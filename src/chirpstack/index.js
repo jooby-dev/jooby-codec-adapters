@@ -1,7 +1,9 @@
 //import 'core-js/actual/symbol';
 import '../polyfills.js';
 
-import {uplink, downlink} from 'jooby-codec/analog/message.js';
+//import {uplink, downlink} from 'jooby-codec/analog/message.js';
+import * as downlink from 'jooby-codec/analog/message/downlink.js';
+import * as uplink from 'jooby-codec/analog/message/uplink.js';
 //import {getHexFromBytes} from 'jooby-codec/utils/index.js';
 import getHexFromBytes from 'jooby-codec/utils/getHexFromBytes.js';
 import getBytesFromHex from 'jooby-codec/utils/getBytesFromHex.js';
