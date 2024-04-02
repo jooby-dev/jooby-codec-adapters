@@ -1,9 +1,10 @@
 //import 'core-js/actual/symbol';
 import '../polyfills.js';
 
-//import {uplink, downlink} from 'jooby-codec/analog/message.js';
-import * as downlink from 'jooby-codec/analog/message/downlink.js';
-import * as uplink from 'jooby-codec/analog/message/uplink.js';
+import * as message from 'jooby-codec/analog/message';
+//import * as downlink from 'jooby-codec/analog/message/downlink';
+//import * as uplink from 'jooby-codec/analog/message/uplink';
+//import * as downlinkCommands from 'jooby-codec/analog/commands/downlink';
 //import {getHexFromBytes} from 'jooby-codec/utils/index.js';
 import getHexFromBytes from 'jooby-codec/utils/getHexFromBytes.js';
 import getBytesFromHex from 'jooby-codec/utils/getBytesFromHex.js';
@@ -19,7 +20,7 @@ import getBytesFromHex from 'jooby-codec/utils/getBytesFromHex.js';
 //console.log(exports);
 
 decodeUplink = ( {bytes, fPort, variables} ) => {
-    const {commands} = uplink.fromBytes(bytes);
+    const {commands} = message.uplink.fromBytes(bytes);
 
     return {
         data: commands.map(({id, parameters}) => ({id, parameters}))
@@ -27,5 +28,5 @@ decodeUplink = ( {bytes, fPort, variables} ) => {
 };
 
 encodeDownlink = ( {data, variables} ) => {
-    return {bytes: downlink.toBytes(data)};
+    return {bytes: message.downlink.toBytes(data)};
 };
