@@ -2,5 +2,5 @@
     "watch": ["./dist"],
     "ext": ".js",
     "ignore": [],
-    "exec": "ls -l ./dist/chirpstack && echo '\nROLLUP:' && ./bin/otto ./dist/chirpstack/rollup.js && echo '\nWEBPACK:' && ./bin/otto ./dist/chirpstack/webpack.js"
+    "exec": "./bin/exec.sh"
 }

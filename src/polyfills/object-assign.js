@@ -1,7 +1,5 @@
-/**
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
- */
-if ( typeof Object.assign != 'function' ) {
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
+if ( typeof Object.assign !== 'function' ) {
     Object.assign = function ( target ) {
         if ( target === undefined || target === null ) {
             throw new TypeError('Cannot convert undefined or null to object');
