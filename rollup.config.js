@@ -4,7 +4,7 @@ import terser from '@rollup/plugin-terser';
 import {readFileSync} from 'node:fs';
 
 
-const processTemplate = ( fileName ) => {
+const processTemplate = fileName => {
     return {
         name: 'processTemplate',
         'generateBundle': async ( meta, data ) => {
