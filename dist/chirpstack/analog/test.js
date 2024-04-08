@@ -385,7 +385,7 @@ var fromBytes, toBytes;
     });
 
     var extraCommandMask = 0x1f;
-    var toBytes$l = function toBytes(commandId, commandSize) {
+    var toBytes$q = function toBytes(commandId, commandSize) {
       if ((commandId & extraCommandMask) === 0) {
         if (commandSize > extraCommandMask) {
           throw new Error("Wrong command id/size. Id: ".concat(commandId, ", size: ").concat(commandSize, "."));
@@ -398,21 +398,21 @@ var fromBytes, toBytes;
       return [commandId, commandSize];
     };
 
-    var toBytes$k = function toBytes(commandId) {
+    var toBytes$p = function toBytes(commandId) {
       var commandData = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-      var headerData = toBytes$l(commandId, commandData.length);
+      var headerData = toBytes$q(commandId, commandData.length);
       return [].concat(_toConsumableArray(headerData), _toConsumableArray(commandData));
     };
 
-    var id$j = 0x0c;
-    var name$j = 'correctTime2000';
-    var headerSize$j = 2;
-    var COMMAND_BODY_SIZE$b = 2;
-    var examples$j = {
+    var id$o = 0x0c;
+    var name$o = 'correctTime2000';
+    var headerSize$o = 2;
+    var COMMAND_BODY_SIZE$d = 2;
+    var examples$o = {
       'correct time 120 seconds to the past': {
-        id: id$j,
-        name: name$j,
-        headerSize: headerSize$j,
+        id: id$o,
+        name: name$o,
+        headerSize: headerSize$o,
         parameters: {
           sequenceNumber: 45,
           seconds: -120
@@ -420,9 +420,9 @@ var fromBytes, toBytes;
         bytes: [0x0c, 0x02, 0x2d, 0x88]
       },
       'correct time 95 seconds to the future': {
-        id: id$j,
-        name: name$j,
-        headerSize: headerSize$j,
+        id: id$o,
+        name: name$o,
+        headerSize: headerSize$o,
         parameters: {
           sequenceNumber: 46,
           seconds: 95
@@ -430,8 +430,8 @@ var fromBytes, toBytes;
         bytes: [0x0c, 0x02, 0x2e, 0x5f]
       }
     };
-    var fromBytes$j = function fromBytes(data) {
-      if (data.length !== COMMAND_BODY_SIZE$b) {
+    var fromBytes$o = function fromBytes(data) {
+      if (data.length !== COMMAND_BODY_SIZE$d) {
         throw new Error("Wrong buffer size: ".concat(data.length, "."));
       }
       var buffer = new BinaryBuffer(data, false);
@@ -444,90 +444,66 @@ var fromBytes, toBytes;
       }
       return parameters;
     };
-    var toBytes$j = function toBytes(parameters) {
+    var toBytes$o = function toBytes(parameters) {
       var sequenceNumber = parameters.sequenceNumber,
         seconds = parameters.seconds;
-      var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$b, false);
+      var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$d, false);
       buffer.setUint8(sequenceNumber);
       buffer.setInt8(seconds);
-      return toBytes$k(id$j, buffer.data);
+      return toBytes$p(id$o, buffer.data);
     };
 
     var correctTime2000$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$j,
-        fromBytes: fromBytes$j,
-        headerSize: headerSize$j,
-        id: id$j,
-        name: name$j,
-        toBytes: toBytes$j
+        examples: examples$o,
+        fromBytes: fromBytes$o,
+        headerSize: headerSize$o,
+        id: id$o,
+        name: name$o,
+        toBytes: toBytes$o
     });
 
-    var id$i = 0x07;
-    var name$i = 'getCurrent';
-    var headerSize$i = 2;
-    var COMMAND_BODY_SIZE$a = 0;
-    var examples$i = {
+    var id$n = 0x07;
+    var name$n = 'getCurrent';
+    var headerSize$n = 2;
+    var COMMAND_BODY_SIZE$c = 0;
+    var examples$n = {
       'simple request': {
-        id: id$i,
-        headerSize: headerSize$i,
-        name: name$i,
+        id: id$n,
+        headerSize: headerSize$n,
+        name: name$n,
         parameters: {},
         bytes: [0x07, 0x00]
       }
     };
-    var fromBytes$i = function fromBytes(data) {
-      if (data.length !== COMMAND_BODY_SIZE$a) {
+    var fromBytes$n = function fromBytes(data) {
+      if (data.length !== COMMAND_BODY_SIZE$c) {
         throw new Error("Wrong buffer size: ".concat(data.length, "."));
       }
       return {};
     };
-    var toBytes$i = function toBytes() {
-      return toBytes$k(id$i);
+    var toBytes$n = function toBytes() {
+      return toBytes$p(id$n);
     };
 
     var getCurrent = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$i,
-        fromBytes: fromBytes$i,
-        headerSize: headerSize$i,
-        id: id$i,
-        name: name$i,
-        toBytes: toBytes$i
+        examples: examples$n,
+        fromBytes: fromBytes$n,
+        headerSize: headerSize$n,
+        id: id$n,
+        name: name$n,
+        toBytes: toBytes$n
     });
 
-    var id$h = 0x18;
-    var name$h = 'getCurrentMc';
-    var headerSize$h = 2;
-    var COMMAND_BODY_SIZE$9 = 0;
-    var examples$h = {
-      'simple request': {
-        id: id$h,
-        name: name$h,
-        headerSize: headerSize$h,
-        parameters: {},
-        bytes: [0x18, 0x00]
-      }
+    var INITIAL_YEAR_TIMESTAMP = 946684800000;
+    var MILLISECONDS_IN_SECONDS = 1000;
+    var getDateFromTime2000 = function getDateFromTime2000(time2000) {
+      return new Date(INITIAL_YEAR_TIMESTAMP + time2000 * MILLISECONDS_IN_SECONDS);
     };
-    var fromBytes$h = function fromBytes(data) {
-      if (data.length !== COMMAND_BODY_SIZE$9) {
-        throw new Error("Wrong buffer size: ".concat(data.length, "."));
-      }
-      return {};
+    var getTime2000FromDate = function getTime2000FromDate(date) {
+      return (date.getTime() - INITIAL_YEAR_TIMESTAMP) / MILLISECONDS_IN_SECONDS;
     };
-    var toBytes$h = function toBytes() {
-      return toBytes$k(id$h);
-    };
-
-    var getCurrentMc = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        examples: examples$h,
-        fromBytes: fromBytes$h,
-        headerSize: headerSize$h,
-        id: id$h,
-        name: name$h,
-        toBytes: toBytes$h
-    });
 
     var fromObject = function fromObject() {
       var bitMask = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -548,15 +524,6 @@ var fromBytes, toBytes;
         result[name] = (value & bitMask[name]) !== 0;
       }
       return result;
-    };
-
-    var INITIAL_YEAR_TIMESTAMP = 946684800000;
-    var MILLISECONDS_IN_SECONDS = 1000;
-    var getDateFromTime2000 = function getDateFromTime2000(time2000) {
-      return new Date(INITIAL_YEAR_TIMESTAMP + time2000 * MILLISECONDS_IN_SECONDS);
-    };
-    var getTime2000FromDate = function getTime2000FromDate(date) {
-      return (date.getTime() - INITIAL_YEAR_TIMESTAMP) / MILLISECONDS_IN_SECONDS;
     };
 
     var GASI1 = 1;
@@ -593,6 +560,7 @@ var fromBytes, toBytes;
     var ELIMP_HARDWARE_TYPES = [ELIMP];
     var FOUR_CHANNELS_HARDWARE_TYPES = [IMP4EU, IMP4IN];
     var MTX_HARDWARE_TYPES = [MTXLORA];
+    var TWO_BYTES_HARDWARE_TYPES = [].concat(FOUR_CHANNELS_HARDWARE_TYPES, MTX_HARDWARE_TYPES);
     var gasBitMask = {
       isBatteryLow: Math.pow(2, 0),
       isMagneticInfluence: Math.pow(2, 1),
@@ -643,6 +611,9 @@ var fromBytes, toBytes;
     var pulseCoefficientToByteMap = invertObject(byteToPulseCoefficientMap);
     var isMSBSet = function isMSBSet(value) {
       return !!(value & 0x80);
+    };
+    var getEventStatusSize = function getEventStatusSize(hardwareType) {
+      return TWO_BYTES_HARDWARE_TYPES.indexOf(hardwareType) !== -1 ? 2 : 1;
     };
     function CommandBinaryBuffer(dataOrLength) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
@@ -994,15 +965,75 @@ var fromBytes, toBytes;
       }
     };
 
-    var id$g = 0x0b;
-    var name$g = 'getArchiveEvents';
-    var headerSize$g = 2;
-    var COMMAND_BODY_SIZE$8 = 5;
-    var examples$g = {
+    var id$m = 0x1b;
+    var name$m = 'getArchiveDaysMC';
+    var headerSize$m = 2;
+    var COMMAND_BODY_SIZE$b = 4;
+    var examples$m = {
+      '1 day pulse counter for 1 channel from 2023.03.10 00:00:00 GMT': {
+        id: id$m,
+        name: name$m,
+        headerSize: headerSize$m,
+        parameters: {
+          startTime2000: 731721600,
+          days: 1,
+          channelList: [1]
+        },
+        bytes: [0x1b, 0x04, 0x2e, 0x6a, 0x01, 0x01]
+      }
+    };
+    var fromBytes$m = function fromBytes(data) {
+      if (data.length !== COMMAND_BODY_SIZE$b) {
+        throw new Error("Wrong buffer size: ".concat(data.length, "."));
+      }
+      var buffer = new CommandBinaryBuffer(data);
+      var date = buffer.getDate();
+      var channelList = buffer.getChannels();
+      var days = buffer.getUint8();
+      if (!buffer.isEmpty) {
+        throw new Error('BinaryBuffer is not empty.');
+      }
+      return {
+        startTime2000: getTime2000FromDate(date),
+        days: days,
+        channelList: channelList
+      };
+    };
+    var toBytes$m = function toBytes(parameters) {
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$b);
+      var startTime2000 = parameters.startTime2000,
+        days = parameters.days,
+        channelList = parameters.channelList;
+      var date = getDateFromTime2000(startTime2000);
+      buffer.setDate(date);
+      buffer.setChannels(channelList.map(function (index) {
+        return {
+          index: index
+        };
+      }));
+      buffer.setUint8(days);
+      return toBytes$p(id$m, buffer.data);
+    };
+
+    var getArchiveDaysMc$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        examples: examples$m,
+        fromBytes: fromBytes$m,
+        headerSize: headerSize$m,
+        id: id$m,
+        name: name$m,
+        toBytes: toBytes$m
+    });
+
+    var id$l = 0x0b;
+    var name$l = 'getArchiveEvents';
+    var headerSize$l = 2;
+    var COMMAND_BODY_SIZE$a = 5;
+    var examples$l = {
       'request 4 events from 2023.04.03 14:01:17 GMT': {
-        id: id$g,
-        name: name$g,
-        headerSize: headerSize$g,
+        id: id$l,
+        name: name$l,
+        headerSize: headerSize$l,
         parameters: {
           startTime2000: 733845677,
           events: 4
@@ -1010,8 +1041,8 @@ var fromBytes, toBytes;
         bytes: [0x0b, 0x05, 0x2b, 0xbd, 0x98, 0xad, 0x04]
       }
     };
-    var fromBytes$g = function fromBytes(data) {
-      if (data.length !== COMMAND_BODY_SIZE$8) {
+    var fromBytes$l = function fromBytes(data) {
+      if (data.length !== COMMAND_BODY_SIZE$a) {
         throw new Error("Wrong buffer size: ".concat(data.length, "."));
       }
       var buffer = new CommandBinaryBuffer(data);
@@ -1025,16 +1056,212 @@ var fromBytes, toBytes;
         events: events
       };
     };
-    var toBytes$g = function toBytes(parameters) {
+    var toBytes$l = function toBytes(parameters) {
       var startTime2000 = parameters.startTime2000,
         events = parameters.events;
-      var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$8);
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$a);
       buffer.setTime(startTime2000);
       buffer.setUint8(events);
-      return toBytes$k(id$g, buffer.data);
+      return toBytes$p(id$l, buffer.data);
     };
 
     var getArchiveEvents$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        examples: examples$l,
+        fromBytes: fromBytes$l,
+        headerSize: headerSize$l,
+        id: id$l,
+        name: name$l,
+        toBytes: toBytes$l
+    });
+
+    var id$k = 0x1a;
+    var name$k = 'getArchiveHoursMC';
+    var headerSize$k = 2;
+    var COMMAND_BODY_SIZE$9 = 4;
+    var examples$k = {
+      'hour pulse counter and 1 hour diff for 1 channel from 2023.12.23 12:00:00 GMT': {
+        id: id$k,
+        name: name$k,
+        headerSize: headerSize$k,
+        parameters: {
+          startTime2000: 756648000,
+          hours: 2,
+          channelList: [1]
+        },
+        bytes: [0x1a, 0x04, 0x2f, 0x97, 0x2c, 0x01]
+      }
+    };
+    var fromBytes$k = function fromBytes(data) {
+      if (data.length !== COMMAND_BODY_SIZE$9) {
+        throw new Error("Wrong buffer size: ".concat(data.length, "."));
+      }
+      var buffer = new CommandBinaryBuffer(data);
+      var date = buffer.getDate();
+      var _buffer$getHours = buffer.getHours(),
+        hour = _buffer$getHours.hour,
+        hours = _buffer$getHours.hours;
+      var channelList = buffer.getChannels();
+      date.setUTCHours(hour);
+      if (!buffer.isEmpty) {
+        throw new Error('BinaryBuffer is not empty.');
+      }
+      return {
+        startTime2000: getTime2000FromDate(date),
+        hours: hours,
+        channelList: channelList
+      };
+    };
+    var toBytes$k = function toBytes(parameters) {
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$9);
+      var hours = parameters.hours,
+        startTime2000 = parameters.startTime2000,
+        channelList = parameters.channelList;
+      var date = getDateFromTime2000(startTime2000);
+      var hour = date.getUTCHours();
+      buffer.setDate(date);
+      buffer.setHours(hour, hours);
+      buffer.setChannels(channelList.map(function (index) {
+        return {
+          index: index
+        };
+      }));
+      return toBytes$p(id$k, buffer.data);
+    };
+
+    var getArchiveHoursMc$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        examples: examples$k,
+        fromBytes: fromBytes$k,
+        headerSize: headerSize$k,
+        id: id$k,
+        name: name$k,
+        toBytes: toBytes$k
+    });
+
+    var id$j = 0x18;
+    var name$j = 'getCurrentMc';
+    var headerSize$j = 2;
+    var COMMAND_BODY_SIZE$8 = 0;
+    var examples$j = {
+      'simple request': {
+        id: id$j,
+        name: name$j,
+        headerSize: headerSize$j,
+        parameters: {},
+        bytes: [0x18, 0x00]
+      }
+    };
+    var fromBytes$j = function fromBytes(data) {
+      if (data.length !== COMMAND_BODY_SIZE$8) {
+        throw new Error("Wrong buffer size: ".concat(data.length, "."));
+      }
+      return {};
+    };
+    var toBytes$j = function toBytes() {
+      return toBytes$p(id$j);
+    };
+
+    var getCurrentMc = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        examples: examples$j,
+        fromBytes: fromBytes$j,
+        headerSize: headerSize$j,
+        id: id$j,
+        name: name$j,
+        toBytes: toBytes$j
+    });
+
+    var id$i = 0x021f;
+    var name$i = 'getLmicInfo';
+    var headerSize$i = 3;
+    var COMMAND_BODY_SIZE$7 = 0;
+    var examples$i = {
+      'simple request': {
+        id: id$i,
+        name: name$i,
+        headerSize: headerSize$i,
+        parameters: {},
+        bytes: [0x1f, 0x02, 0x00]
+      }
+    };
+    var fromBytes$i = function fromBytes(data) {
+      if (data.length !== COMMAND_BODY_SIZE$7) {
+        throw new Error("Wrong buffer size: ".concat(data.length, "."));
+      }
+      return {};
+    };
+    var toBytes$i = function toBytes() {
+      return toBytes$p(id$i);
+    };
+
+    var getLmicInfo$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        examples: examples$i,
+        fromBytes: fromBytes$i,
+        headerSize: headerSize$i,
+        id: id$i,
+        name: name$i,
+        toBytes: toBytes$i
+    });
+
+    var id$h = 0x14;
+    var name$h = 'getStatus';
+    var headerSize$h = 2;
+    var COMMAND_BODY_SIZE$6 = 0;
+    var examples$h = {
+      'simple request': {
+        id: id$h,
+        name: name$h,
+        headerSize: headerSize$h,
+        parameters: {},
+        bytes: [0x14, 0x00]
+      }
+    };
+    var fromBytes$h = function fromBytes(data) {
+      if (data.length !== COMMAND_BODY_SIZE$6) {
+        throw new Error("Wrong buffer size: ".concat(data.length, "."));
+      }
+      return {};
+    };
+    var toBytes$h = function toBytes() {
+      return toBytes$p(id$h);
+    };
+
+    var getStatus = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        examples: examples$h,
+        fromBytes: fromBytes$h,
+        headerSize: headerSize$h,
+        id: id$h,
+        name: name$h,
+        toBytes: toBytes$h
+    });
+
+    var id$g = 0x09;
+    var name$g = 'getTime2000';
+    var headerSize$g = 2;
+    var COMMAND_BODY_SIZE$5 = 0;
+    var examples$g = {
+      'simple request': {
+        id: id$g,
+        name: name$g,
+        headerSize: headerSize$g,
+        parameters: {},
+        bytes: [0x09, 0x00]
+      }
+    };
+    var fromBytes$g = function fromBytes(data) {
+      if (data.length !== COMMAND_BODY_SIZE$5) {
+        throw new Error("Wrong buffer size: ".concat(data.length, "."));
+      }
+      return {};
+    };
+    var toBytes$g = function toBytes() {
+      return toBytes$p(id$g, []);
+    };
+
+    var getTime2000 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$g,
         fromBytes: fromBytes$g,
@@ -1044,113 +1271,14 @@ var fromBytes, toBytes;
         toBytes: toBytes$g
     });
 
-    var id$f = 0x021f;
-    var name$f = 'getLmicInfo';
-    var headerSize$f = 3;
-    var COMMAND_BODY_SIZE$7 = 0;
-    var examples$f = {
-      'simple request': {
-        id: id$f,
-        name: name$f,
-        headerSize: headerSize$f,
-        parameters: {},
-        bytes: [0x1f, 0x02, 0x00]
-      }
-    };
-    var fromBytes$f = function fromBytes(data) {
-      if (data.length !== COMMAND_BODY_SIZE$7) {
-        throw new Error("Wrong buffer size: ".concat(data.length, "."));
-      }
-      return {};
-    };
-    var toBytes$f = function toBytes() {
-      return toBytes$k(id$f);
-    };
-
-    var getLmicInfo$1 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        examples: examples$f,
-        fromBytes: fromBytes$f,
-        headerSize: headerSize$f,
-        id: id$f,
-        name: name$f,
-        toBytes: toBytes$f
-    });
-
-    var id$e = 0x14;
-    var name$e = 'getStatus';
-    var headerSize$e = 2;
-    var COMMAND_BODY_SIZE$6 = 0;
-    var examples$e = {
-      'simple request': {
-        id: id$e,
-        name: name$e,
-        headerSize: headerSize$e,
-        parameters: {},
-        bytes: [0x14, 0x00]
-      }
-    };
-    var fromBytes$e = function fromBytes(data) {
-      if (data.length !== COMMAND_BODY_SIZE$6) {
-        throw new Error("Wrong buffer size: ".concat(data.length, "."));
-      }
-      return {};
-    };
-    var toBytes$e = function toBytes() {
-      return toBytes$k(id$e);
-    };
-
-    var getStatus = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        examples: examples$e,
-        fromBytes: fromBytes$e,
-        headerSize: headerSize$e,
-        id: id$e,
-        name: name$e,
-        toBytes: toBytes$e
-    });
-
-    var id$d = 0x09;
-    var name$d = 'getTime2000';
-    var headerSize$d = 2;
-    var COMMAND_BODY_SIZE$5 = 0;
-    var examples$d = {
-      'simple request': {
-        id: id$d,
-        name: name$d,
-        headerSize: headerSize$d,
-        parameters: {},
-        bytes: [0x09, 0x00]
-      }
-    };
-    var fromBytes$d = function fromBytes(data) {
-      if (data.length !== COMMAND_BODY_SIZE$5) {
-        throw new Error("Wrong buffer size: ".concat(data.length, "."));
-      }
-      return {};
-    };
-    var toBytes$d = function toBytes() {
-      return toBytes$k(id$d, []);
-    };
-
-    var getTime2000 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        examples: examples$d,
-        fromBytes: fromBytes$d,
-        headerSize: headerSize$d,
-        id: id$d,
-        name: name$d,
-        toBytes: toBytes$d
-    });
-
-    var id$c = 0x02;
-    var name$c = 'setTime2000';
-    var headerSize$c = 2;
+    var id$f = 0x02;
+    var name$f = 'setTime2000';
+    var headerSize$f = 2;
     var COMMAND_BODY_SIZE$4 = 5;
-    var examples$c = {
+    var examples$f = {
       'set time to 2023.04.03 14:01:17 GMT': {
-        id: id$c,
-        headerSize: headerSize$c,
+        id: id$f,
+        headerSize: headerSize$f,
         parameters: {
           sequenceNumber: 78,
           seconds: 733845677
@@ -1158,7 +1286,7 @@ var fromBytes, toBytes;
         bytes: [0x02, 0x05, 0x4e, 0x2b, 0xbd, 0x98, 0xad]
       }
     };
-    var fromBytes$c = function fromBytes(data) {
+    var fromBytes$f = function fromBytes(data) {
       if (data.length !== COMMAND_BODY_SIZE$4) {
         throw new Error("Wrong buffer size: ".concat(data.length, "."));
       }
@@ -1172,29 +1300,31 @@ var fromBytes, toBytes;
       }
       return parameters;
     };
-    var toBytes$c = function toBytes(parameters) {
+    var toBytes$f = function toBytes(parameters) {
       var sequenceNumber = parameters.sequenceNumber,
         seconds = parameters.seconds;
       var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$4, false);
       buffer.setUint8(sequenceNumber);
       buffer.setInt32(seconds);
-      return toBytes$k(id$c, buffer.data);
+      return toBytes$p(id$f, buffer.data);
     };
 
     var setTime2000$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$c,
-        fromBytes: fromBytes$c,
-        headerSize: headerSize$c,
-        id: id$c,
-        name: name$c,
-        toBytes: toBytes$c
+        examples: examples$f,
+        fromBytes: fromBytes$f,
+        headerSize: headerSize$f,
+        id: id$f,
+        name: name$f,
+        toBytes: toBytes$f
     });
 
     var downlink = /*#__PURE__*/Object.freeze({
         __proto__: null,
         correctTime2000: correctTime2000$1,
+        getArchiveDaysMc: getArchiveDaysMc$1,
         getArchiveEvents: getArchiveEvents$1,
+        getArchiveHoursMc: getArchiveHoursMc$1,
         getCurrent: getCurrent,
         getCurrentMc: getCurrentMc,
         getLmicInfo: getLmicInfo$1,
@@ -1203,31 +1333,31 @@ var fromBytes, toBytes;
         setTime2000: setTime2000$1
     });
 
-    var id$b = 0x0c;
-    var name$b = 'correctTime2000';
-    var headerSize$b = 2;
+    var id$e = 0x0c;
+    var name$e = 'correctTime2000';
+    var headerSize$e = 2;
     var COMMAND_BODY_SIZE$3 = 1;
-    var examples$b = {
+    var examples$e = {
       'time correction failure': {
-        id: id$b,
-        name: name$b,
-        headerSize: headerSize$b,
+        id: id$e,
+        name: name$e,
+        headerSize: headerSize$e,
         parameters: {
           status: 0
         },
         bytes: [0x0c, 0x01, 0x00]
       },
       'time correction success': {
-        id: id$b,
-        name: name$b,
-        headerSize: headerSize$b,
+        id: id$e,
+        name: name$e,
+        headerSize: headerSize$e,
         parameters: {
           status: 1
         },
         bytes: [0x0c, 0x01, 0x01]
       }
     };
-    var fromBytes$b = function fromBytes(data) {
+    var fromBytes$e = function fromBytes(data) {
       if (data.length !== COMMAND_BODY_SIZE$3) {
         throw new Error("Wrong buffer size: ".concat(data.length, "."));
       }
@@ -1240,32 +1370,32 @@ var fromBytes, toBytes;
       }
       return parameters;
     };
-    var toBytes$b = function toBytes(parameters) {
+    var toBytes$e = function toBytes(parameters) {
       var status = parameters.status;
       var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$3, false);
       buffer.setUint8(status);
-      return toBytes$k(id$b, buffer.data);
+      return toBytes$p(id$e, buffer.data);
     };
 
     var correctTime2000 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$b,
-        fromBytes: fromBytes$b,
-        headerSize: headerSize$b,
-        id: id$b,
-        name: name$b,
-        toBytes: toBytes$b
+        examples: examples$e,
+        fromBytes: fromBytes$e,
+        headerSize: headerSize$e,
+        id: id$e,
+        name: name$e,
+        toBytes: toBytes$e
     });
 
-    var id$a = 0x18;
-    var name$a = 'currentMC';
-    var headerSize$a = 2;
-    var COMMAND_BODY_MAX_SIZE$6 = 37;
-    var examples$a = {
+    var id$d = 0x18;
+    var name$d = 'currentMC';
+    var headerSize$d = 2;
+    var COMMAND_BODY_MAX_SIZE$8 = 37;
+    var examples$d = {
       '4 first channels': {
-        id: id$a,
-        name: name$a,
-        headerSize: headerSize$a,
+        id: id$d,
+        name: name$d,
+        headerSize: headerSize$d,
         parameters: {
           channelList: [{
             index: 1,
@@ -1284,9 +1414,9 @@ var fromBytes, toBytes;
         bytes: [0x18, 0x06, 0x0f, 0x83, 0x01, 0x08, 0x0a, 0x0c]
       },
       'single channel 2': {
-        id: id$a,
-        name: name$a,
-        headerSize: headerSize$a,
+        id: id$d,
+        name: name$d,
+        headerSize: headerSize$d,
         parameters: {
           channelList: [{
             index: 2,
@@ -1296,9 +1426,9 @@ var fromBytes, toBytes;
         bytes: [0x18, 0x02, 0x02, 0x32]
       },
       'channels 5, 6, 12': {
-        id: id$a,
-        name: name$a,
-        headerSize: headerSize$a,
+        id: id$d,
+        name: name$d,
+        headerSize: headerSize$d,
         parameters: {
           channelList: [{
             index: 5,
@@ -1314,8 +1444,8 @@ var fromBytes, toBytes;
         bytes: [0x18, 0x07, 0xb0, 0x10, 0xd2, 0x3f, 0xa4, 0x01, 0x4b]
       }
     };
-    var fromBytes$a = function fromBytes(data) {
-      if (data.length > COMMAND_BODY_MAX_SIZE$6) {
+    var fromBytes$d = function fromBytes(data) {
+      if (data.length > COMMAND_BODY_MAX_SIZE$8) {
         throw new Error("Wrong buffer size: ".concat(data.length, "."));
       }
       var parameters = {
@@ -1331,36 +1461,36 @@ var fromBytes, toBytes;
       });
       return parameters;
     };
-    var toBytes$a = function toBytes(parameters) {
-      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$6);
+    var toBytes$d = function toBytes(parameters) {
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$8);
       var channelList = parameters.channelList;
       buffer.setChannels(channelList);
       channelList.forEach(function (_ref) {
         var value = _ref.value;
         buffer.setExtendedValue(value);
       });
-      return toBytes$k(id$a, buffer.getBytesToOffset());
+      return toBytes$p(id$d, buffer.getBytesToOffset());
     };
 
     var currentMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$a,
-        fromBytes: fromBytes$a,
-        headerSize: headerSize$a,
-        id: id$a,
-        name: name$a,
-        toBytes: toBytes$a
+        examples: examples$d,
+        fromBytes: fromBytes$d,
+        headerSize: headerSize$d,
+        id: id$d,
+        name: name$d,
+        toBytes: toBytes$d
     });
 
-    var id$9 = 0x16;
-    var name$9 = 'dayMC';
-    var headerSize$9 = 2;
-    var COMMAND_BODY_MAX_SIZE$5 = 32;
-    var examples$9 = {
+    var id$c = 0x16;
+    var name$c = 'dayMC';
+    var headerSize$c = 2;
+    var COMMAND_BODY_MAX_SIZE$7 = 32;
+    var examples$c = {
       '4 channels at 2023.12.23 00:00:00 GMT': {
-        id: id$9,
-        name: name$9,
-        headerSize: headerSize$9,
+        id: id$c,
+        name: name$c,
+        headerSize: headerSize$c,
         parameters: {
           startTime2000: 756604800,
           channelList: [{
@@ -1380,8 +1510,8 @@ var fromBytes, toBytes;
         bytes: [0x16, 0x08, 0x2f, 0x97, 0x55, 0x0c, 0x83, 0x01, 0x08, 0x0a]
       }
     };
-    var fromBytes$9 = function fromBytes(data) {
-      if (data.length > COMMAND_BODY_MAX_SIZE$5) {
+    var fromBytes$c = function fromBytes(data) {
+      if (data.length > COMMAND_BODY_MAX_SIZE$7) {
         throw new Error("Wrong buffer size: ".concat(data.length, "."));
       }
       var buffer = new CommandBinaryBuffer(data);
@@ -1398,8 +1528,8 @@ var fromBytes, toBytes;
         channelList: channelList
       };
     };
-    var toBytes$9 = function toBytes(parameters) {
-      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$5);
+    var toBytes$c = function toBytes(parameters) {
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$7);
       var channelList = parameters.channelList,
         startTime2000 = parameters.startTime2000;
       buffer.setDate(startTime2000);
@@ -1408,28 +1538,28 @@ var fromBytes, toBytes;
         var value = _ref.value;
         buffer.setExtendedValue(value);
       });
-      return toBytes$k(id$9, buffer.getBytesToOffset());
+      return toBytes$p(id$c, buffer.getBytesToOffset());
     };
 
     var dayMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$9,
-        fromBytes: fromBytes$9,
-        headerSize: headerSize$9,
-        id: id$9,
-        name: name$9,
-        toBytes: toBytes$9
+        examples: examples$c,
+        fromBytes: fromBytes$c,
+        headerSize: headerSize$c,
+        id: id$c,
+        name: name$c,
+        toBytes: toBytes$c
     });
 
-    var id$8 = 0x0b1f;
-    var name$8 = 'exAbsDayMC';
-    var headerSize$8 = 3;
-    var COMMAND_BODY_MAX_SIZE$4 = 89;
-    var examples$8 = {
+    var id$b = 0x0b1f;
+    var name$b = 'exAbsDayMC';
+    var headerSize$b = 3;
+    var COMMAND_BODY_MAX_SIZE$6 = 89;
+    var examples$b = {
       'absolute day value for 2023.03.10 00:00:00 GMT': {
-        id: id$8,
-        name: name$8,
-        headerSize: headerSize$8,
+        id: id$b,
+        name: name$b,
+        headerSize: headerSize$b,
         parameters: {
           startTime2000: 731721600,
           channelList: [{
@@ -1441,8 +1571,8 @@ var fromBytes, toBytes;
         bytes: [0x1f, 0x0b, 0x06, 0x2e, 0x6a, 0x01, 0x83, 0xd6, 0x02]
       }
     };
-    var fromBytes$8 = function fromBytes(data) {
-      if (data.length > COMMAND_BODY_MAX_SIZE$4) {
+    var fromBytes$b = function fromBytes(data) {
+      if (data.length > COMMAND_BODY_MAX_SIZE$6) {
         throw new Error("Wrong buffer size: ".concat(data.length, "."));
       }
       var buffer = new CommandBinaryBuffer(data);
@@ -1453,34 +1583,34 @@ var fromBytes, toBytes;
         channelList: channelList
       };
     };
-    var toBytes$8 = function toBytes(parameters) {
-      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$4);
+    var toBytes$b = function toBytes(parameters) {
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$6);
       var startTime2000 = parameters.startTime2000,
         channelList = parameters.channelList;
       buffer.setDate(startTime2000);
       buffer.setChannelsWithAbsoluteValues(channelList);
-      return toBytes$k(id$8, buffer.getBytesToOffset());
+      return toBytes$p(id$b, buffer.getBytesToOffset());
     };
 
     var exAbsDayMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$8,
-        fromBytes: fromBytes$8,
-        headerSize: headerSize$8,
-        id: id$8,
-        name: name$8,
-        toBytes: toBytes$8
+        examples: examples$b,
+        fromBytes: fromBytes$b,
+        headerSize: headerSize$b,
+        id: id$b,
+        name: name$b,
+        toBytes: toBytes$b
     });
 
-    var id$7 = 0x0a1f;
-    var name$7 = 'exAbsHourMC';
-    var headerSize$7 = 3;
-    var COMMAND_BODY_MAX_SIZE$3 = 168;
-    var examples$7 = {
+    var id$a = 0x0a1f;
+    var name$a = 'exAbsHourMC';
+    var headerSize$a = 3;
+    var COMMAND_BODY_MAX_SIZE$5 = 168;
+    var examples$a = {
       '1 channel at 2023.03.10 12:00:00 GMT': {
-        id: id$7,
-        name: name$7,
-        headerSize: headerSize$7,
+        id: id$a,
+        name: name$a,
+        headerSize: headerSize$a,
         parameters: {
           startTime2000: 731764800,
           hours: 2,
@@ -1494,8 +1624,8 @@ var fromBytes, toBytes;
         bytes: [0x1f, 0x0a, 0x0a, 0x2e, 0x6a, 0x2c, 0x01, 0x83, 0xb9, 0xf3, 0x14, 0x80, 0x01]
       }
     };
-    var fromBytes$7 = function fromBytes(data) {
-      if (data.length > COMMAND_BODY_MAX_SIZE$3) {
+    var fromBytes$a = function fromBytes(data) {
+      if (data.length > COMMAND_BODY_MAX_SIZE$5) {
         throw new Error("Wrong buffer size: ".concat(data.length, "."));
       }
       var buffer = new CommandBinaryBuffer(data);
@@ -1511,8 +1641,8 @@ var fromBytes, toBytes;
         channelList: channelList
       };
     };
-    var toBytes$7 = function toBytes(parameters) {
-      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$3);
+    var toBytes$a = function toBytes(parameters) {
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$5);
       var startTime2000 = parameters.startTime2000,
         hours = parameters.hours,
         channelList = parameters.channelList;
@@ -1521,28 +1651,111 @@ var fromBytes, toBytes;
       buffer.setDate(startTime2000);
       buffer.setHours(hour, hours);
       buffer.setChannelsAbsoluteValuesWithHourDiff(channelList);
-      return toBytes$k(id$7, buffer.getBytesToOffset());
+      return toBytes$p(id$a, buffer.getBytesToOffset());
     };
 
     var exAbsHourMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$7,
-        fromBytes: fromBytes$7,
-        headerSize: headerSize$7,
-        id: id$7,
-        name: name$7,
-        toBytes: toBytes$7
+        examples: examples$a,
+        fromBytes: fromBytes$a,
+        headerSize: headerSize$a,
+        id: id$a,
+        name: name$a,
+        toBytes: toBytes$a
     });
 
-    var id$6 = 0x0b;
-    var name$6 = 'getArchiveEvents';
-    var headerSize$6 = 2;
+    var id$9 = 0x1b;
+    var name$9 = 'getArchiveDaysMCResponse';
+    var headerSize$9 = 2;
+    var COMMAND_BODY_MAX_SIZE$4 = 5104;
+    var examples$9 = {
+      'get day values from 2001.03.10 12:00:00 GMT for channel 1': {
+        id: id$9,
+        name: name$9,
+        headerSize: headerSize$9,
+        parameters: {
+          startTime2000: 2678227200,
+          days: 2,
+          channelList: [{
+            index: 1,
+            dayList: [234, 332]
+          }]
+        },
+        bytes: [0x1b, 0x08, 0xa9, 0x6d, 0x01, 0x02, 0xea, 0x01, 0xcc, 0x02]
+      },
+      'empty result from 2010.10.09 00:00:00 GMT for channel 1': {
+        id: id$9,
+        name: name$9,
+        headerSize: headerSize$9,
+        parameters: {
+          startTime2000: 339897600,
+          days: 1,
+          channelList: [{
+            index: 1,
+            dayList: [0]
+          }]
+        },
+        bytes: [0x1b, 0x05, 0x15, 0x49, 0x01, 0x01, 0x00]
+      }
+    };
+    var fromBytes$9 = function fromBytes(data) {
+      var buffer = new CommandBinaryBuffer(data);
+      var date = buffer.getDate();
+      var channels = buffer.getChannels();
+      var days = buffer.getUint8();
+      var channelList = [];
+      channels.forEach(function (channelIndex) {
+        var dayList = [];
+        channelList.push({
+          dayList: dayList,
+          index: channelIndex
+        });
+        for (var day = 0; day < days; ++day) {
+          dayList.push(buffer.getExtendedValue());
+        }
+      });
+      return {
+        startTime2000: getTime2000FromDate(date),
+        days: days,
+        channelList: channelList
+      };
+    };
+    var toBytes$9 = function toBytes(parameters) {
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$4);
+      var startTime2000 = parameters.startTime2000,
+        days = parameters.days,
+        channelList = parameters.channelList;
+      buffer.setDate(startTime2000);
+      buffer.setChannels(channelList);
+      buffer.setUint8(days);
+      channelList.forEach(function (_ref) {
+        var dayList = _ref.dayList;
+        dayList.forEach(function (value) {
+          buffer.setExtendedValue(value);
+        });
+      });
+      return toBytes$p(id$9, buffer.getBytesToOffset());
+    };
+
+    var getArchiveDaysMc = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        examples: examples$9,
+        fromBytes: fromBytes$9,
+        headerSize: headerSize$9,
+        id: id$9,
+        name: name$9,
+        toBytes: toBytes$9
+    });
+
+    var id$8 = 0x0b;
+    var name$8 = 'getArchiveEvents';
+    var headerSize$8 = 2;
     var COMMAND_BODY_MIN_SIZE = 4 + 1 + 1;
-    var examples$6 = {
+    var examples$8 = {
       '1 event "MAGNET_ON" at 2023.04.05 13:17:20 GMT': {
-        id: id$6,
-        name: name$6,
-        headerSize: headerSize$6,
+        id: id$8,
+        name: name$8,
+        headerSize: headerSize$8,
         parameters: {
           eventList: [{
             time2000: 734015840,
@@ -1553,9 +1766,9 @@ var fromBytes, toBytes;
         bytes: [0x0b, 0x06, 0x2b, 0xc0, 0x31, 0x60, 0x01, 0x01]
       },
       '4 events': {
-        id: id$6,
-        name: name$6,
-        headerSize: headerSize$6,
+        id: id$8,
+        name: name$8,
+        headerSize: headerSize$8,
         parameters: {
           eventList: [{
             time2000: 734015840,
@@ -1590,7 +1803,7 @@ var fromBytes, toBytes;
       buffer.setUint8(event.id);
       buffer.setUint8(event.sequenceNumber);
     };
-    var fromBytes$6 = function fromBytes(data) {
+    var fromBytes$8 = function fromBytes(data) {
       var buffer = new CommandBinaryBuffer(data, false);
       var eventList = [];
       while (buffer.bytesLeft > 0) {
@@ -1600,38 +1813,108 @@ var fromBytes, toBytes;
         eventList: eventList
       };
     };
-    function toBytes$6(parameters) {
+    function toBytes$8(parameters) {
       var eventList = parameters.eventList;
       var buffer = new CommandBinaryBuffer(eventList.length * COMMAND_BODY_MIN_SIZE, false);
       eventList.forEach(function (event) {
         return setEvent(buffer, event);
       });
-      return toBytes$k(id$6, buffer.data);
+      return toBytes$p(id$8, buffer.data);
     }
 
     var getArchiveEvents = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$6,
-        fromBytes: fromBytes$6,
-        headerSize: headerSize$6,
-        id: id$6,
-        name: name$6,
-        toBytes: toBytes$6
+        examples: examples$8,
+        fromBytes: fromBytes$8,
+        headerSize: headerSize$8,
+        id: id$8,
+        name: name$8,
+        toBytes: toBytes$8
     });
 
-    var id$5 = 0x021f;
-    var name$5 = 'getLmicInfo';
-    var headerSize$5 = 3;
+    var id$7 = 0x1a;
+    var name$7 = 'getArchiveHoursMCResponse';
+    var headerSize$7 = 2;
+    var COMMAND_BODY_MAX_SIZE$3 = 164;
+    var examples$7 = {
+      '4 channels at 2023.12.23 12:00:00 GMT': {
+        id: id$7,
+        name: name$7,
+        headerSize: headerSize$7,
+        parameters: {
+          startTime2000: 756648000,
+          hours: 2,
+          channelList: [{
+            index: 1,
+            value: 131,
+            diff: [10]
+          }, {
+            index: 2,
+            value: 8,
+            diff: [10]
+          }, {
+            index: 3,
+            value: 8,
+            diff: [10]
+          }, {
+            index: 4,
+            value: 12,
+            diff: [10]
+          }]
+        },
+        bytes: [0x1a, 0x0d, 0x2f, 0x97, 0x2c, 0x0f, 0x83, 0x01, 0x0a, 0x08, 0x0a, 0x08, 0x0a, 0x0c, 0x0a]
+      },
+      'empty result at 2023.11.19 00:00:00 GMT': {
+        id: id$7,
+        name: name$7,
+        headerSize: headerSize$7,
+        parameters: {
+          startTime2000: 752889600,
+          hours: 0,
+          channelList: []
+        },
+        bytes: [0x1a, 0x04, 0x2f, 0x6a, 0x00, 0x00]
+      }
+    };
+    var fromBytes$7 = function fromBytes(data) {
+      if (data.length > COMMAND_BODY_MAX_SIZE$3) {
+        throw new Error("Wrong buffer size: ".concat(data.length, "."));
+      }
+      var buffer = new CommandBinaryBuffer(data);
+      return buffer.getChannelsValuesWithHourDiff();
+    };
+    var toBytes$7 = function toBytes(parameters) {
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$3);
+      var hours = parameters.hours,
+        startTime2000 = parameters.startTime2000,
+        channelList = parameters.channelList;
+      buffer.setChannelsValuesWithHourDiff(hours, startTime2000, channelList);
+      return toBytes$p(id$7, buffer.getBytesToOffset());
+    };
+
+    var getArchiveHoursMc = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        examples: examples$7,
+        fromBytes: fromBytes$7,
+        headerSize: headerSize$7,
+        id: id$7,
+        name: name$7,
+        toBytes: toBytes$7
+    });
+
+    var id$6 = 0x021f;
+    var name$6 = 'getLmicInfo';
+    var headerSize$6 = 3;
     var COMMAND_BODY_SIZE$2 = 2;
     var lmicCapabilitiesBitMask = {
       isMulticastSupported: 1 << 0,
       isFragmentedDataSupported: 1 << 1
     };
-    var examples$5 = {
+    var examples$6 = {
       'version: 5, support only multicast': {
-        id: id$5,
-        name: name$5,
-        headerSize: headerSize$5,
+        id: id$6,
+        name: name$6,
+        headerSize: headerSize$6,
         parameters: {
           version: 5,
           capabilities: {
@@ -1642,9 +1925,9 @@ var fromBytes, toBytes;
         bytes: [0x1f, 0x02, 0x02, 0x01, 0x05]
       },
       'version: 8, support multicast and fragmented data': {
-        id: id$5,
-        name: name$5,
-        headerSize: headerSize$5,
+        id: id$6,
+        name: name$6,
+        headerSize: headerSize$6,
         parameters: {
           version: 8,
           capabilities: {
@@ -1655,7 +1938,7 @@ var fromBytes, toBytes;
         bytes: [0x1f, 0x02, 0x02, 0x03, 0x08]
       }
     };
-    var fromBytes$5 = function fromBytes(data) {
+    var fromBytes$6 = function fromBytes(data) {
       if (data.length !== COMMAND_BODY_SIZE$2) {
         throw new Error("Wrong buffer size: ".concat(data.length, "."));
       }
@@ -1670,34 +1953,34 @@ var fromBytes, toBytes;
         version: version
       };
     };
-    var toBytes$5 = function toBytes(parameters) {
+    var toBytes$6 = function toBytes(parameters) {
       var capabilities = parameters.capabilities,
         version = parameters.version;
       var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$2);
       buffer.setUint8(fromObject(lmicCapabilitiesBitMask, capabilities));
       buffer.setUint8(version);
-      return toBytes$k(id$5, buffer.data);
+      return toBytes$p(id$6, buffer.data);
     };
 
     var getLmicInfo = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$5,
-        fromBytes: fromBytes$5,
-        headerSize: headerSize$5,
-        id: id$5,
-        name: name$5,
-        toBytes: toBytes$5
+        examples: examples$6,
+        fromBytes: fromBytes$6,
+        headerSize: headerSize$6,
+        id: id$6,
+        name: name$6,
+        toBytes: toBytes$6
     });
 
-    var id$4 = 0x17;
-    var name$4 = 'hourMC';
-    var headerSize$4 = 2;
+    var id$5 = 0x17;
+    var name$5 = 'hourMC';
+    var headerSize$5 = 2;
     var COMMAND_BODY_MAX_SIZE$2 = 164;
-    var examples$4 = {
+    var examples$5 = {
       '4 first channels at 2023.12.23 12:00:00 GMT': {
-        id: id$4,
-        name: name$4,
-        headerSize: headerSize$4,
+        id: id$5,
+        name: name$5,
+        headerSize: headerSize$5,
         parameters: {
           startTime2000: 756648000,
           hours: 2,
@@ -1722,23 +2005,127 @@ var fromBytes, toBytes;
         bytes: [0x17, 0x0f, 0x2f, 0x97, 0x2c, 0x0f, 0x83, 0x01, 0x0a, 0xc0, 0x06, 0x0c, 0x26, 0x08, 0xea, 0x01, 0x0b]
       }
     };
-    var fromBytes$4 = function fromBytes(data) {
+    var fromBytes$5 = function fromBytes(data) {
       if (data.length > COMMAND_BODY_MAX_SIZE$2) {
         throw new Error("Wrong buffer size: ".concat(data.length, "."));
       }
       var buffer = new CommandBinaryBuffer(data);
       return buffer.getChannelsValuesWithHourDiff();
     };
-    var toBytes$4 = function toBytes(parameters) {
+    var toBytes$5 = function toBytes(parameters) {
       var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$2);
       var startTime2000 = parameters.startTime2000,
         hours = parameters.hours,
         channelList = parameters.channelList;
       buffer.setChannelsValuesWithHourDiff(hours, startTime2000, channelList);
-      return toBytes$k(id$4, buffer.getBytesToOffset());
+      return toBytes$p(id$5, buffer.getBytesToOffset());
     };
 
     var hourMc = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        examples: examples$5,
+        fromBytes: fromBytes$5,
+        headerSize: headerSize$5,
+        id: id$5,
+        name: name$5,
+        toBytes: toBytes$5
+    });
+
+    var id$4 = 0x60;
+    var name$4 = 'lastEvent';
+    var headerSize$4 = 1;
+    var examples$4 = {
+      'status for GASI3': {
+        id: id$4,
+        name: name$4,
+        headerSize: headerSize$4,
+        parameters: {
+          sequenceNumber: 32,
+          status: {
+            isBatteryLow: true,
+            isButtonReleased: false,
+            isConnectionLost: true,
+            isMagneticInfluence: false
+          }
+        },
+        config: {
+          hardwareType: GASI3
+        },
+        bytes: [0x62, 0x20, 0x09]
+      },
+      'status for IMP4EU': {
+        id: id$4,
+        name: name$4,
+        headerSize: headerSize$4,
+        parameters: {
+          sequenceNumber: 16,
+          status: {
+            isBatteryLow: true,
+            isConnectionLost: false,
+            isFirstChannelInactive: false,
+            isSecondChannelInactive: true,
+            isThirdChannelInactive: true,
+            isForthChannelInactive: true
+          }
+        },
+        config: {
+          hardwareType: IMP4EU
+        },
+        bytes: [0x63, 0x10, 0xe1, 0x01]
+      },
+      'status for MTXLORA': {
+        id: id$4,
+        name: name$4,
+        headerSize: headerSize$4,
+        parameters: {
+          sequenceNumber: 48,
+          status: {
+            isMeterCaseOpen: true,
+            isMagneticInfluence: true,
+            isParametersSetRemotely: false,
+            isParametersSetLocally: false,
+            isMeterProgramRestarted: false,
+            isLockedOut: false,
+            isTimeSet: false,
+            isTimeCorrected: true,
+            isMeterFailure: false,
+            isMeterTerminalBoxOpen: true,
+            isModuleCompartmentOpen: false,
+            isTariffPlanChanged: true,
+            isNewTariffPlanReceived: false
+          }
+        },
+        config: {
+          hardwareType: MTXLORA
+        },
+        bytes: [0x63, 0x30, 0x83, 0x0a]
+      }
+    };
+    var fromBytes$4 = function fromBytes(data, config) {
+      if (!config.hardwareType) {
+        throw new Error('hardwareType in config is mandatory');
+      }
+      var buffer = new CommandBinaryBuffer(data);
+      var sequenceNumber = buffer.getUint8();
+      var status = buffer.getEventStatus(config.hardwareType);
+      return {
+        sequenceNumber: sequenceNumber,
+        status: status
+      };
+    };
+    var toBytes$4 = function toBytes(parameters, config) {
+      if (!config.hardwareType) {
+        throw new Error('hardwareType in config is mandatory');
+      }
+      var buffer = new CommandBinaryBuffer(1 + getEventStatusSize(config.hardwareType));
+      var sequenceNumber = parameters.sequenceNumber,
+        status = parameters.status;
+      buffer.setUint8(sequenceNumber);
+      buffer.setEventStatus(config.hardwareType, status);
+      return toBytes$p(id$4, buffer.data);
+    };
+
+    var lastEvent = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$4,
         fromBytes: fromBytes$4,
@@ -1999,7 +2386,7 @@ var fromBytes, toBytes;
         default:
           throw new Error("Event ".concat(id$3, " is not supported"));
       }
-      return toBytes$k(id$3, buffer.getBytesToOffset());
+      return toBytes$p(id$3, buffer.getBytesToOffset());
     };
 
     var newEvent = /*#__PURE__*/Object.freeze({
@@ -2044,7 +2431,7 @@ var fromBytes, toBytes;
       var status = parameters.status;
       var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$1, false);
       buffer.setUint8(status);
-      return toBytes$k(id$2, buffer.data);
+      return toBytes$p(id$2, buffer.data);
     };
 
     var setTime2000 = /*#__PURE__*/Object.freeze({
@@ -2255,7 +2642,7 @@ var fromBytes, toBytes;
         default:
           throw new Error("".concat(id$1, ": hardware type ").concat(hardware.type, " is not supported"));
       }
-      return toBytes$k(id$1, buffer.getBytesToOffset());
+      return toBytes$p(id$1, buffer.getBytesToOffset());
     };
 
     var status = /*#__PURE__*/Object.freeze({
@@ -2304,7 +2691,7 @@ var fromBytes, toBytes;
       var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE);
       buffer.setUint8(sequenceNumber);
       buffer.setTime(time2000);
-      return toBytes$k(id, buffer.data);
+      return toBytes$p(id, buffer.data);
     }
 
     var time2000 = /*#__PURE__*/Object.freeze({
@@ -2324,9 +2711,12 @@ var fromBytes, toBytes;
         dayMc: dayMc,
         exAbsDayMc: exAbsDayMc,
         exAbsHourMc: exAbsHourMc,
+        getArchiveDaysMc: getArchiveDaysMc,
         getArchiveEvents: getArchiveEvents,
+        getArchiveHoursMc: getArchiveHoursMc,
         getLmicInfo: getLmicInfo,
         hourMc: hourMc,
+        lastEvent: lastEvent,
         newEvent: newEvent,
         setTime2000: setTime2000,
         status: status,
@@ -2352,8 +2742,8 @@ var fromBytes, toBytes;
           console.log(' *', commandName);
           for (var exampleName in examples) {
             var exampleData = examples[exampleName];
-            deepEqual(command.toBytes(exampleData.parameters), exampleData.bytes);
-            deepEqual(command.fromBytes(exampleData.bytes.slice(command.headerSize)), exampleData.parameters);
+            deepEqual(command.toBytes(exampleData.parameters, exampleData.config), exampleData.bytes);
+            deepEqual(command.fromBytes(exampleData.bytes.slice(command.headerSize), exampleData.config), exampleData.parameters);
           }
         }
       }

@@ -328,7 +328,7 @@ var toBytes, getBase64FromBytes;
     });
 
     var extraCommandMask = 0x1f;
-    var toBytes$b = function (commandId, commandSize) {
+    var toBytes$d = function (commandId, commandSize) {
       if ((commandId & extraCommandMask) === 0) {
         if (commandSize > extraCommandMask) {
           throw new Error("Wrong command id/size. Id: ".concat(commandId, ", size: ").concat(commandSize, "."));
@@ -341,31 +341,35 @@ var toBytes, getBase64FromBytes;
       return [commandId, commandSize];
     };
 
-    var toBytes$a = function (commandId) {
+    var toBytes$c = function (commandId) {
       var commandData = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-      var headerData = toBytes$b(commandId, commandData.length);
+      var headerData = toBytes$d(commandId, commandData.length);
       return [].concat(_toConsumableArray(headerData), _toConsumableArray(commandData));
     };
 
-    var id$7 = 0x0c;
-    var COMMAND_BODY_SIZE$2 = 2;
-    var toBytes$9 = function (parameters) {
+    var id$9 = 0x0c;
+    var COMMAND_BODY_SIZE$4 = 2;
+    var toBytes$b = function (parameters) {
       var sequenceNumber = parameters.sequenceNumber,
         seconds = parameters.seconds;
-      var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$2, false);
+      var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$4, false);
       buffer.setUint8(sequenceNumber);
       buffer.setInt8(seconds);
-      return toBytes$a(id$7, buffer.data);
+      return toBytes$c(id$9, buffer.data);
     };
 
-    var id$6 = 0x07;
-    var toBytes$8 = function () {
-      return toBytes$a(id$6);
+    var id$8 = 0x07;
+    var toBytes$a = function () {
+      return toBytes$c(id$8);
     };
 
-    var id$5 = 0x18;
-    var toBytes$7 = function () {
-      return toBytes$a(id$5);
+    var INITIAL_YEAR_TIMESTAMP = 946684800000;
+    var MILLISECONDS_IN_SECONDS = 1000;
+    var getDateFromTime2000 = function (time2000) {
+      return new Date(INITIAL_YEAR_TIMESTAMP + time2000 * MILLISECONDS_IN_SECONDS);
+    };
+    var getTime2000FromDate = function (date) {
+      return (date.getTime() - INITIAL_YEAR_TIMESTAMP) / MILLISECONDS_IN_SECONDS;
     };
 
     var fromObject = function () {
@@ -387,15 +391,6 @@ var toBytes, getBase64FromBytes;
         result[name] = (value & bitMask[name]) !== 0;
       }
       return result;
-    };
-
-    var INITIAL_YEAR_TIMESTAMP = 946684800000;
-    var MILLISECONDS_IN_SECONDS = 1000;
-    var getDateFromTime2000 = function (time2000) {
-      return new Date(INITIAL_YEAR_TIMESTAMP + time2000 * MILLISECONDS_IN_SECONDS);
-    };
-    var getTime2000FromDate = function (date) {
-      return (date.getTime() - INITIAL_YEAR_TIMESTAMP) / MILLISECONDS_IN_SECONDS;
     };
 
     var GASI1 = 1;
@@ -833,30 +828,72 @@ var toBytes, getBase64FromBytes;
       }
     };
 
-    var id$4 = 0x0b;
-    var COMMAND_BODY_SIZE$1 = 5;
-    var toBytes$6 = function (parameters) {
+    var id$7 = 0x1b;
+    var COMMAND_BODY_SIZE$3 = 4;
+    var toBytes$9 = function (parameters) {
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$3);
+      var startTime2000 = parameters.startTime2000,
+        days = parameters.days,
+        channelList = parameters.channelList;
+      var date = getDateFromTime2000(startTime2000);
+      buffer.setDate(date);
+      buffer.setChannels(channelList.map(function (index) {
+        return {
+          index: index
+        };
+      }));
+      buffer.setUint8(days);
+      return toBytes$c(id$7, buffer.data);
+    };
+
+    var id$6 = 0x0b;
+    var COMMAND_BODY_SIZE$2 = 5;
+    var toBytes$8 = function (parameters) {
       var startTime2000 = parameters.startTime2000,
         events = parameters.events;
-      var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$1);
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$2);
       buffer.setTime(startTime2000);
       buffer.setUint8(events);
-      return toBytes$a(id$4, buffer.data);
+      return toBytes$c(id$6, buffer.data);
+    };
+
+    var id$5 = 0x1a;
+    var COMMAND_BODY_SIZE$1 = 4;
+    var toBytes$7 = function (parameters) {
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$1);
+      var hours = parameters.hours,
+        startTime2000 = parameters.startTime2000,
+        channelList = parameters.channelList;
+      var date = getDateFromTime2000(startTime2000);
+      var hour = date.getUTCHours();
+      buffer.setDate(date);
+      buffer.setHours(hour, hours);
+      buffer.setChannels(channelList.map(function (index) {
+        return {
+          index: index
+        };
+      }));
+      return toBytes$c(id$5, buffer.data);
+    };
+
+    var id$4 = 0x18;
+    var toBytes$6 = function () {
+      return toBytes$c(id$4);
     };
 
     var id$3 = 0x021f;
     var toBytes$5 = function () {
-      return toBytes$a(id$3);
+      return toBytes$c(id$3);
     };
 
     var id$2 = 0x14;
     var toBytes$4 = function () {
-      return toBytes$a(id$2);
+      return toBytes$c(id$2);
     };
 
     var id$1 = 0x09;
     var toBytes$3 = function () {
-      return toBytes$a(id$1, []);
+      return toBytes$c(id$1, []);
     };
 
     var id = 0x02;
@@ -867,7 +904,7 @@ var toBytes, getBase64FromBytes;
       var buffer = new BinaryBuffer(COMMAND_BODY_SIZE, false);
       buffer.setUint8(sequenceNumber);
       buffer.setInt32(seconds);
-      return toBytes$a(id, buffer.data);
+      return toBytes$c(id, buffer.data);
     };
 
     var calculateLrc = (function (data) {
@@ -898,9 +935,11 @@ var toBytes, getBase64FromBytes;
 
     var toBytesMap = {};
     var toBytes$1 = getToBytes(toBytesMap);
+    toBytesMap[id$9] = toBytes$b;
     toBytesMap[id$7] = toBytes$9;
     toBytesMap[id$6] = toBytes$8;
     toBytesMap[id$5] = toBytes$7;
+    toBytesMap[id$8] = toBytes$a;
     toBytesMap[id$4] = toBytes$6;
     toBytesMap[id$3] = toBytes$5;
     toBytesMap[id$2] = toBytes$4;
