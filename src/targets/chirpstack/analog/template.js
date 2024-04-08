@@ -23,7 +23,7 @@ var config = {
     * data - object representing the decoded payload
 */
 function decodeUplink ( input ) {
-    return fromBytes(input.bytes, config);
+    return {data: fromBytes(input.bytes, config)};
 };
 
 

@@ -17,6 +17,14 @@ const processTemplate = fileName => {
     };
 };
 
+const thingsboardTerserOptions = {
+    ecma: 5,
+    //mangle: false,
+    compress: false,
+    parse: {bare_returns: true},
+    //format: {braces: true}
+};
+
 
 export default [
     // chirpstack uplink+downlink
@@ -26,7 +34,7 @@ export default [
             {
                 file: './dist/chirpstack/analog/full.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack/analog/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/chirpstack/analog/init.js', 'utf8')
             },
             {
                 file: './dist/chirpstack/analog/full.min.js',
@@ -48,19 +56,17 @@ export default [
         output: [
             {
                 file: './dist/chirpstack/analog/test.js',
-                format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack/analog/init.js', 'utf8'),
+                format: 'iife'
             },
             {
                 file: './dist/chirpstack/analog/test.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack/analog/init.js', 'utf8'),
                 plugins: [terser()]
             }
         ],
         plugins: [
             nodeResolve(),
-            babel({babelHelpers: 'bundled'}),
+            babel({babelHelpers: 'bundled'})
         ]
     },
 
@@ -71,19 +77,13 @@ export default [
             {
                 file: './dist/thingsboard/analog/uplink.js',
                 format: 'cjs',
-                banner: readFileSync('./src/targets/thingsboard/analog/uplink/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/thingsboard/analog/uplink/init.js', 'utf8')
             },
             {
                 file: './dist/thingsboard/analog/uplink.min.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/thingsboard/analog/uplink/init.js', 'utf8'),
-                plugins: [terser({
-                    ecma: 5,
-                    //mangle: false,
-                    compress: false,
-                    parse: {bare_returns: true},
-                    //format: {braces: true}
-                })]
+                plugins: [terser(thingsboardTerserOptions)]
             }
         ],
         plugins: [
@@ -113,19 +113,13 @@ export default [
             {
                 file: './dist/thingsboard/analog/downlink.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/thingsboard/analog/downlink/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/thingsboard/analog/downlink/init.js', 'utf8')
             },
             {
                 file: './dist/thingsboard/analog/downlink.min.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/thingsboard/analog/downlink/init.js', 'utf8'),
-                plugins: [terser({
-                    ecma: 5,
-                    //mangle: false,
-                    compress: false,
-                    parse: {bare_returns: true},
-                    //format: {braces: true}
-                })]
+                plugins: [terser(thingsboardTerserOptions)]
             }
         ],
         plugins: [
@@ -145,6 +139,48 @@ export default [
                 ]
             }),
             processTemplate('./src/targets/thingsboard/analog/downlink/template.js')
+        ]
+    },
+
+    // thingsboard downlink tests
+    {
+        input: './src/targets/thingsboard/analog/downlink/test.js',
+        output: [
+            {
+                file: './dist/thingsboard/analog/downlink.test.js',
+                format: 'iife'
+            },
+            {
+                file: './dist/thingsboard/analog/downlink.test.min.js',
+                format: 'iife',
+                plugins: [terser(thingsboardTerserOptions)]
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            babel({babelHelpers: 'bundled'}),
+            processTemplate('./src/targets/thingsboard/analog/downlink/template.test.js')
+        ]
+    },
+
+    // thingsboard uplink tests
+    {
+        input: './src/targets/thingsboard/analog/uplink/test.js',
+        output: [
+            {
+                file: './dist/thingsboard/analog/uplink.test.js',
+                format: 'iife'
+            },
+            {
+                file: './dist/thingsboard/analog/uplink.test.min.js',
+                format: 'iife',
+                plugins: [terser(thingsboardTerserOptions)]
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            babel({babelHelpers: 'bundled'}),
+            processTemplate('./src/targets/thingsboard/analog/uplink/template.test.js')
         ]
     }
 ];

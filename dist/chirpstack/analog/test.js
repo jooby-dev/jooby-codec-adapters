@@ -1,5 +1,3 @@
-var fromBytes, toBytes;
-
 (function () {
     'use strict';
 
