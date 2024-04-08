@@ -30,12 +30,12 @@ const testCommands = ( direction, commands ) => {
                 const exampleData = examples[exampleName];
 
                 deepEqual(
-                    command.toBytes(exampleData.parameters),
+                    command.toBytes(exampleData.parameters, exampleData.config),
                     exampleData.bytes
                 );
 
                 deepEqual(
-                    command.fromBytes(exampleData.bytes.slice(command.headerSize)),
+                    command.fromBytes(exampleData.bytes.slice(command.headerSize), exampleData.config),
                     exampleData.parameters
                 );
             }
