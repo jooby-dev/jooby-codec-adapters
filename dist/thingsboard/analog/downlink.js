@@ -28,6 +28,9 @@ var toBytes, getBase64FromBytes;
       return obj;
     };
 
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
+    Number.EPSILON = Number.EPSILON || 2.220446049250313e-16;
+
     function _toConsumableArray(arr) {
       return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
     }
