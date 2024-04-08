@@ -26,7 +26,7 @@ export default [
             {
                 file: './dist/chirpstack/analog/full.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack/analog/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/chirpstack/analog/init.js', 'utf8')
             },
             {
                 file: './dist/chirpstack/analog/full.min.js',
@@ -48,19 +48,17 @@ export default [
         output: [
             {
                 file: './dist/chirpstack/analog/test.js',
-                format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack/analog/init.js', 'utf8'),
+                format: 'iife'
             },
             {
                 file: './dist/chirpstack/analog/test.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack/analog/init.js', 'utf8'),
                 plugins: [terser()]
             }
         ],
         plugins: [
             nodeResolve(),
-            babel({babelHelpers: 'bundled'}),
+            babel({babelHelpers: 'bundled'})
         ]
     },
 
@@ -71,19 +69,13 @@ export default [
             {
                 file: './dist/thingsboard/analog/uplink.js',
                 format: 'cjs',
-                banner: readFileSync('./src/targets/thingsboard/analog/uplink/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/thingsboard/analog/uplink/init.js', 'utf8')
             },
             {
                 file: './dist/thingsboard/analog/uplink.min.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/thingsboard/analog/uplink/init.js', 'utf8'),
-                plugins: [terser({
-                    ecma: 5,
-                    //mangle: false,
-                    compress: false,
-                    parse: {bare_returns: true},
-                    //format: {braces: true}
-                })]
+                plugins: [terser(thingsboardTerserOptions)]
             }
         ],
         plugins: [
