@@ -7,7 +7,7 @@ In the `Integrations center` > `Data converters` create new JavaScript converter
 
 Example `Payload content`: `DAEAWA==`
 
-The `Decoder` function content should be taken from the [bundle file](../../../dist/thingsboard/analog/uplink.min.js) (or its [not minified version](../../../dist/thingsboard/analog/uplink.js)).
+The `Decoder` function content should be taken from the [bundle file](../../../../dist/thingsboard/analog/uplink.min.js) (or its [not minified version](../../../../dist/thingsboard/analog/uplink.js)).
 
 Expected `Output`:
 
@@ -61,7 +61,7 @@ Example `Message`:
 }
 ```
 
-The `Encoder` function content should be taken from the [bundle file](../../../dist/thingsboard/analog/downlink.min.js) (or its [not minified version](../../../dist/thingsboard/analog/downlink.js)).
+The `Encoder` function content should be taken from the [bundle file](../../../../dist/thingsboard/analog/downlink.min.js) (or its [not minified version](../../../../dist/thingsboard/analog/downlink.js)).
 
 Expected `Output`:
 
