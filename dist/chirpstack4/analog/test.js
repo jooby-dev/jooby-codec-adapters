@@ -252,7 +252,42 @@
         }
     });
 
+    const shortCommandMask = 0xe0;
     const extraCommandMask = 0x1f;
+    const fromBytes$q = (data) => {
+        if (data.length === 0) {
+            throw new Error('Invalid buffer size');
+        }
+        const header = {
+            shortCode: data[0] & shortCommandMask,
+            extraCode: data[0] & extraCommandMask
+        };
+        if (header.shortCode !== 0) {
+            return {
+                headerSize: 1,
+                commandId: data[0] & (~header.extraCode),
+                commandSize: header.extraCode
+            };
+        }
+        if (header.extraCode === extraCommandMask) {
+            if (data.length < 3) {
+                throw new Error('Invalid buffer size');
+            }
+            return {
+                headerSize: 3,
+                commandId: (data[1] << 8) | extraCommandMask,
+                commandSize: data[2]
+            };
+        }
+        if (data.length < 2) {
+            throw new Error('Invalid buffer size');
+        }
+        return {
+            headerSize: 2,
+            commandId: header.extraCode,
+            commandSize: data[1]
+        };
+    };
     const toBytes$q = (commandId, commandSize) => {
         if ((commandId & extraCommandMask) === 0) {
             if (commandSize > extraCommandMask) {
@@ -304,7 +339,7 @@
             ]
         }
     };
-    const fromBytes$o = (data) => {
+    const fromBytes$p = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$d) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -329,7 +364,7 @@
     var correctTime2000$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$o,
-        fromBytes: fromBytes$o,
+        fromBytes: fromBytes$p,
         headerSize: headerSize$o,
         id: id$o,
         name: name$o,
@@ -786,7 +821,7 @@
             ]
         }
     };
-    const fromBytes$n = (data) => {
+    const fromBytes$o = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$c) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -812,7 +847,7 @@
     var getArchiveDaysMc$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$n,
-        fromBytes: fromBytes$n,
+        fromBytes: fromBytes$o,
         headerSize: headerSize$n,
         id: id$n,
         name: name$n,
@@ -835,7 +870,7 @@
             ]
         }
     };
-    const fromBytes$m = (data) => {
+    const fromBytes$n = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$b) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -858,7 +893,7 @@
     var getArchiveEvents$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$m,
-        fromBytes: fromBytes$m,
+        fromBytes: fromBytes$n,
         headerSize: headerSize$m,
         id: id$m,
         name: name$m,
@@ -881,7 +916,7 @@
             ]
         }
     };
-    const fromBytes$l = (data) => {
+    const fromBytes$m = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$a) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -909,7 +944,7 @@
     var getArchiveHoursMc$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$l,
-        fromBytes: fromBytes$l,
+        fromBytes: fromBytes$m,
         headerSize: headerSize$l,
         id: id$l,
         name: name$l,
@@ -931,7 +966,7 @@
             ]
         }
     };
-    const fromBytes$k = (data) => {
+    const fromBytes$l = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$9) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -942,7 +977,7 @@
     var getCurrent = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$k,
-        fromBytes: fromBytes$k,
+        fromBytes: fromBytes$l,
         headerSize: headerSize$k,
         id: id$k,
         name: name$k,
@@ -964,7 +999,7 @@
             ]
         }
     };
-    const fromBytes$j = (data) => {
+    const fromBytes$k = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$8) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -975,7 +1010,7 @@
     var getCurrentMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$j,
-        fromBytes: fromBytes$j,
+        fromBytes: fromBytes$k,
         headerSize: headerSize$j,
         id: id$j,
         name: name$j,
@@ -997,7 +1032,7 @@
             ]
         }
     };
-    const fromBytes$i = (data) => {
+    const fromBytes$j = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$7) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1008,7 +1043,7 @@
     var getLmicInfo$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$i,
-        fromBytes: fromBytes$i,
+        fromBytes: fromBytes$j,
         headerSize: headerSize$i,
         id: id$i,
         name: name$i,
@@ -1030,7 +1065,7 @@
             ]
         }
     };
-    const fromBytes$h = (data) => {
+    const fromBytes$i = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$6) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1041,7 +1076,7 @@
     var getStatus = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$h,
-        fromBytes: fromBytes$h,
+        fromBytes: fromBytes$i,
         headerSize: headerSize$h,
         id: id$h,
         name: name$h,
@@ -1063,7 +1098,7 @@
             ]
         }
     };
-    const fromBytes$g = (data) => {
+    const fromBytes$h = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$5) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1074,7 +1109,7 @@
     var getTime2000 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$g,
-        fromBytes: fromBytes$g,
+        fromBytes: fromBytes$h,
         headerSize: headerSize$g,
         id: id$g,
         name: name$g,
@@ -1099,7 +1134,7 @@
             ]
         }
     };
-    const fromBytes$f = (data) => {
+    const fromBytes$g = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$4) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1124,7 +1159,7 @@
     var setTime2000$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$f,
-        fromBytes: fromBytes$f,
+        fromBytes: fromBytes$g,
         headerSize: headerSize$f,
         id: id$f,
         name: name$f,
@@ -1171,7 +1206,7 @@
             ]
         }
     };
-    const fromBytes$e = (data) => {
+    const fromBytes$f = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$3) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1194,7 +1229,7 @@
     var correctTime2000 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$e,
-        fromBytes: fromBytes$e,
+        fromBytes: fromBytes$f,
         headerSize: headerSize$e,
         id: id$e,
         name: name$e,
@@ -1254,7 +1289,7 @@
             ]
         }
     };
-    const fromBytes$d = (data) => {
+    const fromBytes$e = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$8) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1280,7 +1315,7 @@
     var currentMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$d,
-        fromBytes: fromBytes$d,
+        fromBytes: fromBytes$e,
         headerSize: headerSize$d,
         id: id$d,
         name: name$d,
@@ -1311,7 +1346,7 @@
             ]
         }
     };
-    const fromBytes$c = (data) => {
+    const fromBytes$d = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$7) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1338,7 +1373,7 @@
     var dayMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$c,
-        fromBytes: fromBytes$c,
+        fromBytes: fromBytes$d,
         headerSize: headerSize$c,
         id: id$c,
         name: name$c,
@@ -1366,7 +1401,7 @@
             ]
         }
     };
-    const fromBytes$b = (data) => {
+    const fromBytes$c = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$6) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1386,7 +1421,7 @@
     var exAbsDayMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$b,
-        fromBytes: fromBytes$b,
+        fromBytes: fromBytes$c,
         headerSize: headerSize$b,
         id: id$b,
         name: name$b,
@@ -1420,7 +1455,7 @@
             ]
         }
     };
-    const fromBytes$a = (data) => {
+    const fromBytes$b = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$5) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1445,7 +1480,7 @@
     var exAbsHourMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$a,
-        fromBytes: fromBytes$a,
+        fromBytes: fromBytes$b,
         headerSize: headerSize$a,
         id: id$a,
         name: name$a,
@@ -1486,7 +1521,7 @@
             ]
         }
     };
-    const fromBytes$9 = (data) => {
+    const fromBytes$a = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const date = buffer.getDate();
         const channels = buffer.getChannels();
@@ -1518,7 +1553,7 @@
     var getArchiveDaysMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$9,
-        fromBytes: fromBytes$9,
+        fromBytes: fromBytes$a,
         headerSize: headerSize$9,
         id: id$9,
         name: name$9,
@@ -1594,7 +1629,7 @@
         buffer.setUint8(event.id);
         buffer.setUint8(event.sequenceNumber);
     };
-    const fromBytes$8 = (data) => {
+    const fromBytes$9 = (data) => {
         const buffer = new CommandBinaryBuffer(data, false);
         const eventList = [];
         while (buffer.bytesLeft > 0) {
@@ -1612,7 +1647,7 @@
     var getArchiveEvents = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$8,
-        fromBytes: fromBytes$8,
+        fromBytes: fromBytes$9,
         headerSize: headerSize$8,
         id: id$8,
         name: name$8,
@@ -1658,7 +1693,7 @@
             ]
         }
     };
-    const fromBytes$7 = (data) => {
+    const fromBytes$8 = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$3) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1675,7 +1710,7 @@
     var getArchiveHoursMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$7,
-        fromBytes: fromBytes$7,
+        fromBytes: fromBytes$8,
         headerSize: headerSize$7,
         id: id$7,
         name: name$7,
@@ -1724,7 +1759,7 @@
             ]
         }
     };
-    const fromBytes$6 = (data) => {
+    const fromBytes$7 = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$2) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1747,7 +1782,7 @@
     var getLmicInfo = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$6,
-        fromBytes: fromBytes$6,
+        fromBytes: fromBytes$7,
         headerSize: headerSize$6,
         id: id$6,
         name: name$6,
@@ -1780,7 +1815,7 @@
             ]
         }
     };
-    const fromBytes$5 = (data) => {
+    const fromBytes$6 = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$2) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1797,7 +1832,7 @@
     var hourMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$5,
-        fromBytes: fromBytes$5,
+        fromBytes: fromBytes$6,
         headerSize: headerSize$5,
         id: id$5,
         name: name$5,
@@ -1883,7 +1918,7 @@
             ]
         }
     };
-    const fromBytes$4 = (data, config) => {
+    const fromBytes$5 = (data, config) => {
         if (!config.hardwareType) {
             throw new Error('hardwareType in config is mandatory');
         }
@@ -1906,7 +1941,7 @@
     var lastEvent = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$4,
-        fromBytes: fromBytes$4,
+        fromBytes: fromBytes$5,
         headerSize: headerSize$4,
         id: id$4,
         name: name$4,
@@ -2063,7 +2098,7 @@
     const setDeviceId = (buffer, value) => {
         getBytesFromHex(value).forEach(byte => buffer.setUint8(byte));
     };
-    const fromBytes$3 = (data) => {
+    const fromBytes$4 = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$1) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -2146,7 +2181,7 @@
     var newEvent = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$3,
-        fromBytes: fromBytes$3,
+        fromBytes: fromBytes$4,
         headerSize: headerSize$3,
         id: id$3,
         name: name$3,
@@ -2169,7 +2204,7 @@
             ]
         }
     };
-    const fromBytes$2 = (data) => {
+    const fromBytes$3 = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$1) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -2192,7 +2227,7 @@
     var setTime2000 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$2,
-        fromBytes: fromBytes$2,
+        fromBytes: fromBytes$3,
         headerSize: headerSize$2,
         id: id$2,
         name: name$2,
@@ -2262,7 +2297,7 @@
             ]
         }
     };
-    const fromBytes$1 = (bytes) => {
+    const fromBytes$2 = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
         const software = { type: buffer.getUint8(), version: buffer.getUint8() };
         const hardware = { type: buffer.getUint8(), version: buffer.getUint8() };
@@ -2386,7 +2421,7 @@
     var status = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$1,
-        fromBytes: fromBytes$1,
+        fromBytes: fromBytes$2,
         headerSize: headerSize$1,
         id: id$1,
         name: name$1,
@@ -2409,7 +2444,7 @@
             ]
         }
     };
-    const fromBytes = (data) => {
+    const fromBytes$1 = (data) => {
         if (data.length !== COMMAND_BODY_SIZE) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -2434,7 +2469,7 @@
     var time2000 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples,
-        fromBytes: fromBytes,
+        fromBytes: fromBytes$1,
         headerSize: headerSize,
         id: id,
         name: name,
@@ -2459,6 +2494,125 @@
         status: status,
         time2000: time2000
     });
+
+    var calculateLrc = (data, initialLrc = 0x55) => {
+        let lrc = initialLrc;
+        data.forEach(item => {
+            lrc ^= item;
+        });
+        return lrc;
+    };
+
+    const HEADER_MAX_SIZE = 3;
+    const getFromBytes = (fromBytesMap, nameMap) => (data = [], config) => {
+        const commands = [];
+        const message = {
+            commands,
+            bytes: data,
+            lrc: { expected: undefined, actual: 0 }
+        };
+        let processedBytes = 0;
+        let expectedLrc;
+        let actualLrc;
+        do {
+            const headerInfo = fromBytes$q(data.slice(processedBytes, processedBytes + HEADER_MAX_SIZE));
+            const headerData = data.slice(processedBytes, processedBytes + headerInfo.headerSize);
+            const bodyData = data.slice(processedBytes + headerInfo.headerSize, processedBytes + headerInfo.headerSize + headerInfo.commandSize);
+            const command = {
+                id: headerInfo.commandId,
+                name: nameMap[headerInfo.commandId],
+                headerSize: headerInfo.headerSize,
+                bytes: [...headerData, ...bodyData]
+            };
+            processedBytes = processedBytes + headerInfo.headerSize + headerInfo.commandSize;
+            if (config) {
+                command.config = config;
+            }
+            try {
+                command.parameters = fromBytesMap[headerInfo.commandId](bodyData, config);
+                commands.push(command);
+            }
+            catch (error) {
+                commands.push({
+                    command,
+                    error: error.message
+                });
+            }
+        } while (processedBytes < data.length - 1);
+        if (data.length - processedBytes === 1) {
+            expectedLrc = data[data.length - 1];
+            actualLrc = calculateLrc(data.slice(0, -1));
+        }
+        else {
+            actualLrc = calculateLrc(data);
+        }
+        message.lrc.actual = actualLrc;
+        message.lrc.expected = expectedLrc;
+        if (expectedLrc === actualLrc) {
+            return message;
+        }
+        return {
+            message,
+            error: 'mismatch LRC'
+        };
+    };
+
+    const fromBytesMap$1 = {};
+    const nameMap$1 = {};
+    fromBytesMap$1[id$o] = fromBytes$p;
+    fromBytesMap$1[id$n] = fromBytes$o;
+    fromBytesMap$1[id$m] = fromBytes$n;
+    fromBytesMap$1[id$l] = fromBytes$m;
+    fromBytesMap$1[id$k] = toBytes$k;
+    fromBytesMap$1[id$j] = toBytes$j;
+    fromBytesMap$1[id$i] = fromBytes$j;
+    fromBytesMap$1[id$h] = fromBytes$i;
+    fromBytesMap$1[id$g] = fromBytes$h;
+    fromBytesMap$1[id$f] = fromBytes$g;
+    nameMap$1[id$o] = name$o;
+    nameMap$1[id$n] = name$n;
+    nameMap$1[id$m] = name$m;
+    nameMap$1[id$l] = name$l;
+    nameMap$1[id$k] = name$k;
+    nameMap$1[id$j] = name$j;
+    nameMap$1[id$i] = name$i;
+    nameMap$1[id$h] = name$h;
+    nameMap$1[id$g] = name$g;
+    nameMap$1[id$f] = name$f;
+
+    const fromBytesMap = {};
+    const nameMap = {};
+    const fromBytes = getFromBytes(fromBytesMap, nameMap);
+    fromBytesMap[id$e] = fromBytes$f;
+    fromBytesMap[id$d] = fromBytes$e;
+    fromBytesMap[id$c] = fromBytes$d;
+    fromBytesMap[id$b] = fromBytes$c;
+    fromBytesMap[id$a] = fromBytes$b;
+    fromBytesMap[id$9] = fromBytes$a;
+    fromBytesMap[id$8] = fromBytes$9;
+    fromBytesMap[id$7] = fromBytes$8;
+    fromBytesMap[id$6] = fromBytes$7;
+    fromBytesMap[id$5] = fromBytes$6;
+    fromBytesMap[id$4] = fromBytes$5;
+    fromBytesMap[id$3] = fromBytes$4;
+    fromBytesMap[id$2] = fromBytes$3;
+    fromBytesMap[id$1] = fromBytes$2;
+    fromBytesMap[id] = fromBytes$1;
+    nameMap[id$e] = name$e;
+    nameMap[id$d] = name$d;
+    nameMap[id$c] = name$c;
+    nameMap[id$b] = name$b;
+    nameMap[id$a] = name$a;
+    nameMap[id$9] = name$9;
+    nameMap[id$8] = name$8;
+    nameMap[id$7] = name$7;
+    nameMap[id$6] = name$6;
+    nameMap[id$5] = name$5;
+    nameMap[id$4] = name$4;
+    nameMap[id$3] = name$3;
+    nameMap[id$2] = name$2;
+    nameMap[id$1] = name$1;
+    nameMap[id] = name;
 
     const equal = ( actual, expected ) => {
         if ( actual !== expected ) {
@@ -2502,5 +2656,11 @@
 
     testCommands('downlink', downlink);
     testCommands('uplink', uplink);
+
+
+    //let bytes = getBytesFromHex('172c3089e10fbffa0400000000000000fff00400000000000000fff00400000000000000fff00400000000000000160f30890fbffa04fff004fff004fff00463be8000cb');
+    let bytes = getBytesFromHex('180d0fbffa04fff004fff004fff00463be800058');
+
+    console.log('fromBytes(bytes):', JSON.stringify(fromBytes(bytes, {hardwareType: 6})));
 
 })();

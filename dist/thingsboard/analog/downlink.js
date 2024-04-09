@@ -915,6 +915,7 @@ var toBytes, getBase64FromBytes;
   };
 
   var toBytesMap = {};
+  var toBytes$1 = getToBytes(toBytesMap);
   toBytesMap[id$9] = toBytes$b;
   toBytesMap[id$8] = toBytes$a;
   toBytesMap[id$7] = toBytes$9;
@@ -925,7 +926,6 @@ var toBytes, getBase64FromBytes;
   toBytesMap[id$2] = toBytes$4;
   toBytesMap[id$1] = toBytes$3;
   toBytesMap[id] = toBytes$2;
-  var toBytes$1 = getToBytes(toBytesMap);
 
   var getBase64FromBytes$1 = (function (bytes) {
     return btoa(bytes.map(function (byte) {
