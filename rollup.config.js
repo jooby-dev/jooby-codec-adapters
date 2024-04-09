@@ -27,39 +27,40 @@ const thingsboardTerserOptions = {
 
 
 export default [
-    // chirpstack uplink+downlink
+    /*
+    // chirpstack3 uplink+downlink
     {
-        input: './src/targets/chirpstack/analog/index.js',
+        input: './src/targets/chirpstack3/analog/index.js',
         output: [
             {
-                file: './dist/chirpstack/analog/full.js',
+                file: './dist/chirpstack3/analog/full.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack/analog/init.js', 'utf8')
+                banner: readFileSync('./src/targets/chirpstack3/analog/init.js', 'utf8')
             },
             {
-                file: './dist/chirpstack/analog/full.min.js',
+                file: './dist/chirpstack3/analog/full.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack/analog/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/chirpstack3/analog/init.js', 'utf8'),
                 plugins: [terser()]
             }
         ],
         plugins: [
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
-            processTemplate('./src/targets/chirpstack/analog/template.js')
+            processTemplate('./src/targets/chirpstack3/analog/template.js')
         ]
     },
 
-    // chirpstack uplink+downlink tests
+    // chirpstack3 uplink+downlink tests
     {
-        input: './src/targets/chirpstack/analog/test.js',
+        input: './src/targets/chirpstack3/analog/test.js',
         output: [
             {
-                file: './dist/chirpstack/analog/test.js',
+                file: './dist/chirpstack3/analog/test.js',
                 format: 'iife'
             },
             {
-                file: './dist/chirpstack/analog/test.min.js',
+                file: './dist/chirpstack3/analog/test.min.js',
                 format: 'iife',
                 plugins: [terser()]
             }
@@ -69,6 +70,51 @@ export default [
             babel({babelHelpers: 'bundled'})
         ]
     },
+    /**/
+
+    // chirpstack4 uplink+downlink
+    {
+        input: './src/targets/chirpstack4/analog/index.js',
+        output: [
+            {
+                file: './dist/chirpstack4/analog/full.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/chirpstack4/analog/init.js', 'utf8')
+            },
+            {
+                file: './dist/chirpstack4/analog/full.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/chirpstack4/analog/init.js', 'utf8'),
+                plugins: [terser()]
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            //babel({babelHelpers: 'bundled'}),
+            processTemplate('./src/targets/chirpstack4/analog/template.js')
+        ]
+    },
+
+    // chirpstack4 uplink+downlink tests
+    {
+        input: './src/targets/chirpstack4/analog/test.js',
+        output: [
+            {
+                file: './dist/chirpstack4/analog/test.js',
+                format: 'iife'
+            },
+            {
+                file: './dist/chirpstack4/analog/test.min.js',
+                format: 'iife',
+                plugins: [terser()]
+            }
+        ],
+        plugins: [
+            nodeResolve()
+            //babel({babelHelpers: 'bundled'})
+        ]
+    },
+
 
     // thingsboard uplink
     {
