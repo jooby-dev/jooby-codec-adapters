@@ -852,7 +852,7 @@ var logs = '';
   };
 
   var id$d = 0x18;
-  var name$d = 'currentMC';
+  var name$d = 'currentMc';
   var headerSize$d = 2;
   var COMMAND_BODY_MAX_SIZE$8 = 37;
   var examples$d = {
@@ -862,17 +862,17 @@ var logs = '';
       headerSize: headerSize$d,
       parameters: {
         channelList: [{
-          index: 1,
-          value: 131
+          value: 131,
+          index: 1
         }, {
-          index: 2,
-          value: 8
+          value: 8,
+          index: 2
         }, {
-          index: 3,
-          value: 10
+          value: 10,
+          index: 3
         }, {
-          index: 4,
-          value: 12
+          value: 12,
+          index: 4
         }]
       },
       bytes: [0x18, 0x06, 0x0f, 0x83, 0x01, 0x08, 0x0a, 0x0c]
@@ -883,8 +883,8 @@ var logs = '';
       headerSize: headerSize$d,
       parameters: {
         channelList: [{
-          index: 2,
-          value: 50
+          value: 50,
+          index: 2
         }]
       },
       bytes: [0x18, 0x02, 0x02, 0x32]
@@ -895,14 +895,14 @@ var logs = '';
       headerSize: headerSize$d,
       parameters: {
         channelList: [{
-          index: 5,
-          value: 8146
+          value: 8146,
+          index: 5
         }, {
-          index: 6,
-          value: 164
+          value: 164,
+          index: 6
         }, {
-          index: 12,
-          value: 75
+          value: 75,
+          index: 12
         }]
       },
       bytes: [0x18, 0x07, 0xb0, 0x10, 0xd2, 0x3f, 0xa4, 0x01, 0x4b]
@@ -947,7 +947,7 @@ var logs = '';
   });
 
   var id$c = 0x16;
-  var name$c = 'dayMC';
+  var name$c = 'dayMc';
   var headerSize$c = 2;
   var COMMAND_BODY_MAX_SIZE$7 = 32;
   var examples$c = {
@@ -958,17 +958,17 @@ var logs = '';
       parameters: {
         startTime2000: 756604800,
         channelList: [{
-          index: 3,
-          value: 131
+          value: 131,
+          index: 3
         }, {
-          index: 5,
-          value: 8
+          value: 8,
+          index: 5
         }, {
-          index: 7,
-          value: 10
+          value: 10,
+          index: 7
         }, {
-          index: 1,
-          value: 12
+          value: 12,
+          index: 1
         }]
       },
       bytes: [0x16, 0x08, 0x2f, 0x97, 0x55, 0x0c, 0x83, 0x01, 0x08, 0x0a]
@@ -1016,7 +1016,7 @@ var logs = '';
   });
 
   var id$b = 0x0b1f;
-  var name$b = 'exAbsDayMC';
+  var name$b = 'exAbsDayMc';
   var headerSize$b = 3;
   var COMMAND_BODY_MAX_SIZE$6 = 89;
   var examples$b = {
@@ -1028,8 +1028,8 @@ var logs = '';
         startTime2000: 731721600,
         channelList: [{
           pulseCoefficient: 100,
-          index: 1,
-          value: 342
+          value: 342,
+          index: 1
         }]
       },
       bytes: [0x1f, 0x0b, 0x06, 0x2e, 0x6a, 0x01, 0x83, 0xd6, 0x02]
@@ -1067,7 +1067,7 @@ var logs = '';
   });
 
   var id$a = 0x0a1f;
-  var name$a = 'exAbsHourMC';
+  var name$a = 'exAbsHourMc';
   var headerSize$a = 3;
   var COMMAND_BODY_MAX_SIZE$5 = 168;
   var examples$a = {
@@ -1079,10 +1079,10 @@ var logs = '';
         startTime2000: 731764800,
         hours: 2,
         channelList: [{
-          pulseCoefficient: 100,
-          index: 1,
+          diff: [128],
           value: 342457,
-          diff: [128]
+          pulseCoefficient: 100,
+          index: 1
         }]
       },
       bytes: [0x1f, 0x0a, 0x0a, 0x2e, 0x6a, 0x2c, 0x01, 0x83, 0xb9, 0xf3, 0x14, 0x80, 0x01]
@@ -1129,7 +1129,7 @@ var logs = '';
   });
 
   var id$9 = 0x1b;
-  var name$9 = 'getArchiveDaysMCResponse';
+  var name$9 = 'getArchiveDaysMc';
   var headerSize$9 = 2;
   var COMMAND_BODY_MAX_SIZE$4 = 5104;
   var examples$9 = {
@@ -1141,8 +1141,8 @@ var logs = '';
         startTime2000: 2678227200,
         days: 2,
         channelList: [{
-          index: 1,
-          dayList: [234, 332]
+          dayList: [234, 332],
+          index: 1
         }]
       },
       bytes: [0x1b, 0x08, 0xa9, 0x6d, 0x01, 0x02, 0xea, 0x01, 0xcc, 0x02]
@@ -1155,8 +1155,8 @@ var logs = '';
         startTime2000: 339897600,
         days: 1,
         channelList: [{
-          index: 1,
-          dayList: [0]
+          dayList: [0],
+          index: 1
         }]
       },
       bytes: [0x1b, 0x05, 0x15, 0x49, 0x01, 0x01, 0x00]
@@ -1297,7 +1297,7 @@ var logs = '';
   });
 
   var id$7 = 0x1a;
-  var name$7 = 'getArchiveHoursMCResponse';
+  var name$7 = 'getArchiveHoursMc';
   var headerSize$7 = 2;
   var COMMAND_BODY_MAX_SIZE$3 = 164;
   var examples$7 = {
@@ -1309,21 +1309,21 @@ var logs = '';
         startTime2000: 756648000,
         hours: 2,
         channelList: [{
-          index: 1,
           value: 131,
-          diff: [10]
+          diff: [10],
+          index: 1
         }, {
-          index: 2,
           value: 8,
-          diff: [10]
+          diff: [10],
+          index: 2
         }, {
-          index: 3,
           value: 8,
-          diff: [10]
+          diff: [10],
+          index: 3
         }, {
-          index: 4,
           value: 12,
-          diff: [10]
+          diff: [10],
+          index: 4
         }]
       },
       bytes: [0x1a, 0x0d, 0x2f, 0x97, 0x2c, 0x0f, 0x83, 0x01, 0x0a, 0x08, 0x0a, 0x08, 0x0a, 0x0c, 0x0a]
@@ -1380,11 +1380,11 @@ var logs = '';
       name: name$6,
       headerSize: headerSize$6,
       parameters: {
-        version: 5,
         capabilities: {
           isMulticastSupported: true,
           isFragmentedDataSupported: false
-        }
+        },
+        version: 5
       },
       bytes: [0x1f, 0x02, 0x02, 0x01, 0x05]
     },
@@ -1393,11 +1393,11 @@ var logs = '';
       name: name$6,
       headerSize: headerSize$6,
       parameters: {
-        version: 8,
         capabilities: {
           isMulticastSupported: true,
           isFragmentedDataSupported: true
-        }
+        },
+        version: 8
       },
       bytes: [0x1f, 0x02, 0x02, 0x03, 0x08]
     }
@@ -1437,7 +1437,7 @@ var logs = '';
   });
 
   var id$5 = 0x17;
-  var name$5 = 'hourMC';
+  var name$5 = 'hourMc';
   var headerSize$5 = 2;
   var COMMAND_BODY_MAX_SIZE$2 = 164;
   var examples$5 = {
@@ -1449,21 +1449,21 @@ var logs = '';
         startTime2000: 756648000,
         hours: 2,
         channelList: [{
-          index: 1,
           value: 131,
-          diff: [10]
+          diff: [10],
+          index: 1
         }, {
-          index: 2,
           value: 832,
-          diff: [12]
+          diff: [12],
+          index: 2
         }, {
-          index: 3,
           value: 38,
-          diff: [8]
+          diff: [8],
+          index: 3
         }, {
-          index: 4,
           value: 234,
-          diff: [11]
+          diff: [11],
+          index: 4
         }]
       },
       bytes: [0x17, 0x0f, 0x2f, 0x97, 0x2c, 0x0f, 0x83, 0x01, 0x0a, 0xc0, 0x06, 0x0c, 0x26, 0x08, 0xea, 0x01, 0x0b]
@@ -1507,9 +1507,9 @@ var logs = '';
         sequenceNumber: 32,
         status: {
           isBatteryLow: true,
+          isMagneticInfluence: false,
           isButtonReleased: false,
-          isConnectionLost: true,
-          isMagneticInfluence: false
+          isConnectionLost: true
         }
       },
       config: {

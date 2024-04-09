@@ -832,7 +832,7 @@ CommandBinaryBuffer.prototype.setEventStatus = function (hardwareType, status) {
 };
 
 var id$c = 0x18;
-var name$c = 'currentMC';
+var name$c = 'currentMc';
 var COMMAND_BODY_MAX_SIZE$6 = 37;
 var fromBytes$e = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$6) {
@@ -853,7 +853,7 @@ var fromBytes$e = function (data) {
 };
 
 var id$b = 0x16;
-var name$b = 'dayMC';
+var name$b = 'dayMc';
 var COMMAND_BODY_MAX_SIZE$5 = 32;
 var fromBytes$d = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$5) {
@@ -875,7 +875,7 @@ var fromBytes$d = function (data) {
 };
 
 var id$a = 0x0b1f;
-var name$a = 'exAbsDayMC';
+var name$a = 'exAbsDayMc';
 var COMMAND_BODY_MAX_SIZE$4 = 89;
 var fromBytes$c = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$4) {
@@ -891,7 +891,7 @@ var fromBytes$c = function (data) {
 };
 
 var id$9 = 0x0a1f;
-var name$9 = 'exAbsHourMC';
+var name$9 = 'exAbsHourMc';
 var COMMAND_BODY_MAX_SIZE$3 = 168;
 var fromBytes$b = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$3) {
@@ -912,7 +912,7 @@ var fromBytes$b = function (data) {
 };
 
 var id$8 = 0x1b;
-var name$8 = 'getArchiveDaysMCResponse';
+var name$8 = 'getArchiveDaysMc';
 var fromBytes$a = function (data) {
   var buffer = new CommandBinaryBuffer(data);
   var date = buffer.getDate();
@@ -957,7 +957,7 @@ var fromBytes$9 = function (data) {
 };
 
 var id$6 = 0x1a;
-var name$6 = 'getArchiveHoursMCResponse';
+var name$6 = 'getArchiveHoursMc';
 var COMMAND_BODY_MAX_SIZE$2 = 164;
 var fromBytes$8 = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$2) {
@@ -991,7 +991,7 @@ var fromBytes$7 = function (data) {
 };
 
 var id$4 = 0x17;
-var name$4 = 'hourMC';
+var name$4 = 'hourMc';
 var COMMAND_BODY_MAX_SIZE$1 = 164;
 var fromBytes$6 = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$1) {

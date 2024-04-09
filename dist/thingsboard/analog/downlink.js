@@ -339,11 +339,6 @@ var toBytes, getBase64FromBytes;
     return toBytes$c(id$9, buffer.data);
   };
 
-  var id$8 = 0x07;
-  var toBytes$a = function () {
-    return toBytes$c(id$8);
-  };
-
   var INITIAL_YEAR_TIMESTAMP = 946684800000;
   var MILLISECONDS_IN_SECONDS = 1000;
   var getDateFromTime2000 = function (time2000) {
@@ -809,9 +804,9 @@ var toBytes, getBase64FromBytes;
     }
   };
 
-  var id$7 = 0x1b;
+  var id$8 = 0x1b;
   var COMMAND_BODY_SIZE$3 = 4;
-  var toBytes$9 = function (parameters) {
+  var toBytes$a = function (parameters) {
     var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$3);
     var startTime2000 = parameters.startTime2000,
       days = parameters.days,
@@ -824,23 +819,23 @@ var toBytes, getBase64FromBytes;
       };
     }));
     buffer.setUint8(days);
-    return toBytes$c(id$7, buffer.data);
+    return toBytes$c(id$8, buffer.data);
   };
 
-  var id$6 = 0x0b;
+  var id$7 = 0x0b;
   var COMMAND_BODY_SIZE$2 = 5;
-  var toBytes$8 = function (parameters) {
+  var toBytes$9 = function (parameters) {
     var startTime2000 = parameters.startTime2000,
       events = parameters.events;
     var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$2);
     buffer.setTime(startTime2000);
     buffer.setUint8(events);
-    return toBytes$c(id$6, buffer.data);
+    return toBytes$c(id$7, buffer.data);
   };
 
-  var id$5 = 0x1a;
+  var id$6 = 0x1a;
   var COMMAND_BODY_SIZE$1 = 4;
-  var toBytes$7 = function (parameters) {
+  var toBytes$8 = function (parameters) {
     var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$1);
     var hours = parameters.hours,
       startTime2000 = parameters.startTime2000,
@@ -854,7 +849,12 @@ var toBytes, getBase64FromBytes;
         index: index
       };
     }));
-    return toBytes$c(id$5, buffer.data);
+    return toBytes$c(id$6, buffer.data);
+  };
+
+  var id$5 = 0x07;
+  var toBytes$7 = function () {
+    return toBytes$c(id$5);
   };
 
   var id$4 = 0x18;
@@ -915,17 +915,17 @@ var toBytes, getBase64FromBytes;
   };
 
   var toBytesMap = {};
-  var toBytes$1 = getToBytes(toBytesMap);
   toBytesMap[id$9] = toBytes$b;
+  toBytesMap[id$8] = toBytes$a;
   toBytesMap[id$7] = toBytes$9;
   toBytesMap[id$6] = toBytes$8;
   toBytesMap[id$5] = toBytes$7;
-  toBytesMap[id$8] = toBytes$a;
   toBytesMap[id$4] = toBytes$6;
   toBytesMap[id$3] = toBytes$5;
   toBytesMap[id$2] = toBytes$4;
   toBytesMap[id$1] = toBytes$3;
   toBytesMap[id] = toBytes$2;
+  var toBytes$1 = getToBytes(toBytesMap);
 
   var getBase64FromBytes$1 = (function (bytes) {
     return btoa(bytes.map(function (byte) {

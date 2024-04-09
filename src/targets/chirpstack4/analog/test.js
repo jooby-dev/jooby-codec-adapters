@@ -1,5 +1,3 @@
-import '../polyfills.js';
-
 import * as downlink from 'jooby-codec/analog/commands/downlink';
 import * as uplink from 'jooby-codec/analog/commands/uplink';
 
