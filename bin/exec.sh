@@ -3,24 +3,24 @@
 # exit on error
 set -e
 
-# echo '============='
-# echo 'ChirpStack v3'
-# echo '============='
+echo '===================='
+echo 'ChirpStack v3 (Otto)'
+echo '===================='
 
-# ls -l ./dist/chirpstack3/analog
+ls -l ./dist/chirpstack3/analog
 
-# echo '\n[FULL]' && ./bin/otto ./dist/chirpstack3/analog/full.js
-# echo '\n[FULL MIN]' && ./bin/otto ./dist/chirpstack3/analog/full.min.js
+echo '\n[FULL]' && ./bin/otto ./dist/chirpstack3/analog/full.js
+echo '\n[FULL MIN]' && ./bin/otto ./dist/chirpstack3/analog/full.min.js
 
-# echo '\n[TEST]' && ./bin/otto ./dist/chirpstack3/analog/test.js
-# echo '\n[TEST MIN]' && ./bin/otto ./dist/chirpstack3/analog/test.min.js
+echo '\n[TEST]' && ./bin/otto ./dist/chirpstack3/analog/test.js
+echo '\n[TEST MIN]' && ./bin/otto ./dist/chirpstack3/analog/test.min.js
 
-# echo '\n'
+echo '\n'
 
 
-echo '============='
-echo 'ChirpStack v4'
-echo '============='
+echo '======================='
+echo 'ChirpStack v4 (QuickJS)'
+echo '======================='
 
 ls -l ./dist/chirpstack4/analog
 

@@ -17,6 +17,12 @@ var config = {
     * metadata - key/value object
 */
 
+var message = fromBytes(payload, config);
+
+// there may be a message.error (e.g. mismatched LRC)
+// in that case message.message will contain everything parsed successfully
+// it should be used with caution
+
 var result = {
     deviceName: 'Some Device Name',
     deviceType: 'Water Meter',
@@ -25,7 +31,7 @@ var result = {
         serialNumber: 'SN111',
         manufacturer: 'Device Manufacturer'
     },
-    messages: fromBytes(payload, config),
+    message: message.message || message,
     metadata: metadata
 };
 

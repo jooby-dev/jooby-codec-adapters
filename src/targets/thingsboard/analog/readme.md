@@ -20,7 +20,7 @@ Expected `Output`:
         "serialNumber": "SN111",
         "manufacturer": "Device Manufacturer"
     },
-    "messages": {
+    "message": {
         "commands": [{
             "id": 12,
             "name": "correctTime2000",

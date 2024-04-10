@@ -27,7 +27,6 @@ const thingsboardTerserOptions = {
 
 
 export default [
-    /*
     // chirpstack3 uplink+downlink
     {
         input: './src/targets/chirpstack3/analog/index.js',
@@ -70,7 +69,7 @@ export default [
             babel({babelHelpers: 'bundled'})
         ]
     },
-    /**/
+
 
     // chirpstack4 uplink+downlink
     {
