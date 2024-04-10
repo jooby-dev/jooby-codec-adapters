@@ -314,7 +314,7 @@ Object.defineProperties(BinaryBuffer.prototype, {
 
 var shortCommandMask = 0xe0;
 var extraCommandMask = 0x1f;
-var fromBytes$h = function (data) {
+var fromBytes$j = function (data) {
   if (data.length === 0) {
     throw new Error('Invalid buffer size');
   }
@@ -349,10 +349,10 @@ var fromBytes$h = function (data) {
   };
 };
 
-var id$e = 0x0c;
-var name$e = 'correctTime2000';
+var id$g = 0x0c;
+var name$g = 'correctTime2000';
 var COMMAND_BODY_SIZE$3 = 1;
-var fromBytes$g = function (data) {
+var fromBytes$i = function (data) {
   if (data.length !== COMMAND_BODY_SIZE$3) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -831,10 +831,10 @@ CommandBinaryBuffer.prototype.setEventStatus = function (hardwareType, status) {
   }
 };
 
-var id$d = 0x18;
-var name$d = 'currentMc';
+var id$f = 0x18;
+var name$f = 'currentMc';
 var COMMAND_BODY_MAX_SIZE$6 = 37;
-var fromBytes$f = function (data) {
+var fromBytes$h = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$6) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -852,10 +852,10 @@ var fromBytes$f = function (data) {
   return parameters;
 };
 
-var id$c = 0x16;
-var name$c = 'dayMc';
+var id$e = 0x16;
+var name$e = 'dayMc';
 var COMMAND_BODY_MAX_SIZE$5 = 32;
-var fromBytes$e = function (data) {
+var fromBytes$g = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$5) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -874,10 +874,10 @@ var fromBytes$e = function (data) {
   };
 };
 
-var id$b = 0x0b1f;
-var name$b = 'exAbsDayMc';
+var id$d = 0x0b1f;
+var name$d = 'exAbsDayMc';
 var COMMAND_BODY_MAX_SIZE$4 = 89;
-var fromBytes$d = function (data) {
+var fromBytes$f = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$4) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -890,10 +890,10 @@ var fromBytes$d = function (data) {
   };
 };
 
-var id$a = 0x0a1f;
-var name$a = 'exAbsHourMc';
+var id$c = 0x0a1f;
+var name$c = 'exAbsHourMc';
 var COMMAND_BODY_MAX_SIZE$3 = 168;
-var fromBytes$c = function (data) {
+var fromBytes$e = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$3) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -911,9 +911,9 @@ var fromBytes$c = function (data) {
   };
 };
 
-var id$9 = 0x1b;
-var name$9 = 'getArchiveDaysMc';
-var fromBytes$b = function (data) {
+var id$b = 0x1b;
+var name$b = 'getArchiveDaysMc';
+var fromBytes$d = function (data) {
   var buffer = new CommandBinaryBuffer(data);
   var date = buffer.getDate();
   var channels = buffer.getChannels();
@@ -936,8 +936,8 @@ var fromBytes$b = function (data) {
   };
 };
 
-var id$8 = 0x0b;
-var name$8 = 'getArchiveEvents';
+var id$a = 0x0b;
+var name$a = 'getArchiveEvents';
 var getEvent = function (buffer) {
   return {
     time2000: buffer.getTime(),
@@ -945,7 +945,7 @@ var getEvent = function (buffer) {
     sequenceNumber: buffer.getUint8()
   };
 };
-var fromBytes$a = function (data) {
+var fromBytes$c = function (data) {
   var buffer = new CommandBinaryBuffer(data, false);
   var eventList = [];
   while (buffer.bytesLeft > 0) {
@@ -956,13 +956,47 @@ var fromBytes$a = function (data) {
   };
 };
 
-var id$7 = 0x1a;
-var name$7 = 'getArchiveHoursMc';
+var id$9 = 0x1a;
+var name$9 = 'getArchiveHoursMc';
 var COMMAND_BODY_MAX_SIZE$2 = 164;
-var fromBytes$9 = function (data) {
+var fromBytes$b = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$2) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
+  var buffer = new CommandBinaryBuffer(data);
+  return buffer.getChannelsValuesWithHourDiff();
+};
+
+var id$8 = 0x0d1f;
+var name$8 = 'getExAbsArchiveDaysMc';
+var fromBytes$a = function (data) {
+  var buffer = new CommandBinaryBuffer(data);
+  var date = buffer.getDate();
+  var channels = buffer.getChannels();
+  var days = buffer.getUint8();
+  var channelList = [];
+  channels.forEach(function (channelIndex) {
+    var dayList = [];
+    var pulseCoefficient = buffer.getPulseCoefficient();
+    channelList.push({
+      pulseCoefficient: pulseCoefficient,
+      dayList: dayList,
+      index: channelIndex
+    });
+    for (var day = 0; day < days; ++day) {
+      dayList.push(buffer.getExtendedValue());
+    }
+  });
+  return {
+    channelList: channelList,
+    days: days,
+    startTime2000: getTime2000FromDate(date)
+  };
+};
+
+var id$7 = 0x1a;
+var name$7 = 'getArchiveHoursMc';
+var fromBytes$9 = function (data) {
   var buffer = new CommandBinaryBuffer(data);
   return buffer.getChannelsValuesWithHourDiff();
 };
@@ -1250,8 +1284,11 @@ var getFromBytes = function (fromBytesMap, nameMap) {
     var processedBytes = 0;
     var expectedLrc;
     var actualLrc;
+    if (!data.length) {
+      return message;
+    }
     do {
-      var headerInfo = fromBytes$h(data.slice(processedBytes, processedBytes + HEADER_MAX_SIZE));
+      var headerInfo = fromBytes$j(data.slice(processedBytes, processedBytes + HEADER_MAX_SIZE));
       var headerData = data.slice(processedBytes, processedBytes + headerInfo.headerSize);
       var bodyData = data.slice(processedBytes + headerInfo.headerSize, processedBytes + headerInfo.headerSize + headerInfo.commandSize);
       var command = {
@@ -1295,6 +1332,8 @@ var getFromBytes = function (fromBytesMap, nameMap) {
 var fromBytesMap = {};
 var nameMap = {};
 var fromBytes$1 = getFromBytes(fromBytesMap, nameMap);
+fromBytesMap[id$g] = fromBytes$i;
+fromBytesMap[id$f] = fromBytes$h;
 fromBytesMap[id$e] = fromBytes$g;
 fromBytesMap[id$d] = fromBytes$f;
 fromBytesMap[id$c] = fromBytes$e;
@@ -1310,6 +1349,8 @@ fromBytesMap[id$3] = fromBytes$5;
 fromBytesMap[id$2] = fromBytes$4;
 fromBytesMap[id$1] = fromBytes$3;
 fromBytesMap[id] = fromBytes$2;
+nameMap[id$g] = name$g;
+nameMap[id$f] = name$f;
 nameMap[id$e] = name$e;
 nameMap[id$d] = name$d;
 nameMap[id$c] = name$c;
@@ -1337,6 +1378,12 @@ fromBytes = fromBytes$1;
     * metadata - key/value object
 */
 
+var message = fromBytes(payload, config);
+
+// there may be a message.error (e.g. mismatched LRC)
+// in that case message.message will contain everything parsed successfully
+// it should be used with caution
+
 var result = {
     deviceName: 'Some Device Name',
     deviceType: 'Water Meter',
@@ -1345,7 +1392,7 @@ var result = {
         serialNumber: 'SN111',
         manufacturer: 'Device Manufacturer'
     },
-    messages: fromBytes(payload, config),
+    message: message.message || message,
     metadata: metadata
 };
 
