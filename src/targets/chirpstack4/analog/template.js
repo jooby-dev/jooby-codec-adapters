@@ -18,7 +18,13 @@ var config = {
     * data - object representing the decoded payload
 */
 function decodeUplink ( input ) {
-    return {data: fromBytes(input.bytes, config)};
+    const message = fromBytes(input.bytes, config);
+
+    // there may be a message.error (e.g. mismatched LRC)
+    // in that case message.message will contain everything parsed successfully
+    // it should be used with caution
+
+    return {data: message.message || message};
 };
 
 
