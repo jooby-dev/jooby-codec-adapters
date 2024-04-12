@@ -58,6 +58,7 @@ var fromBytes, toBytes;
 
     const INT8_SIZE = 1;
     const INT16_SIZE = 2;
+    const INT24_SIZE = 3;
     const INT32_SIZE = 4;
     const { log, pow, LN2 } = Math;
     const readFloat = (buffer, offset, isLittleEndian, mLen, bytes) => {
@@ -130,8 +131,10 @@ var fromBytes, toBytes;
         buffer[offset + i - d] |= s * 0x80;
     };
     const be2 = [1, 0];
+    const be3 = [2, 1, 0];
     const be4 = [3, 2, 1, 0];
     const le2 = [0, 1];
+    const le3 = [0, 1, 2];
     const le4 = [0, 1, 2, 3];
     const readUint8 = (buffer, offset) => buffer[offset];
     const readUint16 = (buffer, offset, isLittleEndian) => {
@@ -139,6 +142,13 @@ var fromBytes, toBytes;
         const b0 = buffer[offset + order[0]];
         const b1 = buffer[offset + order[1]] << 8;
         return b0 | b1;
+    };
+    const readUint24 = (buffer, offset, isLittleEndian) => {
+        const order = isLittleEndian ? le3 : be3;
+        const b0 = buffer[offset + order[0]];
+        const b1 = buffer[offset + order[1]] << 8;
+        const b2 = buffer[offset + order[2]] << 16;
+        return b0 | b1 | b2;
     };
     const readUint32 = (buffer, offset, isLittleEndian) => {
         const order = isLittleEndian ? le4 : be4;
@@ -155,6 +165,12 @@ var fromBytes, toBytes;
         const order = isLittleEndian ? le2 : be2;
         buffer[offset + order[0]] = value & 0xff;
         buffer[offset + order[1]] = value >>> 8 & 0xff;
+    };
+    const writeUint24 = (buffer, offset, value, isLittleEndian) => {
+        const order = isLittleEndian ? le3 : be3;
+        buffer[offset + order[0]] = value & 0xff;
+        buffer[offset + order[1]] = value >>> 8 & 0xff;
+        buffer[offset + order[2]] = value >>> 16 & 0xff;
     };
     const writeUint32 = (buffer, offset, value, isLittleEndian) => {
         const order = isLittleEndian ? le4 : be4;
@@ -218,6 +234,24 @@ var fromBytes, toBytes;
         getUint16(isLittleEndian = this.isLittleEndian) {
             const result = readUint16(this.data, this.offset, isLittleEndian);
             this.offset += INT16_SIZE;
+            return result;
+        },
+        setInt24(value, isLittleEndian = this.isLittleEndian) {
+            writeUint24(this.data, this.offset, value < 0 ? value | 0x1000000 : value, isLittleEndian);
+            this.offset += INT24_SIZE;
+        },
+        getInt24(isLittleEndian = this.isLittleEndian) {
+            const result = readUint24(this.data, this.offset, isLittleEndian);
+            this.offset += INT24_SIZE;
+            return result & 0x800000 ? result ^ -0x1000000 : result;
+        },
+        setUint24(value, isLittleEndian = this.isLittleEndian) {
+            writeUint24(this.data, this.offset, value, isLittleEndian);
+            this.offset += INT24_SIZE;
+        },
+        getUint24(isLittleEndian = this.isLittleEndian) {
+            const result = readUint24(this.data, this.offset, isLittleEndian);
+            this.offset += INT24_SIZE;
             return result;
         },
         setInt32(value, isLittleEndian = this.isLittleEndian) {
@@ -304,7 +338,7 @@ var fromBytes, toBytes;
 
     const shortCommandMask = 0xe0;
     const extraCommandMask = 0x1f;
-    const fromBytes$v = (data) => {
+    const fromBytes$w = (data) => {
         if (data.length === 0) {
             throw new Error('Invalid buffer size');
         }
@@ -338,7 +372,7 @@ var fromBytes, toBytes;
             commandSize: data[1]
         };
     };
-    const toBytes$w = (commandId, commandSize) => {
+    const toBytes$x = (commandId, commandSize) => {
         if ((commandId & extraCommandMask) === 0) {
             if (commandSize > extraCommandMask) {
                 throw new Error(`Wrong command id/size. Id: ${commandId}, size: ${commandSize}.`);
@@ -358,15 +392,15 @@ var fromBytes, toBytes;
         ];
     };
 
-    const toBytes$v = (commandId, commandData = []) => {
-        const headerData = toBytes$w(commandId, commandData.length);
+    const toBytes$w = (commandId, commandData = []) => {
+        const headerData = toBytes$x(commandId, commandData.length);
         return [...headerData, ...commandData];
     };
 
-    const id$s = 0x0c;
-    const name$s = 'correctTime2000';
+    const id$t = 0x0c;
+    const name$t = 'correctTime2000';
     const COMMAND_BODY_SIZE$f = 2;
-    const fromBytes$u = (data) => {
+    const fromBytes$v = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$f) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -380,12 +414,12 @@ var fromBytes, toBytes;
         }
         return parameters;
     };
-    const toBytes$u = (parameters) => {
+    const toBytes$v = (parameters) => {
         const { sequenceNumber, seconds } = parameters;
         const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$f, false);
         buffer.setUint8(sequenceNumber);
         buffer.setInt8(seconds);
-        return toBytes$v(id$s, buffer.data);
+        return toBytes$w(id$t, buffer.data);
     };
 
     const INITIAL_YEAR_TIMESTAMP = 946684800000;
@@ -409,6 +443,41 @@ var fromBytes, toBytes;
         }
         return result;
     };
+    const extractBits = (value, bitsNumber, startIndex) => (((1 << bitsNumber) - 1) & (value >> (startIndex - 1)));
+    const fillBits = (value, bitsNumber, startIndex, valueToSet) => {
+        const mask = ((1 << bitsNumber) - 1) << (startIndex - 1);
+        let newValueToSet = valueToSet;
+        let result = value;
+        result &= ~mask;
+        newValueToSet <<= (startIndex - 1);
+        result |= newValueToSet;
+        return result;
+    };
+
+    var getHexFromBytes = (bytes, options = {}) => {
+        const { separator, prefix } = Object.assign({}, hexFormatOptions, options);
+        return bytes
+            .map((byte) => `${prefix}${byte.toString(16).padStart(2, '0')}`)
+            .join(separator);
+    };
+
+    var getBytesFromHex = (hex) => {
+        let cleanHex = hex.replace(/\s+|0x/g, '');
+        if (cleanHex.length % 2 !== 0) {
+            cleanHex = `0${cleanHex}`;
+        }
+        const resultLength = cleanHex.length / 2;
+        const bytes = new Array(resultLength);
+        for (let index = 0; index < resultLength; index++) {
+            bytes[index] = parseInt(cleanHex.substring(index * 2, index * 2 + 2), 16);
+        }
+        return bytes;
+    };
+
+    var roundNumber = (value, decimalPlaces = 4) => {
+        const places = Math.pow(10, decimalPlaces);
+        return Math.round((value * places) * (1 + Number.EPSILON)) / places;
+    };
 
     const GASI1 = 1;
     const GASI2 = 2;
@@ -422,6 +491,43 @@ var fromBytes, toBytes;
     const IMP4IN = 10;
     const ELIMP = 11;
     const GASIC = 12;
+
+    const REPORTING_DATA_INTERVAL = 1;
+    const DAY_CHECKOUT_HOUR = 4;
+    const REPORTING_DATA_TYPE = 5;
+    const PRIORITY_DATA_DELIVERY_TYPE = 8;
+    const ACTIVATION_METHOD = 9;
+    const BATTERY_DEPASSIVATION_INFO = 10;
+    const BATTERY_MINIMAL_LOAD_TIME = 11;
+    const CHANNELS_CONFIG = 13;
+    const RX2_CONFIG = 18;
+    const ABSOLUTE_DATA = 23;
+    const ABSOLUTE_DATA_ENABLE = 24;
+    const SERIAL_NUMBER = 25;
+    const GEOLOCATION = 26;
+    const EXTRA_FRAME_INTERVAL = 28;
+    const ABSOLUTE_DATA_MULTI_CHANNEL = 29;
+    const ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL = 30;
+    const PULSE_CHANNELS_SCAN_CONFIG = 31;
+    const PULSE_CHANNELS_SET_CONFIG = 32;
+    const BATTERY_DEPASSIVATION_CONFIG = 33;
+    const MQTT_SESSION_CONFIG = 34;
+    const MQTT_BROKER_ADDRESS = 35;
+    const MQTT_SSL_ENABLE = 36;
+    const MQTT_TOPIC_PREFIX = 37;
+    const MQTT_DATA_RECEIVE_CONFIG = 38;
+    const MQTT_DATA_SEND_CONFIG = 39;
+    const NBIOT_SSL_CONFIG = 40;
+    const NBIOT_SSL_CACERT_WRITE = 41;
+    const NBIOT_SSL_CACERT_SET = 42;
+    const NBIOT_SSL_CLIENT_CERT_WRITE = 43;
+    const NBIOT_SSL_CLIENT_CERT_SET = 44;
+    const NBIOT_SSL_CLIENT_KEY_WRITE = 45;
+    const NBIOT_SSL_CLIENT_KEY_SET = 46;
+    const NBIOT_DEVICE_SOFTWARE_UPDATE = 47;
+    const NBIOT_MODULE_FIRMWARE_UPDATE = 48;
+    const REPORTING_DATA_CONFIG = 49;
+    const EVENTS_CONFIG = 50;
 
     var invertObject = (source) => {
         const target = {};
@@ -439,6 +545,11 @@ var fromBytes, toBytes;
     const UNKNOWN_BATTERY_VOLTAGE = 4095;
     const EXTEND_BIT_MASK = 0x80;
     const LAST_BIT_INDEX = 7;
+    const DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT = 600;
+    const DATA_SENDING_INTERVAL_RESERVED_BYTES = 3;
+    const PARAMETER_RX2_FREQUENCY_COEFFICIENT = 100;
+    const SERIAL_NUMBER_SIZE = 6;
+    const MAGNETIC_INFLUENCE_BIT_INDEX = 8;
     const GAS_HARDWARE_TYPES = [
         GASI2,
         GASI3,
@@ -500,6 +611,12 @@ var fromBytes, toBytes;
         isTariffPlanChanged: Math.pow(2, 11),
         isNewTariffPlanReceived: Math.pow(2, 12)
     };
+    const fourChannelsBitMask = {
+        channel1: Math.pow(2, 0),
+        channel2: Math.pow(2, 1),
+        channel3: Math.pow(2, 2),
+        channel4: Math.pow(2, 3)
+    };
     const byteToPulseCoefficientMap = {
         128: 1,
         129: 5,
@@ -511,6 +628,365 @@ var fromBytes, toBytes;
     };
     const pulseCoefficientToByteMap = invertObject(byteToPulseCoefficientMap);
     const isMSBSet = (value) => !!(value & 0x80);
+    const getMagneticInfluenceBit = (byte) => (!!extractBits(byte, 1, MAGNETIC_INFLUENCE_BIT_INDEX));
+    const setMagneticInfluenceBit = (byte, value) => (fillBits(byte, 1, MAGNETIC_INFLUENCE_BIT_INDEX, +value));
+    const getChannelValue = (buffer) => buffer.getUint8() + 1;
+    const setChannelValue = (buffer, value) => {
+        if (value < 1) {
+            throw new Error('channel must be 1 or greater');
+        }
+        buffer.setUint8(value - 1);
+    };
+    const getNbiotSslWrite = (buffer) => ({
+        size: buffer.getUint16(false),
+        position: buffer.getUint16(false),
+        chunk: buffer.getBytesLeft()
+    });
+    const setNbiotSslWrite = (buffer, parameter) => {
+        if (parameter.size !== parameter.chunk.length) {
+            throw new Error('ssl chunk size parameter doesn\'t match actual ssl chunk size');
+        }
+        buffer.setUint16(parameter.size, false);
+        buffer.setUint16(parameter.position, false);
+        buffer.setBytes(parameter.chunk);
+    };
+    const getNbiotSslSet = (buffer) => ({ crc32: buffer.getUint32(false) });
+    const setNbiotSslSet = (buffer, parameter) => {
+        buffer.setUint32(parameter.crc32, false);
+    };
+    const deviceParameterConvertersMap = {
+        [REPORTING_DATA_INTERVAL]: {
+            get: (buffer) => {
+                buffer.seek(buffer.offset + DATA_SENDING_INTERVAL_RESERVED_BYTES);
+                return {
+                    value: buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT
+                };
+            },
+            set: (buffer, parameter) => {
+                buffer.seek(buffer.offset + DATA_SENDING_INTERVAL_RESERVED_BYTES);
+                buffer.setUint8(parameter.value / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+            }
+        },
+        [DAY_CHECKOUT_HOUR]: {
+            get: (buffer) => ({
+                value: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.value);
+            }
+        },
+        [REPORTING_DATA_TYPE]: {
+            get: (buffer) => ({
+                type: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.type);
+            }
+        },
+        [PRIORITY_DATA_DELIVERY_TYPE]: {
+            get: (buffer) => ({ value: buffer.getUint8() }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.value);
+            }
+        },
+        [ACTIVATION_METHOD]: {
+            get: (buffer) => ({
+                type: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.type);
+            }
+        },
+        [BATTERY_DEPASSIVATION_INFO]: {
+            get: (buffer) => ({
+                loadTime: buffer.getUint16(false),
+                internalResistance: buffer.getUint16(false),
+                lowVoltage: buffer.getUint16(false)
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint16(parameter.loadTime, false);
+                buffer.setUint16(parameter.internalResistance, false);
+                buffer.setUint16(parameter.lowVoltage, false);
+            }
+        },
+        [BATTERY_MINIMAL_LOAD_TIME]: {
+            get: (buffer) => ({
+                value: buffer.getUint32(false)
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint32(parameter.value, false);
+            }
+        },
+        [CHANNELS_CONFIG]: {
+            get: (buffer) => ({ value: buffer.getUint8() }),
+            set: (buffer, parameter) => {
+                if (parameter.value < 0 || parameter.value > 18) {
+                    throw new Error('channels config must be between 0-18');
+                }
+                buffer.setUint8(parameter.value);
+            }
+        },
+        [RX2_CONFIG]: {
+            get: (buffer) => ({
+                spreadFactor: buffer.getUint8(),
+                frequency: buffer.getUint24(false) * PARAMETER_RX2_FREQUENCY_COEFFICIENT
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.spreadFactor);
+                buffer.setUint24(parameter.frequency / PARAMETER_RX2_FREQUENCY_COEFFICIENT, false);
+            }
+        },
+        [ABSOLUTE_DATA]: {
+            get: (buffer) => ({
+                meterValue: buffer.getUint32(false),
+                pulseCoefficient: buffer.getPulseCoefficient(),
+                value: buffer.getUint32(false)
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint32(parameter.meterValue, false);
+                buffer.setPulseCoefficient(parameter.pulseCoefficient);
+                buffer.setUint32(parameter.value, false);
+            }
+        },
+        [ABSOLUTE_DATA_ENABLE]: {
+            get: (buffer) => ({ state: buffer.getUint8() }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.state);
+            }
+        },
+        [SERIAL_NUMBER]: {
+            get: (buffer) => ({
+                value: getHexFromBytes(buffer.getBytes(SERIAL_NUMBER_SIZE))
+            }),
+            set: (buffer, parameter) => {
+                getBytesFromHex(parameter.value).forEach(byte => buffer.setUint8(byte));
+            }
+        },
+        [GEOLOCATION]: {
+            get: (buffer) => ({
+                latitude: roundNumber(buffer.getFloat32()),
+                longitude: roundNumber(buffer.getFloat32()),
+                altitude: roundNumber(buffer.getUint16())
+            }),
+            set: (buffer, parameter) => {
+                buffer.setFloat32(roundNumber(parameter.latitude));
+                buffer.setFloat32(roundNumber(parameter.longitude));
+                buffer.setUint16(roundNumber(parameter.altitude));
+            }
+        },
+        [EXTRA_FRAME_INTERVAL]: {
+            get: (buffer) => ({ value: buffer.getUint16() }),
+            set: (buffer, parameter) => {
+                buffer.setUint16(parameter.value);
+            }
+        },
+        [ABSOLUTE_DATA_MULTI_CHANNEL]: {
+            get: (buffer) => ({
+                channel: getChannelValue(buffer),
+                meterValue: buffer.getUint32(false),
+                pulseCoefficient: buffer.getPulseCoefficient(),
+                value: buffer.getUint32(false)
+            }),
+            set: (buffer, parameter) => {
+                setChannelValue(buffer, parameter.channel);
+                buffer.setUint32(parameter.meterValue, false);
+                buffer.setPulseCoefficient(parameter.pulseCoefficient);
+                buffer.setUint32(parameter.value, false);
+            }
+        },
+        [ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL]: {
+            get: (buffer) => ({
+                channel: getChannelValue(buffer),
+                state: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                setChannelValue(buffer, parameter.channel);
+                buffer.setUint8(parameter.state);
+            }
+        },
+        [PULSE_CHANNELS_SCAN_CONFIG]: {
+            get: (buffer) => ({
+                channelList: buffer.getChannels(),
+                pullUpTime: buffer.getUint8(),
+                scanTime: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                if (parameter.pullUpTime < 17) {
+                    throw new Error('minimal value for pullUpTime - 17');
+                }
+                if (parameter.scanTime < 15) {
+                    throw new Error('minimal value for scanTime - 15');
+                }
+                buffer.setChannels(parameter.channelList.map(index => ({ index })));
+                buffer.setUint8(parameter.pullUpTime);
+                buffer.setUint8(parameter.scanTime);
+            }
+        },
+        [PULSE_CHANNELS_SET_CONFIG]: {
+            get: (buffer) => {
+                const object = toObject(fourChannelsBitMask, buffer.getUint8());
+                return { channel1: object.channel1, channel2: object.channel2, channel3: object.channel3, channel4: object.channel4 };
+            },
+            set: (buffer, parameter) => {
+                const { channel1, channel2, channel3, channel4 } = parameter;
+                buffer.setUint8(fromObject(fourChannelsBitMask, { channel1, channel2, channel3, channel4 }));
+            }
+        },
+        [BATTERY_DEPASSIVATION_CONFIG]: {
+            get: (buffer) => ({
+                resistanceStartThreshold: buffer.getUint16(false),
+                resistanceStopThreshold: buffer.getUint16(false)
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint16(parameter.resistanceStartThreshold, false);
+                buffer.setUint16(parameter.resistanceStopThreshold, false);
+            }
+        },
+        [MQTT_SESSION_CONFIG]: {
+            get: (buffer) => ({
+                clientId: buffer.getString(),
+                username: buffer.getString(),
+                password: buffer.getString(),
+                cleanSession: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setString(parameter.clientId);
+                buffer.setString(parameter.username);
+                buffer.setString(parameter.password);
+                buffer.setUint8(parameter.cleanSession);
+            }
+        },
+        [MQTT_BROKER_ADDRESS]: {
+            get: (buffer) => ({
+                hostName: buffer.getString(),
+                port: buffer.getUint16(false)
+            }),
+            set: (buffer, parameter) => {
+                buffer.setString(parameter.hostName);
+                buffer.setUint16(parameter.port, false);
+            }
+        },
+        [MQTT_SSL_ENABLE]: {
+            get: (buffer) => ({
+                enable: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.enable);
+            }
+        },
+        [MQTT_TOPIC_PREFIX]: {
+            get: (buffer) => ({
+                topicPrefix: buffer.getString()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setString(parameter.topicPrefix);
+            }
+        },
+        [MQTT_DATA_RECEIVE_CONFIG]: {
+            get: (buffer) => ({
+                qos: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.qos);
+            }
+        },
+        [MQTT_DATA_SEND_CONFIG]: {
+            get: (buffer) => ({
+                qos: buffer.getUint8(),
+                retain: buffer.getUint8(),
+                newestSendFirst: buffer.getUint8(),
+                sendCountAttempts: buffer.getUint8(),
+                sendTimeoutBetweenAttempts: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.qos);
+                buffer.setUint8(parameter.retain);
+                buffer.setUint8(parameter.newestSendFirst);
+                buffer.setUint8(parameter.sendCountAttempts);
+                buffer.setUint8(parameter.sendTimeoutBetweenAttempts);
+            }
+        },
+        [NBIOT_SSL_CONFIG]: {
+            get: (buffer) => ({
+                securityLevel: buffer.getUint8(),
+                version: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.securityLevel);
+                buffer.setUint8(parameter.version);
+            }
+        },
+        [NBIOT_SSL_CACERT_WRITE]: {
+            get: getNbiotSslWrite,
+            set: setNbiotSslWrite
+        },
+        [NBIOT_SSL_CACERT_SET]: {
+            get: getNbiotSslSet,
+            set: setNbiotSslSet
+        },
+        [NBIOT_SSL_CLIENT_CERT_WRITE]: {
+            get: getNbiotSslWrite,
+            set: setNbiotSslWrite
+        },
+        [NBIOT_SSL_CLIENT_CERT_SET]: {
+            get: getNbiotSslSet,
+            set: setNbiotSslSet
+        },
+        [NBIOT_SSL_CLIENT_KEY_WRITE]: {
+            get: getNbiotSslWrite,
+            set: setNbiotSslWrite
+        },
+        [NBIOT_SSL_CLIENT_KEY_SET]: {
+            get: getNbiotSslSet,
+            set: setNbiotSslSet
+        },
+        [NBIOT_DEVICE_SOFTWARE_UPDATE]: {
+            get: (buffer) => ({ softwareImageUrl: buffer.getString() }),
+            set: (buffer, parameter) => {
+                buffer.setString(parameter.softwareImageUrl);
+            }
+        },
+        [NBIOT_MODULE_FIRMWARE_UPDATE]: {
+            get: (buffer) => ({ moduleFirmwareImageUrl: buffer.getString() }),
+            set: (buffer, parameter) => {
+                buffer.setString(parameter.moduleFirmwareImageUrl);
+            }
+        },
+        [REPORTING_DATA_CONFIG]: {
+            get: (buffer) => ({
+                dataType: buffer.getUint8(),
+                hour: buffer.getUint8(),
+                minutes: buffer.getUint8(),
+                countToSend: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.dataType);
+                buffer.setUint8(parameter.hour);
+                buffer.setUint8(parameter.minutes);
+                buffer.setUint8(parameter.countToSend);
+            }
+        },
+        [EVENTS_CONFIG]: {
+            get: (buffer) => ({
+                eventId: buffer.getUint8(),
+                enableEvent: buffer.getUint8(),
+                sendEvent: buffer.getUint8(),
+                saveEvent: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.eventId);
+                buffer.setUint8(parameter.enableEvent);
+                buffer.setUint8(parameter.sendEvent);
+                buffer.setUint8(parameter.saveEvent);
+            }
+        }
+    };
+    const getRequestChannelParameter = (buffer) => ({
+        channel: getChannelValue(buffer)
+    });
+    const setRequestChannelParameter = (buffer, parameter) => {
+        setChannelValue(buffer, parameter.channel);
+    };
     const getEventStatusSize = (hardwareType) => (TWO_BYTES_HARDWARE_TYPES.indexOf(hardwareType) !== -1 ? 2 : 1);
     function CommandBinaryBuffer(dataOrLength, isLittleEndian = true) {
         BinaryBuffer.call(this, dataOrLength, isLittleEndian);
@@ -588,6 +1064,22 @@ var fromBytes, toBytes;
         const lowAndHighVoltageByte = ((underLowLoad & 0x0f) << 4) | ((underHighLoad >> 8) & 0x0f);
         const highVoltageByte = underHighLoad & 0xff;
         [lowVoltageByte, lowAndHighVoltageByte, highVoltageByte].forEach(byte => this.setUint8(byte));
+    };
+    CommandBinaryBuffer.prototype.getLegacyCounterValue = function () {
+        return this.getUint24(false);
+    };
+    CommandBinaryBuffer.prototype.setLegacyCounterValue = function (value) {
+        this.setUint24(value, false);
+    };
+    CommandBinaryBuffer.prototype.getLegacyCounter = function (byte = this.getUint8()) {
+        return {
+            isMagneticInfluence: getMagneticInfluenceBit(byte),
+            value: this.getLegacyCounterValue()
+        };
+    };
+    CommandBinaryBuffer.prototype.setLegacyCounter = function (counter, byte = 0) {
+        this.setUint8(setMagneticInfluenceBit(byte, counter.isMagneticInfluence));
+        this.setLegacyCounterValue(counter.value);
     };
     CommandBinaryBuffer.prototype.getChannels = function () {
         const channelList = [];
@@ -821,11 +1313,92 @@ var fromBytes, toBytes;
             throw new Error('wrong hardwareType');
         }
     };
+    CommandBinaryBuffer.prototype.getParameter = function () {
+        const id = this.getUint8();
+        if (!deviceParameterConvertersMap[id] || !deviceParameterConvertersMap[id].get) {
+            throw new Error(`parameter ${id} is not supported`);
+        }
+        const data = deviceParameterConvertersMap[id].get(this);
+        return { id, data };
+    };
+    CommandBinaryBuffer.prototype.setParameter = function (parameter) {
+        const { id, data } = parameter;
+        if (!deviceParameterConvertersMap[id] || !deviceParameterConvertersMap[id].set) {
+            throw new Error(`parameter ${id} is not supported`);
+        }
+        this.setUint8(id);
+        deviceParameterConvertersMap[id].set(this, data);
+    };
+    CommandBinaryBuffer.prototype.getRequestParameter = function () {
+        const id = this.getUint8();
+        let data = null;
+        switch (id) {
+            case ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL:
+            case ABSOLUTE_DATA_MULTI_CHANNEL:
+                data = getRequestChannelParameter(this);
+                break;
+        }
+        return { id, data };
+    };
+    CommandBinaryBuffer.prototype.setRequestParameter = function (parameter) {
+        const { id, data } = parameter;
+        this.setUint8(id);
+        switch (id) {
+            case ABSOLUTE_DATA_MULTI_CHANNEL:
+            case ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL:
+                setRequestChannelParameter(this, data);
+                break;
+        }
+    };
+    CommandBinaryBuffer.prototype.getResponseParameter = function () {
+        const id = this.getUint8();
+        let data;
+        if (!deviceParameterConvertersMap[id] || !deviceParameterConvertersMap[id].get) {
+            throw new Error(`parameter ${id} is not supported`);
+        }
+        switch (id) {
+            case MQTT_SESSION_CONFIG:
+            case NBIOT_SSL_CACERT_WRITE:
+            case NBIOT_SSL_CLIENT_CERT_WRITE:
+            case NBIOT_SSL_CLIENT_KEY_WRITE:
+            case NBIOT_SSL_CACERT_SET:
+            case NBIOT_SSL_CLIENT_CERT_SET:
+            case NBIOT_SSL_CLIENT_KEY_SET:
+            case NBIOT_DEVICE_SOFTWARE_UPDATE:
+            case NBIOT_MODULE_FIRMWARE_UPDATE:
+                data = null;
+                break;
+            default:
+                data = deviceParameterConvertersMap[id].get(this);
+        }
+        return { id, data };
+    };
+    CommandBinaryBuffer.prototype.setResponseParameter = function (parameter) {
+        const { id, data } = parameter;
+        if (!deviceParameterConvertersMap[id] || !deviceParameterConvertersMap[id].set) {
+            throw new Error(`parameter ${id} is not supported`);
+        }
+        this.setUint8(id);
+        switch (id) {
+            case MQTT_SESSION_CONFIG:
+            case NBIOT_SSL_CACERT_WRITE:
+            case NBIOT_SSL_CLIENT_CERT_WRITE:
+            case NBIOT_SSL_CLIENT_KEY_WRITE:
+            case NBIOT_SSL_CACERT_SET:
+            case NBIOT_SSL_CLIENT_CERT_SET:
+            case NBIOT_SSL_CLIENT_KEY_SET:
+            case NBIOT_DEVICE_SOFTWARE_UPDATE:
+            case NBIOT_MODULE_FIRMWARE_UPDATE:
+                break;
+            default:
+                deviceParameterConvertersMap[id].set(this, data);
+        }
+    };
 
-    const id$r = 0x1b;
-    const name$r = 'getArchiveDaysMc';
+    const id$s = 0x1b;
+    const name$s = 'getArchiveDaysMc';
     const COMMAND_BODY_SIZE$e = 4;
-    const fromBytes$t = (data) => {
+    const fromBytes$u = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$e) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -838,20 +1411,20 @@ var fromBytes, toBytes;
         }
         return { startTime2000: getTime2000FromDate(date), days, channelList };
     };
-    const toBytes$t = (parameters) => {
+    const toBytes$u = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$e);
         const { startTime2000, days, channelList } = parameters;
         const date = getDateFromTime2000(startTime2000);
         buffer.setDate(date);
         buffer.setChannels(channelList.map(index => ({ index })));
         buffer.setUint8(days);
-        return toBytes$v(id$r, buffer.data);
+        return toBytes$w(id$s, buffer.data);
     };
 
-    const id$q = 0x0b;
-    const name$q = 'getArchiveEvents';
+    const id$r = 0x0b;
+    const name$r = 'getArchiveEvents';
     const COMMAND_BODY_SIZE$d = 5;
-    const fromBytes$s = (data) => {
+    const fromBytes$t = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$d) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -863,18 +1436,18 @@ var fromBytes, toBytes;
         }
         return { startTime2000, events };
     };
-    const toBytes$s = (parameters) => {
+    const toBytes$t = (parameters) => {
         const { startTime2000, events } = parameters;
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$d);
         buffer.setTime(startTime2000);
         buffer.setUint8(events);
-        return toBytes$v(id$q, buffer.data);
+        return toBytes$w(id$r, buffer.data);
     };
 
-    const id$p = 0x1a;
-    const name$p = 'getArchiveHoursMc';
+    const id$q = 0x1a;
+    const name$q = 'getArchiveHoursMc';
     const COMMAND_BODY_SIZE$c = 4;
-    const fromBytes$r = (data) => {
+    const fromBytes$s = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$c) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -888,7 +1461,7 @@ var fromBytes, toBytes;
         }
         return { startTime2000: getTime2000FromDate(date), hours, channelList };
     };
-    const toBytes$r = (parameters) => {
+    const toBytes$s = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$c);
         const { hours, startTime2000, channelList } = parameters;
         const date = getDateFromTime2000(startTime2000);
@@ -896,35 +1469,35 @@ var fromBytes, toBytes;
         buffer.setDate(date);
         buffer.setHours(hour, hours);
         buffer.setChannels(channelList.map(index => ({ index })));
-        return toBytes$v(id$p, buffer.data);
+        return toBytes$w(id$q, buffer.data);
     };
 
-    const id$o = 0x07;
-    const name$o = 'getCurrent';
+    const id$p = 0x07;
+    const name$p = 'getCurrent';
     const COMMAND_BODY_SIZE$b = 0;
-    const fromBytes$q = (data) => {
+    const fromBytes$r = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$b) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$q = () => toBytes$v(id$o);
+    const toBytes$r = () => toBytes$w(id$p);
 
-    const id$n = 0x18;
-    const name$n = 'getCurrentMc';
+    const id$o = 0x18;
+    const name$o = 'getCurrentMc';
     const COMMAND_BODY_SIZE$a = 0;
-    const fromBytes$p = (data) => {
+    const fromBytes$q = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$a) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$p = () => toBytes$v(id$n);
+    const toBytes$q = () => toBytes$w(id$o);
 
-    const id$m = 0x0d1f;
-    const name$m = 'getExAbsArchiveDaysMc';
+    const id$n = 0x0d1f;
+    const name$n = 'getExAbsArchiveDaysMc';
     const COMMAND_BODY_SIZE$9 = 4;
-    const fromBytes$o = (data) => {
+    const fromBytes$p = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$9) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -937,19 +1510,19 @@ var fromBytes, toBytes;
         }
         return { startTime2000: getTime2000FromDate(date), days, channelList };
     };
-    const toBytes$o = (parameters) => {
+    const toBytes$p = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$9);
         const { startTime2000, days, channelList } = parameters;
         buffer.setDate(startTime2000);
         buffer.setChannels(channelList.map(index => ({ index })));
         buffer.setUint8(days);
-        return toBytes$v(id$m, buffer.data);
+        return toBytes$w(id$n, buffer.data);
     };
 
-    const id$l = 0x0c1f;
-    const name$l = 'getExAbsArchiveHoursMc';
+    const id$m = 0x0c1f;
+    const name$m = 'getExAbsArchiveHoursMc';
     const COMMAND_BODY_SIZE$8 = 4;
-    const fromBytes$n = (data) => {
+    const fromBytes$o = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const date = buffer.getDate();
         const { hour, hours } = buffer.getHours();
@@ -960,7 +1533,7 @@ var fromBytes, toBytes;
         }
         return { channelList, hours, startTime2000: getTime2000FromDate(date) };
     };
-    const toBytes$n = (parameters) => {
+    const toBytes$o = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$8);
         const { startTime2000, hours, channelList } = parameters;
         const date = getDateFromTime2000(startTime2000);
@@ -968,46 +1541,46 @@ var fromBytes, toBytes;
         buffer.setDate(date);
         buffer.setHours(hour, hours);
         buffer.setChannels(channelList.map(index => ({ index })));
-        return toBytes$v(id$l, buffer.data);
+        return toBytes$w(id$m, buffer.data);
     };
 
-    const id$k = 0x021f;
-    const name$k = 'getLmicInfo';
+    const id$l = 0x021f;
+    const name$l = 'getLmicInfo';
     const COMMAND_BODY_SIZE$7 = 0;
-    const fromBytes$m = (data) => {
+    const fromBytes$n = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$7) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$m = () => toBytes$v(id$k);
+    const toBytes$n = () => toBytes$w(id$l);
 
-    const id$j = 0x14;
-    const name$j = 'getStatus';
+    const id$k = 0x14;
+    const name$k = 'getStatus';
     const COMMAND_BODY_SIZE$6 = 0;
-    const fromBytes$l = (data) => {
+    const fromBytes$m = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$6) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$l = () => toBytes$v(id$j);
+    const toBytes$m = () => toBytes$w(id$k);
 
-    const id$i = 0x09;
-    const name$i = 'getTime2000';
+    const id$j = 0x09;
+    const name$j = 'getTime2000';
     const COMMAND_BODY_SIZE$5 = 0;
-    const fromBytes$k = (data) => {
+    const fromBytes$l = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$5) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$k = () => toBytes$v(id$i, []);
+    const toBytes$l = () => toBytes$w(id$j, []);
 
-    const id$h = 0x02;
-    const name$h = 'setTime2000';
+    const id$i = 0x02;
+    const name$i = 'setTime2000';
     const COMMAND_BODY_SIZE$4 = 5;
-    const fromBytes$j = (data) => {
+    const fromBytes$k = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$4) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1021,12 +1594,12 @@ var fromBytes, toBytes;
         }
         return parameters;
     };
-    const toBytes$j = (parameters) => {
+    const toBytes$k = (parameters) => {
         const { sequenceNumber, seconds } = parameters;
         const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$4, false);
         buffer.setUint8(sequenceNumber);
         buffer.setInt32(seconds);
-        return toBytes$v(id$h, buffer.data);
+        return toBytes$w(id$i, buffer.data);
     };
 
     var calculateLrc = (data, initialLrc = 0x55) => {
@@ -1052,7 +1625,7 @@ var fromBytes, toBytes;
             return message;
         }
         do {
-            const headerInfo = fromBytes$v(data.slice(processedBytes, processedBytes + HEADER_MAX_SIZE));
+            const headerInfo = fromBytes$w(data.slice(processedBytes, processedBytes + HEADER_MAX_SIZE));
             const headerData = data.slice(processedBytes, processedBytes + headerInfo.headerSize);
             const bodyData = data.slice(processedBytes + headerInfo.headerSize, processedBytes + headerInfo.headerSize + headerInfo.commandSize);
             const command = {
@@ -1110,7 +1683,8 @@ var fromBytes, toBytes;
     const toBytesMap$1 = {};
     const fromBytesMap$1 = {};
     const nameMap$1 = {};
-    const toBytes$i = getToBytes(toBytesMap$1);
+    const toBytes$j = getToBytes(toBytesMap$1);
+    toBytesMap$1[id$t] = toBytes$v;
     toBytesMap$1[id$s] = toBytes$u;
     toBytesMap$1[id$r] = toBytes$t;
     toBytesMap$1[id$q] = toBytes$s;
@@ -1122,7 +1696,7 @@ var fromBytes, toBytes;
     toBytesMap$1[id$k] = toBytes$m;
     toBytesMap$1[id$j] = toBytes$l;
     toBytesMap$1[id$i] = toBytes$k;
-    toBytesMap$1[id$h] = toBytes$j;
+    fromBytesMap$1[id$t] = fromBytes$v;
     fromBytesMap$1[id$s] = fromBytes$u;
     fromBytesMap$1[id$r] = fromBytes$t;
     fromBytesMap$1[id$q] = fromBytes$s;
@@ -1134,7 +1708,7 @@ var fromBytes, toBytes;
     fromBytesMap$1[id$k] = fromBytes$m;
     fromBytesMap$1[id$j] = fromBytes$l;
     fromBytesMap$1[id$i] = fromBytes$k;
-    fromBytesMap$1[id$h] = fromBytes$j;
+    nameMap$1[id$t] = name$t;
     nameMap$1[id$s] = name$s;
     nameMap$1[id$r] = name$r;
     nameMap$1[id$q] = name$q;
@@ -1146,12 +1720,11 @@ var fromBytes, toBytes;
     nameMap$1[id$k] = name$k;
     nameMap$1[id$j] = name$j;
     nameMap$1[id$i] = name$i;
-    nameMap$1[id$h] = name$h;
 
-    const id$g = 0x0c;
-    const name$g = 'correctTime2000';
+    const id$h = 0x0c;
+    const name$h = 'correctTime2000';
     const COMMAND_BODY_SIZE$3 = 1;
-    const fromBytes$i = (data) => {
+    const fromBytes$j = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$3) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1164,11 +1737,27 @@ var fromBytes, toBytes;
         }
         return parameters;
     };
-    const toBytes$h = (parameters) => {
+    const toBytes$i = (parameters) => {
         const { status } = parameters;
         const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$3, false);
         buffer.setUint8(status);
-        return toBytes$v(id$g, buffer.data);
+        return toBytes$w(id$h, buffer.data);
+    };
+
+    const id$g = 0x07;
+    const name$g = 'current';
+    const COMMAND_BODY_MAX_SIZE$b = 4;
+    const fromBytes$i = (data) => {
+        if (data.length > COMMAND_BODY_MAX_SIZE$b) {
+            throw new Error(`Wrong buffer size: ${data.length}.`);
+        }
+        const buffer = new CommandBinaryBuffer(data);
+        return buffer.getLegacyCounter();
+    };
+    const toBytes$h = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$b);
+        buffer.setLegacyCounter(parameters);
+        return toBytes$w(id$g, buffer.data);
     };
 
     const id$f = 0x18;
@@ -1194,7 +1783,7 @@ var fromBytes, toBytes;
         channelList.forEach(({ value }) => {
             buffer.setExtendedValue(value);
         });
-        return toBytes$v(id$f, buffer.getBytesToOffset());
+        return toBytes$w(id$f, buffer.getBytesToOffset());
     };
 
     const id$e = 0x16;
@@ -1221,7 +1810,7 @@ var fromBytes, toBytes;
         channelList.forEach(({ value }) => {
             buffer.setExtendedValue(value);
         });
-        return toBytes$v(id$e, buffer.getBytesToOffset());
+        return toBytes$w(id$e, buffer.getBytesToOffset());
     };
 
     const id$d = 0x0b1f;
@@ -1241,7 +1830,7 @@ var fromBytes, toBytes;
         const { startTime2000, channelList } = parameters;
         buffer.setDate(startTime2000);
         buffer.setChannelsWithAbsoluteValues(channelList);
-        return toBytes$v(id$d, buffer.getBytesToOffset());
+        return toBytes$w(id$d, buffer.getBytesToOffset());
     };
 
     const id$c = 0x0a1f;
@@ -1266,7 +1855,7 @@ var fromBytes, toBytes;
         buffer.setDate(startTime2000);
         buffer.setHours(hour, hours);
         buffer.setChannelsAbsoluteValuesWithHourDiff(channelList);
-        return toBytes$v(id$c, buffer.getBytesToOffset());
+        return toBytes$w(id$c, buffer.getBytesToOffset());
     };
 
     const id$b = 0x1b;
@@ -1298,7 +1887,7 @@ var fromBytes, toBytes;
                 buffer.setExtendedValue(value);
             });
         });
-        return toBytes$v(id$b, buffer.getBytesToOffset());
+        return toBytes$w(id$b, buffer.getBytesToOffset());
     };
 
     const id$a = 0x0b;
@@ -1326,7 +1915,7 @@ var fromBytes, toBytes;
         const { eventList } = parameters;
         const buffer = new CommandBinaryBuffer(eventList.length * COMMAND_BODY_MIN_SIZE, false);
         eventList.forEach(event => setEvent(buffer, event));
-        return toBytes$v(id$a, buffer.data);
+        return toBytes$w(id$a, buffer.data);
     }
 
     const id$9 = 0x1a;
@@ -1343,7 +1932,7 @@ var fromBytes, toBytes;
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$5);
         const { hours, startTime2000, channelList } = parameters;
         buffer.setChannelsValuesWithHourDiff(hours, startTime2000, channelList);
-        return toBytes$v(id$9, buffer.getBytesToOffset());
+        return toBytes$w(id$9, buffer.getBytesToOffset());
     };
 
     const id$8 = 0x0d1f;
@@ -1381,7 +1970,7 @@ var fromBytes, toBytes;
                 buffer.setExtendedValue(value);
             });
         });
-        return toBytes$v(id$8, buffer.getBytesToOffset());
+        return toBytes$w(id$8, buffer.getBytesToOffset());
     };
 
     const id$7 = 0x1a;
@@ -1394,7 +1983,7 @@ var fromBytes, toBytes;
     const toBytes$8 = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$3);
         buffer.setChannelsValuesWithHourDiff(parameters.hours, parameters.startTime2000, parameters.channelList);
-        return toBytes$v(id$7, buffer.getBytesToOffset());
+        return toBytes$w(id$7, buffer.getBytesToOffset());
     };
 
     const id$6 = 0x021f;
@@ -1421,7 +2010,7 @@ var fromBytes, toBytes;
         const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$2);
         buffer.setUint8(fromObject(lmicCapabilitiesBitMask, capabilities));
         buffer.setUint8(version);
-        return toBytes$v(id$6, buffer.data);
+        return toBytes$w(id$6, buffer.data);
     };
 
     const id$5 = 0x17;
@@ -1438,7 +2027,7 @@ var fromBytes, toBytes;
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$2);
         const { startTime2000, hours, channelList } = parameters;
         buffer.setChannelsValuesWithHourDiff(hours, startTime2000, channelList);
-        return toBytes$v(id$5, buffer.getBytesToOffset());
+        return toBytes$w(id$5, buffer.getBytesToOffset());
     };
 
     const id$4 = 0x60;
@@ -1460,7 +2049,7 @@ var fromBytes, toBytes;
         const { sequenceNumber, status } = parameters;
         buffer.setUint8(sequenceNumber);
         buffer.setEventStatus(config.hardwareType, status);
-        return toBytes$v(id$4, buffer.data);
+        return toBytes$w(id$4, buffer.data);
     };
 
     const MAGNET_ON = 1;
@@ -1479,26 +2068,6 @@ var fromBytes, toBytes;
     const OPTOFLASH = 16;
     const MTX = 17;
     const JOIN_ACCEPT = 18;
-
-    var getHexFromBytes = (bytes, options = {}) => {
-        const { separator, prefix } = Object.assign({}, hexFormatOptions, options);
-        return bytes
-            .map((byte) => `${prefix}${byte.toString(16).padStart(2, '0')}`)
-            .join(separator);
-    };
-
-    var getBytesFromHex = (hex) => {
-        let cleanHex = hex.replace(/\s+|0x/g, '');
-        if (cleanHex.length % 2 !== 0) {
-            cleanHex = `0${cleanHex}`;
-        }
-        const resultLength = cleanHex.length / 2;
-        const bytes = new Array(resultLength);
-        for (let index = 0; index < resultLength; index++) {
-            bytes[index] = parseInt(cleanHex.substring(index * 2, index * 2 + 2), 16);
-        }
-        return bytes;
-    };
 
     const id$3 = 0x15;
     const name$3 = 'newEvent';
@@ -1587,7 +2156,7 @@ var fromBytes, toBytes;
             default:
                 throw new Error(`Event ${id$3} is not supported`);
         }
-        return toBytes$v(id$3, buffer.getBytesToOffset());
+        return toBytes$w(id$3, buffer.getBytesToOffset());
     };
 
     const id$2 = 0x02;
@@ -1610,12 +2179,7 @@ var fromBytes, toBytes;
         const { status } = parameters;
         const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$1, false);
         buffer.setUint8(status);
-        return toBytes$v(id$2, buffer.data);
-    };
-
-    var roundNumber = (value, decimalPlaces = 4) => {
-        const places = Math.pow(10, decimalPlaces);
-        return Math.round((value * places) * (1 + Number.EPSILON)) / places;
+        return toBytes$w(id$2, buffer.data);
     };
 
     const id$1 = 0x14;
@@ -1741,7 +2305,7 @@ var fromBytes, toBytes;
             default:
                 throw new Error(`${id$1}: hardware type ${hardware.type} is not supported`);
         }
-        return toBytes$v(id$1, buffer.getBytesToOffset());
+        return toBytes$w(id$1, buffer.getBytesToOffset());
     };
 
     const id = 0x09;
@@ -1766,13 +2330,14 @@ var fromBytes, toBytes;
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE);
         buffer.setUint8(sequenceNumber);
         buffer.setTime(time2000);
-        return toBytes$v(id, buffer.data);
+        return toBytes$w(id, buffer.data);
     }
 
     const toBytesMap = {};
     const fromBytesMap = {};
     const nameMap = {};
     const fromBytes$1 = getFromBytes(fromBytesMap, nameMap);
+    toBytesMap[id$h] = toBytes$i;
     toBytesMap[id$g] = toBytes$h;
     toBytesMap[id$f] = toBytes$g;
     toBytesMap[id$e] = toBytes$f;
@@ -1790,6 +2355,7 @@ var fromBytes, toBytes;
     toBytesMap[id$2] = toBytes$3;
     toBytesMap[id$1] = toBytes$2;
     toBytesMap[id] = toBytes$1;
+    fromBytesMap[id$h] = fromBytes$j;
     fromBytesMap[id$g] = fromBytes$i;
     fromBytesMap[id$f] = fromBytes$h;
     fromBytesMap[id$e] = fromBytes$g;
@@ -1807,6 +2373,7 @@ var fromBytes, toBytes;
     fromBytesMap[id$2] = fromBytes$4;
     fromBytesMap[id$1] = fromBytes$3;
     fromBytesMap[id] = fromBytes$2;
+    nameMap[id$h] = name$h;
     nameMap[id$g] = name$g;
     nameMap[id$f] = name$f;
     nameMap[id$e] = name$e;
@@ -1827,7 +2394,7 @@ var fromBytes, toBytes;
 
     // export
     fromBytes = fromBytes$1;
-    toBytes = toBytes$i;
+    toBytes = toBytes$j;
 
 })();
 //#endregion
