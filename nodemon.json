@@ -1,5 +1,6 @@
 {
     "watch": ["./dist"],
+    "delay": 500,
     "ext": ".js",
     "ignore": [],
     "exec": "./bin/exec.sh"

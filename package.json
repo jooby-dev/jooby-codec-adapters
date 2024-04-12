@@ -2,9 +2,13 @@
     "name": "jooby-codec-adapters",
     "version": "1.0.0",
     "description": "Jooby encoders/decoders adapters",
+    "repository": {
+        "url": "https://github.com/jooby-dev/jooby-codec-adapters"
+    },
     "type": "module",
     "scripts": {
         "build": "rollup -c",
+        "build:clean": "rm -rf ./dist && rollup -c",
         "build:watch": "rollup -c -w",
         "dev": "nodemon"
     },
