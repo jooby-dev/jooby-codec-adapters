@@ -39,4 +39,5 @@ echo '==========='
 
 ls -l ./dist/thingsboard/analog
 
-echo '\nok'
+echo
+date '+%T'

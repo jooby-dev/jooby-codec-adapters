@@ -352,7 +352,7 @@ var toBytes, getBase64FromBytes;
   });
 
   var extraCommandMask = 0x1f;
-  var toBytes$f = function (commandId, commandSize) {
+  var toBytes$m = function (commandId, commandSize) {
     if ((commandId & extraCommandMask) === 0) {
       if (commandSize > extraCommandMask) {
         throw new Error("Wrong command id/size. Id: ".concat(commandId, ", size: ").concat(commandSize, "."));
@@ -365,21 +365,21 @@ var toBytes, getBase64FromBytes;
     return [commandId, commandSize];
   };
 
-  var toBytes$e = function (commandId) {
+  var toBytes$l = function (commandId) {
     var commandData = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    var headerData = toBytes$f(commandId, commandData.length);
+    var headerData = toBytes$m(commandId, commandData.length);
     return [].concat(_toConsumableArray(headerData), _toConsumableArray(commandData));
   };
 
-  var id$b = 0x0c;
-  var COMMAND_BODY_SIZE$6 = 2;
-  var toBytes$d = function (parameters) {
+  var id$i = 0x0c;
+  var COMMAND_BODY_SIZE$9 = 2;
+  var toBytes$k = function (parameters) {
     var sequenceNumber = parameters.sequenceNumber,
       seconds = parameters.seconds;
-    var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$6, false);
+    var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$9, false);
     buffer.setUint8(sequenceNumber);
     buffer.setInt8(seconds);
-    return toBytes$e(id$b, buffer.data);
+    return toBytes$l(id$i, buffer.data);
   };
 
   var INITIAL_YEAR_TIMESTAMP = 946684800000;
@@ -524,6 +524,8 @@ var toBytes, getBase64FromBytes;
   var PARAMETER_RX2_FREQUENCY_COEFFICIENT = 100;
   var SERIAL_NUMBER_SIZE = 6;
   var MAGNETIC_INFLUENCE_BIT_INDEX = 8;
+  var LEGACY_HOUR_COUNTER_SIZE = 2 + 4;
+  var LEGACY_HOUR_DIFF_SIZE = 2;
   var GAS_HARDWARE_TYPES = [GASI2, GASI3, GASI1, GASIC];
   var TWO_CHANNELS_HARDWARE_TYPES = [IMP2AS, IMP2EU, IMP2IN, NOVATOR];
   var ELIMP_HARDWARE_TYPES = [ELIMP];
@@ -567,6 +569,36 @@ var toBytes, getBase64FromBytes;
     isTariffPlanChanged: Math.pow(2, 11),
     isNewTariffPlanReceived: Math.pow(2, 12)
   };
+  var parametersSizeMap = {
+    [REPORTING_DATA_INTERVAL]: 1 + 4,
+    [DAY_CHECKOUT_HOUR]: 1 + 1,
+    [REPORTING_DATA_TYPE]: 1 + 1,
+    [PRIORITY_DATA_DELIVERY_TYPE]: 1 + 1,
+    [ACTIVATION_METHOD]: 1 + 1,
+    [BATTERY_DEPASSIVATION_INFO]: 1 + 6,
+    [BATTERY_MINIMAL_LOAD_TIME]: 1 + 4,
+    [CHANNELS_CONFIG]: 1 + 1,
+    [RX2_CONFIG]: 1 + 4,
+    [ABSOLUTE_DATA]: 1 + 9,
+    [ABSOLUTE_DATA_ENABLE]: 1 + 1,
+    [SERIAL_NUMBER]: 1 + 6,
+    [GEOLOCATION]: 1 + 10,
+    [EXTRA_FRAME_INTERVAL]: 1 + 2,
+    [ABSOLUTE_DATA_MULTI_CHANNEL]: 1 + 10,
+    [ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL]: 1 + 2,
+    [PULSE_CHANNELS_SCAN_CONFIG]: 1 + 3,
+    [PULSE_CHANNELS_SET_CONFIG]: 1 + 1,
+    [BATTERY_DEPASSIVATION_CONFIG]: 1 + 4,
+    [MQTT_SSL_ENABLE]: 1 + 1,
+    [MQTT_DATA_RECEIVE_CONFIG]: 1 + 1,
+    [MQTT_DATA_SEND_CONFIG]: 1 + 5,
+    [NBIOT_SSL_CONFIG]: 1 + 2,
+    [NBIOT_SSL_CACERT_SET]: 1 + 4,
+    [NBIOT_SSL_CLIENT_CERT_SET]: 1 + 4,
+    [NBIOT_SSL_CLIENT_KEY_SET]: 1 + 4,
+    [REPORTING_DATA_CONFIG]: 1 + 4,
+    [EVENTS_CONFIG]: 1 + 4
+  };
   var fourChannelsBitMask = {
     channel1: Math.pow(2, 0),
     channel2: Math.pow(2, 1),
@@ -585,12 +617,6 @@ var toBytes, getBase64FromBytes;
   var pulseCoefficientToByteMap = invertObject(byteToPulseCoefficientMap);
   var isMSBSet = function (value) {
     return !!(value & 0x80);
-  };
-  var getMagneticInfluenceBit = function (byte) {
-    return !!extractBits(byte, 1, MAGNETIC_INFLUENCE_BIT_INDEX);
-  };
-  var setMagneticInfluenceBit = function (byte, value) {
-    return fillBits(byte, 1, MAGNETIC_INFLUENCE_BIT_INDEX, +value);
   };
   var getChannelValue = function (buffer) {
     return buffer.getUint8() + 1;
@@ -1038,13 +1064,82 @@ var toBytes, getBase64FromBytes;
       }
     }
   };
-  var getRequestChannelParameter = function (buffer) {
-    return {
-      channel: getChannelValue(buffer)
-    };
+  var getParameterSize = function (parameter) {
+    var size;
+    var data;
+    switch (parameter.id) {
+      case MQTT_SESSION_CONFIG:
+        if (parameter.data) {
+          data = parameter.data;
+          size = 1 + 1;
+          size += data.clientId.length + 1;
+          size += data.username.length + 1;
+          size += data.password.length + 1;
+        } else {
+          size = 1;
+        }
+        break;
+      case MQTT_BROKER_ADDRESS:
+        data = parameter.data;
+        size = 1 + 2;
+        size += data.hostName.length + 1;
+        break;
+      case MQTT_TOPIC_PREFIX:
+        data = parameter.data;
+        size = 1;
+        size += data.topicPrefix.length + 1;
+        break;
+      case NBIOT_SSL_CACERT_WRITE:
+      case NBIOT_SSL_CLIENT_CERT_WRITE:
+      case NBIOT_SSL_CLIENT_KEY_WRITE:
+        if (parameter.data) {
+          data = parameter.data;
+          size = 1 + 2 + 2;
+          size += data.chunk.length;
+        } else {
+          size = 1;
+        }
+        break;
+      case NBIOT_DEVICE_SOFTWARE_UPDATE:
+        if (parameter.data) {
+          data = parameter.data;
+          size = 1;
+          size += data.softwareImageUrl.length + 1;
+        } else {
+          size = 1;
+        }
+        break;
+      case NBIOT_MODULE_FIRMWARE_UPDATE:
+        if (parameter.data) {
+          data = parameter.data;
+          size = 1;
+          size += data.moduleFirmwareImageUrl.length + 1;
+        } else {
+          size = 1;
+        }
+        break;
+      default:
+        size = parametersSizeMap[parameter.id];
+    }
+    if (size === undefined) {
+      throw new Error('unknown parameter id');
+    }
+    return size;
   };
-  var setRequestChannelParameter = function (buffer, parameter) {
-    setChannelValue(buffer, parameter.channel);
+  var getRequestParameterSize = function (parameter) {
+    var size;
+    switch (parameter.id) {
+      case ABSOLUTE_DATA_MULTI_CHANNEL:
+      case ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL:
+      case REPORTING_DATA_CONFIG:
+      case EVENTS_CONFIG:
+        size = 2;
+        break;
+      default:
+        size = 1;
+        break;
+    }
+    return size;
   };
   function CommandBinaryBuffer(dataOrLength) {
     var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
@@ -1052,6 +1147,15 @@ var toBytes, getBase64FromBytes;
   }
   CommandBinaryBuffer.prototype = Object.create(BinaryBuffer.prototype);
   CommandBinaryBuffer.prototype.constructor = CommandBinaryBuffer;
+  CommandBinaryBuffer.getMagneticInfluenceBit = function (byte) {
+    return !!extractBits(byte, 1, MAGNETIC_INFLUENCE_BIT_INDEX);
+  };
+  CommandBinaryBuffer.setMagneticInfluenceBit = function (byte, value) {
+    return fillBits(byte, 1, MAGNETIC_INFLUENCE_BIT_INDEX, +value);
+  };
+  CommandBinaryBuffer.getLegacyHourCounterSize = function (hourCounter) {
+    return LEGACY_HOUR_COUNTER_SIZE + hourCounter.diff.length * LEGACY_HOUR_DIFF_SIZE;
+  };
   CommandBinaryBuffer.prototype.getExtendedValue = function () {
     var value = 0;
     var isByteExtended = true;
@@ -1143,13 +1247,13 @@ var toBytes, getBase64FromBytes;
   CommandBinaryBuffer.prototype.getLegacyCounter = function () {
     var byte = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getUint8();
     return {
-      isMagneticInfluence: getMagneticInfluenceBit(byte),
+      isMagneticInfluence: CommandBinaryBuffer.getMagneticInfluenceBit(byte),
       value: this.getLegacyCounterValue()
     };
   };
   CommandBinaryBuffer.prototype.setLegacyCounter = function (counter) {
     var byte = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-    this.setUint8(setMagneticInfluenceBit(byte, counter.isMagneticInfluence));
+    this.setUint8(CommandBinaryBuffer.setMagneticInfluenceBit(byte, counter.isMagneticInfluence));
     this.setLegacyCounterValue(counter.value);
   };
   CommandBinaryBuffer.prototype.getChannels = function () {
@@ -1439,7 +1543,19 @@ var toBytes, getBase64FromBytes;
     switch (id) {
       case ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL:
       case ABSOLUTE_DATA_MULTI_CHANNEL:
-        data = getRequestChannelParameter(this);
+        data = {
+          channel: getChannelValue(this)
+        };
+        break;
+      case REPORTING_DATA_CONFIG:
+        data = {
+          dataType: this.getUint8()
+        };
+        break;
+      case EVENTS_CONFIG:
+        data = {
+          eventId: this.getUint8()
+        };
         break;
     }
     return {
@@ -1449,12 +1565,22 @@ var toBytes, getBase64FromBytes;
   };
   CommandBinaryBuffer.prototype.setRequestParameter = function (parameter) {
     var id = parameter.id,
-      data = parameter.data;
+      parameterData = parameter.data;
+    var data;
     this.setUint8(id);
     switch (id) {
       case ABSOLUTE_DATA_MULTI_CHANNEL:
       case ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL:
-        setRequestChannelParameter(this, data);
+        data = parameterData;
+        setChannelValue(this, data.channel);
+        break;
+      case REPORTING_DATA_CONFIG:
+        data = parameterData;
+        this.setUint8(data.dataType);
+        break;
+      case EVENTS_CONFIG:
+        data = parameterData;
+        this.setUint8(data.eventId);
         break;
     }
   };
@@ -1506,11 +1632,117 @@ var toBytes, getBase64FromBytes;
         deviceParameterConvertersMap[id].set(this, data);
     }
   };
+  CommandBinaryBuffer.prototype.getLegacyHourDiff = function () {
+    var stateWithValueByte = this.getUint8();
+    var valueLowerByte = this.getUint8();
+    return {
+      isMagneticInfluence: CommandBinaryBuffer.getMagneticInfluenceBit(stateWithValueByte),
+      value: (stateWithValueByte & 0x1f) << 8 | valueLowerByte
+    };
+  };
+  CommandBinaryBuffer.prototype.setLegacyHourDiff = function (diff) {
+    var _this11 = this;
+    var bytes = [diff.value >> 8, diff.value & 0xff];
+    bytes[0] = CommandBinaryBuffer.setMagneticInfluenceBit(bytes[0], diff.isMagneticInfluence);
+    bytes.forEach(function (byte) {
+      return _this11.setUint8(byte);
+    });
+  };
+  CommandBinaryBuffer.prototype.getLegacyHourCounterWithDiff = function () {
+    var date = this.getDate();
+    var byte = this.getUint8();
+    var _this$getHours2 = this.getHours(byte),
+      hour = _this$getHours2.hour;
+    var counter = {
+      isMagneticInfluence: CommandBinaryBuffer.getMagneticInfluenceBit(byte),
+      value: this.getLegacyCounterValue()
+    };
+    var diff = [];
+    while (this.offset < this.data.length) {
+      diff.push(this.getLegacyHourDiff());
+    }
+    date.setUTCHours(hour);
+    return {
+      startTime2000: getTime2000FromDate(date),
+      counter: counter,
+      diff: diff
+    };
+  };
+  CommandBinaryBuffer.prototype.setLegacyHourCounterWithDiff = function (hourCounter) {
+    var _this12 = this;
+    var date = getDateFromTime2000(hourCounter.startTime2000);
+    var hour = date.getUTCHours();
+    this.setDate(date);
+    this.setHours(hour, 1);
+    this.seek(this.offset - 1);
+    var byte = this.getUint8();
+    this.seek(this.offset - 1);
+    this.setUint8(CommandBinaryBuffer.setMagneticInfluenceBit(byte, hourCounter.counter.isMagneticInfluence));
+    this.setLegacyCounterValue(hourCounter.counter.value);
+    hourCounter.diff.forEach(function (diffItem) {
+      return _this12.setLegacyHourDiff(diffItem);
+    });
+  };
+  CommandBinaryBuffer.prototype.getChannelsValuesWithHourDiffExtended = function () {
+    var _this13 = this;
+    var date = this.getDate();
+    var hour = this.getUint8();
+    var hours = this.getUint8();
+    var channels = this.getChannels();
+    var channelList = [];
+    date.setUTCHours(hour);
+    channels.forEach(function (channelIndex) {
+      var diff = [];
+      var value = _this13.getExtendedValue();
+      for (var diffHour = 1; diffHour < hours; ++diffHour) {
+        diff.push(_this13.getExtendedValue());
+      }
+      channelList.push({
+        value: value,
+        diff: diff,
+        index: channelIndex
+      });
+    });
+    return {
+      startTime2000: getTime2000FromDate(date),
+      hour: hour,
+      hours: hours,
+      channelList: channelList
+    };
+  };
+  CommandBinaryBuffer.prototype.setChannelsValuesWithHourDiffExtended = function (parameters) {
+    var _this14 = this;
+    var date = getDateFromTime2000(parameters.startTime2000);
+    this.setDate(date);
+    this.setUint8(parameters.hour);
+    this.setUint8(parameters.hours);
+    this.setChannels(parameters.channelList);
+    parameters.channelList.forEach(function (_ref5) {
+      var value = _ref5.value,
+        diff = _ref5.diff;
+      _this14.setExtendedValue(value);
+      diff.forEach(function (diffValue) {
+        return _this14.setExtendedValue(diffValue);
+      });
+    });
+  };
 
-  var id$a = 0x1b;
-  var COMMAND_BODY_SIZE$5 = 4;
-  var toBytes$c = function (parameters) {
-    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$5);
+  var id$h = 0x06;
+  var COMMAND_BODY_SIZE$8 = 3;
+  var toBytes$j = function (parameters) {
+    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$8);
+    var startTime2000 = parameters.startTime2000,
+      days = parameters.days;
+    var date = getDateFromTime2000(startTime2000);
+    buffer.setDate(date);
+    buffer.setUint8(days);
+    return toBytes$l(id$h, buffer.data);
+  };
+
+  var id$g = 0x1b;
+  var COMMAND_BODY_SIZE$7 = 4;
+  var toBytes$i = function (parameters) {
+    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$7);
     var startTime2000 = parameters.startTime2000,
       days = parameters.days,
       channelList = parameters.channelList;
@@ -1522,24 +1754,38 @@ var toBytes, getBase64FromBytes;
       };
     }));
     buffer.setUint8(days);
-    return toBytes$e(id$a, buffer.data);
+    return toBytes$l(id$g, buffer.data);
   };
 
-  var id$9 = 0x0b;
-  var COMMAND_BODY_SIZE$4 = 5;
-  var toBytes$b = function (parameters) {
+  var id$f = 0x0b;
+  var COMMAND_BODY_SIZE$6 = 5;
+  var toBytes$h = function (parameters) {
     var startTime2000 = parameters.startTime2000,
       events = parameters.events;
-    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$4);
+    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$6);
     buffer.setTime(startTime2000);
     buffer.setUint8(events);
-    return toBytes$e(id$9, buffer.data);
+    return toBytes$l(id$f, buffer.data);
   };
 
-  var id$8 = 0x1a;
-  var COMMAND_BODY_SIZE$3 = 4;
-  var toBytes$a = function (parameters) {
-    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$3);
+  var id$e = 0x05;
+  var COMMAND_BODY_SIZE$5 = 4;
+  var toBytes$g = function (parameters) {
+    var startTime2000 = parameters.startTime2000,
+      hours = parameters.hours;
+    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$5);
+    var date = getDateFromTime2000(startTime2000);
+    var hour = date.getUTCHours();
+    buffer.setDate(date);
+    buffer.setHours(hour, 1);
+    buffer.setUint8(hours);
+    return toBytes$l(id$e, buffer.data);
+  };
+
+  var id$d = 0x1a;
+  var COMMAND_BODY_SIZE$4 = 4;
+  var toBytes$f = function (parameters) {
+    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$4);
     var hours = parameters.hours,
       startTime2000 = parameters.startTime2000,
       channelList = parameters.channelList;
@@ -1552,23 +1798,28 @@ var toBytes, getBase64FromBytes;
         index: index
       };
     }));
-    return toBytes$e(id$8, buffer.data);
+    return toBytes$l(id$d, buffer.data);
   };
 
-  var id$7 = 0x07;
-  var toBytes$9 = function () {
-    return toBytes$e(id$7);
+  var id$c = 0x051f;
+  var toBytes$e = function () {
+    return toBytes$l(id$c);
   };
 
-  var id$6 = 0x18;
-  var toBytes$8 = function () {
-    return toBytes$e(id$6);
+  var id$b = 0x07;
+  var toBytes$d = function () {
+    return toBytes$l(id$b);
   };
 
-  var id$5 = 0x0d1f;
-  var COMMAND_BODY_SIZE$2 = 4;
-  var toBytes$7 = function (parameters) {
-    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$2);
+  var id$a = 0x18;
+  var toBytes$c = function () {
+    return toBytes$l(id$a);
+  };
+
+  var id$9 = 0x0d1f;
+  var COMMAND_BODY_SIZE$3 = 4;
+  var toBytes$b = function (parameters) {
+    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$3);
     var startTime2000 = parameters.startTime2000,
       days = parameters.days,
       channelList = parameters.channelList;
@@ -1579,13 +1830,13 @@ var toBytes, getBase64FromBytes;
       };
     }));
     buffer.setUint8(days);
-    return toBytes$e(id$5, buffer.data);
+    return toBytes$l(id$9, buffer.data);
   };
 
-  var id$4 = 0x0c1f;
-  var COMMAND_BODY_SIZE$1 = 4;
-  var toBytes$6 = function (parameters) {
-    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$1);
+  var id$8 = 0x0c1f;
+  var COMMAND_BODY_SIZE$2 = 4;
+  var toBytes$a = function (parameters) {
+    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$2);
     var startTime2000 = parameters.startTime2000,
       hours = parameters.hours,
       channelList = parameters.channelList;
@@ -1598,33 +1849,72 @@ var toBytes, getBase64FromBytes;
         index: index
       };
     }));
-    return toBytes$e(id$4, buffer.data);
+    return toBytes$l(id$8, buffer.data);
   };
 
-  var id$3 = 0x021f;
+  var id$7 = 0x301f;
+  var COMMAND_BODY_SIZE$1 = 5;
+  var toBytes$9 = function (parameters) {
+    var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$1);
+    var channelList = parameters.channelList,
+      hour = parameters.hour,
+      hours = parameters.hours,
+      startTime2000 = parameters.startTime2000;
+    var date = getDateFromTime2000(startTime2000);
+    buffer.setDate(date);
+    buffer.setUint8(hour);
+    buffer.setUint8(hours);
+    buffer.setChannels(channelList.map(function (index) {
+      return {
+        index: index
+      };
+    }));
+    return toBytes$l(id$7, buffer.data);
+  };
+
+  var id$6 = 0x021f;
+  var toBytes$8 = function () {
+    return toBytes$l(id$6);
+  };
+
+  var id$5 = 0x04;
+  var toBytes$7 = function (parameters) {
+    var buffer = new CommandBinaryBuffer(getRequestParameterSize(parameters));
+    buffer.setRequestParameter(parameters);
+    return toBytes$l(id$5, buffer.data);
+  };
+
+  var id$4 = 0x14;
+  var toBytes$6 = function () {
+    return toBytes$l(id$4);
+  };
+
+  var id$3 = 0x09;
   var toBytes$5 = function () {
-    return toBytes$e(id$3);
+    return toBytes$l(id$3, []);
   };
 
-  var id$2 = 0x14;
-  var toBytes$4 = function () {
-    return toBytes$e(id$2);
+  var id$2 = 0x03;
+  var toBytes$4 = function (parameters) {
+    var buffer = new CommandBinaryBuffer(getParameterSize(parameters));
+    buffer.setParameter(parameters);
+    return toBytes$l(id$2, buffer.data);
   };
 
-  var id$1 = 0x09;
-  var toBytes$3 = function () {
-    return toBytes$e(id$1, []);
-  };
-
-  var id = 0x02;
+  var id$1 = 0x02;
   var COMMAND_BODY_SIZE = 5;
-  var toBytes$2 = function (parameters) {
+  var toBytes$3 = function (parameters) {
     var sequenceNumber = parameters.sequenceNumber,
       seconds = parameters.seconds;
     var buffer = new BinaryBuffer(COMMAND_BODY_SIZE, false);
     buffer.setUint8(sequenceNumber);
     buffer.setInt32(seconds);
-    return toBytes$e(id, buffer.data);
+    return toBytes$l(id$1, buffer.data);
+  };
+
+  var id = 0x19;
+  var toBytes$2 = function () {
+    return toBytes$l(id);
   };
 
   var calculateLrc = (function (data) {
@@ -1655,6 +1945,13 @@ var toBytes, getBase64FromBytes;
 
   var toBytesMap = {};
   var toBytes$1 = getToBytes(toBytesMap);
+  toBytesMap[id$i] = toBytes$k;
+  toBytesMap[id$h] = toBytes$j;
+  toBytesMap[id$g] = toBytes$i;
+  toBytesMap[id$f] = toBytes$h;
+  toBytesMap[id$e] = toBytes$g;
+  toBytesMap[id$d] = toBytes$f;
+  toBytesMap[id$c] = toBytes$e;
   toBytesMap[id$b] = toBytes$d;
   toBytesMap[id$a] = toBytes$c;
   toBytesMap[id$9] = toBytes$b;
