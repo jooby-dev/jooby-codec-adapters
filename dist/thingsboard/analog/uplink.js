@@ -352,7 +352,7 @@ Object.defineProperties(BinaryBuffer.prototype, {
 
 var shortCommandMask = 0xe0;
 var extraCommandMask = 0x1f;
-var fromBytes$u = function (data) {
+var fromBytes$y = function (data) {
   if (data.length === 0) {
     throw new Error('Invalid buffer size');
   }
@@ -387,11 +387,11 @@ var fromBytes$u = function (data) {
   };
 };
 
-var id$r = 0x0c;
-var name$r = 'correctTime2000';
-var COMMAND_BODY_SIZE$5 = 1;
-var fromBytes$t = function (data) {
-  if (data.length !== COMMAND_BODY_SIZE$5) {
+var id$v = 0x0c;
+var name$v = 'correctTime2000';
+var COMMAND_BODY_SIZE$7 = 1;
+var fromBytes$x = function (data) {
+  if (data.length !== COMMAND_BODY_SIZE$7) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
   var buffer = new BinaryBuffer(data, false);
@@ -1642,11 +1642,30 @@ CommandBinaryBuffer.prototype.setChannelsValuesWithHourDiffExtended = function (
     });
   });
 };
+CommandBinaryBuffer.prototype.getDataSegment = function () {
+  var segmentationSessionId = this.getUint8();
+  var flag = this.getUint8();
+  return {
+    segmentationSessionId: segmentationSessionId,
+    segmentIndex: extractBits(flag, 3, 1),
+    segmentsNumber: extractBits(flag, 3, 5),
+    isLast: Boolean(extractBits(flag, 1, 8)),
+    data: this.getBytesLeft()
+  };
+};
+CommandBinaryBuffer.prototype.setDataSegment = function (parameters) {
+  var flag = fillBits(0, 3, 1, parameters.segmentIndex);
+  flag = fillBits(flag, 3, 5, parameters.segmentsNumber);
+  flag = fillBits(flag, 1, 8, +parameters.isLast);
+  this.setUint8(parameters.segmentationSessionId);
+  this.setUint8(flag);
+  this.setBytes(parameters.data);
+};
 
-var id$q = 0x07;
-var name$q = 'current';
+var id$u = 0x07;
+var name$u = 'current';
 var COMMAND_BODY_MAX_SIZE$9 = 4;
-var fromBytes$s = function (data) {
+var fromBytes$w = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$9) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -1654,10 +1673,10 @@ var fromBytes$s = function (data) {
   return buffer.getLegacyCounter();
 };
 
-var id$p = 0x18;
-var name$p = 'currentMc';
+var id$t = 0x18;
+var name$t = 'currentMc';
 var COMMAND_BODY_MAX_SIZE$8 = 37;
-var fromBytes$r = function (data) {
+var fromBytes$v = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$8) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -1675,9 +1694,16 @@ var fromBytes$r = function (data) {
   return parameters;
 };
 
-var id$o = 0x20;
-var name$o = 'day';
-var fromBytes$q = function (data) {
+var id$s = 0x1e;
+var name$s = 'dataSegment';
+var fromBytes$u = function (data) {
+  var buffer = new CommandBinaryBuffer(data);
+  return buffer.getDataSegment();
+};
+
+var id$r = 0x20;
+var name$r = 'day';
+var fromBytes$t = function (data) {
   var buffer = new CommandBinaryBuffer(data);
   var date = buffer.getDate();
   var byte = buffer.getUint8();
@@ -1693,10 +1719,10 @@ var fromBytes$q = function (data) {
   };
 };
 
-var id$n = 0x16;
-var name$n = 'dayMc';
+var id$q = 0x16;
+var name$q = 'dayMc';
 var COMMAND_BODY_MAX_SIZE$7 = 32;
-var fromBytes$p = function (data) {
+var fromBytes$s = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$7) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -1715,10 +1741,10 @@ var fromBytes$p = function (data) {
   };
 };
 
-var id$m = 0x0b1f;
-var name$m = 'exAbsDayMc';
+var id$p = 0x0b1f;
+var name$p = 'exAbsDayMc';
 var COMMAND_BODY_MAX_SIZE$6 = 89;
-var fromBytes$o = function (data) {
+var fromBytes$r = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$6) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -1731,10 +1757,10 @@ var fromBytes$o = function (data) {
   };
 };
 
-var id$l = 0x0a1f;
-var name$l = 'exAbsHourMc';
+var id$o = 0x0a1f;
+var name$o = 'exAbsHourMc';
 var COMMAND_BODY_MAX_SIZE$5 = 168;
-var fromBytes$n = function (data) {
+var fromBytes$q = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$5) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -1752,9 +1778,9 @@ var fromBytes$n = function (data) {
   };
 };
 
-var id$k = 0x06;
-var name$k = 'getArchiveDays';
-var fromBytes$m = function (data) {
+var id$n = 0x06;
+var name$n = 'getArchiveDays';
+var fromBytes$p = function (data) {
   var buffer = new CommandBinaryBuffer(data);
   var date = buffer.getDate();
   var dayList = [];
@@ -1767,9 +1793,9 @@ var fromBytes$m = function (data) {
   };
 };
 
-var id$j = 0x1b;
-var name$j = 'getArchiveDaysMc';
-var fromBytes$l = function (data) {
+var id$m = 0x1b;
+var name$m = 'getArchiveDaysMc';
+var fromBytes$o = function (data) {
   var buffer = new CommandBinaryBuffer(data);
   var date = buffer.getDate();
   var channels = buffer.getChannels();
@@ -1792,8 +1818,8 @@ var fromBytes$l = function (data) {
   };
 };
 
-var id$i = 0x0b;
-var name$i = 'getArchiveEvents';
+var id$l = 0x0b;
+var name$l = 'getArchiveEvents';
 var getEvent = function (buffer) {
   return {
     time2000: buffer.getTime(),
@@ -1801,7 +1827,7 @@ var getEvent = function (buffer) {
     sequenceNumber: buffer.getUint8()
   };
 };
-var fromBytes$k = function (data) {
+var fromBytes$n = function (data) {
   var buffer = new CommandBinaryBuffer(data, false);
   var eventList = [];
   while (buffer.bytesLeft > 0) {
@@ -1812,17 +1838,17 @@ var fromBytes$k = function (data) {
   };
 };
 
-var id$h = 0x05;
-var name$h = 'getArchiveHours';
-var fromBytes$j = function (data) {
+var id$k = 0x05;
+var name$k = 'getArchiveHours';
+var fromBytes$m = function (data) {
   var buffer = new CommandBinaryBuffer(data);
   return buffer.getLegacyHourCounterWithDiff();
 };
 
-var id$g = 0x1a;
-var name$g = 'getArchiveHoursMc';
+var id$j = 0x1a;
+var name$j = 'getArchiveHoursMc';
 var COMMAND_BODY_MAX_SIZE$4 = 164;
-var fromBytes$i = function (data) {
+var fromBytes$l = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$4) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -1830,9 +1856,9 @@ var fromBytes$i = function (data) {
   return buffer.getChannelsValuesWithHourDiff();
 };
 
-var id$f = 0x051f;
-var name$f = 'getBatteryStatus';
-var fromBytes$h = function (data) {
+var id$i = 0x051f;
+var name$i = 'getBatteryStatus';
+var fromBytes$k = function (data) {
   var buffer = new CommandBinaryBuffer(data);
   return {
     voltageUnderLowLoad: buffer.getUint16(),
@@ -1845,9 +1871,9 @@ var fromBytes$h = function (data) {
   };
 };
 
-var id$e = 0x0d1f;
-var name$e = 'getExAbsArchiveDaysMc';
-var fromBytes$g = function (data) {
+var id$h = 0x0d1f;
+var name$h = 'getExAbsArchiveDaysMc';
+var fromBytes$j = function (data) {
   var buffer = new CommandBinaryBuffer(data);
   var date = buffer.getDate();
   var channels = buffer.getChannels();
@@ -1872,17 +1898,17 @@ var fromBytes$g = function (data) {
   };
 };
 
-var id$d = 0x1a;
-var name$d = 'getExAbsArchiveHoursMc';
-var fromBytes$f = function (data) {
+var id$g = 0x1a;
+var name$g = 'getExAbsArchiveHoursMc';
+var fromBytes$i = function (data) {
   var buffer = new CommandBinaryBuffer(data);
   return buffer.getChannelsValuesWithHourDiff();
 };
 
-var id$c = 0x301f;
-var name$c = 'getExAbsArchiveHoursMcEx';
+var id$f = 0x301f;
+var name$f = 'getExAbsArchiveHoursMcEx';
 var COMMAND_BODY_MAX_SIZE$3 = 164;
-var fromBytes$e = function (data) {
+var fromBytes$h = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$3) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -1890,15 +1916,15 @@ var fromBytes$e = function (data) {
   return buffer.getChannelsValuesWithHourDiffExtended();
 };
 
-var id$b = 0x021f;
-var name$b = 'getLmicInfo';
-var COMMAND_BODY_SIZE$4 = 2;
+var id$e = 0x021f;
+var name$e = 'getLmicInfo';
+var COMMAND_BODY_SIZE$6 = 2;
 var lmicCapabilitiesBitMask = {
   isMulticastSupported: 1 << 0,
   isFragmentedDataSupported: 1 << 1
 };
-var fromBytes$d = function (data) {
-  if (data.length !== COMMAND_BODY_SIZE$4) {
+var fromBytes$g = function (data) {
+  if (data.length !== COMMAND_BODY_SIZE$6) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
   var buffer = new BinaryBuffer(data);
@@ -1913,24 +1939,24 @@ var fromBytes$d = function (data) {
   };
 };
 
-var id$a = 0x04;
-var name$a = 'getParameter';
-var fromBytes$c = function (data) {
+var id$d = 0x04;
+var name$d = 'getParameter';
+var fromBytes$f = function (data) {
   var buffer = new CommandBinaryBuffer(data);
   return buffer.getResponseParameter();
 };
 
-var id$9 = 0x40;
-var name$9 = 'hour';
-var fromBytes$b = function (data) {
+var id$c = 0x40;
+var name$c = 'hour';
+var fromBytes$e = function (data) {
   var buffer = new CommandBinaryBuffer(data);
   return buffer.getLegacyHourCounterWithDiff();
 };
 
-var id$8 = 0x17;
-var name$8 = 'hourMc';
+var id$b = 0x17;
+var name$b = 'hourMc';
 var COMMAND_BODY_MAX_SIZE$2 = 164;
-var fromBytes$a = function (data) {
+var fromBytes$d = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$2) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -1938,10 +1964,10 @@ var fromBytes$a = function (data) {
   return buffer.getChannelsValuesWithHourDiff();
 };
 
-var id$7 = 0x311f;
-var name$7 = 'hourMcEx';
+var id$a = 0x311f;
+var name$a = 'hourMcEx';
 var COMMAND_BODY_MAX_SIZE$1 = 5125;
-var fromBytes$9 = function (data) {
+var fromBytes$c = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE$1) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -1949,9 +1975,9 @@ var fromBytes$9 = function (data) {
   return buffer.getChannelsValuesWithHourDiffExtended();
 };
 
-var id$6 = 0x60;
-var name$6 = 'lastEvent';
-var fromBytes$8 = function (data, config) {
+var id$9 = 0x60;
+var name$9 = 'lastEvent';
+var fromBytes$b = function (data, config) {
   if (!config.hardwareType) {
     throw new Error('hardwareType in config is mandatory');
   }
@@ -1981,8 +2007,8 @@ var OPTOFLASH = 16;
 var MTX = 17;
 var JOIN_ACCEPT = 18;
 
-var id$5 = 0x15;
-var name$5 = 'newEvent';
+var id$8 = 0x15;
+var name$8 = 'newEvent';
 var COMMAND_BODY_MAX_SIZE = 14;
 var MTX_ADDRESS_SIZE = 8;
 var getVoltage = function (buffer) {
@@ -1991,7 +2017,7 @@ var getVoltage = function (buffer) {
 var getDeviceId = function (buffer) {
   return getHexFromBytes(buffer.getBytes(MTX_ADDRESS_SIZE));
 };
-var fromBytes$7 = function (data) {
+var fromBytes$a = function (data) {
   if (data.length > COMMAND_BODY_MAX_SIZE) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
@@ -2039,7 +2065,7 @@ var fromBytes$7 = function (data) {
       };
       break;
     default:
-      throw new Error("Event ".concat(id$5, " is not supported"));
+      throw new Error("Event ".concat(id$8, " is not supported"));
   }
   return {
     id: eventId,
@@ -2048,11 +2074,11 @@ var fromBytes$7 = function (data) {
   };
 };
 
-var id$4 = 0x03;
-var name$4 = 'setParameter';
-var COMMAND_BODY_SIZE$3 = 2;
-var fromBytes$6 = function (data) {
-  if (data.length !== COMMAND_BODY_SIZE$3) {
+var id$7 = 0x03;
+var name$7 = 'setParameter';
+var COMMAND_BODY_SIZE$5 = 2;
+var fromBytes$9 = function (data) {
+  if (data.length !== COMMAND_BODY_SIZE$5) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
   var buffer = new CommandBinaryBuffer(data);
@@ -2066,11 +2092,11 @@ var fromBytes$6 = function (data) {
   return parameters;
 };
 
-var id$3 = 0x02;
-var name$3 = 'setTime2000';
-var COMMAND_BODY_SIZE$2 = 1;
-var fromBytes$5 = function (data) {
-  if (data.length !== COMMAND_BODY_SIZE$2) {
+var id$6 = 0x02;
+var name$6 = 'setTime2000';
+var COMMAND_BODY_SIZE$4 = 1;
+var fromBytes$8 = function (data) {
+  if (data.length !== COMMAND_BODY_SIZE$4) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
   var buffer = new BinaryBuffer(data, false);
@@ -2083,21 +2109,21 @@ var fromBytes$5 = function (data) {
   return parameters;
 };
 
-var id$2 = 0x19;
-var name$2 = 'softRestart';
-var COMMAND_BODY_SIZE$1 = 0;
-var fromBytes$4 = function (data) {
-  if (data.length !== COMMAND_BODY_SIZE$1) {
+var id$5 = 0x19;
+var name$5 = 'softRestart';
+var COMMAND_BODY_SIZE$3 = 0;
+var fromBytes$7 = function (data) {
+  if (data.length !== COMMAND_BODY_SIZE$3) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
   return {};
 };
 
-var id$1 = 0x14;
-var name$1 = 'status';
+var id$4 = 0x14;
+var name$4 = 'status';
 var UNKNOWN_BATTERY_RESISTANCE = 65535;
 var UNKNOWN_BATTERY_CAPACITY = 255;
-var fromBytes$3 = function (bytes) {
+var fromBytes$6 = function (bytes) {
   var buffer = new CommandBinaryBuffer(bytes);
   var software = {
     type: buffer.getUint8(),
@@ -2158,7 +2184,7 @@ var fromBytes$3 = function (bytes) {
       break;
     case ELIMP:
     default:
-      throw new Error("".concat(id$1, ": hardware type ").concat(hardware.type, " is not supported"));
+      throw new Error("".concat(id$4, ": hardware type ").concat(hardware.type, " is not supported"));
   }
   return {
     software: software,
@@ -2167,11 +2193,11 @@ var fromBytes$3 = function (bytes) {
   };
 };
 
-var id = 0x09;
-var name = 'time2000';
-var COMMAND_BODY_SIZE = 5;
-var fromBytes$2 = function (data) {
-  if (data.length !== COMMAND_BODY_SIZE) {
+var id$3 = 0x09;
+var name$3 = 'time2000';
+var COMMAND_BODY_SIZE$2 = 5;
+var fromBytes$5 = function (data) {
+  if (data.length !== COMMAND_BODY_SIZE$2) {
     throw new Error("Wrong buffer size: ".concat(data.length, "."));
   }
   var buffer = new CommandBinaryBuffer(data);
@@ -2183,6 +2209,39 @@ var fromBytes$2 = function (data) {
     throw new Error('BinaryBuffer is not empty.');
   }
   return parameters;
+};
+
+var id$2 = 0x2c1f;
+var name$2 = 'updateRun';
+var COMMAND_BODY_SIZE$1 = 0;
+var fromBytes$4 = function (data) {
+  if (data.length !== COMMAND_BODY_SIZE$1) {
+    throw new Error("Wrong buffer size: ".concat(data.length, "."));
+  }
+  return {};
+};
+
+var id$1 = 0x2b1f;
+var name$1 = 'verifyImage';
+var COMMAND_BODY_SIZE = 1;
+var fromBytes$3 = function (data) {
+  if (data.length !== COMMAND_BODY_SIZE) {
+    throw new Error("Wrong buffer size: ".concat(data.length, "."));
+  }
+  var buffer = new CommandBinaryBuffer(data);
+  return {
+    status: buffer.getUint8()
+  };
+};
+
+var id = 0x2a1f;
+var name = 'writeImage';
+var fromBytes$2 = function (data) {
+  var buffer = new CommandBinaryBuffer(data);
+  return {
+    offset: buffer.getUint32(false),
+    status: buffer.getUint8()
+  };
 };
 
 var calculateLrc = (function (data) {
@@ -2215,7 +2274,7 @@ var getFromBytes = function (fromBytesMap, nameMap) {
       return message;
     }
     do {
-      var headerInfo = fromBytes$u(data.slice(processedBytes, processedBytes + HEADER_MAX_SIZE));
+      var headerInfo = fromBytes$y(data.slice(processedBytes, processedBytes + HEADER_MAX_SIZE));
       var headerData = data.slice(processedBytes, processedBytes + headerInfo.headerSize);
       var bodyData = data.slice(processedBytes + headerInfo.headerSize, processedBytes + headerInfo.headerSize + headerInfo.commandSize);
       var command = {
@@ -2259,6 +2318,10 @@ var getFromBytes = function (fromBytesMap, nameMap) {
 var fromBytesMap = {};
 var nameMap = {};
 var fromBytes$1 = getFromBytes(fromBytesMap, nameMap);
+fromBytesMap[id$v] = fromBytes$x;
+fromBytesMap[id$u] = fromBytes$w;
+fromBytesMap[id$t] = fromBytes$v;
+fromBytesMap[id$s] = fromBytes$u;
 fromBytesMap[id$r] = fromBytes$t;
 fromBytesMap[id$q] = fromBytes$s;
 fromBytesMap[id$p] = fromBytes$r;
@@ -2266,12 +2329,12 @@ fromBytesMap[id$o] = fromBytes$q;
 fromBytesMap[id$n] = fromBytes$p;
 fromBytesMap[id$m] = fromBytes$o;
 fromBytesMap[id$l] = fromBytes$n;
+fromBytesMap[id$i] = fromBytes$k;
 fromBytesMap[id$k] = fromBytes$m;
 fromBytesMap[id$j] = fromBytes$l;
-fromBytesMap[id$i] = fromBytes$k;
-fromBytesMap[id$f] = fromBytes$h;
 fromBytesMap[id$h] = fromBytes$j;
 fromBytesMap[id$g] = fromBytes$i;
+fromBytesMap[id$f] = fromBytes$h;
 fromBytesMap[id$e] = fromBytes$g;
 fromBytesMap[id$d] = fromBytes$f;
 fromBytesMap[id$c] = fromBytes$e;
@@ -2287,6 +2350,10 @@ fromBytesMap[id$3] = fromBytes$5;
 fromBytesMap[id$2] = fromBytes$4;
 fromBytesMap[id$1] = fromBytes$3;
 fromBytesMap[id] = fromBytes$2;
+nameMap[id$v] = name$v;
+nameMap[id$u] = name$u;
+nameMap[id$t] = name$t;
+nameMap[id$s] = name$s;
 nameMap[id$r] = name$r;
 nameMap[id$q] = name$q;
 nameMap[id$p] = name$p;
@@ -2294,12 +2361,12 @@ nameMap[id$o] = name$o;
 nameMap[id$n] = name$n;
 nameMap[id$m] = name$m;
 nameMap[id$l] = name$l;
+nameMap[id$i] = name$i;
 nameMap[id$k] = name$k;
 nameMap[id$j] = name$j;
-nameMap[id$i] = name$i;
-nameMap[id$f] = name$f;
 nameMap[id$h] = name$h;
 nameMap[id$g] = name$g;
+nameMap[id$f] = name$f;
 nameMap[id$e] = name$e;
 nameMap[id$d] = name$d;
 nameMap[id$c] = name$c;
