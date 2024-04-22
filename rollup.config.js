@@ -119,11 +119,11 @@ export default [
     {
         input: './src/targets/thingsboard/analog/uplink/index.js',
         output: [
-            {
-                file: './dist/thingsboard/analog/uplink.js',
-                format: 'cjs',
-                banner: readFileSync('./src/targets/thingsboard/analog/uplink/init.js', 'utf8')
-            },
+            // {
+            //     file: './dist/thingsboard/analog/uplink.js',
+            //     format: 'cjs',
+            //     banner: readFileSync('./src/targets/thingsboard/analog/uplink/init.js', 'utf8')
+            // },
             {
                 file: './dist/thingsboard/analog/uplink.min.js',
                 format: 'iife',
@@ -144,7 +144,8 @@ export default [
                     '@babel/plugin-transform-parameters',
                     '@babel/plugin-transform-shorthand-properties',
                     '@babel/plugin-transform-spread',
-                    '@babel/plugin-transform-template-literals'
+                    '@babel/plugin-transform-template-literals',
+                    '@babel/plugin-transform-computed-properties'
                 ]
             }),
             processTemplate('./src/targets/thingsboard/analog/uplink/template.js')
@@ -155,11 +156,11 @@ export default [
     {
         input: './src/targets/thingsboard/analog/downlink/index.js',
         output: [
-            {
-                file: './dist/thingsboard/analog/downlink.js',
-                format: 'iife',
-                banner: readFileSync('./src/targets/thingsboard/analog/downlink/init.js', 'utf8')
-            },
+            // {
+            //     file: './dist/thingsboard/analog/downlink.js',
+            //     format: 'iife',
+            //     banner: readFileSync('./src/targets/thingsboard/analog/downlink/init.js', 'utf8')
+            // },
             {
                 file: './dist/thingsboard/analog/downlink.min.js',
                 format: 'iife',
@@ -180,7 +181,8 @@ export default [
                     '@babel/plugin-transform-parameters',
                     '@babel/plugin-transform-shorthand-properties',
                     '@babel/plugin-transform-spread',
-                    '@babel/plugin-transform-template-literals'
+                    '@babel/plugin-transform-template-literals',
+                    '@babel/plugin-transform-computed-properties'
                 ]
             }),
             processTemplate('./src/targets/thingsboard/analog/downlink/template.js')
