@@ -1,1 +1,1 @@
-var fromBytes;
+var fromBytes, getBytesFromHex;
