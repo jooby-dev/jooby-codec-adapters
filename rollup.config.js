@@ -25,6 +25,22 @@ const thingsboardTerserOptions = {
     //format: {braces: true}
 };
 
+const thingsboardBabelPlugin = babel({
+    babelHelpers: 'bundled',
+    presets: ['@babel/preset-env'],
+    targets: 'defaults',
+    plugins: [
+        ['@babel/plugin-transform-arrow-functions', {spec: false}],
+        '@babel/plugin-transform-destructuring',
+        '@babel/plugin-transform-block-scoping',
+        '@babel/plugin-transform-parameters',
+        '@babel/plugin-transform-shorthand-properties',
+        '@babel/plugin-transform-spread',
+        '@babel/plugin-transform-template-literals',
+        '@babel/plugin-transform-computed-properties'
+    ]
+});
+
 
 export default [
     // chirpstack3 uplink+downlink
@@ -119,11 +135,11 @@ export default [
     {
         input: './src/targets/thingsboard/analog/uplink/index.js',
         output: [
-            // {
-            //     file: './dist/thingsboard/analog/uplink.js',
-            //     format: 'cjs',
-            //     banner: readFileSync('./src/targets/thingsboard/analog/uplink/init.js', 'utf8')
-            // },
+            {
+                file: './dist/thingsboard/analog/uplink.js',
+                format: 'cjs',
+                banner: readFileSync('./src/targets/thingsboard/analog/uplink/init.js', 'utf8')
+            },
             {
                 file: './dist/thingsboard/analog/uplink.min.js',
                 format: 'iife',
@@ -133,21 +149,25 @@ export default [
         ],
         plugins: [
             nodeResolve(),
-            babel({
-                babelHelpers: 'bundled',
-                presets: ['@babel/preset-env'],
-                targets: 'defaults',
-                plugins: [
-                    ['@babel/plugin-transform-arrow-functions', {spec: false}],
-                    '@babel/plugin-transform-destructuring',
-                    '@babel/plugin-transform-block-scoping',
-                    '@babel/plugin-transform-parameters',
-                    '@babel/plugin-transform-shorthand-properties',
-                    '@babel/plugin-transform-spread',
-                    '@babel/plugin-transform-template-literals',
-                    '@babel/plugin-transform-computed-properties'
-                ]
-            }),
+            thingsboardBabelPlugin,
+            processTemplate('./src/targets/thingsboard/analog/uplink/template.js')
+        ]
+    },
+
+    // thingsboard uplink for loriot
+    {
+        input: './src/targets/thingsboard/analog/uplink/loriot/index.js',
+        output: [
+            {
+                file: './dist/thingsboard/analog/loriot/uplink.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/thingsboard/analog/uplink/loriot/init.js', 'utf8'),
+                plugins: [terser(thingsboardTerserOptions)]
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            thingsboardBabelPlugin,
             processTemplate('./src/targets/thingsboard/analog/uplink/template.js')
         ]
     },
@@ -156,11 +176,11 @@ export default [
     {
         input: './src/targets/thingsboard/analog/downlink/index.js',
         output: [
-            // {
-            //     file: './dist/thingsboard/analog/downlink.js',
-            //     format: 'iife',
-            //     banner: readFileSync('./src/targets/thingsboard/analog/downlink/init.js', 'utf8')
-            // },
+            {
+                file: './dist/thingsboard/analog/downlink.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/thingsboard/analog/downlink/init.js', 'utf8')
+            },
             {
                 file: './dist/thingsboard/analog/downlink.min.js',
                 format: 'iife',
@@ -170,21 +190,7 @@ export default [
         ],
         plugins: [
             nodeResolve(),
-            babel({
-                babelHelpers: 'bundled',
-                presets: ['@babel/preset-env'],
-                targets: 'defaults',
-                plugins: [
-                    ['@babel/plugin-transform-arrow-functions', {spec: false}],
-                    '@babel/plugin-transform-destructuring',
-                    '@babel/plugin-transform-block-scoping',
-                    '@babel/plugin-transform-parameters',
-                    '@babel/plugin-transform-shorthand-properties',
-                    '@babel/plugin-transform-spread',
-                    '@babel/plugin-transform-template-literals',
-                    '@babel/plugin-transform-computed-properties'
-                ]
-            }),
+            thingsboardBabelPlugin,
             processTemplate('./src/targets/thingsboard/analog/downlink/template.js')
         ]
     },
