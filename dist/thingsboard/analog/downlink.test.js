@@ -60,6 +60,57 @@ var logs = '';
   function _nonIterableSpread() {
     throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
   }
+  function _createForOfIteratorHelper(o, allowArrayLike) {
+    var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
+    if (!it) {
+      if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
+        if (it) o = it;
+        var i = 0;
+        var F = function () {};
+        return {
+          s: F,
+          n: function () {
+            if (i >= o.length) return {
+              done: true
+            };
+            return {
+              done: false,
+              value: o[i++]
+            };
+          },
+          e: function (e) {
+            throw e;
+          },
+          f: F
+        };
+      }
+      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }
+    var normalCompletion = true,
+      didErr = false,
+      err;
+    return {
+      s: function () {
+        it = it.call(o);
+      },
+      n: function () {
+        var step = it.next();
+        normalCompletion = step.done;
+        return step;
+      },
+      e: function (e) {
+        didErr = true;
+        err = e;
+      },
+      f: function () {
+        try {
+          if (!normalCompletion && it.return != null) it.return();
+        } finally {
+          if (didErr) throw err;
+        }
+      }
+    };
+  }
 
   var hexFormatOptions = {
     separator: ' ',
@@ -573,6 +624,8 @@ var logs = '';
   var NBIOT_MODULE_FIRMWARE_UPDATE = 48;
   var REPORTING_DATA_CONFIG = 49;
   var EVENTS_CONFIG = 50;
+  var NBIOT_MODULE_INFO = 51;
+  var NBIOT_BANDS = 52;
 
   var invertObject = (function (source) {
     var target = {};
@@ -1015,7 +1068,7 @@ var logs = '';
   }), NBIOT_SSL_CLIENT_CERT_SET, {
     get: getNbiotSslSet,
     set: setNbiotSslSet
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_SSL_CLIENT_KEY_WRITE, {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_SSL_CLIENT_KEY_WRITE, {
     get: getNbiotSslWrite,
     set: setNbiotSslWrite
   }), NBIOT_SSL_CLIENT_KEY_SET, {
@@ -1069,21 +1122,52 @@ var logs = '';
       buffer.setUint8(parameter.sendEvent);
       buffer.setUint8(parameter.saveEvent);
     }
+  }), NBIOT_MODULE_INFO, {
+    get: function get(buffer) {
+      return {
+        moduleInfo: buffer.getString()
+      };
+    },
+    set: function set(buffer, parameter) {
+      buffer.setString(parameter.moduleInfo);
+    }
+  }), NBIOT_BANDS, {
+    get: function get(buffer) {
+      var count = buffer.getUint8();
+      var bands = [];
+      for (var index = 0; index < count; index++) {
+        bands.push(buffer.getUint8());
+      }
+      return {
+        bands: bands
+      };
+    },
+    set: function set(buffer, parameter) {
+      buffer.setUint8(parameter.bands.length);
+      var _iterator = _createForOfIteratorHelper(parameter.bands),
+        _step;
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var band = _step.value;
+          buffer.setUint8(band);
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+    }
   }));
   var getParameterSize = function getParameterSize(parameter) {
     var size;
     var data;
     switch (parameter.id) {
       case MQTT_SESSION_CONFIG:
-        if (parameter.data) {
-          data = parameter.data;
-          size = 1 + 1;
-          size += data.clientId.length + 1;
-          size += data.username.length + 1;
-          size += data.password.length + 1;
-        } else {
-          size = 1;
-        }
+        data = parameter.data;
+        size = 1 + 1;
+        size += data.clientId.length + 1;
+        size += data.username.length + 1;
+        size += data.password.length + 1;
         break;
       case MQTT_BROKER_ADDRESS:
         data = parameter.data;
@@ -1098,31 +1182,28 @@ var logs = '';
       case NBIOT_SSL_CACERT_WRITE:
       case NBIOT_SSL_CLIENT_CERT_WRITE:
       case NBIOT_SSL_CLIENT_KEY_WRITE:
-        if (parameter.data) {
-          data = parameter.data;
-          size = 1 + 2 + 2;
-          size += data.chunk.length;
-        } else {
-          size = 1;
-        }
+        data = parameter.data;
+        size = 1 + 2 + 2;
+        size += data.chunk.length;
         break;
       case NBIOT_DEVICE_SOFTWARE_UPDATE:
-        if (parameter.data) {
-          data = parameter.data;
-          size = 1;
-          size += data.softwareImageUrl.length + 1;
-        } else {
-          size = 1;
-        }
+        data = parameter.data;
+        size = 1;
+        size += data.softwareImageUrl.length + 1;
         break;
       case NBIOT_MODULE_FIRMWARE_UPDATE:
-        if (parameter.data) {
-          data = parameter.data;
-          size = 1;
-          size += data.moduleFirmwareImageUrl.length + 1;
-        } else {
-          size = 1;
-        }
+        data = parameter.data;
+        size = 1;
+        size += data.moduleFirmwareImageUrl.length + 1;
+        break;
+      case NBIOT_MODULE_INFO:
+        data = parameter.data;
+        size = 1 + 1 + data.moduleInfo.length;
+        break;
+      case NBIOT_BANDS:
+        data = parameter.data;
+        size = 1 + 1;
+        size += data.bands.length;
         break;
       default:
         size = parametersSizeMap[parameter.id];
@@ -1700,7 +1781,7 @@ var logs = '';
     channels.forEach(function (channelIndex) {
       var diff = [];
       var value = _this13.getExtendedValue();
-      for (var diffHour = 1; diffHour < hours; ++diffHour) {
+      for (var diffHour = 0; diffHour < hours; ++diffHour) {
         diff.push(_this13.getExtendedValue());
       }
       channelList.push({
@@ -2292,7 +2373,7 @@ var logs = '';
   });
 
   var id$b = 0x301f;
-  var name$b = 'getExAbsArchiveHoursMcEx';
+  var name$b = 'getArchiveHoursMcEx';
   var headerSize$b = 3;
   var COMMAND_BODY_SIZE$8 = 5;
   var examples$b = {
@@ -2344,7 +2425,7 @@ var logs = '';
     return toBytes$o(id$b, buffer.data);
   };
 
-  var getExAbsArchiveHoursMcEx = /*#__PURE__*/Object.freeze({
+  var getArchiveHoursMcEx = /*#__PURE__*/Object.freeze({
     __proto__: null,
     examples: examples$b,
     fromBytes: fromBytes$b,
@@ -2467,6 +2548,30 @@ var logs = '';
         }
       },
       bytes: [0x04, 0x02, 0x1e, 0x00]
+    },
+    'request for configuration for specific reporting data type': {
+      id: id$8,
+      name: name$8,
+      headerSize: headerSize$8,
+      parameters: {
+        id: 49,
+        data: {
+          dataType: 0
+        }
+      },
+      bytes: [0x04, 0x02, 0x31, 0x00]
+    },
+    'request for configuration for specific event id': {
+      id: id$8,
+      name: name$8,
+      headerSize: headerSize$8,
+      parameters: {
+        id: 50,
+        data: {
+          eventId: 1
+        }
+      },
+      bytes: [0x04, 0x02, 0x32, 0x01]
     }
   };
   var fromBytes$8 = function fromBytes(data) {
@@ -2803,6 +2908,18 @@ var logs = '';
         }
       },
       bytes: [0x03, 0x05, 0x21, 0x8c, 0xa0, 0x65, 0x90]
+    },
+    'set nbiot bands': {
+      id: id$5,
+      name: name$5,
+      headerSize: headerSize$5,
+      parameters: {
+        id: 52,
+        data: {
+          bands: [3, 8, 20]
+        }
+      },
+      bytes: [0x03, 0x05, 0x34, 0x03, 0x03, 0x08, 0x14]
     }
   };
   var fromBytes$5 = function fromBytes(data) {
@@ -3029,12 +3146,12 @@ var logs = '';
     getArchiveEvents: getArchiveEvents,
     getArchiveHours: getArchiveHours,
     getArchiveHoursMc: getArchiveHoursMc,
+    getArchiveHoursMcEx: getArchiveHoursMcEx,
     getBatteryStatus: getBatteryStatus,
     getCurrent: getCurrent,
     getCurrentMc: getCurrentMc,
     getExAbsArchiveDaysMc: getExAbsArchiveDaysMc,
     getExAbsArchiveHoursMc: getExAbsArchiveHoursMc,
-    getExAbsArchiveHoursMcEx: getExAbsArchiveHoursMcEx,
     getExAbsCurrentMc: getExAbsCurrentMc,
     getLmicInfo: getLmicInfo,
     getParameter: getParameter,

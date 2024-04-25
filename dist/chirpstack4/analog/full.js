@@ -529,6 +529,8 @@ var fromBytes, toBytes;
     const NBIOT_MODULE_FIRMWARE_UPDATE = 48;
     const REPORTING_DATA_CONFIG = 49;
     const EVENTS_CONFIG = 50;
+    const NBIOT_MODULE_INFO = 51;
+    const NBIOT_BANDS = 52;
 
     var invertObject = (source) => {
         const target = {};
@@ -1010,6 +1012,28 @@ var fromBytes, toBytes;
                 buffer.setUint8(parameter.sendEvent);
                 buffer.setUint8(parameter.saveEvent);
             }
+        },
+        [NBIOT_MODULE_INFO]: {
+            get: (buffer) => ({ moduleInfo: buffer.getString() }),
+            set: (buffer, parameter) => {
+                buffer.setString(parameter.moduleInfo);
+            }
+        },
+        [NBIOT_BANDS]: {
+            get: (buffer) => {
+                const count = buffer.getUint8();
+                const bands = [];
+                for (let index = 0; index < count; index++) {
+                    bands.push(buffer.getUint8());
+                }
+                return { bands };
+            },
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.bands.length);
+                for (const band of parameter.bands) {
+                    buffer.setUint8(band);
+                }
+            }
         }
     };
     const getEventStatusSize = (hardwareType) => (TWO_BYTES_HARDWARE_TYPES.indexOf(hardwareType) !== -1 ? 2 : 1);
@@ -1018,16 +1042,11 @@ var fromBytes, toBytes;
         let data;
         switch (parameter.id) {
             case MQTT_SESSION_CONFIG:
-                if (parameter.data) {
-                    data = parameter.data;
-                    size = 1 + 1;
-                    size += data.clientId.length + 1;
-                    size += data.username.length + 1;
-                    size += data.password.length + 1;
-                }
-                else {
-                    size = 1;
-                }
+                data = parameter.data;
+                size = 1 + 1;
+                size += data.clientId.length + 1;
+                size += data.username.length + 1;
+                size += data.password.length + 1;
                 break;
             case MQTT_BROKER_ADDRESS:
                 data = parameter.data;
@@ -1042,34 +1061,28 @@ var fromBytes, toBytes;
             case NBIOT_SSL_CACERT_WRITE:
             case NBIOT_SSL_CLIENT_CERT_WRITE:
             case NBIOT_SSL_CLIENT_KEY_WRITE:
-                if (parameter.data) {
-                    data = parameter.data;
-                    size = 1 + 2 + 2;
-                    size += data.chunk.length;
-                }
-                else {
-                    size = 1;
-                }
+                data = parameter.data;
+                size = 1 + 2 + 2;
+                size += data.chunk.length;
                 break;
             case NBIOT_DEVICE_SOFTWARE_UPDATE:
-                if (parameter.data) {
-                    data = parameter.data;
-                    size = 1;
-                    size += data.softwareImageUrl.length + 1;
-                }
-                else {
-                    size = 1;
-                }
+                data = parameter.data;
+                size = 1;
+                size += data.softwareImageUrl.length + 1;
                 break;
             case NBIOT_MODULE_FIRMWARE_UPDATE:
-                if (parameter.data) {
-                    data = parameter.data;
-                    size = 1;
-                    size += data.moduleFirmwareImageUrl.length + 1;
-                }
-                else {
-                    size = 1;
-                }
+                data = parameter.data;
+                size = 1;
+                size += data.moduleFirmwareImageUrl.length + 1;
+                break;
+            case NBIOT_MODULE_INFO:
+                data = parameter.data;
+                size = 1 + 1 + data.moduleInfo.length;
+                break;
+            case NBIOT_BANDS:
+                data = parameter.data;
+                size = 1 + 1;
+                size += data.bands.length;
                 break;
             default:
                 size = parametersSizeMap[parameter.id];
@@ -1096,7 +1109,6 @@ var fromBytes, toBytes;
     };
     const getResponseParameterSize = (parameter) => {
         let size;
-        let data;
         switch (parameter.id) {
             case MQTT_SESSION_CONFIG:
             case NBIOT_SSL_CACERT_WRITE:
@@ -1110,14 +1122,10 @@ var fromBytes, toBytes;
                 size = 1;
                 break;
             case MQTT_BROKER_ADDRESS:
-                data = parameter.data;
-                size = 1 + 2;
-                size += data.hostName.length + 1;
-                break;
             case MQTT_TOPIC_PREFIX:
-                data = parameter.data;
-                size = 1;
-                size += data.topicPrefix.length + 1;
+            case NBIOT_MODULE_INFO:
+            case NBIOT_BANDS:
+                size = getParameterSize(parameter);
                 break;
             default:
                 size = parametersSizeMap[parameter.id];
@@ -1602,7 +1610,7 @@ var fromBytes, toBytes;
         channels.forEach(channelIndex => {
             const diff = [];
             const value = this.getExtendedValue();
-            for (let diffHour = 1; diffHour < hours; ++diffHour) {
+            for (let diffHour = 0; diffHour < hours; ++diffHour) {
                 diff.push(this.getExtendedValue());
             }
             channelList.push({
@@ -1870,7 +1878,7 @@ var fromBytes, toBytes;
     };
 
     const id$F = 0x301f;
-    const name$F = 'getExAbsArchiveHoursMcEx';
+    const name$F = 'getArchiveHoursMcEx';
     const COMMAND_BODY_SIZE$i = 5;
     const fromBytes$H = (data) => {
         const buffer = new CommandBinaryBuffer(data);
@@ -2117,12 +2125,12 @@ var fromBytes, toBytes;
     toBytesMap$1[id$N] = toBytes$P;
     toBytesMap$1[id$M] = toBytes$O;
     toBytesMap$1[id$L] = toBytes$N;
+    toBytesMap$1[id$F] = toBytes$H;
     toBytesMap$1[id$K] = toBytes$M;
     toBytesMap$1[id$J] = toBytes$L;
     toBytesMap$1[id$I] = toBytes$K;
     toBytesMap$1[id$H] = toBytes$J;
     toBytesMap$1[id$G] = toBytes$I;
-    toBytesMap$1[id$F] = toBytes$H;
     toBytesMap$1[id$E] = toBytes$G;
     toBytesMap$1[id$D] = toBytes$F;
     toBytesMap$1[id$C] = toBytes$E;
@@ -2140,12 +2148,12 @@ var fromBytes, toBytes;
     fromBytesMap$1[id$N] = fromBytes$P;
     fromBytesMap$1[id$M] = fromBytes$O;
     fromBytesMap$1[id$L] = fromBytes$N;
+    fromBytesMap$1[id$F] = fromBytes$H;
     fromBytesMap$1[id$K] = fromBytes$M;
     fromBytesMap$1[id$J] = fromBytes$L;
     fromBytesMap$1[id$I] = fromBytes$K;
     fromBytesMap$1[id$H] = fromBytes$J;
     fromBytesMap$1[id$G] = fromBytes$I;
-    fromBytesMap$1[id$F] = fromBytes$H;
     fromBytesMap$1[id$E] = fromBytes$G;
     fromBytesMap$1[id$D] = fromBytes$F;
     fromBytesMap$1[id$C] = fromBytes$E;
@@ -2163,12 +2171,12 @@ var fromBytes, toBytes;
     nameMap$1[id$N] = name$N;
     nameMap$1[id$M] = name$M;
     nameMap$1[id$L] = name$L;
+    nameMap$1[id$F] = name$F;
     nameMap$1[id$K] = name$K;
     nameMap$1[id$J] = name$J;
     nameMap$1[id$I] = name$I;
     nameMap$1[id$H] = name$H;
     nameMap$1[id$G] = name$G;
-    nameMap$1[id$F] = name$F;
     nameMap$1[id$E] = name$E;
     nameMap$1[id$D] = name$D;
     nameMap$1[id$C] = name$C;
@@ -2455,10 +2463,26 @@ var fromBytes, toBytes;
         return toBytes$U(id$j, buffer.getBytesToOffset());
     };
 
-    const id$i = 0x051f;
-    const name$i = 'getBatteryStatus';
-    const COMMAND_BODY_SIZE$8 = 11;
+    const id$i = 0x301f;
+    const name$i = 'getArchiveHoursMcEx';
+    const COMMAND_BODY_MAX_SIZE$6 = 164;
     const fromBytes$k = (data) => {
+        if (data.length > COMMAND_BODY_MAX_SIZE$6) {
+            throw new Error(`Wrong buffer size: ${data.length}.`);
+        }
+        const buffer = new CommandBinaryBuffer(data);
+        return buffer.getChannelsValuesWithHourDiffExtended();
+    };
+    const toBytes$j = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$6);
+        buffer.setChannelsValuesWithHourDiffExtended(parameters);
+        return toBytes$U(id$i, buffer.getBytesToOffset());
+    };
+
+    const id$h = 0x051f;
+    const name$h = 'getBatteryStatus';
+    const COMMAND_BODY_SIZE$8 = 11;
+    const fromBytes$j = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return {
             voltageUnderLowLoad: buffer.getUint16(),
@@ -2470,7 +2494,7 @@ var fromBytes, toBytes;
             averageDailyOverconsumptionCounter: buffer.getUint16()
         };
     };
-    const toBytes$j = (parameters) => {
+    const toBytes$i = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$8);
         buffer.setUint16(parameters.voltageUnderLowLoad);
         buffer.setUint16(parameters.voltageUnderHighLoad);
@@ -2479,13 +2503,13 @@ var fromBytes, toBytes;
         buffer.setUint8(parameters.remainingCapacity);
         buffer.setUint8(parameters.isLastDayOverconsumption ? 1 : 0);
         buffer.setUint16(parameters.averageDailyOverconsumptionCounter);
-        return toBytes$U(id$i, buffer.data);
+        return toBytes$U(id$h, buffer.data);
     };
 
-    const id$h = 0x0d1f;
-    const name$h = 'getExAbsArchiveDaysMc';
-    const COMMAND_BODY_MAX_SIZE$6 = 6124;
-    const fromBytes$j = (data) => {
+    const id$g = 0x0d1f;
+    const name$g = 'getExAbsArchiveDaysMc';
+    const COMMAND_BODY_MAX_SIZE$5 = 6124;
+    const fromBytes$i = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const date = buffer.getDate();
         const channels = buffer.getChannels();
@@ -2505,8 +2529,8 @@ var fromBytes, toBytes;
         });
         return { channelList, days, startTime2000: getTime2000FromDate(date) };
     };
-    const toBytes$i = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$6);
+    const toBytes$h = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$5);
         const { channelList, startTime2000, days } = parameters;
         buffer.setDate(startTime2000);
         buffer.setChannels(channelList);
@@ -2517,35 +2541,19 @@ var fromBytes, toBytes;
                 buffer.setExtendedValue(value);
             });
         });
-        return toBytes$U(id$h, buffer.getBytesToOffset());
-    };
-
-    const id$g = 0x1a;
-    const name$g = 'getExAbsArchiveHoursMc';
-    const COMMAND_BODY_MAX_SIZE$5 = 164;
-    const fromBytes$i = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
-        return buffer.getChannelsValuesWithHourDiff();
-    };
-    const toBytes$h = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$5);
-        buffer.setChannelsValuesWithHourDiff(parameters.hours, parameters.startTime2000, parameters.channelList);
         return toBytes$U(id$g, buffer.getBytesToOffset());
     };
 
-    const id$f = 0x301f;
-    const name$f = 'getExAbsArchiveHoursMcEx';
+    const id$f = 0x1a;
+    const name$f = 'getExAbsArchiveHoursMc';
     const COMMAND_BODY_MAX_SIZE$4 = 164;
     const fromBytes$h = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$4) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
-        }
         const buffer = new CommandBinaryBuffer(data);
-        return buffer.getChannelsValuesWithHourDiffExtended();
+        return buffer.getChannelsValuesWithHourDiff();
     };
     const toBytes$g = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$4);
-        buffer.setChannelsValuesWithHourDiffExtended(parameters);
+        buffer.setChannelsValuesWithHourDiff(parameters.hours, parameters.startTime2000, parameters.channelList);
         return toBytes$U(id$f, buffer.getBytesToOffset());
     };
 
@@ -3063,10 +3071,10 @@ var fromBytes, toBytes;
     fromBytesMap[id$n] = fromBytes$p;
     fromBytesMap[id$m] = fromBytes$o;
     fromBytesMap[id$l] = fromBytes$n;
-    fromBytesMap[id$i] = fromBytes$k;
+    fromBytesMap[id$h] = fromBytes$j;
     fromBytesMap[id$k] = fromBytes$m;
     fromBytesMap[id$j] = fromBytes$l;
-    fromBytesMap[id$h] = fromBytes$j;
+    fromBytesMap[id$i] = fromBytes$k;
     fromBytesMap[id$g] = fromBytes$i;
     fromBytesMap[id$f] = fromBytes$h;
     fromBytesMap[id$e] = fromBytes$g;
@@ -3095,10 +3103,10 @@ var fromBytes, toBytes;
     nameMap[id$n] = name$n;
     nameMap[id$m] = name$m;
     nameMap[id$l] = name$l;
-    nameMap[id$i] = name$i;
+    nameMap[id$h] = name$h;
     nameMap[id$k] = name$k;
     nameMap[id$j] = name$j;
-    nameMap[id$h] = name$h;
+    nameMap[id$i] = name$i;
     nameMap[id$g] = name$g;
     nameMap[id$f] = name$f;
     nameMap[id$e] = name$e;

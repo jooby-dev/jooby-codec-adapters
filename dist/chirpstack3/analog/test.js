@@ -136,6 +136,57 @@
     function _nonIterableSpread() {
       throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
     }
+    function _createForOfIteratorHelper(o, allowArrayLike) {
+      var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
+      if (!it) {
+        if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
+          if (it) o = it;
+          var i = 0;
+          var F = function () {};
+          return {
+            s: F,
+            n: function () {
+              if (i >= o.length) return {
+                done: true
+              };
+              return {
+                done: false,
+                value: o[i++]
+              };
+            },
+            e: function (e) {
+              throw e;
+            },
+            f: F
+          };
+        }
+        throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+      }
+      var normalCompletion = true,
+        didErr = false,
+        err;
+      return {
+        s: function () {
+          it = it.call(o);
+        },
+        n: function () {
+          var step = it.next();
+          normalCompletion = step.done;
+          return step;
+        },
+        e: function (e) {
+          didErr = true;
+          err = e;
+        },
+        f: function () {
+          try {
+            if (!normalCompletion && it.return != null) it.return();
+          } finally {
+            if (didErr) throw err;
+          }
+        }
+      };
+    }
 
     var hexFormatOptions = {
       separator: ' ',
@@ -650,6 +701,8 @@
     var NBIOT_MODULE_FIRMWARE_UPDATE = 48;
     var REPORTING_DATA_CONFIG = 49;
     var EVENTS_CONFIG = 50;
+    var NBIOT_MODULE_INFO = 51;
+    var NBIOT_BANDS = 52;
 
     var invertObject = (function (source) {
       var target = {};
@@ -1093,7 +1146,7 @@
     }), NBIOT_SSL_CLIENT_CERT_SET, {
       get: getNbiotSslSet,
       set: setNbiotSslSet
-    }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_SSL_CLIENT_KEY_WRITE, {
+    }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_SSL_CLIENT_KEY_WRITE, {
       get: getNbiotSslWrite,
       set: setNbiotSslWrite
     }), NBIOT_SSL_CLIENT_KEY_SET, {
@@ -1147,6 +1200,41 @@
         buffer.setUint8(parameter.sendEvent);
         buffer.setUint8(parameter.saveEvent);
       }
+    }), NBIOT_MODULE_INFO, {
+      get: function get(buffer) {
+        return {
+          moduleInfo: buffer.getString()
+        };
+      },
+      set: function set(buffer, parameter) {
+        buffer.setString(parameter.moduleInfo);
+      }
+    }), NBIOT_BANDS, {
+      get: function get(buffer) {
+        var count = buffer.getUint8();
+        var bands = [];
+        for (var index = 0; index < count; index++) {
+          bands.push(buffer.getUint8());
+        }
+        return {
+          bands: bands
+        };
+      },
+      set: function set(buffer, parameter) {
+        buffer.setUint8(parameter.bands.length);
+        var _iterator = _createForOfIteratorHelper(parameter.bands),
+          _step;
+        try {
+          for (_iterator.s(); !(_step = _iterator.n()).done;) {
+            var band = _step.value;
+            buffer.setUint8(band);
+          }
+        } catch (err) {
+          _iterator.e(err);
+        } finally {
+          _iterator.f();
+        }
+      }
     }));
     var getEventStatusSize = function getEventStatusSize(hardwareType) {
       return TWO_BYTES_HARDWARE_TYPES.indexOf(hardwareType) !== -1 ? 2 : 1;
@@ -1156,15 +1244,11 @@
       var data;
       switch (parameter.id) {
         case MQTT_SESSION_CONFIG:
-          if (parameter.data) {
-            data = parameter.data;
-            size = 1 + 1;
-            size += data.clientId.length + 1;
-            size += data.username.length + 1;
-            size += data.password.length + 1;
-          } else {
-            size = 1;
-          }
+          data = parameter.data;
+          size = 1 + 1;
+          size += data.clientId.length + 1;
+          size += data.username.length + 1;
+          size += data.password.length + 1;
           break;
         case MQTT_BROKER_ADDRESS:
           data = parameter.data;
@@ -1179,31 +1263,28 @@
         case NBIOT_SSL_CACERT_WRITE:
         case NBIOT_SSL_CLIENT_CERT_WRITE:
         case NBIOT_SSL_CLIENT_KEY_WRITE:
-          if (parameter.data) {
-            data = parameter.data;
-            size = 1 + 2 + 2;
-            size += data.chunk.length;
-          } else {
-            size = 1;
-          }
+          data = parameter.data;
+          size = 1 + 2 + 2;
+          size += data.chunk.length;
           break;
         case NBIOT_DEVICE_SOFTWARE_UPDATE:
-          if (parameter.data) {
-            data = parameter.data;
-            size = 1;
-            size += data.softwareImageUrl.length + 1;
-          } else {
-            size = 1;
-          }
+          data = parameter.data;
+          size = 1;
+          size += data.softwareImageUrl.length + 1;
           break;
         case NBIOT_MODULE_FIRMWARE_UPDATE:
-          if (parameter.data) {
-            data = parameter.data;
-            size = 1;
-            size += data.moduleFirmwareImageUrl.length + 1;
-          } else {
-            size = 1;
-          }
+          data = parameter.data;
+          size = 1;
+          size += data.moduleFirmwareImageUrl.length + 1;
+          break;
+        case NBIOT_MODULE_INFO:
+          data = parameter.data;
+          size = 1 + 1 + data.moduleInfo.length;
+          break;
+        case NBIOT_BANDS:
+          data = parameter.data;
+          size = 1 + 1;
+          size += data.bands.length;
           break;
         default:
           size = parametersSizeMap[parameter.id];
@@ -1230,7 +1311,6 @@
     };
     var getResponseParameterSize = function getResponseParameterSize(parameter) {
       var size;
-      var data;
       switch (parameter.id) {
         case MQTT_SESSION_CONFIG:
         case NBIOT_SSL_CACERT_WRITE:
@@ -1244,14 +1324,10 @@
           size = 1;
           break;
         case MQTT_BROKER_ADDRESS:
-          data = parameter.data;
-          size = 1 + 2;
-          size += data.hostName.length + 1;
-          break;
         case MQTT_TOPIC_PREFIX:
-          data = parameter.data;
-          size = 1;
-          size += data.topicPrefix.length + 1;
+        case NBIOT_MODULE_INFO:
+        case NBIOT_BANDS:
+          size = getParameterSize(parameter);
           break;
         default:
           size = parametersSizeMap[parameter.id];
@@ -1814,7 +1890,7 @@
       channels.forEach(function (channelIndex) {
         var diff = [];
         var value = _this13.getExtendedValue();
-        for (var diffHour = 1; diffHour < hours; ++diffHour) {
+        for (var diffHour = 0; diffHour < hours; ++diffHour) {
           diff.push(_this13.getExtendedValue());
         }
         channelList.push({
@@ -2406,7 +2482,7 @@
     });
 
     var id$H = 0x301f;
-    var name$H = 'getExAbsArchiveHoursMcEx';
+    var name$H = 'getArchiveHoursMcEx';
     var headerSize$H = 3;
     var COMMAND_BODY_SIZE$j = 5;
     var examples$H = {
@@ -2458,7 +2534,7 @@
       return toBytes$U(id$H, buffer.data);
     };
 
-    var getExAbsArchiveHoursMcEx$1 = /*#__PURE__*/Object.freeze({
+    var getArchiveHoursMcEx$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$H,
         fromBytes: fromBytes$H,
@@ -2581,6 +2657,30 @@
           }
         },
         bytes: [0x04, 0x02, 0x1e, 0x00]
+      },
+      'request for configuration for specific reporting data type': {
+        id: id$E,
+        name: name$E,
+        headerSize: headerSize$E,
+        parameters: {
+          id: 49,
+          data: {
+            dataType: 0
+          }
+        },
+        bytes: [0x04, 0x02, 0x31, 0x00]
+      },
+      'request for configuration for specific event id': {
+        id: id$E,
+        name: name$E,
+        headerSize: headerSize$E,
+        parameters: {
+          id: 50,
+          data: {
+            eventId: 1
+          }
+        },
+        bytes: [0x04, 0x02, 0x32, 0x01]
       }
     };
     var fromBytes$E = function fromBytes(data) {
@@ -2917,6 +3017,18 @@
           }
         },
         bytes: [0x03, 0x05, 0x21, 0x8c, 0xa0, 0x65, 0x90]
+      },
+      'set nbiot bands': {
+        id: id$B,
+        name: name$B,
+        headerSize: headerSize$B,
+        parameters: {
+          id: 52,
+          data: {
+            bands: [3, 8, 20]
+          }
+        },
+        bytes: [0x03, 0x05, 0x34, 0x03, 0x03, 0x08, 0x14]
       }
     };
     var fromBytes$B = function fromBytes(data) {
@@ -3143,12 +3255,12 @@
         getArchiveEvents: getArchiveEvents$1,
         getArchiveHours: getArchiveHours$1,
         getArchiveHoursMc: getArchiveHoursMc$1,
+        getArchiveHoursMcEx: getArchiveHoursMcEx$1,
         getBatteryStatus: getBatteryStatus$1,
         getCurrent: getCurrent,
         getCurrentMc: getCurrentMc,
         getExAbsArchiveDaysMc: getExAbsArchiveDaysMc$1,
         getExAbsArchiveHoursMc: getExAbsArchiveHoursMc$1,
-        getExAbsArchiveHoursMcEx: getExAbsArchiveHoursMcEx$1,
         getExAbsCurrentMc: getExAbsCurrentMc,
         getLmicInfo: getLmicInfo$1,
         getParameter: getParameter$1,
@@ -3975,15 +4087,84 @@
         toBytes: toBytes$j
     });
 
-    var id$i = 0x051f;
-    var name$i = 'getBatteryStatus';
+    var id$i = 0x301f;
+    var name$i = 'getArchiveHoursMcEx';
     var headerSize$i = 3;
-    var COMMAND_BODY_SIZE$8 = 11;
+    var COMMAND_BODY_MAX_SIZE$6 = 164;
     var examples$i = {
-      'simple response': {
+      '4 channels at 2023.12.23 12:00:00 GMT': {
         id: id$i,
         name: name$i,
         headerSize: headerSize$i,
+        parameters: {
+          startTime2000: 756648000,
+          hour: 12,
+          hours: 1,
+          channelList: [{
+            value: 131,
+            diff: [10],
+            index: 1
+          }, {
+            value: 8,
+            diff: [10],
+            index: 2
+          }, {
+            value: 8,
+            diff: [10],
+            index: 3
+          }, {
+            value: 12,
+            diff: [10],
+            index: 4
+          }]
+        },
+        bytes: [0x1f, 0x30, 0x0e, 0x2f, 0x97, 0x0c, 0x01, 0x0f, 0x83, 0x01, 0x0a, 0x08, 0x0a, 0x08, 0x0a, 0x0c, 0x0a]
+      },
+      'empty result at 2023.11.19 00:00:00 GMT': {
+        id: id$i,
+        name: name$i,
+        headerSize: headerSize$i,
+        parameters: {
+          startTime2000: 752889600,
+          hour: 0,
+          hours: 0,
+          channelList: []
+        },
+        bytes: [0x1f, 0x30, 0x05, 0x2f, 0x6a, 0x00, 0x00, 0x00]
+      }
+    };
+    var fromBytes$i = function fromBytes(data) {
+      if (data.length > COMMAND_BODY_MAX_SIZE$6) {
+        throw new Error("Wrong buffer size: ".concat(data.length, "."));
+      }
+      var buffer = new CommandBinaryBuffer(data);
+      return buffer.getChannelsValuesWithHourDiffExtended();
+    };
+    var toBytes$i = function toBytes(parameters) {
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$6);
+      buffer.setChannelsValuesWithHourDiffExtended(parameters);
+      return toBytes$U(id$i, buffer.getBytesToOffset());
+    };
+
+    var getArchiveHoursMcEx = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        examples: examples$i,
+        fromBytes: fromBytes$i,
+        headerSize: headerSize$i,
+        id: id$i,
+        name: name$i,
+        toBytes: toBytes$i
+    });
+
+    var id$h = 0x051f;
+    var name$h = 'getBatteryStatus';
+    var headerSize$h = 3;
+    var COMMAND_BODY_SIZE$8 = 11;
+    var examples$h = {
+      'simple response': {
+        id: id$h,
+        name: name$h,
+        headerSize: headerSize$h,
         parameters: {
           voltageUnderLowLoad: 3600,
           voltageUnderHighLoad: 3600,
@@ -3996,7 +4177,7 @@
         bytes: [0x1f, 0x05, 0x0b, 0x10, 0x0e, 0x10, 0x0e, 0x0a, 0x04, 0x0f, 0x29, 0x00, 0x22, 0x00]
       }
     };
-    var fromBytes$i = function fromBytes(data) {
+    var fromBytes$h = function fromBytes(data) {
       var buffer = new CommandBinaryBuffer(data);
       return {
         voltageUnderLowLoad: buffer.getUint16(),
@@ -4008,7 +4189,7 @@
         averageDailyOverconsumptionCounter: buffer.getUint16()
       };
     };
-    var toBytes$i = function toBytes(parameters) {
+    var toBytes$h = function toBytes(parameters) {
       var buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$8);
       buffer.setUint16(parameters.voltageUnderLowLoad);
       buffer.setUint16(parameters.voltageUnderHighLoad);
@@ -4017,28 +4198,28 @@
       buffer.setUint8(parameters.remainingCapacity);
       buffer.setUint8(parameters.isLastDayOverconsumption ? 1 : 0);
       buffer.setUint16(parameters.averageDailyOverconsumptionCounter);
-      return toBytes$U(id$i, buffer.data);
+      return toBytes$U(id$h, buffer.data);
     };
 
     var getBatteryStatus = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$i,
-        fromBytes: fromBytes$i,
-        headerSize: headerSize$i,
-        id: id$i,
-        name: name$i,
-        toBytes: toBytes$i
-    });
-
-    var id$h = 0x0d1f;
-    var name$h = 'getExAbsArchiveDaysMc';
-    var headerSize$h = 3;
-    var COMMAND_BODY_MAX_SIZE$6 = 6124;
-    var examples$h = {
-      'archive days values at 4 channel from 2023.03.10 00:00:00 GMT': {
+        examples: examples$h,
+        fromBytes: fromBytes$h,
+        headerSize: headerSize$h,
         id: id$h,
         name: name$h,
-        headerSize: headerSize$h,
+        toBytes: toBytes$h
+    });
+
+    var id$g = 0x0d1f;
+    var name$g = 'getExAbsArchiveDaysMc';
+    var headerSize$g = 3;
+    var COMMAND_BODY_MAX_SIZE$5 = 6124;
+    var examples$g = {
+      'archive days values at 4 channel from 2023.03.10 00:00:00 GMT': {
+        id: id$g,
+        name: name$g,
+        headerSize: headerSize$g,
         parameters: {
           channelList: [{
             pulseCoefficient: 100,
@@ -4051,7 +4232,7 @@
         bytes: [0x1f, 0x0d, 0x09, 0x2e, 0x6a, 0x08, 0x02, 0x83, 0x94, 0x2b, 0xaa, 0x2c]
       }
     };
-    var fromBytes$h = function fromBytes(data) {
+    var fromBytes$g = function fromBytes(data) {
       var buffer = new CommandBinaryBuffer(data);
       var date = buffer.getDate();
       var channels = buffer.getChannels();
@@ -4075,8 +4256,8 @@
         startTime2000: getTime2000FromDate(date)
       };
     };
-    var toBytes$h = function toBytes(parameters) {
-      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$6);
+    var toBytes$g = function toBytes(parameters) {
+      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$5);
       var channelList = parameters.channelList,
         startTime2000 = parameters.startTime2000,
         days = parameters.days;
@@ -4091,28 +4272,28 @@
           buffer.setExtendedValue(value);
         });
       });
-      return toBytes$U(id$h, buffer.getBytesToOffset());
+      return toBytes$U(id$g, buffer.getBytesToOffset());
     };
 
     var getExAbsArchiveDaysMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$h,
-        fromBytes: fromBytes$h,
-        headerSize: headerSize$h,
-        id: id$h,
-        name: name$h,
-        toBytes: toBytes$h
-    });
-
-    var id$g = 0x1a;
-    var name$g = 'getExAbsArchiveHoursMc';
-    var headerSize$g = 2;
-    var COMMAND_BODY_MAX_SIZE$5 = 164;
-    var examples$g = {
-      '4 channels at 2023.12.23 12:00:00 GMT': {
+        examples: examples$g,
+        fromBytes: fromBytes$g,
+        headerSize: headerSize$g,
         id: id$g,
         name: name$g,
-        headerSize: headerSize$g,
+        toBytes: toBytes$g
+    });
+
+    var id$f = 0x1a;
+    var name$f = 'getExAbsArchiveHoursMc';
+    var headerSize$f = 2;
+    var COMMAND_BODY_MAX_SIZE$4 = 164;
+    var examples$f = {
+      '4 channels at 2023.12.23 12:00:00 GMT': {
+        id: id$f,
+        name: name$f,
+        headerSize: headerSize$f,
         parameters: {
           startTime2000: 756648000,
           hours: 2,
@@ -4137,9 +4318,9 @@
         bytes: [0x1a, 0x0d, 0x2f, 0x97, 0x2c, 0x0f, 0x83, 0x01, 0x0a, 0x08, 0x0a, 0x08, 0x0a, 0x0c, 0x0a]
       },
       'empty result at 2023.11.19 00:00:00 GMT': {
-        id: id$g,
-        name: name$g,
-        headerSize: headerSize$g,
+        id: id$f,
+        name: name$f,
+        headerSize: headerSize$f,
         parameters: {
           startTime2000: 752889600,
           hours: 0,
@@ -4148,86 +4329,17 @@
         bytes: [0x1a, 0x04, 0x2f, 0x6a, 0x00, 0x00]
       }
     };
-    var fromBytes$g = function fromBytes(data) {
+    var fromBytes$f = function fromBytes(data) {
       var buffer = new CommandBinaryBuffer(data);
       return buffer.getChannelsValuesWithHourDiff();
     };
-    var toBytes$g = function toBytes(parameters) {
-      var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$5);
-      buffer.setChannelsValuesWithHourDiff(parameters.hours, parameters.startTime2000, parameters.channelList);
-      return toBytes$U(id$g, buffer.getBytesToOffset());
-    };
-
-    var getExAbsArchiveHoursMc = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        examples: examples$g,
-        fromBytes: fromBytes$g,
-        headerSize: headerSize$g,
-        id: id$g,
-        name: name$g,
-        toBytes: toBytes$g
-    });
-
-    var id$f = 0x301f;
-    var name$f = 'getExAbsArchiveHoursMcEx';
-    var headerSize$f = 3;
-    var COMMAND_BODY_MAX_SIZE$4 = 164;
-    var examples$f = {
-      '4 channels at 2023.12.23 12:00:00 GMT': {
-        id: id$f,
-        name: name$f,
-        headerSize: headerSize$f,
-        parameters: {
-          startTime2000: 756648000,
-          hour: 12,
-          hours: 2,
-          channelList: [{
-            value: 131,
-            diff: [10],
-            index: 1
-          }, {
-            value: 8,
-            diff: [10],
-            index: 2
-          }, {
-            value: 8,
-            diff: [10],
-            index: 3
-          }, {
-            value: 12,
-            diff: [10],
-            index: 4
-          }]
-        },
-        bytes: [0x1f, 0x30, 0x0e, 0x2f, 0x97, 0x0c, 0x02, 0x0f, 0x83, 0x01, 0x0a, 0x08, 0x0a, 0x08, 0x0a, 0x0c, 0x0a]
-      },
-      'empty result at 2023.11.19 00:00:00 GMT': {
-        id: id$f,
-        name: name$f,
-        headerSize: headerSize$f,
-        parameters: {
-          startTime2000: 752889600,
-          hour: 0,
-          hours: 0,
-          channelList: []
-        },
-        bytes: [0x1f, 0x30, 0x05, 0x2f, 0x6a, 0x00, 0x00, 0x00]
-      }
-    };
-    var fromBytes$f = function fromBytes(data) {
-      if (data.length > COMMAND_BODY_MAX_SIZE$4) {
-        throw new Error("Wrong buffer size: ".concat(data.length, "."));
-      }
-      var buffer = new CommandBinaryBuffer(data);
-      return buffer.getChannelsValuesWithHourDiffExtended();
-    };
     var toBytes$f = function toBytes(parameters) {
       var buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$4);
-      buffer.setChannelsValuesWithHourDiffExtended(parameters);
+      buffer.setChannelsValuesWithHourDiff(parameters.hours, parameters.startTime2000, parameters.channelList);
       return toBytes$U(id$f, buffer.getBytesToOffset());
     };
 
-    var getExAbsArchiveHoursMcEx = /*#__PURE__*/Object.freeze({
+    var getExAbsArchiveHoursMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$f,
         fromBytes: fromBytes$f,
@@ -4376,6 +4488,30 @@
           }
         },
         bytes: [0x04, 0x03, 0x1e, 0x01, 0x01]
+      },
+      'nbiot module info': {
+        id: id$d,
+        name: name$d,
+        headerSize: headerSize$d,
+        parameters: {
+          id: 51,
+          data: {
+            moduleInfo: 'BC660KGLAAR01A05'
+          }
+        },
+        bytes: [0x04, 0x12, 0x33, 0x10, 0x42, 0x43, 0x36, 0x36, 0x30, 0x4B, 0x47, 0x4C, 0x41, 0x41, 0x52, 0x30, 0x31, 0x41, 0x30, 0x35]
+      },
+      'nbiot bands': {
+        id: id$d,
+        name: name$d,
+        headerSize: headerSize$d,
+        parameters: {
+          id: 52,
+          data: {
+            bands: [3, 20]
+          }
+        },
+        bytes: [0x04, 0x04, 0x34, 0x02, 0x03, 0x14]
       }
     };
     var fromBytes$d = function fromBytes(data) {
@@ -4504,33 +4640,21 @@
     var headerSize$a = 3;
     var COMMAND_BODY_MAX_SIZE$2 = 5125;
     var examples$a = {
-      '4 first channels at 2023.12.23 12:00:00 GMT': {
+      '1 channel at 2023.12.23 12:00:00 GMT': {
         id: id$a,
         name: name$a,
         headerSize: headerSize$a,
         parameters: {
           startTime2000: 756648000,
           hour: 12,
-          hours: 2,
+          hours: 7,
           channelList: [{
             value: 131,
-            diff: [10],
+            diff: [10, 10, 10, 10, 10, 10, 10],
             index: 1
-          }, {
-            value: 832,
-            diff: [12],
-            index: 2
-          }, {
-            value: 38,
-            diff: [8],
-            index: 3
-          }, {
-            value: 234,
-            diff: [11],
-            index: 4
           }]
         },
-        bytes: [0x1f, 0x31, 0x10, 0x2f, 0x97, 0x0c, 0x02, 0x0f, 0x83, 0x01, 0x0a, 0xc0, 0x06, 0x0c, 0x26, 0x08, 0xea, 0x01, 0x0b]
+        bytes: [0x1f, 0x31, 0x0e, 0x2f, 0x97, 0x0c, 0x07, 0x01, 0x83, 0x01, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a]
       }
     };
     var fromBytes$a = function fromBytes(data) {
@@ -5424,10 +5548,10 @@
         getArchiveEvents: getArchiveEvents,
         getArchiveHours: getArchiveHours,
         getArchiveHoursMc: getArchiveHoursMc,
+        getArchiveHoursMcEx: getArchiveHoursMcEx,
         getBatteryStatus: getBatteryStatus,
         getExAbsArchiveDaysMc: getExAbsArchiveDaysMc,
         getExAbsArchiveHoursMc: getExAbsArchiveHoursMc,
-        getExAbsArchiveHoursMcEx: getExAbsArchiveHoursMcEx,
         getLmicInfo: getLmicInfo,
         getParameter: getParameter,
         hour: hour,

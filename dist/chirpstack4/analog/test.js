@@ -477,6 +477,8 @@
     const NBIOT_MODULE_FIRMWARE_UPDATE = 48;
     const REPORTING_DATA_CONFIG = 49;
     const EVENTS_CONFIG = 50;
+    const NBIOT_MODULE_INFO = 51;
+    const NBIOT_BANDS = 52;
 
     var invertObject = (source) => {
         const target = {};
@@ -958,6 +960,28 @@
                 buffer.setUint8(parameter.sendEvent);
                 buffer.setUint8(parameter.saveEvent);
             }
+        },
+        [NBIOT_MODULE_INFO]: {
+            get: (buffer) => ({ moduleInfo: buffer.getString() }),
+            set: (buffer, parameter) => {
+                buffer.setString(parameter.moduleInfo);
+            }
+        },
+        [NBIOT_BANDS]: {
+            get: (buffer) => {
+                const count = buffer.getUint8();
+                const bands = [];
+                for (let index = 0; index < count; index++) {
+                    bands.push(buffer.getUint8());
+                }
+                return { bands };
+            },
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.bands.length);
+                for (const band of parameter.bands) {
+                    buffer.setUint8(band);
+                }
+            }
         }
     };
     const getEventStatusSize = (hardwareType) => (TWO_BYTES_HARDWARE_TYPES.indexOf(hardwareType) !== -1 ? 2 : 1);
@@ -966,16 +990,11 @@
         let data;
         switch (parameter.id) {
             case MQTT_SESSION_CONFIG:
-                if (parameter.data) {
-                    data = parameter.data;
-                    size = 1 + 1;
-                    size += data.clientId.length + 1;
-                    size += data.username.length + 1;
-                    size += data.password.length + 1;
-                }
-                else {
-                    size = 1;
-                }
+                data = parameter.data;
+                size = 1 + 1;
+                size += data.clientId.length + 1;
+                size += data.username.length + 1;
+                size += data.password.length + 1;
                 break;
             case MQTT_BROKER_ADDRESS:
                 data = parameter.data;
@@ -990,34 +1009,28 @@
             case NBIOT_SSL_CACERT_WRITE:
             case NBIOT_SSL_CLIENT_CERT_WRITE:
             case NBIOT_SSL_CLIENT_KEY_WRITE:
-                if (parameter.data) {
-                    data = parameter.data;
-                    size = 1 + 2 + 2;
-                    size += data.chunk.length;
-                }
-                else {
-                    size = 1;
-                }
+                data = parameter.data;
+                size = 1 + 2 + 2;
+                size += data.chunk.length;
                 break;
             case NBIOT_DEVICE_SOFTWARE_UPDATE:
-                if (parameter.data) {
-                    data = parameter.data;
-                    size = 1;
-                    size += data.softwareImageUrl.length + 1;
-                }
-                else {
-                    size = 1;
-                }
+                data = parameter.data;
+                size = 1;
+                size += data.softwareImageUrl.length + 1;
                 break;
             case NBIOT_MODULE_FIRMWARE_UPDATE:
-                if (parameter.data) {
-                    data = parameter.data;
-                    size = 1;
-                    size += data.moduleFirmwareImageUrl.length + 1;
-                }
-                else {
-                    size = 1;
-                }
+                data = parameter.data;
+                size = 1;
+                size += data.moduleFirmwareImageUrl.length + 1;
+                break;
+            case NBIOT_MODULE_INFO:
+                data = parameter.data;
+                size = 1 + 1 + data.moduleInfo.length;
+                break;
+            case NBIOT_BANDS:
+                data = parameter.data;
+                size = 1 + 1;
+                size += data.bands.length;
                 break;
             default:
                 size = parametersSizeMap[parameter.id];
@@ -1044,7 +1057,6 @@
     };
     const getResponseParameterSize = (parameter) => {
         let size;
-        let data;
         switch (parameter.id) {
             case MQTT_SESSION_CONFIG:
             case NBIOT_SSL_CACERT_WRITE:
@@ -1058,14 +1070,10 @@
                 size = 1;
                 break;
             case MQTT_BROKER_ADDRESS:
-                data = parameter.data;
-                size = 1 + 2;
-                size += data.hostName.length + 1;
-                break;
             case MQTT_TOPIC_PREFIX:
-                data = parameter.data;
-                size = 1;
-                size += data.topicPrefix.length + 1;
+            case NBIOT_MODULE_INFO:
+            case NBIOT_BANDS:
+                size = getParameterSize(parameter);
                 break;
             default:
                 size = parametersSizeMap[parameter.id];
@@ -1550,7 +1558,7 @@
         channels.forEach(channelIndex => {
             const diff = [];
             const value = this.getExtendedValue();
-            for (let diffHour = 1; diffHour < hours; ++diffHour) {
+            for (let diffHour = 0; diffHour < hours; ++diffHour) {
                 diff.push(this.getExtendedValue());
             }
             channelList.push({
@@ -2074,7 +2082,7 @@
     });
 
     const id$H = 0x301f;
-    const name$H = 'getExAbsArchiveHoursMcEx';
+    const name$H = 'getArchiveHoursMcEx';
     const headerSize$H = 3;
     const COMMAND_BODY_SIZE$j = 5;
     const examples$H = {
@@ -2112,7 +2120,7 @@
         return toBytes$U(id$H, buffer.data);
     };
 
-    var getExAbsArchiveHoursMcEx$1 = /*#__PURE__*/Object.freeze({
+    var getArchiveHoursMcEx$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$H,
         fromBytes: fromBytes$H,
@@ -2230,6 +2238,26 @@
             bytes: [
                 0x04, 0x02,
                 0x1e, 0x00
+            ]
+        },
+        'request for configuration for specific reporting data type': {
+            id: id$E,
+            name: name$E,
+            headerSize: headerSize$E,
+            parameters: { id: 49, data: { dataType: 0 } },
+            bytes: [
+                0x04, 0x02,
+                0x31, 0x00
+            ]
+        },
+        'request for configuration for specific event id': {
+            id: id$E,
+            name: name$E,
+            headerSize: headerSize$E,
+            parameters: { id: 50, data: { eventId: 1 } },
+            bytes: [
+                0x04, 0x02,
+                0x32, 0x01
             ]
         }
     };
@@ -2512,6 +2540,19 @@
                 0x03, 0x05,
                 0x21, 0x8c, 0xa0, 0x65, 0x90
             ]
+        },
+        'set nbiot bands': {
+            id: id$B,
+            name: name$B,
+            headerSize: headerSize$B,
+            parameters: {
+                id: 52,
+                data: { bands: [3, 8, 20] }
+            },
+            bytes: [
+                0x03, 0x05,
+                0x34, 0x03, 0x03, 0x08, 0x14
+            ]
         }
     };
     const fromBytes$B = (data) => {
@@ -2738,12 +2779,12 @@
         getArchiveEvents: getArchiveEvents$1,
         getArchiveHours: getArchiveHours$1,
         getArchiveHoursMc: getArchiveHoursMc$1,
+        getArchiveHoursMcEx: getArchiveHoursMcEx$1,
         getBatteryStatus: getBatteryStatus$1,
         getCurrent: getCurrent,
         getCurrentMc: getCurrentMc,
         getExAbsArchiveDaysMc: getExAbsArchiveDaysMc$1,
         getExAbsArchiveHoursMc: getExAbsArchiveHoursMc$1,
-        getExAbsArchiveHoursMcEx: getExAbsArchiveHoursMcEx$1,
         getExAbsCurrentMc: getExAbsCurrentMc,
         getLmicInfo: getLmicInfo$1,
         getParameter: getParameter$1,
@@ -3528,15 +3569,79 @@
         toBytes: toBytes$j
     });
 
-    const id$i = 0x051f;
-    const name$i = 'getBatteryStatus';
+    const id$i = 0x301f;
+    const name$i = 'getArchiveHoursMcEx';
     const headerSize$i = 3;
-    const COMMAND_BODY_SIZE$8 = 11;
+    const COMMAND_BODY_MAX_SIZE$6 = 164;
     const examples$i = {
-        'simple response': {
+        '4 channels at 2023.12.23 12:00:00 GMT': {
             id: id$i,
             name: name$i,
             headerSize: headerSize$i,
+            parameters: {
+                startTime2000: 756648000,
+                hour: 12,
+                hours: 1,
+                channelList: [
+                    { value: 131, diff: [10], index: 1 },
+                    { value: 8, diff: [10], index: 2 },
+                    { value: 8, diff: [10], index: 3 },
+                    { value: 12, diff: [10], index: 4 }
+                ]
+            },
+            bytes: [
+                0x1f, 0x30, 0x0e,
+                0x2f, 0x97, 0x0c, 0x01, 0x0f, 0x83, 0x01, 0x0a, 0x08, 0x0a, 0x08, 0x0a, 0x0c, 0x0a
+            ]
+        },
+        'empty result at 2023.11.19 00:00:00 GMT': {
+            id: id$i,
+            name: name$i,
+            headerSize: headerSize$i,
+            parameters: {
+                startTime2000: 752889600,
+                hour: 0,
+                hours: 0,
+                channelList: []
+            },
+            bytes: [
+                0x1f, 0x30, 0x05,
+                0x2f, 0x6a, 0x00, 0x00, 0x00
+            ]
+        }
+    };
+    const fromBytes$i = (data) => {
+        if (data.length > COMMAND_BODY_MAX_SIZE$6) {
+            throw new Error(`Wrong buffer size: ${data.length}.`);
+        }
+        const buffer = new CommandBinaryBuffer(data);
+        return buffer.getChannelsValuesWithHourDiffExtended();
+    };
+    const toBytes$i = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$6);
+        buffer.setChannelsValuesWithHourDiffExtended(parameters);
+        return toBytes$U(id$i, buffer.getBytesToOffset());
+    };
+
+    var getArchiveHoursMcEx = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        examples: examples$i,
+        fromBytes: fromBytes$i,
+        headerSize: headerSize$i,
+        id: id$i,
+        name: name$i,
+        toBytes: toBytes$i
+    });
+
+    const id$h = 0x051f;
+    const name$h = 'getBatteryStatus';
+    const headerSize$h = 3;
+    const COMMAND_BODY_SIZE$8 = 11;
+    const examples$h = {
+        'simple response': {
+            id: id$h,
+            name: name$h,
+            headerSize: headerSize$h,
             parameters: {
                 voltageUnderLowLoad: 3600,
                 voltageUnderHighLoad: 3600,
@@ -3552,7 +3657,7 @@
             ]
         }
     };
-    const fromBytes$i = (data) => {
+    const fromBytes$h = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return {
             voltageUnderLowLoad: buffer.getUint16(),
@@ -3564,7 +3669,7 @@
             averageDailyOverconsumptionCounter: buffer.getUint16()
         };
     };
-    const toBytes$i = (parameters) => {
+    const toBytes$h = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$8);
         buffer.setUint16(parameters.voltageUnderLowLoad);
         buffer.setUint16(parameters.voltageUnderHighLoad);
@@ -3573,28 +3678,28 @@
         buffer.setUint8(parameters.remainingCapacity);
         buffer.setUint8(parameters.isLastDayOverconsumption ? 1 : 0);
         buffer.setUint16(parameters.averageDailyOverconsumptionCounter);
-        return toBytes$U(id$i, buffer.data);
+        return toBytes$U(id$h, buffer.data);
     };
 
     var getBatteryStatus = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$i,
-        fromBytes: fromBytes$i,
-        headerSize: headerSize$i,
-        id: id$i,
-        name: name$i,
-        toBytes: toBytes$i
+        examples: examples$h,
+        fromBytes: fromBytes$h,
+        headerSize: headerSize$h,
+        id: id$h,
+        name: name$h,
+        toBytes: toBytes$h
     });
 
-    const id$h = 0x0d1f;
-    const name$h = 'getExAbsArchiveDaysMc';
-    const headerSize$h = 3;
-    const COMMAND_BODY_MAX_SIZE$6 = 6124;
-    const examples$h = {
+    const id$g = 0x0d1f;
+    const name$g = 'getExAbsArchiveDaysMc';
+    const headerSize$g = 3;
+    const COMMAND_BODY_MAX_SIZE$5 = 6124;
+    const examples$g = {
         'archive days values at 4 channel from 2023.03.10 00:00:00 GMT': {
-            id: id$h,
-            name: name$h,
-            headerSize: headerSize$h,
+            id: id$g,
+            name: name$g,
+            headerSize: headerSize$g,
             parameters: {
                 channelList: [
                     {
@@ -3612,7 +3717,7 @@
             ]
         }
     };
-    const fromBytes$h = (data) => {
+    const fromBytes$g = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const date = buffer.getDate();
         const channels = buffer.getChannels();
@@ -3632,8 +3737,8 @@
         });
         return { channelList, days, startTime2000: getTime2000FromDate(date) };
     };
-    const toBytes$h = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$6);
+    const toBytes$g = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$5);
         const { channelList, startTime2000, days } = parameters;
         buffer.setDate(startTime2000);
         buffer.setChannels(channelList);
@@ -3644,28 +3749,28 @@
                 buffer.setExtendedValue(value);
             });
         });
-        return toBytes$U(id$h, buffer.getBytesToOffset());
+        return toBytes$U(id$g, buffer.getBytesToOffset());
     };
 
     var getExAbsArchiveDaysMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        examples: examples$h,
-        fromBytes: fromBytes$h,
-        headerSize: headerSize$h,
-        id: id$h,
-        name: name$h,
-        toBytes: toBytes$h
+        examples: examples$g,
+        fromBytes: fromBytes$g,
+        headerSize: headerSize$g,
+        id: id$g,
+        name: name$g,
+        toBytes: toBytes$g
     });
 
-    const id$g = 0x1a;
-    const name$g = 'getExAbsArchiveHoursMc';
-    const headerSize$g = 2;
-    const COMMAND_BODY_MAX_SIZE$5 = 164;
-    const examples$g = {
+    const id$f = 0x1a;
+    const name$f = 'getExAbsArchiveHoursMc';
+    const headerSize$f = 2;
+    const COMMAND_BODY_MAX_SIZE$4 = 164;
+    const examples$f = {
         '4 channels at 2023.12.23 12:00:00 GMT': {
-            id: id$g,
-            name: name$g,
-            headerSize: headerSize$g,
+            id: id$f,
+            name: name$f,
+            headerSize: headerSize$f,
             parameters: {
                 startTime2000: 756648000,
                 hours: 2,
@@ -3682,9 +3787,9 @@
             ]
         },
         'empty result at 2023.11.19 00:00:00 GMT': {
-            id: id$g,
-            name: name$g,
-            headerSize: headerSize$g,
+            id: id$f,
+            name: name$f,
+            headerSize: headerSize$f,
             parameters: {
                 startTime2000: 752889600,
                 hours: 0,
@@ -3696,81 +3801,17 @@
             ]
         }
     };
-    const fromBytes$g = (data) => {
+    const fromBytes$f = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return buffer.getChannelsValuesWithHourDiff();
     };
-    const toBytes$g = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$5);
-        buffer.setChannelsValuesWithHourDiff(parameters.hours, parameters.startTime2000, parameters.channelList);
-        return toBytes$U(id$g, buffer.getBytesToOffset());
-    };
-
-    var getExAbsArchiveHoursMc = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        examples: examples$g,
-        fromBytes: fromBytes$g,
-        headerSize: headerSize$g,
-        id: id$g,
-        name: name$g,
-        toBytes: toBytes$g
-    });
-
-    const id$f = 0x301f;
-    const name$f = 'getExAbsArchiveHoursMcEx';
-    const headerSize$f = 3;
-    const COMMAND_BODY_MAX_SIZE$4 = 164;
-    const examples$f = {
-        '4 channels at 2023.12.23 12:00:00 GMT': {
-            id: id$f,
-            name: name$f,
-            headerSize: headerSize$f,
-            parameters: {
-                startTime2000: 756648000,
-                hour: 12,
-                hours: 2,
-                channelList: [
-                    { value: 131, diff: [10], index: 1 },
-                    { value: 8, diff: [10], index: 2 },
-                    { value: 8, diff: [10], index: 3 },
-                    { value: 12, diff: [10], index: 4 }
-                ]
-            },
-            bytes: [
-                0x1f, 0x30, 0x0e,
-                0x2f, 0x97, 0x0c, 0x02, 0x0f, 0x83, 0x01, 0x0a, 0x08, 0x0a, 0x08, 0x0a, 0x0c, 0x0a
-            ]
-        },
-        'empty result at 2023.11.19 00:00:00 GMT': {
-            id: id$f,
-            name: name$f,
-            headerSize: headerSize$f,
-            parameters: {
-                startTime2000: 752889600,
-                hour: 0,
-                hours: 0,
-                channelList: []
-            },
-            bytes: [
-                0x1f, 0x30, 0x05,
-                0x2f, 0x6a, 0x00, 0x00, 0x00
-            ]
-        }
-    };
-    const fromBytes$f = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$4) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
-        }
-        const buffer = new CommandBinaryBuffer(data);
-        return buffer.getChannelsValuesWithHourDiffExtended();
-    };
     const toBytes$f = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$4);
-        buffer.setChannelsValuesWithHourDiffExtended(parameters);
+        buffer.setChannelsValuesWithHourDiff(parameters.hours, parameters.startTime2000, parameters.channelList);
         return toBytes$U(id$f, buffer.getBytesToOffset());
     };
 
-    var getExAbsArchiveHoursMcEx = /*#__PURE__*/Object.freeze({
+    var getExAbsArchiveHoursMc = /*#__PURE__*/Object.freeze({
         __proto__: null,
         examples: examples$f,
         fromBytes: fromBytes$f,
@@ -3920,6 +3961,34 @@
                 0x04, 0x03,
                 0x1e, 0x01, 0x01
             ]
+        },
+        'nbiot module info': {
+            id: id$d,
+            name: name$d,
+            headerSize: headerSize$d,
+            parameters: {
+                id: 51,
+                data: {
+                    moduleInfo: 'BC660KGLAAR01A05'
+                }
+            },
+            bytes: [
+                0x04, 0x12,
+                0x33, 0x10, 0x42, 0x43, 0x36, 0x36, 0x30, 0x4B, 0x47, 0x4C, 0x41, 0x41, 0x52, 0x30, 0x31, 0x41, 0x30, 0x35
+            ]
+        },
+        'nbiot bands': {
+            id: id$d,
+            name: name$d,
+            headerSize: headerSize$d,
+            parameters: {
+                id: 52,
+                data: { bands: [3, 20] }
+            },
+            bytes: [
+                0x04, 0x04,
+                0x34, 0x02, 0x03, 0x14
+            ]
         }
     };
     const fromBytes$d = (data) => {
@@ -4038,24 +4107,21 @@
     const headerSize$a = 3;
     const COMMAND_BODY_MAX_SIZE$2 = 5125;
     const examples$a = {
-        '4 first channels at 2023.12.23 12:00:00 GMT': {
+        '1 channel at 2023.12.23 12:00:00 GMT': {
             id: id$a,
             name: name$a,
             headerSize: headerSize$a,
             parameters: {
                 startTime2000: 756648000,
                 hour: 12,
-                hours: 2,
+                hours: 7,
                 channelList: [
-                    { value: 131, diff: [10], index: 1 },
-                    { value: 832, diff: [12], index: 2 },
-                    { value: 38, diff: [8], index: 3 },
-                    { value: 234, diff: [11], index: 4 }
+                    { value: 131, diff: [10, 10, 10, 10, 10, 10, 10], index: 1 }
                 ]
             },
             bytes: [
-                0x1f, 0x31, 0x10,
-                0x2f, 0x97, 0x0c, 0x02, 0x0f, 0x83, 0x01, 0x0a, 0xc0, 0x06, 0x0c, 0x26, 0x08, 0xea, 0x01, 0x0b
+                0x1f, 0x31, 0x0e,
+                0x2f, 0x97, 0x0c, 0x07, 0x01, 0x83, 0x01, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a
             ]
         }
     };
@@ -4915,10 +4981,10 @@
         getArchiveEvents: getArchiveEvents,
         getArchiveHours: getArchiveHours,
         getArchiveHoursMc: getArchiveHoursMc,
+        getArchiveHoursMcEx: getArchiveHoursMcEx,
         getBatteryStatus: getBatteryStatus,
         getExAbsArchiveDaysMc: getExAbsArchiveDaysMc,
         getExAbsArchiveHoursMc: getExAbsArchiveHoursMc,
-        getExAbsArchiveHoursMcEx: getExAbsArchiveHoursMcEx,
         getLmicInfo: getLmicInfo,
         getParameter: getParameter,
         hour: hour,
