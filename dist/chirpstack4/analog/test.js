@@ -271,6 +271,9 @@
         },
         isEmpty: {
             get() {
+                if (this.offset > this.data.length) {
+                    throw new Error(`current offset ${this.offset} is outside the bounds of the buffer`);
+                }
                 return this.data.length - this.offset === 0;
             }
         },
@@ -547,7 +550,7 @@
         isFirstChannelInactive: Math.pow(2, 4),
         isSecondChannelInactive: Math.pow(2, 5),
         isThirdChannelInactive: Math.pow(2, 6),
-        isForthChannelInactive: Math.pow(2, 7)
+        isForthChannelInactive: Math.pow(2, 8)
     };
     const mtxBitMask = {
         isMeterCaseOpen: Math.pow(2, 0),
@@ -1381,7 +1384,7 @@
             status = toObject(elimpBitMask, this.getUint8());
         }
         else if (FOUR_CHANNELS_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-            status = toObject(fourChannelBitMask, this.getExtendedValue());
+            status = toObject(fourChannelBitMask, this.getUint16());
         }
         else if (MTX_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
             status = toObject(mtxBitMask, this.getUint16());
@@ -1402,7 +1405,7 @@
             this.setUint8(fromObject(elimpBitMask, status));
         }
         else if (FOUR_CHANNELS_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-            this.setExtendedValue(fromObject(fourChannelBitMask, status));
+            this.setUint16(fromObject(fourChannelBitMask, status) | (1 << 7));
         }
         else if (MTX_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
             this.setUint16(fromObject(mtxBitMask, status));
@@ -1600,6 +1603,23 @@
         this.setBytes(parameters.data);
     };
 
+    const HEX = 1;
+
+    var getBase64FromBytes = (bytes) => btoa(bytes
+        .map(byte => String.fromCharCode(byte))
+        .join(''));
+
+    const defaultFormatOptions = {
+        bytesConversionFormat: HEX,
+        bytesConversionFormatOptions: {}
+    };
+    const getStringFromBytes = (bytes, options = defaultFormatOptions) => {
+        const { bytesConversionFormat = defaultFormatOptions.bytesConversionFormat, bytesConversionFormatOptions = defaultFormatOptions.bytesConversionFormatOptions } = options;
+        return bytesConversionFormat === HEX
+            ? getHexFromBytes(bytes, bytesConversionFormatOptions)
+            : getBase64FromBytes(bytes);
+    };
+
     const id$S = 0x1e;
     const name$S = 'dataSegment';
     const headerSize$S = 2;
@@ -1631,6 +1651,10 @@
         buffer.setDataSegment(parameters);
         return toBytes$U(id$S, buffer.data);
     };
+    const toJson$1 = (parameters, options) => (JSON.stringify({
+        ...parameters,
+        data: getStringFromBytes(parameters.data, options)
+    }));
 
     var dataSegment$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -1639,7 +1663,8 @@
         headerSize: headerSize$S,
         id: id$S,
         name: name$S,
-        toBytes: toBytes$S
+        toBytes: toBytes$S,
+        toJson: toJson$1
     });
 
     const id$R = 0x06;
@@ -2131,7 +2156,7 @@
     });
 
     const id$G = 0x0f1f;
-    const name$G = 'getExAbsCurrentMC';
+    const name$G = 'getExAbsCurrentMc';
     const headerSize$G = 3;
     const COMMAND_BODY_SIZE$i = 0;
     const examples$G = {
@@ -2691,7 +2716,7 @@
         buffer.setBytes(parameters.data);
         return toBytes$U(id$y, buffer.data);
     };
-    const toJson$1 = (parameters) => JSON.stringify(parameters);
+    const toJson = (parameters) => JSON.stringify(parameters);
 
     var writeImage$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -2701,7 +2726,7 @@
         id: id$y,
         name: name$y,
         toBytes: toBytes$y,
-        toJson: toJson$1
+        toJson: toJson
     });
 
     const id$x = 0x2b1f;
@@ -2986,7 +3011,8 @@
         headerSize: headerSize$S,
         id: id$S,
         name: name$S,
-        toBytes: toBytes$S
+        toBytes: toBytes$S,
+        toJson: toJson$1
     });
 
     const id$s = 0x20;
@@ -3762,9 +3788,9 @@
         toBytes: toBytes$g
     });
 
-    const id$f = 0x1a;
+    const id$f = 0x0c1f;
     const name$f = 'getExAbsArchiveHoursMc';
-    const headerSize$f = 2;
+    const headerSize$f = 3;
     const COMMAND_BODY_MAX_SIZE$4 = 164;
     const examples$f = {
         '4 channels at 2023.12.23 12:00:00 GMT': {
@@ -3782,7 +3808,7 @@
                 ]
             },
             bytes: [
-                0x1a, 0x0d,
+                0x1f, 0x0c, 0x0d,
                 0x2f, 0x97, 0x2c, 0x0f, 0x83, 0x01, 0x0a, 0x08, 0x0a, 0x08, 0x0a, 0x0c, 0x0a
             ]
         },
@@ -3796,7 +3822,7 @@
                 channelList: []
             },
             bytes: [
-                0x1a, 0x04,
+                0x1f, 0x0c, 0x04,
                 0x2f, 0x6a, 0x00, 0x00
             ]
         }
@@ -4194,6 +4220,29 @@
             bytes: [
                 0x63,
                 0x10, 0xe1, 0x01
+            ]
+        },
+        'status for IMP4EU (all false)': {
+            id: id$9,
+            name: name$9,
+            headerSize: headerSize$9,
+            parameters: {
+                sequenceNumber: 16,
+                status: {
+                    isBatteryLow: false,
+                    isConnectionLost: false,
+                    isFirstChannelInactive: false,
+                    isSecondChannelInactive: false,
+                    isThirdChannelInactive: false,
+                    isForthChannelInactive: false
+                }
+            },
+            config: {
+                hardwareType: IMP4EU
+            },
+            bytes: [
+                0x63,
+                0x10, 0x80, 0x00
             ]
         },
         'status for MTXLORA': {
@@ -4620,7 +4669,7 @@
     const UNKNOWN_BATTERY_RESISTANCE = 65535;
     const UNKNOWN_BATTERY_CAPACITY = 255;
     const examples$4 = {
-        'status for GASI3': {
+        'status for GASI3 (old)': {
             id: id$4,
             name: name$4,
             headerSize: headerSize$4,
@@ -4631,13 +4680,34 @@
                     batteryVoltage: { underLowLoad: 3158, underHighLoad: 3522 },
                     batteryInternalResistance: 10034,
                     temperature: 14,
-                    remainingBatteryCapacity: 41,
+                    remainingBatteryCapacity: 40.9,
                     lastEventSequenceNumber: 34
                 }
             },
             bytes: [
                 0x14, 0x0c,
                 0x02, 0x0a, 0x03, 0x01, 0xc5, 0x6d, 0xc2, 0x27, 0x32, 0x0e, 0x68, 0x22
+            ]
+        },
+        'status for GASI3 (new)': {
+            id: id$4,
+            name: name$4,
+            headerSize: headerSize$4,
+            parameters: {
+                software: { type: 2, version: 10 },
+                hardware: { type: GASI3, version: 1 },
+                data: {
+                    batteryVoltage: { underLowLoad: 3158, underHighLoad: 3522 },
+                    batteryInternalResistance: 10034,
+                    temperature: 14,
+                    remainingBatteryCapacity: 40.9,
+                    lastEventSequenceNumber: 34,
+                    downlinkQuality: 42
+                }
+            },
+            bytes: [
+                0x14, 0x0d,
+                0x02, 0x0a, 0x03, 0x01, 0xc5, 0x6d, 0xc2, 0x27, 0x32, 0x0e, 0x68, 0x22, 0x2a
             ]
         },
         'status for MTX': {
@@ -4703,7 +4773,10 @@
                         statusData.remainingBatteryCapacity = undefined;
                     }
                     else if (statusData.remainingBatteryCapacity !== undefined) {
-                        statusData.remainingBatteryCapacity = roundNumber((statusData.remainingBatteryCapacity * 100) / (UNKNOWN_BATTERY_CAPACITY - 1), 0);
+                        statusData.remainingBatteryCapacity = roundNumber((statusData.remainingBatteryCapacity * 100) / (UNKNOWN_BATTERY_CAPACITY - 1), 1);
+                    }
+                    if (!buffer.isEmpty) {
+                        statusData.downlinkQuality = buffer.getUint8();
                     }
                     data = statusData;
                 }
@@ -4763,9 +4836,12 @@
                         buffer.setUint8(UNKNOWN_BATTERY_CAPACITY);
                     }
                     else {
-                        buffer.setUint8((UNKNOWN_BATTERY_CAPACITY - 1) * (statusData.remainingBatteryCapacity / 100));
+                        buffer.setUint8(roundNumber((UNKNOWN_BATTERY_CAPACITY - 1) * (statusData.remainingBatteryCapacity / 100), 0));
                     }
                     buffer.setUint8(statusData.lastEventSequenceNumber);
+                    if ('downlinkQuality' in statusData) {
+                        buffer.setUint8(statusData.downlinkQuality);
+                    }
                 }
                 break;
             case MTXLORA:
@@ -4952,7 +5028,6 @@
         buffer.setUint8(parameters.status);
         return toBytes$U(id, buffer.data);
     };
-    const toJson = (parameters) => JSON.stringify(parameters);
 
     var writeImage = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -4961,8 +5036,7 @@
         headerSize: headerSize,
         id: id,
         name: name,
-        toBytes: toBytes,
-        toJson: toJson
+        toBytes: toBytes
     });
 
     var uplink = /*#__PURE__*/Object.freeze({

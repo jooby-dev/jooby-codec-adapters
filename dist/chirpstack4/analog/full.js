@@ -321,6 +321,9 @@ var fromBytes, toBytes;
         },
         isEmpty: {
             get() {
+                if (this.offset > this.data.length) {
+                    throw new Error(`current offset ${this.offset} is outside the bounds of the buffer`);
+                }
                 return this.data.length - this.offset === 0;
             }
         },
@@ -338,7 +341,7 @@ var fromBytes, toBytes;
 
     const shortCommandMask = 0xe0;
     const extraCommandMask = 0x1f;
-    const fromBytes$U = (data) => {
+    const fromBytes$W = (data) => {
         if (data.length === 0) {
             throw new Error('Invalid buffer size');
         }
@@ -372,7 +375,7 @@ var fromBytes, toBytes;
             commandSize: data[1]
         };
     };
-    const toBytes$V = (commandId, commandSize) => {
+    const toBytes$X = (commandId, commandSize) => {
         if ((commandId & extraCommandMask) === 0) {
             if (commandSize > extraCommandMask) {
                 throw new Error(`Wrong command id/size. Id: ${commandId}, size: ${commandSize}.`);
@@ -392,16 +395,16 @@ var fromBytes, toBytes;
         ];
     };
 
-    const toBytes$U = (commandId, commandData = []) => {
-        const headerData = toBytes$V(commandId, commandData.length);
+    const toBytes$W = (commandId, commandData = []) => {
+        const headerData = toBytes$X(commandId, commandData.length);
         return [...headerData, ...commandData];
     };
 
-    const id$R = 0x0c;
-    const name$R = 'correctTime2000';
-    const COMMAND_BODY_SIZE$t = 2;
-    const fromBytes$T = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$t) {
+    const id$T = 0x0c;
+    const name$T = 'correctTime2000';
+    const COMMAND_BODY_SIZE$u = 2;
+    const fromBytes$V = (data) => {
+        if (data.length !== COMMAND_BODY_SIZE$u) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         const buffer = new BinaryBuffer(data, false);
@@ -414,12 +417,12 @@ var fromBytes, toBytes;
         }
         return parameters;
     };
-    const toBytes$T = (parameters) => {
+    const toBytes$V = (parameters) => {
         const { sequenceNumber, seconds } = parameters;
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$t, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$u, false);
         buffer.setUint8(sequenceNumber);
         buffer.setInt8(seconds);
-        return toBytes$U(id$R, buffer.data);
+        return toBytes$W(id$T, buffer.data);
     };
 
     const fromObject = (bitMask = {}, booleanObject = {}) => {
@@ -599,7 +602,7 @@ var fromBytes, toBytes;
         isFirstChannelInactive: Math.pow(2, 4),
         isSecondChannelInactive: Math.pow(2, 5),
         isThirdChannelInactive: Math.pow(2, 6),
-        isForthChannelInactive: Math.pow(2, 7)
+        isForthChannelInactive: Math.pow(2, 8)
     };
     const mtxBitMask = {
         isMeterCaseOpen: Math.pow(2, 0),
@@ -1433,7 +1436,7 @@ var fromBytes, toBytes;
             status = toObject(elimpBitMask, this.getUint8());
         }
         else if (FOUR_CHANNELS_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-            status = toObject(fourChannelBitMask, this.getExtendedValue());
+            status = toObject(fourChannelBitMask, this.getUint16());
         }
         else if (MTX_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
             status = toObject(mtxBitMask, this.getUint16());
@@ -1454,7 +1457,7 @@ var fromBytes, toBytes;
             this.setUint8(fromObject(elimpBitMask, status));
         }
         else if (FOUR_CHANNELS_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-            this.setExtendedValue(fromObject(fourChannelBitMask, status));
+            this.setUint16(fromObject(fourChannelBitMask, status) | (1 << 7));
         }
         else if (MTX_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
             this.setUint16(fromObject(mtxBitMask, status));
@@ -1652,24 +1655,24 @@ var fromBytes, toBytes;
         this.setBytes(parameters.data);
     };
 
-    const id$Q = 0x1e;
-    const name$Q = 'dataSegment';
+    const id$S = 0x1e;
+    const name$S = 'dataSegment';
     const COMMAND_BODY_MIN_SIZE$3 = 2;
-    const fromBytes$S = (data) => {
+    const fromBytes$U = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return buffer.getDataSegment();
     };
-    const toBytes$S = (parameters) => {
+    const toBytes$U = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MIN_SIZE$3 + parameters.data.length);
         buffer.setDataSegment(parameters);
-        return toBytes$U(id$Q, buffer.data);
+        return toBytes$W(id$S, buffer.data);
     };
 
-    const id$P = 0x06;
-    const name$P = 'getArchiveDays';
-    const COMMAND_BODY_SIZE$s = 3;
-    const fromBytes$R = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$s) {
+    const id$R = 0x06;
+    const name$R = 'getArchiveDays';
+    const COMMAND_BODY_SIZE$t = 3;
+    const fromBytes$T = (data) => {
+        if (data.length !== COMMAND_BODY_SIZE$t) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         const buffer = new CommandBinaryBuffer(data);
@@ -1680,20 +1683,20 @@ var fromBytes, toBytes;
         }
         return { startTime2000: getTime2000FromDate(date), days };
     };
-    const toBytes$R = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$s);
+    const toBytes$T = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$t);
         const { startTime2000, days } = parameters;
         const date = getDateFromTime2000(startTime2000);
         buffer.setDate(date);
         buffer.setUint8(days);
-        return toBytes$U(id$P, buffer.data);
+        return toBytes$W(id$R, buffer.data);
     };
 
-    const id$O = 0x1b;
-    const name$O = 'getArchiveDaysMc';
-    const COMMAND_BODY_SIZE$r = 4;
-    const fromBytes$Q = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$r) {
+    const id$Q = 0x1b;
+    const name$Q = 'getArchiveDaysMc';
+    const COMMAND_BODY_SIZE$s = 4;
+    const fromBytes$S = (data) => {
+        if (data.length !== COMMAND_BODY_SIZE$s) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         const buffer = new CommandBinaryBuffer(data);
@@ -1705,21 +1708,21 @@ var fromBytes, toBytes;
         }
         return { startTime2000: getTime2000FromDate(date), days, channelList };
     };
-    const toBytes$Q = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$r);
+    const toBytes$S = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$s);
         const { startTime2000, days, channelList } = parameters;
         const date = getDateFromTime2000(startTime2000);
         buffer.setDate(date);
         buffer.setChannels(channelList.map(index => ({ index })));
         buffer.setUint8(days);
-        return toBytes$U(id$O, buffer.data);
+        return toBytes$W(id$Q, buffer.data);
     };
 
-    const id$N = 0x0b;
-    const name$N = 'getArchiveEvents';
-    const COMMAND_BODY_SIZE$q = 5;
-    const fromBytes$P = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$q) {
+    const id$P = 0x0b;
+    const name$P = 'getArchiveEvents';
+    const COMMAND_BODY_SIZE$r = 5;
+    const fromBytes$R = (data) => {
+        if (data.length !== COMMAND_BODY_SIZE$r) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         const buffer = new CommandBinaryBuffer(data);
@@ -1730,19 +1733,19 @@ var fromBytes, toBytes;
         }
         return { startTime2000, events };
     };
-    const toBytes$P = (parameters) => {
+    const toBytes$R = (parameters) => {
         const { startTime2000, events } = parameters;
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$q);
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$r);
         buffer.setTime(startTime2000);
         buffer.setUint8(events);
-        return toBytes$U(id$N, buffer.data);
+        return toBytes$W(id$P, buffer.data);
     };
 
-    const id$M = 0x05;
-    const name$M = 'getArchiveHours';
-    const COMMAND_BODY_SIZE$p = 4;
-    const fromBytes$O = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$p) {
+    const id$O = 0x05;
+    const name$O = 'getArchiveHours';
+    const COMMAND_BODY_SIZE$q = 4;
+    const fromBytes$Q = (data) => {
+        if (data.length !== COMMAND_BODY_SIZE$q) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         const buffer = new CommandBinaryBuffer(data);
@@ -1755,22 +1758,22 @@ var fromBytes, toBytes;
         }
         return { startTime2000: getTime2000FromDate(date), hours };
     };
-    const toBytes$O = (parameters) => {
+    const toBytes$Q = (parameters) => {
         const { startTime2000, hours } = parameters;
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$p);
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$q);
         const date = getDateFromTime2000(startTime2000);
         const hour = date.getUTCHours();
         buffer.setDate(date);
         buffer.setHours(hour, 1);
         buffer.setUint8(hours);
-        return toBytes$U(id$M, buffer.data);
+        return toBytes$W(id$O, buffer.data);
     };
 
-    const id$L = 0x1a;
-    const name$L = 'getArchiveHoursMc';
-    const COMMAND_BODY_SIZE$o = 4;
-    const fromBytes$N = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$o) {
+    const id$N = 0x1a;
+    const name$N = 'getArchiveHoursMc';
+    const COMMAND_BODY_SIZE$p = 4;
+    const fromBytes$P = (data) => {
+        if (data.length !== COMMAND_BODY_SIZE$p) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         const buffer = new CommandBinaryBuffer(data);
@@ -1783,55 +1786,55 @@ var fromBytes, toBytes;
         }
         return { startTime2000: getTime2000FromDate(date), hours, channelList };
     };
-    const toBytes$N = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$o);
+    const toBytes$P = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$p);
         const { hours, startTime2000, channelList } = parameters;
         const date = getDateFromTime2000(startTime2000);
         const hour = date.getUTCHours();
         buffer.setDate(date);
         buffer.setHours(hour, hours);
         buffer.setChannels(channelList.map(index => ({ index })));
-        return toBytes$U(id$L, buffer.data);
+        return toBytes$W(id$N, buffer.data);
     };
 
-    const id$K = 0x051f;
-    const name$K = 'getBatteryStatus';
+    const id$M = 0x051f;
+    const name$M = 'getBatteryStatus';
+    const COMMAND_BODY_SIZE$o = 0;
+    const fromBytes$O = (data) => {
+        if (data.length !== COMMAND_BODY_SIZE$o) {
+            throw new Error(`Wrong buffer size: ${data.length}.`);
+        }
+        return {};
+    };
+    const toBytes$O = () => toBytes$W(id$M);
+
+    const id$L = 0x07;
+    const name$L = 'getCurrent';
     const COMMAND_BODY_SIZE$n = 0;
-    const fromBytes$M = (data) => {
+    const fromBytes$N = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$n) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$M = () => toBytes$U(id$K);
+    const toBytes$N = () => toBytes$W(id$L);
 
-    const id$J = 0x07;
-    const name$J = 'getCurrent';
+    const id$K = 0x18;
+    const name$K = 'getCurrentMc';
     const COMMAND_BODY_SIZE$m = 0;
-    const fromBytes$L = (data) => {
+    const fromBytes$M = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$m) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$L = () => toBytes$U(id$J);
+    const toBytes$M = () => toBytes$W(id$K);
 
-    const id$I = 0x18;
-    const name$I = 'getCurrentMc';
-    const COMMAND_BODY_SIZE$l = 0;
-    const fromBytes$K = (data) => {
+    const id$J = 0x0d1f;
+    const name$J = 'getExAbsArchiveDaysMc';
+    const COMMAND_BODY_SIZE$l = 4;
+    const fromBytes$L = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$l) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
-        }
-        return {};
-    };
-    const toBytes$K = () => toBytes$U(id$I);
-
-    const id$H = 0x0d1f;
-    const name$H = 'getExAbsArchiveDaysMc';
-    const COMMAND_BODY_SIZE$k = 4;
-    const fromBytes$J = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$k) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         const buffer = new CommandBinaryBuffer(data);
@@ -1843,19 +1846,19 @@ var fromBytes, toBytes;
         }
         return { startTime2000: getTime2000FromDate(date), days, channelList };
     };
-    const toBytes$J = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$k);
+    const toBytes$L = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$l);
         const { startTime2000, days, channelList } = parameters;
         buffer.setDate(startTime2000);
         buffer.setChannels(channelList.map(index => ({ index })));
         buffer.setUint8(days);
-        return toBytes$U(id$H, buffer.data);
+        return toBytes$W(id$J, buffer.data);
     };
 
-    const id$G = 0x0c1f;
-    const name$G = 'getExAbsArchiveHoursMc';
-    const COMMAND_BODY_SIZE$j = 4;
-    const fromBytes$I = (data) => {
+    const id$I = 0x0c1f;
+    const name$I = 'getExAbsArchiveHoursMc';
+    const COMMAND_BODY_SIZE$k = 4;
+    const fromBytes$K = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const date = buffer.getDate();
         const { hour, hours } = buffer.getHours();
@@ -1866,21 +1869,21 @@ var fromBytes, toBytes;
         }
         return { channelList, hours, startTime2000: getTime2000FromDate(date) };
     };
-    const toBytes$I = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$j);
+    const toBytes$K = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$k);
         const { startTime2000, hours, channelList } = parameters;
         const date = getDateFromTime2000(startTime2000);
         const hour = date.getUTCHours();
         buffer.setDate(date);
         buffer.setHours(hour, hours);
         buffer.setChannels(channelList.map(index => ({ index })));
-        return toBytes$U(id$G, buffer.data);
+        return toBytes$W(id$I, buffer.data);
     };
 
-    const id$F = 0x301f;
-    const name$F = 'getArchiveHoursMcEx';
-    const COMMAND_BODY_SIZE$i = 5;
-    const fromBytes$H = (data) => {
+    const id$H = 0x301f;
+    const name$H = 'getArchiveHoursMcEx';
+    const COMMAND_BODY_SIZE$j = 5;
+    const fromBytes$J = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const date = buffer.getDate();
         const hour = buffer.getUint8();
@@ -1892,78 +1895,89 @@ var fromBytes, toBytes;
         }
         return { startTime2000: getTime2000FromDate(date), hour, hours, channelList };
     };
-    const toBytes$H = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$i);
+    const toBytes$J = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$j);
         const { channelList, hour, hours, startTime2000 } = parameters;
         const date = getDateFromTime2000(startTime2000);
         buffer.setDate(date);
         buffer.setUint8(hour);
         buffer.setUint8(hours);
         buffer.setChannels(channelList.map(index => ({ index })));
-        return toBytes$U(id$F, buffer.data);
+        return toBytes$W(id$H, buffer.data);
     };
 
-    const id$E = 0x021f;
-    const name$E = 'getLmicInfo';
+    const id$G = 0x0f1f;
+    const name$G = 'getExAbsCurrentMc';
+    const COMMAND_BODY_SIZE$i = 0;
+    const fromBytes$I = (data) => {
+        if (data.length !== COMMAND_BODY_SIZE$i) {
+            throw new Error(`Wrong buffer size: ${data.length}.`);
+        }
+        return {};
+    };
+    const toBytes$I = () => toBytes$W(id$G);
+
+    const id$F = 0x021f;
+    const name$F = 'getLmicInfo';
     const COMMAND_BODY_SIZE$h = 0;
-    const fromBytes$G = (data) => {
+    const fromBytes$H = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$h) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$G = () => toBytes$U(id$E);
+    const toBytes$H = () => toBytes$W(id$F);
 
-    const id$D = 0x04;
-    const name$D = 'getParameter';
-    const fromBytes$F = (data) => {
+    const id$E = 0x04;
+    const name$E = 'getParameter';
+    const fromBytes$G = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return buffer.getRequestParameter();
     };
-    const toBytes$F = (parameters) => {
+    const toBytes$G = (parameters) => {
         const buffer = new CommandBinaryBuffer(getRequestParameterSize(parameters));
         buffer.setRequestParameter(parameters);
-        return toBytes$U(id$D, buffer.data);
+        return toBytes$W(id$E, buffer.data);
     };
 
-    const id$C = 0x14;
-    const name$C = 'getStatus';
+    const id$D = 0x14;
+    const name$D = 'getStatus';
     const COMMAND_BODY_SIZE$g = 0;
-    const fromBytes$E = (data) => {
+    const fromBytes$F = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$g) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$E = () => toBytes$U(id$C);
+    const toBytes$F = () => toBytes$W(id$D);
 
-    const id$B = 0x09;
-    const name$B = 'getTime2000';
+    const id$C = 0x09;
+    const name$C = 'getTime2000';
     const COMMAND_BODY_SIZE$f = 0;
-    const fromBytes$D = (data) => {
+    const fromBytes$E = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$f) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$D = () => toBytes$U(id$B, []);
+    const toBytes$E = () => toBytes$W(id$C, []);
 
-    const id$A = 0x03;
-    const name$A = 'setParameter';
-    const fromBytes$C = (data) => {
+    const id$B = 0x03;
+    const name$B = 'setParameter';
+    const fromBytes$D = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return buffer.getParameter();
     };
-    const toBytes$C = (parameters) => {
+    const toBytes$D = (parameters) => {
         const buffer = new CommandBinaryBuffer(getParameterSize(parameters));
         buffer.setParameter(parameters);
-        return toBytes$U(id$A, buffer.data);
+        return toBytes$W(id$B, buffer.data);
     };
 
-    const id$z = 0x02;
-    const name$z = 'setTime2000';
+    const id$A = 0x02;
+    const name$A = 'setTime2000';
     const COMMAND_BODY_SIZE$e = 5;
-    const fromBytes$B = (data) => {
+    const fromBytes$C = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$e) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -1977,29 +1991,29 @@ var fromBytes, toBytes;
         }
         return parameters;
     };
-    const toBytes$B = (parameters) => {
+    const toBytes$C = (parameters) => {
         const { sequenceNumber, seconds } = parameters;
         const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$e, false);
         buffer.setUint8(sequenceNumber);
         buffer.setInt32(seconds);
-        return toBytes$U(id$z, buffer.data);
+        return toBytes$W(id$A, buffer.data);
     };
 
-    const id$y = 0x19;
-    const name$y = 'softRestart';
+    const id$z = 0x19;
+    const name$z = 'softRestart';
     const COMMAND_BODY_SIZE$d = 0;
-    const fromBytes$A = (data) => {
+    const fromBytes$B = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$d) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$A = () => toBytes$U(id$y);
+    const toBytes$B = () => toBytes$W(id$z);
 
-    const id$x = 0x2a1f;
-    const name$x = 'writeImage';
+    const id$y = 0x2a1f;
+    const name$y = 'writeImage';
     const COMMAND_BODY_MIN_SIZE$2 = 4;
-    const fromBytes$z = (data) => {
+    const fromBytes$A = (data) => {
         if (data.length < COMMAND_BODY_MIN_SIZE$2) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -2007,34 +2021,34 @@ var fromBytes, toBytes;
         const offset = buffer.getUint32(false);
         return { offset, data: data.slice(COMMAND_BODY_MIN_SIZE$2) };
     };
-    const toBytes$z = (parameters) => {
+    const toBytes$A = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MIN_SIZE$2);
         buffer.setUint32(parameters.offset, false);
         buffer.setBytes(parameters.data);
-        return toBytes$U(id$x, buffer.data);
+        return toBytes$W(id$y, buffer.data);
     };
 
-    const id$w = 0x2b1f;
-    const name$w = 'verifyImage';
+    const id$x = 0x2b1f;
+    const name$x = 'verifyImage';
     const COMMAND_BODY_SIZE$c = 0;
-    const fromBytes$y = (data) => {
+    const fromBytes$z = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$c) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$y = () => toBytes$U(id$w);
+    const toBytes$z = () => toBytes$W(id$x);
 
-    const id$v = 0x2c1f;
-    const name$v = 'updateRun';
+    const id$w = 0x2c1f;
+    const name$w = 'updateRun';
     const COMMAND_BODY_SIZE$b = 0;
-    const fromBytes$x = (data) => {
+    const fromBytes$y = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$b) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         return {};
     };
-    const toBytes$x = () => toBytes$U(id$v);
+    const toBytes$y = () => toBytes$W(id$w);
 
     var calculateLrc = (data, initialLrc = 0x55) => {
         let lrc = initialLrc;
@@ -2045,23 +2059,23 @@ var fromBytes, toBytes;
     };
 
     const HEADER_MAX_SIZE = 3;
-    const getFromBytes = (fromBytesMap, nameMap) => (data = [], config) => {
+    const getFromBytes = (fromBytesMap, nameMap) => (bytes = [], config) => {
         const commands = [];
         const message = {
             commands,
-            bytes: data,
+            bytes,
             lrc: { expected: undefined, actual: 0 }
         };
         let processedBytes = 0;
         let expectedLrc;
         let actualLrc;
-        if (!data.length) {
+        if (!bytes.length) {
             return message;
         }
         do {
-            const headerInfo = fromBytes$U(data.slice(processedBytes, processedBytes + HEADER_MAX_SIZE));
-            const headerData = data.slice(processedBytes, processedBytes + headerInfo.headerSize);
-            const bodyData = data.slice(processedBytes + headerInfo.headerSize, processedBytes + headerInfo.headerSize + headerInfo.commandSize);
+            const headerInfo = fromBytes$W(bytes.slice(processedBytes, processedBytes + HEADER_MAX_SIZE));
+            const headerData = bytes.slice(processedBytes, processedBytes + headerInfo.headerSize);
+            const bodyData = bytes.slice(processedBytes + headerInfo.headerSize, processedBytes + headerInfo.headerSize + headerInfo.commandSize);
             const command = {
                 id: headerInfo.commandId,
                 name: nameMap[headerInfo.commandId],
@@ -2073,6 +2087,9 @@ var fromBytes, toBytes;
                 command.config = config;
             }
             try {
+                if (!fromBytesMap[headerInfo.commandId]) {
+                    throw new Error(`Unsupported command id: ${headerInfo.commandId}!`);
+                }
                 command.parameters = fromBytesMap[headerInfo.commandId](bodyData, config);
                 commands.push(command);
             }
@@ -2082,13 +2099,13 @@ var fromBytes, toBytes;
                     error: error.message
                 });
             }
-        } while (processedBytes < data.length - 1);
-        if (data.length - processedBytes === 1) {
-            expectedLrc = data[data.length - 1];
-            actualLrc = calculateLrc(data.slice(0, -1));
+        } while (processedBytes < bytes.length - 1);
+        if (bytes.length - processedBytes === 1) {
+            expectedLrc = bytes[bytes.length - 1];
+            actualLrc = calculateLrc(bytes.slice(0, -1));
         }
         else {
-            actualLrc = calculateLrc(data);
+            actualLrc = calculateLrc(bytes);
         }
         message.lrc.actual = actualLrc;
         message.lrc.expected = expectedLrc;
@@ -2097,13 +2114,13 @@ var fromBytes, toBytes;
         }
         return {
             message,
-            error: 'mismatch LRC'
+            error: 'Mismatch LRC.'
         };
     };
     const getToBytes = toBytesMap => (commands) => {
         const commandBytes = commands.map(command => {
-            if ('parameters' in command) {
-                return toBytesMap[command.id](command.parameters, command.config);
+            if ('id' in command) {
+                return toBytesMap[command.id](command.parameters || {}, command.config);
             }
             if ('command' in command) {
                 return command.command.bytes;
@@ -2117,81 +2134,84 @@ var fromBytes, toBytes;
     const toBytesMap$1 = {};
     const fromBytesMap$1 = {};
     const nameMap$1 = {};
-    const toBytes$w = getToBytes(toBytesMap$1);
+    const toBytes$x = getToBytes(toBytesMap$1);
+    toBytesMap$1[id$T] = toBytes$V;
+    toBytesMap$1[id$S] = toBytes$U;
     toBytesMap$1[id$R] = toBytes$T;
     toBytesMap$1[id$Q] = toBytes$S;
     toBytesMap$1[id$P] = toBytes$R;
     toBytesMap$1[id$O] = toBytes$Q;
     toBytesMap$1[id$N] = toBytes$P;
+    toBytesMap$1[id$H] = toBytes$J;
     toBytesMap$1[id$M] = toBytes$O;
     toBytesMap$1[id$L] = toBytes$N;
-    toBytesMap$1[id$F] = toBytes$H;
     toBytesMap$1[id$K] = toBytes$M;
     toBytesMap$1[id$J] = toBytes$L;
     toBytesMap$1[id$I] = toBytes$K;
-    toBytesMap$1[id$H] = toBytes$J;
     toBytesMap$1[id$G] = toBytes$I;
+    toBytesMap$1[id$F] = toBytes$H;
     toBytesMap$1[id$E] = toBytes$G;
     toBytesMap$1[id$D] = toBytes$F;
     toBytesMap$1[id$C] = toBytes$E;
     toBytesMap$1[id$B] = toBytes$D;
     toBytesMap$1[id$A] = toBytes$C;
     toBytesMap$1[id$z] = toBytes$B;
-    toBytesMap$1[id$y] = toBytes$A;
-    toBytesMap$1[id$v] = toBytes$x;
     toBytesMap$1[id$w] = toBytes$y;
     toBytesMap$1[id$x] = toBytes$z;
+    toBytesMap$1[id$y] = toBytes$A;
+    fromBytesMap$1[id$T] = fromBytes$V;
+    fromBytesMap$1[id$S] = fromBytes$U;
     fromBytesMap$1[id$R] = fromBytes$T;
     fromBytesMap$1[id$Q] = fromBytes$S;
     fromBytesMap$1[id$P] = fromBytes$R;
     fromBytesMap$1[id$O] = fromBytes$Q;
     fromBytesMap$1[id$N] = fromBytes$P;
+    fromBytesMap$1[id$H] = fromBytes$J;
     fromBytesMap$1[id$M] = fromBytes$O;
     fromBytesMap$1[id$L] = fromBytes$N;
-    fromBytesMap$1[id$F] = fromBytes$H;
     fromBytesMap$1[id$K] = fromBytes$M;
     fromBytesMap$1[id$J] = fromBytes$L;
     fromBytesMap$1[id$I] = fromBytes$K;
-    fromBytesMap$1[id$H] = fromBytes$J;
     fromBytesMap$1[id$G] = fromBytes$I;
+    fromBytesMap$1[id$F] = fromBytes$H;
     fromBytesMap$1[id$E] = fromBytes$G;
     fromBytesMap$1[id$D] = fromBytes$F;
     fromBytesMap$1[id$C] = fromBytes$E;
     fromBytesMap$1[id$B] = fromBytes$D;
     fromBytesMap$1[id$A] = fromBytes$C;
     fromBytesMap$1[id$z] = fromBytes$B;
-    fromBytesMap$1[id$y] = fromBytes$A;
-    fromBytesMap$1[id$v] = fromBytes$x;
     fromBytesMap$1[id$w] = fromBytes$y;
     fromBytesMap$1[id$x] = fromBytes$z;
+    fromBytesMap$1[id$y] = fromBytes$A;
+    nameMap$1[id$T] = name$T;
+    nameMap$1[id$S] = name$S;
     nameMap$1[id$R] = name$R;
     nameMap$1[id$Q] = name$Q;
     nameMap$1[id$P] = name$P;
     nameMap$1[id$O] = name$O;
     nameMap$1[id$N] = name$N;
+    nameMap$1[id$H] = name$H;
     nameMap$1[id$M] = name$M;
     nameMap$1[id$L] = name$L;
-    nameMap$1[id$F] = name$F;
     nameMap$1[id$K] = name$K;
     nameMap$1[id$J] = name$J;
     nameMap$1[id$I] = name$I;
-    nameMap$1[id$H] = name$H;
     nameMap$1[id$G] = name$G;
+    nameMap$1[id$F] = name$F;
     nameMap$1[id$E] = name$E;
     nameMap$1[id$D] = name$D;
     nameMap$1[id$C] = name$C;
     nameMap$1[id$B] = name$B;
     nameMap$1[id$A] = name$A;
     nameMap$1[id$z] = name$z;
-    nameMap$1[id$y] = name$y;
-    nameMap$1[id$v] = name$v;
     nameMap$1[id$w] = name$w;
     nameMap$1[id$x] = name$x;
+    nameMap$1[id$y] = name$y;
 
-    const id$u = 0x0c;
-    const name$u = 'correctTime2000';
+    const id$v = 0x0c;
+    const name$v = 'correctTime2000';
     const COMMAND_BODY_SIZE$a = 1;
-    const fromBytes$w = (data) => {
+    const fromBytes$x = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$a) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
@@ -2204,34 +2224,34 @@ var fromBytes, toBytes;
         }
         return parameters;
     };
-    const toBytes$v = (parameters) => {
+    const toBytes$w = (parameters) => {
         const { status } = parameters;
         const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$a, false);
         buffer.setUint8(status);
-        return toBytes$U(id$u, buffer.data);
+        return toBytes$W(id$v, buffer.data);
     };
 
-    const id$t = 0x07;
-    const name$t = 'current';
-    const COMMAND_BODY_MAX_SIZE$d = 4;
-    const fromBytes$v = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$d) {
+    const id$u = 0x07;
+    const name$u = 'current';
+    const COMMAND_BODY_MAX_SIZE$e = 4;
+    const fromBytes$w = (data) => {
+        if (data.length > COMMAND_BODY_MAX_SIZE$e) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         const buffer = new CommandBinaryBuffer(data);
         return buffer.getLegacyCounter();
     };
-    const toBytes$u = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$d);
+    const toBytes$v = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$e);
         buffer.setLegacyCounter(parameters);
-        return toBytes$U(id$t, buffer.data);
+        return toBytes$W(id$u, buffer.data);
     };
 
-    const id$s = 0x18;
-    const name$s = 'currentMc';
-    const COMMAND_BODY_MAX_SIZE$c = 37;
-    const fromBytes$u = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$c) {
+    const id$t = 0x18;
+    const name$t = 'currentMc';
+    const COMMAND_BODY_MAX_SIZE$d = 37;
+    const fromBytes$v = (data) => {
+        if (data.length > COMMAND_BODY_MAX_SIZE$d) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         const parameters = { channelList: [] };
@@ -2243,20 +2263,20 @@ var fromBytes, toBytes;
         }));
         return parameters;
     };
-    const toBytes$t = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$c);
+    const toBytes$u = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$d);
         const { channelList } = parameters;
         buffer.setChannels(channelList);
         channelList.forEach(({ value }) => {
             buffer.setExtendedValue(value);
         });
-        return toBytes$U(id$s, buffer.getBytesToOffset());
+        return toBytes$W(id$t, buffer.getBytesToOffset());
     };
 
-    const id$r = 0x20;
-    const name$r = 'day';
+    const id$s = 0x20;
+    const name$s = 'day';
     const COMMAND_BODY_SIZE$9 = 6;
-    const fromBytes$t = (data) => {
+    const fromBytes$u = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const date = buffer.getDate();
         const byte = buffer.getUint8();
@@ -2266,7 +2286,7 @@ var fromBytes, toBytes;
         date.setUTCHours(hour);
         return { value, isMagneticInfluence, startTime2000: getTime2000FromDate(date) };
     };
-    const toBytes$s = (parameters) => {
+    const toBytes$t = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$9);
         const { value, isMagneticInfluence, startTime2000 } = parameters;
         const date = getDateFromTime2000(startTime2000);
@@ -2278,14 +2298,14 @@ var fromBytes, toBytes;
         buffer.seek(buffer.offset - 1);
         buffer.setUint8(CommandBinaryBuffer.setMagneticInfluenceBit(byte, isMagneticInfluence));
         buffer.setLegacyCounterValue(value);
-        return toBytes$U(id$r, buffer.getBytesToOffset());
+        return toBytes$W(id$s, buffer.getBytesToOffset());
     };
 
-    const id$q = 0x16;
-    const name$q = 'dayMc';
-    const COMMAND_BODY_MAX_SIZE$b = 32;
-    const fromBytes$s = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$b) {
+    const id$r = 0x16;
+    const name$r = 'dayMc';
+    const COMMAND_BODY_MAX_SIZE$c = 32;
+    const fromBytes$t = (data) => {
+        if (data.length > COMMAND_BODY_MAX_SIZE$c) {
             throw new Error(`Wrong buffer size: ${data.length}.`);
         }
         const buffer = new CommandBinaryBuffer(data);
@@ -2297,15 +2317,28 @@ var fromBytes, toBytes;
         }));
         return { startTime2000: getTime2000FromDate(date), channelList };
     };
-    const toBytes$r = (parameters) => {
-        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$b);
+    const toBytes$s = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$c);
         const { channelList, startTime2000 } = parameters;
         buffer.setDate(startTime2000);
         buffer.setChannels(channelList);
         channelList.forEach(({ value }) => {
             buffer.setExtendedValue(value);
         });
-        return toBytes$U(id$q, buffer.getBytesToOffset());
+        return toBytes$W(id$r, buffer.getBytesToOffset());
+    };
+
+    const id$q = 0x0f1f;
+    const name$q = 'exAbsCurrentMc';
+    const COMMAND_BODY_MAX_SIZE$b = 87;
+    const fromBytes$s = (data) => {
+        const buffer = new CommandBinaryBuffer(data);
+        return { channelList: buffer.getChannelsWithAbsoluteValues() };
+    };
+    const toBytes$r = (parameters) => {
+        const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$b);
+        buffer.setChannelsWithAbsoluteValues(parameters.channelList);
+        return toBytes$W(id$q, buffer.getBytesToOffset());
     };
 
     const id$p = 0x0b1f;
@@ -2325,7 +2358,7 @@ var fromBytes, toBytes;
         const { startTime2000, channelList } = parameters;
         buffer.setDate(startTime2000);
         buffer.setChannelsWithAbsoluteValues(channelList);
-        return toBytes$U(id$p, buffer.getBytesToOffset());
+        return toBytes$W(id$p, buffer.getBytesToOffset());
     };
 
     const id$o = 0x0a1f;
@@ -2350,7 +2383,7 @@ var fromBytes, toBytes;
         buffer.setDate(startTime2000);
         buffer.setHours(hour, hours);
         buffer.setChannelsAbsoluteValuesWithHourDiff(channelList);
-        return toBytes$U(id$o, buffer.getBytesToOffset());
+        return toBytes$W(id$o, buffer.getBytesToOffset());
     };
 
     const id$n = 0x06;
@@ -2371,7 +2404,7 @@ var fromBytes, toBytes;
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MIN_SIZE$1 + (dayList.length * DAY_COUNTER_SIZE));
         buffer.setDate(startTime2000);
         dayList.forEach(dayCounter => buffer.setLegacyCounter(dayCounter));
-        return toBytes$U(id$n, buffer.getBytesToOffset());
+        return toBytes$W(id$n, buffer.getBytesToOffset());
     };
 
     const id$m = 0x1b;
@@ -2403,7 +2436,7 @@ var fromBytes, toBytes;
                 buffer.setExtendedValue(value);
             });
         });
-        return toBytes$U(id$m, buffer.getBytesToOffset());
+        return toBytes$W(id$m, buffer.getBytesToOffset());
     };
 
     const id$l = 0x0b;
@@ -2431,7 +2464,7 @@ var fromBytes, toBytes;
         const { eventList } = parameters;
         const buffer = new CommandBinaryBuffer(eventList.length * COMMAND_BODY_MIN_SIZE, false);
         eventList.forEach(event => setEvent(buffer, event));
-        return toBytes$U(id$l, buffer.data);
+        return toBytes$W(id$l, buffer.data);
     }
 
     const id$k = 0x05;
@@ -2443,7 +2476,7 @@ var fromBytes, toBytes;
     const toBytes$l = (parameters) => {
         const buffer = new CommandBinaryBuffer(CommandBinaryBuffer.getLegacyHourCounterSize(parameters));
         buffer.setLegacyHourCounterWithDiff(parameters);
-        return toBytes$U(id$k, buffer.getBytesToOffset());
+        return toBytes$W(id$k, buffer.getBytesToOffset());
     };
 
     const id$j = 0x1a;
@@ -2460,7 +2493,7 @@ var fromBytes, toBytes;
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$7);
         const { hours, startTime2000, channelList } = parameters;
         buffer.setChannelsValuesWithHourDiff(hours, startTime2000, channelList);
-        return toBytes$U(id$j, buffer.getBytesToOffset());
+        return toBytes$W(id$j, buffer.getBytesToOffset());
     };
 
     const id$i = 0x301f;
@@ -2476,7 +2509,7 @@ var fromBytes, toBytes;
     const toBytes$j = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$6);
         buffer.setChannelsValuesWithHourDiffExtended(parameters);
-        return toBytes$U(id$i, buffer.getBytesToOffset());
+        return toBytes$W(id$i, buffer.getBytesToOffset());
     };
 
     const id$h = 0x051f;
@@ -2503,7 +2536,7 @@ var fromBytes, toBytes;
         buffer.setUint8(parameters.remainingCapacity);
         buffer.setUint8(parameters.isLastDayOverconsumption ? 1 : 0);
         buffer.setUint16(parameters.averageDailyOverconsumptionCounter);
-        return toBytes$U(id$h, buffer.data);
+        return toBytes$W(id$h, buffer.data);
     };
 
     const id$g = 0x0d1f;
@@ -2541,10 +2574,10 @@ var fromBytes, toBytes;
                 buffer.setExtendedValue(value);
             });
         });
-        return toBytes$U(id$g, buffer.getBytesToOffset());
+        return toBytes$W(id$g, buffer.getBytesToOffset());
     };
 
-    const id$f = 0x1a;
+    const id$f = 0x0c1f;
     const name$f = 'getExAbsArchiveHoursMc';
     const COMMAND_BODY_MAX_SIZE$4 = 164;
     const fromBytes$h = (data) => {
@@ -2554,7 +2587,7 @@ var fromBytes, toBytes;
     const toBytes$g = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$4);
         buffer.setChannelsValuesWithHourDiff(parameters.hours, parameters.startTime2000, parameters.channelList);
-        return toBytes$U(id$f, buffer.getBytesToOffset());
+        return toBytes$W(id$f, buffer.getBytesToOffset());
     };
 
     const id$e = 0x021f;
@@ -2581,7 +2614,7 @@ var fromBytes, toBytes;
         const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$7);
         buffer.setUint8(fromObject(lmicCapabilitiesBitMask, capabilities));
         buffer.setUint8(version);
-        return toBytes$U(id$e, buffer.data);
+        return toBytes$W(id$e, buffer.data);
     };
 
     const id$d = 0x04;
@@ -2593,7 +2626,7 @@ var fromBytes, toBytes;
     const toBytes$e = (parameters) => {
         const buffer = new CommandBinaryBuffer(getResponseParameterSize(parameters));
         buffer.setResponseParameter(parameters);
-        return toBytes$U(id$d, buffer.data);
+        return toBytes$W(id$d, buffer.data);
     };
 
     const id$c = 0x40;
@@ -2605,7 +2638,7 @@ var fromBytes, toBytes;
     const toBytes$d = (parameters) => {
         const buffer = new CommandBinaryBuffer(CommandBinaryBuffer.getLegacyHourCounterSize(parameters));
         buffer.setLegacyHourCounterWithDiff(parameters);
-        return toBytes$U(id$c, buffer.getBytesToOffset());
+        return toBytes$W(id$c, buffer.getBytesToOffset());
     };
 
     const id$b = 0x17;
@@ -2622,7 +2655,7 @@ var fromBytes, toBytes;
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$3);
         const { startTime2000, hours, channelList } = parameters;
         buffer.setChannelsValuesWithHourDiff(hours, startTime2000, channelList);
-        return toBytes$U(id$b, buffer.getBytesToOffset());
+        return toBytes$W(id$b, buffer.getBytesToOffset());
     };
 
     const id$a = 0x311f;
@@ -2638,7 +2671,7 @@ var fromBytes, toBytes;
     const toBytes$b = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_MAX_SIZE$2);
         buffer.setChannelsValuesWithHourDiffExtended(parameters);
-        return toBytes$U(id$a, buffer.getBytesToOffset());
+        return toBytes$W(id$a, buffer.getBytesToOffset());
     };
 
     const id$9 = 0x60;
@@ -2660,7 +2693,7 @@ var fromBytes, toBytes;
         const { sequenceNumber, status } = parameters;
         buffer.setUint8(sequenceNumber);
         buffer.setEventStatus(config.hardwareType, status);
-        return toBytes$U(id$9, buffer.data);
+        return toBytes$W(id$9, buffer.data);
     };
 
     const MAGNET_ON = 1;
@@ -2767,7 +2800,7 @@ var fromBytes, toBytes;
             default:
                 throw new Error(`Event ${id$8} is not supported`);
         }
-        return toBytes$U(id$8, buffer.getBytesToOffset());
+        return toBytes$W(id$8, buffer.getBytesToOffset());
     };
 
     const id$7 = 0x03;
@@ -2791,7 +2824,7 @@ var fromBytes, toBytes;
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$6);
         buffer.setUint8(parameters.id);
         buffer.setUint8(parameters.status);
-        return toBytes$U(id$7, buffer.data);
+        return toBytes$W(id$7, buffer.data);
     };
 
     const id$6 = 0x02;
@@ -2814,7 +2847,7 @@ var fromBytes, toBytes;
         const { status } = parameters;
         const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$5, false);
         buffer.setUint8(status);
-        return toBytes$U(id$6, buffer.data);
+        return toBytes$W(id$6, buffer.data);
     };
 
     const id$5 = 0x19;
@@ -2826,7 +2859,7 @@ var fromBytes, toBytes;
         }
         return {};
     };
-    const toBytes$6 = () => toBytes$U(id$5);
+    const toBytes$6 = () => toBytes$W(id$5);
 
     const id$4 = 0x14;
     const name$4 = 'status';
@@ -2865,7 +2898,10 @@ var fromBytes, toBytes;
                         statusData.remainingBatteryCapacity = undefined;
                     }
                     else if (statusData.remainingBatteryCapacity !== undefined) {
-                        statusData.remainingBatteryCapacity = roundNumber((statusData.remainingBatteryCapacity * 100) / (UNKNOWN_BATTERY_CAPACITY - 1), 0);
+                        statusData.remainingBatteryCapacity = roundNumber((statusData.remainingBatteryCapacity * 100) / (UNKNOWN_BATTERY_CAPACITY - 1), 1);
+                    }
+                    if (!buffer.isEmpty) {
+                        statusData.downlinkQuality = buffer.getUint8();
                     }
                     data = statusData;
                 }
@@ -2925,9 +2961,12 @@ var fromBytes, toBytes;
                         buffer.setUint8(UNKNOWN_BATTERY_CAPACITY);
                     }
                     else {
-                        buffer.setUint8((UNKNOWN_BATTERY_CAPACITY - 1) * (statusData.remainingBatteryCapacity / 100));
+                        buffer.setUint8(roundNumber((UNKNOWN_BATTERY_CAPACITY - 1) * (statusData.remainingBatteryCapacity / 100), 0));
                     }
                     buffer.setUint8(statusData.lastEventSequenceNumber);
+                    if ('downlinkQuality' in statusData) {
+                        buffer.setUint8(statusData.downlinkQuality);
+                    }
                 }
                 break;
             case MTXLORA:
@@ -2952,7 +2991,7 @@ var fromBytes, toBytes;
             default:
                 throw new Error(`${id$4}: hardware type ${hardware.type} is not supported`);
         }
-        return toBytes$U(id$4, buffer.getBytesToOffset());
+        return toBytes$W(id$4, buffer.getBytesToOffset());
     };
 
     const id$3 = 0x09;
@@ -2977,7 +3016,7 @@ var fromBytes, toBytes;
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$3);
         buffer.setUint8(sequenceNumber);
         buffer.setTime(time2000);
-        return toBytes$U(id$3, buffer.data);
+        return toBytes$W(id$3, buffer.data);
     }
 
     const id$2 = 0x2c1f;
@@ -2989,7 +3028,7 @@ var fromBytes, toBytes;
         }
         return {};
     };
-    const toBytes$3 = () => toBytes$U(id$2);
+    const toBytes$3 = () => toBytes$W(id$2);
 
     const id$1 = 0x2b1f;
     const name$1 = 'verifyImage';
@@ -3004,7 +3043,7 @@ var fromBytes, toBytes;
     const toBytes$2 = (parameters) => {
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE$1);
         buffer.setUint8(parameters.status);
-        return toBytes$U(id$1, buffer.data);
+        return toBytes$W(id$1, buffer.data);
     };
 
     const id = 0x2a1f;
@@ -3021,17 +3060,18 @@ var fromBytes, toBytes;
         const buffer = new CommandBinaryBuffer(COMMAND_BODY_SIZE);
         buffer.setUint32(parameters.offset, false);
         buffer.setUint8(parameters.status);
-        return toBytes$U(id, buffer.data);
+        return toBytes$W(id, buffer.data);
     };
 
     const toBytesMap = {};
     const fromBytesMap = {};
     const nameMap = {};
     const fromBytes$1 = getFromBytes(fromBytesMap, nameMap);
+    toBytesMap[id$v] = toBytes$w;
     toBytesMap[id$u] = toBytes$v;
     toBytesMap[id$t] = toBytes$u;
+    toBytesMap[id$S] = toBytes$U;
     toBytesMap[id$s] = toBytes$t;
-    toBytesMap[id$Q] = toBytes$S;
     toBytesMap[id$r] = toBytes$s;
     toBytesMap[id$q] = toBytes$r;
     toBytesMap[id$p] = toBytes$q;
@@ -3060,10 +3100,11 @@ var fromBytes, toBytes;
     toBytesMap[id$2] = toBytes$3;
     toBytesMap[id$1] = toBytes$2;
     toBytesMap[id] = toBytes$1;
+    fromBytesMap[id$v] = fromBytes$x;
     fromBytesMap[id$u] = fromBytes$w;
     fromBytesMap[id$t] = fromBytes$v;
+    fromBytesMap[id$S] = fromBytes$U;
     fromBytesMap[id$s] = fromBytes$u;
-    fromBytesMap[id$Q] = fromBytes$S;
     fromBytesMap[id$r] = fromBytes$t;
     fromBytesMap[id$q] = fromBytes$s;
     fromBytesMap[id$p] = fromBytes$r;
@@ -3071,10 +3112,10 @@ var fromBytes, toBytes;
     fromBytesMap[id$n] = fromBytes$p;
     fromBytesMap[id$m] = fromBytes$o;
     fromBytesMap[id$l] = fromBytes$n;
-    fromBytesMap[id$h] = fromBytes$j;
     fromBytesMap[id$k] = fromBytes$m;
     fromBytesMap[id$j] = fromBytes$l;
     fromBytesMap[id$i] = fromBytes$k;
+    fromBytesMap[id$h] = fromBytes$j;
     fromBytesMap[id$g] = fromBytes$i;
     fromBytesMap[id$f] = fromBytes$h;
     fromBytesMap[id$e] = fromBytes$g;
@@ -3092,10 +3133,11 @@ var fromBytes, toBytes;
     fromBytesMap[id$2] = fromBytes$4;
     fromBytesMap[id$1] = fromBytes$3;
     fromBytesMap[id] = fromBytes$2;
+    nameMap[id$v] = name$v;
     nameMap[id$u] = name$u;
     nameMap[id$t] = name$t;
+    nameMap[id$S] = name$S;
     nameMap[id$s] = name$s;
-    nameMap[id$Q] = name$Q;
     nameMap[id$r] = name$r;
     nameMap[id$q] = name$q;
     nameMap[id$p] = name$p;
@@ -3103,10 +3145,10 @@ var fromBytes, toBytes;
     nameMap[id$n] = name$n;
     nameMap[id$m] = name$m;
     nameMap[id$l] = name$l;
-    nameMap[id$h] = name$h;
     nameMap[id$k] = name$k;
     nameMap[id$j] = name$j;
     nameMap[id$i] = name$i;
+    nameMap[id$h] = name$h;
     nameMap[id$g] = name$g;
     nameMap[id$f] = name$f;
     nameMap[id$e] = name$e;
@@ -3127,7 +3169,7 @@ var fromBytes, toBytes;
 
     // export
     fromBytes = fromBytes$1;
-    toBytes = toBytes$w;
+    toBytes = toBytes$x;
 
 })();
 //#endregion

@@ -83,6 +83,100 @@
       return pad + String(this).slice(0);
     };
 
+    function _arrayLikeToArray(r, a) {
+      (null == a || a > r.length) && (a = r.length);
+      for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e];
+      return n;
+    }
+    function _arrayWithoutHoles(r) {
+      if (Array.isArray(r)) return _arrayLikeToArray(r);
+    }
+    function _createForOfIteratorHelper(r, e) {
+      var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
+      if (!t) {
+        if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e  ) {
+          t && (r = t);
+          var n = 0,
+            F = function () {};
+          return {
+            s: F,
+            n: function () {
+              return n >= r.length ? {
+                done: !0
+              } : {
+                done: !1,
+                value: r[n++]
+              };
+            },
+            e: function (r) {
+              throw r;
+            },
+            f: F
+          };
+        }
+        throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+      }
+      var o,
+        a = !0,
+        u = !1;
+      return {
+        s: function () {
+          t = t.call(r);
+        },
+        n: function () {
+          var r = t.next();
+          return a = r.done, r;
+        },
+        e: function (r) {
+          u = !0, o = r;
+        },
+        f: function () {
+          try {
+            a || null == t.return || t.return();
+          } finally {
+            if (u) throw o;
+          }
+        }
+      };
+    }
+    function _defineProperty(e, r, t) {
+      return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+        value: t,
+        enumerable: !0,
+        configurable: !0,
+        writable: !0
+      }) : e[r] = t, e;
+    }
+    function _iterableToArray(r) {
+      if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r);
+    }
+    function _nonIterableSpread() {
+      throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }
+    function ownKeys(e, r) {
+      var t = Object.keys(e);
+      if (Object.getOwnPropertySymbols) {
+        var o = Object.getOwnPropertySymbols(e);
+        r && (o = o.filter(function (r) {
+          return Object.getOwnPropertyDescriptor(e, r).enumerable;
+        })), t.push.apply(t, o);
+      }
+      return t;
+    }
+    function _objectSpread2(e) {
+      for (var r = 1; r < arguments.length; r++) {
+        var t = null != arguments[r] ? arguments[r] : {};
+        r % 2 ? ownKeys(Object(t), !0).forEach(function (r) {
+          _defineProperty(e, r, t[r]);
+        }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) {
+          Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
+        });
+      }
+      return e;
+    }
+    function _toConsumableArray(r) {
+      return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread();
+    }
     function _toPrimitive(t, r) {
       if ("object" != typeof t || !t) return t;
       var e = t[Symbol.toPrimitive];
@@ -97,95 +191,12 @@
       var i = _toPrimitive(t, "string");
       return "symbol" == typeof i ? i : i + "";
     }
-    function _defineProperty(obj, key, value) {
-      key = _toPropertyKey(key);
-      if (key in obj) {
-        Object.defineProperty(obj, key, {
-          value: value,
-          enumerable: true,
-          configurable: true,
-          writable: true
-        });
-      } else {
-        obj[key] = value;
+    function _unsupportedIterableToArray(r, a) {
+      if (r) {
+        if ("string" == typeof r) return _arrayLikeToArray(r, a);
+        var t = {}.toString.call(r).slice(8, -1);
+        return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
       }
-      return obj;
-    }
-    function _toConsumableArray(arr) {
-      return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
-    }
-    function _arrayWithoutHoles(arr) {
-      if (Array.isArray(arr)) return _arrayLikeToArray(arr);
-    }
-    function _iterableToArray(iter) {
-      if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
-    }
-    function _unsupportedIterableToArray(o, minLen) {
-      if (!o) return;
-      if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-      var n = Object.prototype.toString.call(o).slice(8, -1);
-      if (n === "Object" && o.constructor) n = o.constructor.name;
-      if (n === "Map" || n === "Set") return Array.from(o);
-      if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-    }
-    function _arrayLikeToArray(arr, len) {
-      if (len == null || len > arr.length) len = arr.length;
-      for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-      return arr2;
-    }
-    function _nonIterableSpread() {
-      throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-    }
-    function _createForOfIteratorHelper(o, allowArrayLike) {
-      var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
-      if (!it) {
-        if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
-          if (it) o = it;
-          var i = 0;
-          var F = function () {};
-          return {
-            s: F,
-            n: function () {
-              if (i >= o.length) return {
-                done: true
-              };
-              return {
-                done: false,
-                value: o[i++]
-              };
-            },
-            e: function (e) {
-              throw e;
-            },
-            f: F
-          };
-        }
-        throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-      }
-      var normalCompletion = true,
-        didErr = false,
-        err;
-      return {
-        s: function () {
-          it = it.call(o);
-        },
-        n: function () {
-          var step = it.next();
-          normalCompletion = step.done;
-          return step;
-        },
-        e: function (e) {
-          didErr = true;
-          err = e;
-        },
-        f: function () {
-          try {
-            if (!normalCompletion && it.return != null) it.return();
-          } finally {
-            if (didErr) throw err;
-          }
-        }
-      };
     }
 
     var hexFormatOptions = {
@@ -486,6 +497,9 @@
       },
       isEmpty: {
         get: function get() {
+          if (this.offset > this.data.length) {
+            throw new Error("current offset ".concat(this.offset, " is outside the bounds of the buffer"));
+          }
           return this.data.length - this.offset === 0;
         }
       },
@@ -755,7 +769,7 @@
       isFirstChannelInactive: Math.pow(2, 4),
       isSecondChannelInactive: Math.pow(2, 5),
       isThirdChannelInactive: Math.pow(2, 6),
-      isForthChannelInactive: Math.pow(2, 7)
+      isForthChannelInactive: Math.pow(2, 8)
     };
     var mtxBitMask = {
       isMeterCaseOpen: Math.pow(2, 0),
@@ -1690,7 +1704,7 @@
       } else if (ELIMP_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
         status = toObject(elimpBitMask, this.getUint8());
       } else if (FOUR_CHANNELS_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-        status = toObject(fourChannelBitMask, this.getExtendedValue());
+        status = toObject(fourChannelBitMask, this.getUint16());
       } else if (MTX_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
         status = toObject(mtxBitMask, this.getUint16());
       } else {
@@ -1706,7 +1720,7 @@
       } else if (ELIMP_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
         this.setUint8(fromObject(elimpBitMask, status));
       } else if (FOUR_CHANNELS_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-        this.setExtendedValue(fromObject(fourChannelBitMask, status));
+        this.setUint16(fromObject(fourChannelBitMask, status) | 1 << 7);
       } else if (MTX_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
         this.setUint16(fromObject(mtxBitMask, status));
       } else {
@@ -1942,6 +1956,27 @@
       this.setBytes(parameters.data);
     };
 
+    var HEX = 1;
+
+    var getBase64FromBytes = (function (bytes) {
+      return btoa(bytes.map(function (_byte) {
+        return String.fromCharCode(_byte);
+      }).join(''));
+    });
+
+    var defaultFormatOptions = {
+      bytesConversionFormat: HEX,
+      bytesConversionFormatOptions: {}
+    };
+    var getStringFromBytes = function getStringFromBytes(bytes) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultFormatOptions;
+      var _options$bytesConvers = options.bytesConversionFormat,
+        bytesConversionFormat = _options$bytesConvers === void 0 ? defaultFormatOptions.bytesConversionFormat : _options$bytesConvers,
+        _options$bytesConvers2 = options.bytesConversionFormatOptions,
+        bytesConversionFormatOptions = _options$bytesConvers2 === void 0 ? defaultFormatOptions.bytesConversionFormatOptions : _options$bytesConvers2;
+      return bytesConversionFormat === HEX ? getHexFromBytes(bytes, bytesConversionFormatOptions) : getBase64FromBytes(bytes);
+    };
+
     var id$S = 0x1e;
     var name$S = 'dataSegment';
     var headerSize$S = 2;
@@ -1970,6 +2005,11 @@
       buffer.setDataSegment(parameters);
       return toBytes$U(id$S, buffer.data);
     };
+    var toJson$1 = function toJson(parameters, options) {
+      return JSON.stringify(_objectSpread2(_objectSpread2({}, parameters), {}, {
+        data: getStringFromBytes(parameters.data, options)
+      }));
+    };
 
     var dataSegment$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -1978,7 +2018,8 @@
         headerSize: headerSize$S,
         id: id$S,
         name: name$S,
-        toBytes: toBytes$S
+        toBytes: toBytes$S,
+        toJson: toJson$1
     });
 
     var id$R = 0x06;
@@ -2545,7 +2586,7 @@
     });
 
     var id$G = 0x0f1f;
-    var name$G = 'getExAbsCurrentMC';
+    var name$G = 'getExAbsCurrentMc';
     var headerSize$G = 3;
     var COMMAND_BODY_SIZE$i = 0;
     var examples$G = {
@@ -3165,7 +3206,7 @@
       buffer.setBytes(parameters.data);
       return toBytes$U(id$y, buffer.data);
     };
-    var toJson$1 = function toJson(parameters) {
+    var toJson = function toJson(parameters) {
       return JSON.stringify(parameters);
     };
 
@@ -3177,7 +3218,7 @@
         id: id$y,
         name: name$y,
         toBytes: toBytes$y,
-        toJson: toJson$1
+        toJson: toJson
     });
 
     var id$x = 0x2b1f;
@@ -3469,7 +3510,8 @@
         headerSize: headerSize$S,
         id: id$S,
         name: name$S,
-        toBytes: toBytes$S
+        toBytes: toBytes$S,
+        toJson: toJson$1
     });
 
     var id$s = 0x20;
@@ -4285,9 +4327,9 @@
         toBytes: toBytes$g
     });
 
-    var id$f = 0x1a;
+    var id$f = 0x0c1f;
     var name$f = 'getExAbsArchiveHoursMc';
-    var headerSize$f = 2;
+    var headerSize$f = 3;
     var COMMAND_BODY_MAX_SIZE$4 = 164;
     var examples$f = {
       '4 channels at 2023.12.23 12:00:00 GMT': {
@@ -4315,7 +4357,7 @@
             index: 4
           }]
         },
-        bytes: [0x1a, 0x0d, 0x2f, 0x97, 0x2c, 0x0f, 0x83, 0x01, 0x0a, 0x08, 0x0a, 0x08, 0x0a, 0x0c, 0x0a]
+        bytes: [0x1f, 0x0c, 0x0d, 0x2f, 0x97, 0x2c, 0x0f, 0x83, 0x01, 0x0a, 0x08, 0x0a, 0x08, 0x0a, 0x0c, 0x0a]
       },
       'empty result at 2023.11.19 00:00:00 GMT': {
         id: id$f,
@@ -4326,7 +4368,7 @@
           hours: 0,
           channelList: []
         },
-        bytes: [0x1a, 0x04, 0x2f, 0x6a, 0x00, 0x00]
+        bytes: [0x1f, 0x0c, 0x04, 0x2f, 0x6a, 0x00, 0x00]
       }
     };
     var fromBytes$f = function fromBytes(data) {
@@ -4721,6 +4763,26 @@
           hardwareType: IMP4EU
         },
         bytes: [0x63, 0x10, 0xe1, 0x01]
+      },
+      'status for IMP4EU (all false)': {
+        id: id$9,
+        name: name$9,
+        headerSize: headerSize$9,
+        parameters: {
+          sequenceNumber: 16,
+          status: {
+            isBatteryLow: false,
+            isConnectionLost: false,
+            isFirstChannelInactive: false,
+            isSecondChannelInactive: false,
+            isThirdChannelInactive: false,
+            isForthChannelInactive: false
+          }
+        },
+        config: {
+          hardwareType: IMP4EU
+        },
+        bytes: [0x63, 0x10, 0x80, 0x00]
       },
       'status for MTXLORA': {
         id: id$9,
@@ -5167,7 +5229,7 @@
     var UNKNOWN_BATTERY_RESISTANCE = 65535;
     var UNKNOWN_BATTERY_CAPACITY = 255;
     var examples$4 = {
-      'status for GASI3': {
+      'status for GASI3 (old)': {
         id: id$4,
         name: name$4,
         headerSize: headerSize$4,
@@ -5187,11 +5249,38 @@
             },
             batteryInternalResistance: 10034,
             temperature: 14,
-            remainingBatteryCapacity: 41,
+            remainingBatteryCapacity: 40.9,
             lastEventSequenceNumber: 34
           }
         },
         bytes: [0x14, 0x0c, 0x02, 0x0a, 0x03, 0x01, 0xc5, 0x6d, 0xc2, 0x27, 0x32, 0x0e, 0x68, 0x22]
+      },
+      'status for GASI3 (new)': {
+        id: id$4,
+        name: name$4,
+        headerSize: headerSize$4,
+        parameters: {
+          software: {
+            type: 2,
+            version: 10
+          },
+          hardware: {
+            type: GASI3,
+            version: 1
+          },
+          data: {
+            batteryVoltage: {
+              underLowLoad: 3158,
+              underHighLoad: 3522
+            },
+            batteryInternalResistance: 10034,
+            temperature: 14,
+            remainingBatteryCapacity: 40.9,
+            lastEventSequenceNumber: 34,
+            downlinkQuality: 42
+          }
+        },
+        bytes: [0x14, 0x0d, 0x02, 0x0a, 0x03, 0x01, 0xc5, 0x6d, 0xc2, 0x27, 0x32, 0x0e, 0x68, 0x22, 0x2a]
       },
       'status for MTX': {
         id: id$4,
@@ -5262,7 +5351,10 @@
             if (statusData.remainingBatteryCapacity === UNKNOWN_BATTERY_CAPACITY) {
               statusData.remainingBatteryCapacity = undefined;
             } else if (statusData.remainingBatteryCapacity !== undefined) {
-              statusData.remainingBatteryCapacity = roundNumber(statusData.remainingBatteryCapacity * 100 / (UNKNOWN_BATTERY_CAPACITY - 1), 0);
+              statusData.remainingBatteryCapacity = roundNumber(statusData.remainingBatteryCapacity * 100 / (UNKNOWN_BATTERY_CAPACITY - 1), 1);
+            }
+            if (!buffer.isEmpty) {
+              statusData.downlinkQuality = buffer.getUint8();
             }
             data = statusData;
           }
@@ -5326,9 +5418,12 @@
             if (statusData.remainingBatteryCapacity === undefined) {
               buffer.setUint8(UNKNOWN_BATTERY_CAPACITY);
             } else {
-              buffer.setUint8((UNKNOWN_BATTERY_CAPACITY - 1) * (statusData.remainingBatteryCapacity / 100));
+              buffer.setUint8(roundNumber((UNKNOWN_BATTERY_CAPACITY - 1) * (statusData.remainingBatteryCapacity / 100), 0));
             }
             buffer.setUint8(statusData.lastEventSequenceNumber);
+            if ('downlinkQuality' in statusData) {
+              buffer.setUint8(statusData.downlinkQuality);
+            }
           }
           break;
         case MTXLORA:
@@ -5517,9 +5612,6 @@
       buffer.setUint8(parameters.status);
       return toBytes$U(id, buffer.data);
     };
-    var toJson = function toJson(parameters) {
-      return JSON.stringify(parameters);
-    };
 
     var writeImage = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -5528,8 +5620,7 @@
         headerSize: headerSize,
         id: id,
         name: name,
-        toBytes: toBytes,
-        toJson: toJson
+        toBytes: toBytes
     });
 
     var uplink = /*#__PURE__*/Object.freeze({
