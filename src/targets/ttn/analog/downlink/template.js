@@ -7,6 +7,16 @@ var config = {
 };
 
 
+/*
+  Get bytes from message.
+
+  Input is an object with the following fields:
+    * data - object, must contain "commands" field
+    * fPort - downlink fPort
+
+  Output must be an object with the following fields:
+    * bytes - byte array containing the downlink payload
+*/
 function encodeDownlink ( input ) {
     // input has the following structure:
     // {
@@ -20,12 +30,18 @@ function encodeDownlink ( input ) {
     };
 }
 
+
+/*
+  Get message from bytes.
+
+  Input is an object with the following fields:
+    * bytes - byte array containing the uplink payload, e.g. [255, 230, 255, 0]
+    * fPort - downlink fPort
+
+  Output must be an object with the following fields:
+    * data - object representing the decoded payload
+*/
 function decodeDownlink ( input ) {
-    // input has the following structure:
-    // {
-    //   bytes: [1, 2, 3], // FRMPayload (byte array)
-    //   fPort: 1
-    // }
     var message = fromBytes(input.bytes, config);
 
     return {

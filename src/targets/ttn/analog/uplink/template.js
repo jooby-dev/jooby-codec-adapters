@@ -7,12 +7,17 @@ var config = {
 };
 
 
+/*
+  Get message from bytes.
+
+  Input is an object with the following fields:
+    * bytes - byte array containing the uplink payload, e.g. [255, 230, 255, 0]
+    * fPort - uplink fPort
+
+  Output must be an object with the following fields:
+    * data - object representing the decoded payload
+*/
 function decodeUplink( input ) {
-    // input has the following structure:
-    // {
-    //   "bytes": [1, 2, 3], // FRMPayload (byte array)
-    //   "fPort": 1
-    // }
     var message = fromBytes(input.bytes, config);
 
     return {
