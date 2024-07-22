@@ -7,7 +7,7 @@ var config = {
 
 
 /*
-  Get message form bytes.
+  Get message from bytes.
 
   Input is an object with the following fields:
     * bytes - byte array containing the uplink payload, e.g. [255, 230, 255, 0]
