@@ -4,3 +4,5 @@
 dist/thingsboard/analog/**/**.js
 !dist/thingsboard/analog/**/*.min.js
 !dist/thingsboard/analog/**/*.test.js
+dist/ttn/analog/**/**.js
+!dist/ttn/analog/**/*.min.js
