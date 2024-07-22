@@ -235,5 +235,51 @@ export default [
             babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/thingsboard/analog/uplink/template.test.js')
         ]
+    },
+
+    // The Things Network uplink
+    {
+        input: './src/targets/ttn/analog/uplink/index.js',
+        output: [
+            {
+                file: './dist/ttn/analog/uplink.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/analog/uplink/init.js', 'utf8')
+            },
+            {
+                file: './dist/ttn/analog/uplink.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/analog/uplink/init.js', 'utf8'),
+                plugins: [terser(thingsboardTerserOptions)]
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            thingsboardBabelPlugin,
+            processTemplate('./src/targets/ttn/analog/uplink/template.js')
+        ]
+    },
+
+    // The Things Network downlink
+    {
+        input: './src/targets/ttn/analog/downlink/index.js',
+        output: [
+            {
+                file: './dist/ttn/analog/downlink.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/analog/downlink/init.js', 'utf8')
+            },
+            {
+                file: './dist/ttn/analog/downlink.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/analog/downlink/init.js', 'utf8'),
+                plugins: [terser(thingsboardTerserOptions)]
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            thingsboardBabelPlugin,
+            processTemplate('./src/targets/ttn/analog/downlink/template.js')
+        ]
     }
 ];
