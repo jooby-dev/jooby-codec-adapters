@@ -2,6 +2,7 @@
 
 [The Things Network](https://www.thethingsnetwork.org/) - one of the supported NS in the adapters.
 
+
 ## Setting Up Payload Formatters
 
 Select your [region](https://console.cloud.thethings.network/) in console.
@@ -11,6 +12,7 @@ Select "Uplink" to configure formatters for uplink messages (messages from devic
 Choose "Custom JavaScript formatter".
 Insert content from the [uplink.min.js](../../dist/ttn/analog/uplink.min.js).
 Click "Save changes". Repeat for Downlink with [downlink.min.js](../../dist/ttn/analog/downlink.min.js).
+
 
 ## Testing Payload Formatters
 
