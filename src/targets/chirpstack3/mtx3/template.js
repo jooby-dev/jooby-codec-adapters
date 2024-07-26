@@ -1,9 +1,6 @@
-// these options can be edited
-// available hardware types can be found here:
-// https://github.com/jooby-dev/jooby-docs/blob/main/docs/analog/basics.md#hardware-types
-var config = {
-    hardwareType: 0
-};
+// encoded message should be less than this size
+// to be able to send to a device
+var MAX_DATA_SEGMENT_SIZE = 50;
 
 
 /*
@@ -15,13 +12,20 @@ var config = {
   The function must return an object, e.g. {temperature: 22.5}
 */
 function Decode ( fPort, bytes, variables ) {
-    var message = fromBytes(bytes, config);
+    var segment = getDataSegment(bytes)
 
-    // there may be a message.error (e.g. mismatched LRC)
-    // in that case message.message will contain everything parsed successfully
-    // it should be used with caution
+    // just a single data segment
+    if ( segment ) {
+        var message = fromBytes(segment);
 
-    return {data: message.message || message};
+        // there may be a message.error (e.g. mismatched LRC)
+        // in that case message.message will contain everything parsed successfully
+        // it should be used with caution
+
+        return {data: message.message || message};
+    }
+
+    return {data: null};
 }
 
 
@@ -34,7 +38,14 @@ function Decode ( fPort, bytes, variables ) {
   The function must return an array of bytes, e.g. [225, 230, 255, 0]
 */
 function Encode ( fPort, obj, variables ) {
-    return toBytes(obj.commands, config);
+    var bytes = toBytes(obj.commands);
+
+    // send nothing if not fit in a single data segment
+    if ( bytes.length > MAX_DATA_SEGMENT_SIZE ) {
+        return [];
+    }
+
+    return setDataSegment(bytes);
 }
 
 

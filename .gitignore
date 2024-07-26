@@ -1,8 +1,6 @@
 /node_modules
-# exclude not minified files for analog in thingsboard
-# they are more than 50 KB - which not allowed to use in ThingsBoard
-dist/thingsboard/analog/**/**.js
-!dist/thingsboard/analog/**/*.min.js
-!dist/thingsboard/analog/**/*.test.js
-dist/ttn/analog/**/**.js
-!dist/ttn/analog/**/*.min.js
+
+# exclude not minified builded files
+# they are needed only for development
+dist/**/**.js
+!dist/**/*.min.js

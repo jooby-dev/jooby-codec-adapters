@@ -20,7 +20,7 @@ var config = {
 function encodeDownlink ( input ) {
     // input has the following structure:
     // {
-    //   field: "value"
+    //     field: "value"
     // }
     return {
         bytes: toBytes(input.data.commands), // FRMPayload (byte array)
@@ -47,10 +47,10 @@ function decodeDownlink ( input ) {
     return {
         data: {
             bytes: input.bytes,
-            message,
+            message
         },
         warnings: [], // optional
-        errors: [], // optional (if set, the decoding failed)
+        errors: [] // optional (if set, the decoding failed)
     };
 }
 
