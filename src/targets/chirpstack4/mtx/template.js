@@ -1,13 +1,10 @@
-// these options can be edited
-// available hardware types can be found here:
-// https://github.com/jooby-dev/jooby-docs/blob/main/docs/analog/basics.md#hardware-types
-var config = {
-    hardwareType: 0
-};
+// encoded message should be less than this size
+// to be able to send to a device
+const MAX_DATA_SEGMENT_SIZE = 50;
 
 
 /*
-  Get message from bytes.
+  Get message form bytes.
 
   Input is an object with the following fields:
     * bytes - byte array containing the uplink payload, e.g. [255, 230, 255, 0]
@@ -18,13 +15,20 @@ var config = {
     * data - object representing the decoded payload
 */
 function decodeUplink ( input ) {
-    const message = fromBytes(input.bytes, config);
+    const segment = getDataSegment(input.bytes)
 
-    // there may be a message.error (e.g. mismatched LRC)
-    // in that case message.message will contain everything parsed successfully
-    // it should be used with caution
+    // just a single data segment
+    if ( segment ) {
+        const message = fromBytes(segment);
 
-    return {data: message.message || message};
+        // there may be a message.error (e.g. mismatched LRC)
+        // in that case message.message will contain everything parsed successfully
+        // it should be used with caution
+
+        return {data: message.message || message};
+    }
+
+    return {data: null};
 };
 
 
@@ -39,8 +43,15 @@ function decodeUplink ( input ) {
     * bytes - byte array containing the downlink payload
 */
 function encodeDownlink ( input ) {
+    const bytes = toBytes(input.data.commands);
+
+    // send nothing if not fit in a single data segment
+    if ( bytes.length > MAX_DATA_SEGMENT_SIZE ) {
+        return {bytes: []};
+    }
+
     return {
-        bytes: toBytes(input.data.commands, config)
+        bytes: setDataSegment(bytes)
     };
 };
 
