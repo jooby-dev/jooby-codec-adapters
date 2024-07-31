@@ -55,7 +55,7 @@ const thingsboardBabelPlugin = babel({
 
 
 export default [
-    // ChirpStack v3 analog uplink+downlink
+    /* // ChirpStack v3 analog uplink+downlink
     {
         input: './src/targets/chirpstack3/analog/index.js',
         output: [
@@ -632,7 +632,7 @@ export default [
             babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/thingsboard/mtx3/uplink/template.test.js')
         ]
-    },
+    }, /**/
 
 
     // The Things Network analog downlink
@@ -679,5 +679,89 @@ export default [
             thingsboardBabelPlugin,
             processTemplate('./src/targets/ttn/analog/uplink/template.js')
         ]
-    }
+    },
+
+    // The Things Network MTX
+    {
+        input: './src/targets/ttn/mtx/index.js',
+        output: [
+            {
+                file: './dist/ttn/mtx/full.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/mtx/init.js', 'utf8')
+            },
+            {
+                file: './dist/ttn/mtx/full.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/mtx/init.js', 'utf8'),
+                plugins: [terser(ttnTerserOptions)]
+            }
+        ],
+        plugins: [
+            alias({
+                entries: [
+                    {find: '../utils/crypto.js', replacement: path.resolve('./src/utils/crypto.js')}
+                ]
+            }),
+            nodeResolve(),
+            thingsboardBabelPlugin,
+            processTemplate('./src/targets/ttn/mtx/template.js')
+        ]
+    },
+
+    /* // The Things Network MTX3 downlink
+    {
+        input: './src/targets/ttn/mtx3/downlink/index.js',
+        output: [
+            {
+                file: './dist/ttn/mtx3/downlink.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/mtx3/downlink/init.js', 'utf8')
+            },
+            {
+                file: './dist/ttn/mtx3/downlink.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/mtx3/downlink/init.js', 'utf8'),
+                plugins: [terser(ttnTerserOptions)]
+            }
+        ],
+        plugins: [
+            alias({
+                entries: [
+                    {find: '../utils/crypto.js', replacement: path.resolve('./src/utils/crypto.js')}
+                ]
+            }),
+            nodeResolve(),
+            thingsboardBabelPlugin,
+            processTemplate('./src/targets/ttn/mtx3/downlink/template.js')
+        ]
+    },
+
+    // The Things Network MTX3 uplink
+    {
+        input: './src/targets/ttn/mtx3/uplink/index.js',
+        output: [
+            {
+                file: './dist/ttn/mtx3/uplink.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/mtx3/uplink/init.js', 'utf8')
+            },
+            {
+                file: './dist/ttn/mtx3/uplink.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/mtx3/uplink/init.js', 'utf8'),
+                plugins: [terser(ttnTerserOptions)]
+            }
+        ],
+        plugins: [
+            alias({
+                entries: [
+                    {find: '../utils/crypto.js', replacement: path.resolve('./src/utils/crypto.js')}
+                ]
+            }),
+            nodeResolve(),
+            thingsboardBabelPlugin,
+            processTemplate('./src/targets/ttn/mtx3/uplink/template.js')
+        ]
+    } /**/
 ];
