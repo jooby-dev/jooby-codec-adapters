@@ -22,13 +22,13 @@ echo '========================'
 echo 'ChirpStack v3 MTX (Otto)'
 echo '========================'
 
-ls -l ./dist/chirpstack3/mtx
+ls -l ./dist/chirpstack3/mtx1
 
-echo '\n[FULL]' && ./bin/otto ./dist/chirpstack3/mtx/full.js
-echo '\n[FULL MIN]' && ./bin/otto ./dist/chirpstack3/mtx/full.min.js
+echo '\n[FULL]' && ./bin/otto ./dist/chirpstack3/mtx1/full.js
+echo '\n[FULL MIN]' && ./bin/otto ./dist/chirpstack3/mtx1/full.min.js
 
-echo '\n[TEST]' && ./bin/otto ./dist/chirpstack3/mtx/test.js
-echo '\n[TEST MIN]' && ./bin/otto ./dist/chirpstack3/mtx/test.min.js
+echo '\n[TEST]' && ./bin/otto ./dist/chirpstack3/mtx1/test.js
+echo '\n[TEST MIN]' && ./bin/otto ./dist/chirpstack3/mtx1/test.min.js
 
 echo '\n'
 
@@ -67,13 +67,13 @@ echo '==========================='
 echo 'ChirpStack v4 MTX (QuickJS)'
 echo '==========================='
 
-ls -l ./dist/chirpstack4/mtx
+ls -l ./dist/chirpstack4/mtx1
 
-echo '\n[FULL]' && ./bin/qjs ./dist/chirpstack4/mtx/full.js
-echo '\n[FULL MIN]' && ./bin/qjs ./dist/chirpstack4/mtx/full.min.js
+echo '\n[FULL]' && ./bin/qjs ./dist/chirpstack4/mtx1/full.js
+echo '\n[FULL MIN]' && ./bin/qjs ./dist/chirpstack4/mtx1/full.min.js
 
-echo '\n[TEST]' && ./bin/qjs ./dist/chirpstack4/mtx/test.js
-echo '\n[TEST MIN]' && ./bin/qjs ./dist/chirpstack4/mtx/test.min.js
+echo '\n[TEST]' && ./bin/qjs ./dist/chirpstack4/mtx1/test.js
+echo '\n[TEST MIN]' && ./bin/qjs ./dist/chirpstack4/mtx1/test.min.js
 
 echo '\n'
 

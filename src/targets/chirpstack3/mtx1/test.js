@@ -1,7 +1,7 @@
 import '../polyfills.js';
 
-import * as downlink from 'jooby-codec/mtx/commands/downlink';
-import * as uplink from 'jooby-codec/mtx/commands/uplink';
+import * as downlink from 'jooby-codec/mtx1/commands/downlink';
+import * as uplink from 'jooby-codec/mtx1/commands/uplink';
 
 
 const equal = ( actual, expected ) => {

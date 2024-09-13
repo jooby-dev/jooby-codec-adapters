@@ -98,19 +98,19 @@ export default [
         ]
     },
 
-    // ChirpStack v3 MTX uplink+downlink
+    // ChirpStack v3 MTX1 uplink+downlink
     {
-        input: './src/targets/chirpstack3/mtx/index.js',
+        input: './src/targets/chirpstack3/mtx1/index.js',
         output: [
             {
-                file: './dist/chirpstack3/mtx/full.js',
+                file: './dist/chirpstack3/mtx1/full.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack3/mtx/init.js', 'utf8')
+                banner: readFileSync('./src/targets/chirpstack3/mtx1/init.js', 'utf8')
             },
             {
-                file: './dist/chirpstack3/mtx/full.min.js',
+                file: './dist/chirpstack3/mtx1/full.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack3/mtx/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/chirpstack3/mtx1/init.js', 'utf8'),
                 plugins: [terser()]
             }
         ],
@@ -122,20 +122,20 @@ export default [
             }),
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
-            processTemplate('./src/targets/chirpstack3/mtx/template.js')
+            processTemplate('./src/targets/chirpstack3/mtx1/template.js')
         ]
     },
 
-    // ChirpStack v3 MTX uplink+downlink tests
+    // ChirpStack v3 MTX1 uplink+downlink tests
     {
-        input: './src/targets/chirpstack3/mtx/test.js',
+        input: './src/targets/chirpstack3/mtx1/test.js',
         output: [
             {
-                file: './dist/chirpstack3/mtx/test.js',
+                file: './dist/chirpstack3/mtx1/test.js',
                 format: 'iife'
             },
             {
-                file: './dist/chirpstack3/mtx/test.min.js',
+                file: './dist/chirpstack3/mtx1/test.min.js',
                 format: 'iife',
                 plugins: [terser()]
             }
@@ -238,19 +238,19 @@ export default [
         ]
     },
 
-    // ChirpStack v4 MTX uplink+downlink
+    // ChirpStack v4 MTX1 uplink+downlink
     {
-        input: './src/targets/chirpstack4/mtx/index.js',
+        input: './src/targets/chirpstack4/mtx1/index.js',
         output: [
             {
-                file: './dist/chirpstack4/mtx/full.js',
+                file: './dist/chirpstack4/mtx1/full.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack4/mtx/init.js', 'utf8')
+                banner: readFileSync('./src/targets/chirpstack4/mtx1/init.js', 'utf8')
             },
             {
-                file: './dist/chirpstack4/mtx/full.min.js',
+                file: './dist/chirpstack4/mtx1/full.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack4/mtx/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/chirpstack4/mtx1/init.js', 'utf8'),
                 plugins: [terser()]
             }
         ],
@@ -261,20 +261,20 @@ export default [
                 ]
             }),
             nodeResolve(),
-            processTemplate('./src/targets/chirpstack4/mtx/template.js')
+            processTemplate('./src/targets/chirpstack4/mtx1/template.js')
         ]
     },
 
-    // ChirpStack v4 MTX uplink+downlink tests
+    // ChirpStack v4 MTX1 uplink+downlink tests
     {
-        input: './src/targets/chirpstack4/mtx/test.js',
+        input: './src/targets/chirpstack4/mtx1/test.js',
         output: [
             {
-                file: './dist/chirpstack4/mtx/test.js',
+                file: './dist/chirpstack4/mtx1/test.js',
                 format: 'iife'
             },
             {
-                file: './dist/chirpstack4/mtx/test.min.js',
+                file: './dist/chirpstack4/mtx1/test.min.js',
                 format: 'iife',
                 plugins: [terser()]
             }
@@ -437,19 +437,19 @@ export default [
         ]
     },
 
-    // ThingsBoard MTX downlink
+    // ThingsBoard MTX1 downlink
     {
-        input: './src/targets/thingsboard/mtx/downlink/index.js',
+        input: './src/targets/thingsboard/mtx1/downlink/index.js',
         output: [
             {
-                file: './dist/thingsboard/mtx/downlink.js',
+                file: './dist/thingsboard/mtx1/downlink.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/thingsboard/mtx/downlink/init.js', 'utf8')
+                banner: readFileSync('./src/targets/thingsboard/mtx1/downlink/init.js', 'utf8')
             },
             {
-                file: './dist/thingsboard/mtx/downlink.min.js',
+                file: './dist/thingsboard/mtx1/downlink.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/thingsboard/mtx/downlink/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/thingsboard/mtx1/downlink/init.js', 'utf8'),
                 plugins: [terser(thingsboardTerserOptions)]
             }
         ],
@@ -461,20 +461,20 @@ export default [
             }),
             nodeResolve(),
             thingsboardBabelPlugin,
-            processTemplate('./src/targets/thingsboard/mtx/downlink/template.js')
+            processTemplate('./src/targets/thingsboard/mtx1/downlink/template.js')
         ]
     },
 
-    // ThingsBoard MTX downlink tests
+    // ThingsBoard MTX1 downlink tests
     {
-        input: './src/targets/thingsboard/mtx/downlink/test.js',
+        input: './src/targets/thingsboard/mtx1/downlink/test.js',
         output: [
             {
-                file: './dist/thingsboard/mtx/downlink.test.js',
+                file: './dist/thingsboard/mtx1/downlink.test.js',
                 format: 'iife'
             },
             {
-                file: './dist/thingsboard/mtx/downlink.test.min.js',
+                file: './dist/thingsboard/mtx1/downlink.test.min.js',
                 format: 'iife',
                 plugins: [terser(thingsboardTerserOptions)]
             }
@@ -482,23 +482,23 @@ export default [
         plugins: [
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
-            processTemplate('./src/targets/thingsboard/mtx/downlink/template.test.js')
+            processTemplate('./src/targets/thingsboard/mtx1/downlink/template.test.js')
         ]
     },
 
-    // ThingsBoard MTX uplink
+    // ThingsBoard MTX1 uplink
     {
-        input: './src/targets/thingsboard/mtx/uplink/index.js',
+        input: './src/targets/thingsboard/mtx1/uplink/index.js',
         output: [
             {
-                file: './dist/thingsboard/mtx/uplink.js',
+                file: './dist/thingsboard/mtx1/uplink.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/thingsboard/mtx/uplink/init.js', 'utf8')
+                banner: readFileSync('./src/targets/thingsboard/mtx1/uplink/init.js', 'utf8')
             },
             {
-                file: './dist/thingsboard/mtx/uplink.min.js',
+                file: './dist/thingsboard/mtx1/uplink.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/thingsboard/mtx/uplink/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/thingsboard/mtx1/uplink/init.js', 'utf8'),
                 plugins: [terser(thingsboardTerserOptions)]
             }
         ],
@@ -510,20 +510,20 @@ export default [
             }),
             nodeResolve(),
             thingsboardBabelPlugin,
-            processTemplate('./src/targets/thingsboard/mtx/uplink/template.js')
+            processTemplate('./src/targets/thingsboard/mtx1/uplink/template.js')
         ]
     },
 
-    // ThingsBoard MTX uplink tests
+    // ThingsBoard MTX1 uplink tests
     {
-        input: './src/targets/thingsboard/mtx/uplink/test.js',
+        input: './src/targets/thingsboard/mtx1/uplink/test.js',
         output: [
             {
-                file: './dist/thingsboard/mtx/uplink.test.js',
+                file: './dist/thingsboard/mtx1/uplink.test.js',
                 format: 'iife'
             },
             {
-                file: './dist/thingsboard/mtx/uplink.test.min.js',
+                file: './dist/thingsboard/mtx1/uplink.test.min.js',
                 format: 'iife',
                 plugins: [terser(thingsboardTerserOptions)]
             }
@@ -531,7 +531,7 @@ export default [
         plugins: [
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
-            processTemplate('./src/targets/thingsboard/mtx/uplink/template.test.js')
+            processTemplate('./src/targets/thingsboard/mtx1/uplink/template.test.js')
         ]
     },
 

@@ -1,6 +1,6 @@
 import './polyfills.js';
 
-import * as message from 'jooby-codec/mtx/message/downlink';
+import * as message from 'jooby-codec/mtx1/message/downlink';
 import * as utils from 'jooby-codec/utils';
 import * as dataSegment from '../../../../utils/dataSegment.js';
 
