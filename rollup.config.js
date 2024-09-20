@@ -331,6 +331,54 @@ export default [
     },
 
 
+    // TagoIO analog uplink
+    {
+        input: './src/targets/tago.io/analog/uplink/index.js',
+        output: [
+            {
+                file: './dist/tago.io/analog/uplink/full.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/tago.io/analog/uplink/init.js', 'utf8')
+            },
+            {
+                file: './dist/tago.io/analog/uplink/full.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/tago.io/analog/uplink/init.js', 'utf8'),
+                plugins: [terser()]
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            //babel({babelHelpers: 'bundled'}),
+            processTemplate('./src/targets/tago.io/analog/uplink/template.js')
+        ]
+    },
+
+
+    // ThingPark analog uplink+downlink
+    {
+        input: './src/targets/thingpark/analog/index.js',
+        output: [
+            {
+                file: './dist/thingpark/analog/full.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/thingpark/analog/init.js', 'utf8')
+            },
+            {
+                file: './dist/thingpark/analog/full.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/thingpark/analog/init.js', 'utf8'),
+                plugins: [terser()]
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            //babel({babelHelpers: 'bundled'}),
+            processTemplate('./src/targets/thingpark/analog/template.js')
+        ]
+    },
+
+
     // ThingsBoard analog downlink
     {
         input: './src/targets/thingsboard/analog/downlink/index.js',
