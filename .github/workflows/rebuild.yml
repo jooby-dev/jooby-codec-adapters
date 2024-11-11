@@ -26,7 +26,7 @@ jobs:
           - run: npm install jooby-codec@latest --save
           - run: npm run build:clean
 
-          - name: Commit and push changes
+          - name: commit and push changes
             run: |
               git config user.name "github-actions[bot]"
               git config user.email "github-actions[bot]@users.noreply.github.com"
