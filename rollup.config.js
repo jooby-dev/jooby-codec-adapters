@@ -1,4 +1,5 @@
 import {nodeResolve} from '@rollup/plugin-node-resolve';
+//import commonjs from '@rollup/plugin-commonjs';
 import alias from '@rollup/plugin-alias';
 import {babel} from '@rollup/plugin-babel';
 import terser from '@rollup/plugin-terser';
@@ -141,6 +142,7 @@ export default [
             }
         ],
         plugins: [
+            // commonjs(),
             nodeResolve(),
             babel({babelHelpers: 'bundled'})
         ]
@@ -189,6 +191,7 @@ export default [
             }
         ],
         plugins: [
+            // commonjs(),
             nodeResolve(),
             babel({babelHelpers: 'bundled'})
         ]
@@ -280,6 +283,7 @@ export default [
             }
         ],
         plugins: [
+            // commonjs(),
             nodeResolve()
         ]
     },
@@ -326,6 +330,7 @@ export default [
             }
         ],
         plugins: [
+            // commonjs(),
             nodeResolve()
         ]
     },
@@ -528,6 +533,7 @@ export default [
             }
         ],
         plugins: [
+            // commonjs(),
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/thingsboard/mtx1/downlink/template.test.js')
@@ -577,6 +583,7 @@ export default [
             }
         ],
         plugins: [
+            // commonjs(),
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/thingsboard/mtx1/uplink/template.test.js')
@@ -627,6 +634,7 @@ export default [
             }
         ],
         plugins: [
+            //commonjs(),
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/thingsboard/mtx3/downlink/template.test.js')
@@ -676,6 +684,7 @@ export default [
             }
         ],
         plugins: [
+            //commonjs(),
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/thingsboard/mtx3/uplink/template.test.js')
