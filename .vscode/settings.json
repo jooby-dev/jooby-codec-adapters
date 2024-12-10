@@ -17,6 +17,8 @@
         "OPTOFLASH",
         "OPTOLOW",
         "rssi",
+        "tago",
+        "thingpark",
         "thingsboard"
     ]
 }

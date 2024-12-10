@@ -1,4 +1,5 @@
 import {nodeResolve} from '@rollup/plugin-node-resolve';
+//import commonjs from '@rollup/plugin-commonjs';
 import alias from '@rollup/plugin-alias';
 import {babel} from '@rollup/plugin-babel';
 import terser from '@rollup/plugin-terser';
@@ -60,7 +61,7 @@ export default [
         input: './src/targets/chirpstack3/analog/index.js',
         output: [
             {
-                file: './dist/chirpstack3/analog/full.js',
+                file: './dist/chirpstack3/analog/develop/full.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/chirpstack3/analog/init.js', 'utf8')
             },
@@ -83,7 +84,7 @@ export default [
         input: './src/targets/chirpstack3/analog/test.js',
         output: [
             {
-                file: './dist/chirpstack3/analog/test.js',
+                file: './dist/chirpstack3/analog/develop/test.js',
                 format: 'iife'
             },
             {
@@ -98,19 +99,19 @@ export default [
         ]
     },
 
-    // ChirpStack v3 MTX uplink+downlink
+    // ChirpStack v3 MTX1 uplink+downlink
     {
-        input: './src/targets/chirpstack3/mtx/index.js',
+        input: './src/targets/chirpstack3/mtx1/index.js',
         output: [
             {
-                file: './dist/chirpstack3/mtx/full.js',
+                file: './dist/chirpstack3/mtx1/develop/full.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack3/mtx/init.js', 'utf8')
+                banner: readFileSync('./src/targets/chirpstack3/mtx1/init.js', 'utf8')
             },
             {
-                file: './dist/chirpstack3/mtx/full.min.js',
+                file: './dist/chirpstack3/mtx1/full.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack3/mtx/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/chirpstack3/mtx1/init.js', 'utf8'),
                 plugins: [terser()]
             }
         ],
@@ -122,25 +123,26 @@ export default [
             }),
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
-            processTemplate('./src/targets/chirpstack3/mtx/template.js')
+            processTemplate('./src/targets/chirpstack3/mtx1/template.js')
         ]
     },
 
-    // ChirpStack v3 MTX uplink+downlink tests
+    // ChirpStack v3 MTX1 uplink+downlink tests
     {
-        input: './src/targets/chirpstack3/mtx/test.js',
+        input: './src/targets/chirpstack3/mtx1/test.js',
         output: [
             {
-                file: './dist/chirpstack3/mtx/test.js',
+                file: './dist/chirpstack3/mtx1/develop/test.js',
                 format: 'iife'
             },
             {
-                file: './dist/chirpstack3/mtx/test.min.js',
+                file: './dist/chirpstack3/mtx1/test.min.js',
                 format: 'iife',
                 plugins: [terser()]
             }
         ],
         plugins: [
+            // commonjs(),
             nodeResolve(),
             babel({babelHelpers: 'bundled'})
         ]
@@ -151,7 +153,7 @@ export default [
         input: './src/targets/chirpstack3/mtx3/index.js',
         output: [
             {
-                file: './dist/chirpstack3/mtx3/full.js',
+                file: './dist/chirpstack3/mtx3/develop/full.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/chirpstack3/mtx3/init.js', 'utf8')
             },
@@ -179,7 +181,7 @@ export default [
         input: './src/targets/chirpstack3/mtx3/test.js',
         output: [
             {
-                file: './dist/chirpstack3/mtx3/test.js',
+                file: './dist/chirpstack3/mtx3/develop/test.js',
                 format: 'iife'
             },
             {
@@ -189,6 +191,7 @@ export default [
             }
         ],
         plugins: [
+            // commonjs(),
             nodeResolve(),
             babel({babelHelpers: 'bundled'})
         ]
@@ -200,7 +203,7 @@ export default [
         input: './src/targets/chirpstack4/analog/index.js',
         output: [
             {
-                file: './dist/chirpstack4/analog/full.js',
+                file: './dist/chirpstack4/analog/develop/full.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/chirpstack4/analog/init.js', 'utf8')
             },
@@ -223,7 +226,7 @@ export default [
         input: './src/targets/chirpstack4/analog/test.js',
         output: [
             {
-                file: './dist/chirpstack4/analog/test.js',
+                file: './dist/chirpstack4/analog/develop/test.js',
                 format: 'iife'
             },
             {
@@ -238,19 +241,19 @@ export default [
         ]
     },
 
-    // ChirpStack v4 MTX uplink+downlink
+    // ChirpStack v4 MTX1 uplink+downlink
     {
-        input: './src/targets/chirpstack4/mtx/index.js',
+        input: './src/targets/chirpstack4/mtx1/index.js',
         output: [
             {
-                file: './dist/chirpstack4/mtx/full.js',
+                file: './dist/chirpstack4/mtx1/develop/full.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack4/mtx/init.js', 'utf8')
+                banner: readFileSync('./src/targets/chirpstack4/mtx1/init.js', 'utf8')
             },
             {
-                file: './dist/chirpstack4/mtx/full.min.js',
+                file: './dist/chirpstack4/mtx1/full.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/chirpstack4/mtx/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/chirpstack4/mtx1/init.js', 'utf8'),
                 plugins: [terser()]
             }
         ],
@@ -261,25 +264,26 @@ export default [
                 ]
             }),
             nodeResolve(),
-            processTemplate('./src/targets/chirpstack4/mtx/template.js')
+            processTemplate('./src/targets/chirpstack4/mtx1/template.js')
         ]
     },
 
-    // ChirpStack v4 MTX uplink+downlink tests
+    // ChirpStack v4 MTX1 uplink+downlink tests
     {
-        input: './src/targets/chirpstack4/mtx/test.js',
+        input: './src/targets/chirpstack4/mtx1/test.js',
         output: [
             {
-                file: './dist/chirpstack4/mtx/test.js',
+                file: './dist/chirpstack4/mtx1/develop/test.js',
                 format: 'iife'
             },
             {
-                file: './dist/chirpstack4/mtx/test.min.js',
+                file: './dist/chirpstack4/mtx1/test.min.js',
                 format: 'iife',
                 plugins: [terser()]
             }
         ],
         plugins: [
+            // commonjs(),
             nodeResolve()
         ]
     },
@@ -289,7 +293,7 @@ export default [
         input: './src/targets/chirpstack4/mtx3/index.js',
         output: [
             {
-                file: './dist/chirpstack4/mtx3/full.js',
+                file: './dist/chirpstack4/mtx3/develop/full.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/chirpstack4/mtx3/init.js', 'utf8')
             },
@@ -316,7 +320,7 @@ export default [
         input: './src/targets/chirpstack4/mtx3/test.js',
         output: [
             {
-                file: './dist/chirpstack4/mtx3/test.js',
+                file: './dist/chirpstack4/mtx3/develop/test.js',
                 format: 'iife'
             },
             {
@@ -326,7 +330,56 @@ export default [
             }
         ],
         plugins: [
+            // commonjs(),
             nodeResolve()
+        ]
+    },
+
+
+    // TagoIO analog uplink
+    {
+        input: './src/targets/tago.io/analog/uplink/index.js',
+        output: [
+            {
+                file: './dist/tago.io/analog/uplink/develop/full.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/tago.io/analog/uplink/init.js', 'utf8')
+            },
+            {
+                file: './dist/tago.io/analog/uplink/full.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/tago.io/analog/uplink/init.js', 'utf8'),
+                plugins: [terser()]
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            //babel({babelHelpers: 'bundled'}),
+            processTemplate('./src/targets/tago.io/analog/uplink/template.js')
+        ]
+    },
+
+
+    // ThingPark analog uplink+downlink
+    {
+        input: './src/targets/thingpark/analog/index.js',
+        output: [
+            {
+                file: './dist/thingpark/analog/develop/full.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/thingpark/analog/init.js', 'utf8')
+            },
+            {
+                file: './dist/thingpark/analog/full.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/thingpark/analog/init.js', 'utf8'),
+                plugins: [terser()]
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            //babel({babelHelpers: 'bundled'}),
+            processTemplate('./src/targets/thingpark/analog/template.js')
         ]
     },
 
@@ -336,7 +389,7 @@ export default [
         input: './src/targets/thingsboard/analog/downlink/index.js',
         output: [
             {
-                file: './dist/thingsboard/analog/downlink.js',
+                file: './dist/thingsboard/analog/develop/downlink.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/thingsboard/analog/downlink/init.js', 'utf8')
             },
@@ -359,7 +412,7 @@ export default [
         input: './src/targets/thingsboard/analog/downlink/test.js',
         output: [
             {
-                file: './dist/thingsboard/analog/downlink.test.js',
+                file: './dist/thingsboard/analog/develop/downlink.test.js',
                 format: 'iife'
             },
             {
@@ -380,7 +433,7 @@ export default [
         input: './src/targets/thingsboard/analog/uplink/index.js',
         output: [
             {
-                file: './dist/thingsboard/analog/uplink.js',
+                file: './dist/thingsboard/analog/develop/uplink.js',
                 format: 'cjs',
                 banner: readFileSync('./src/targets/thingsboard/analog/uplink/init.js', 'utf8')
             },
@@ -403,7 +456,7 @@ export default [
         input: './src/targets/thingsboard/analog/uplink/test.js',
         output: [
             {
-                file: './dist/thingsboard/analog/uplink.test.js',
+                file: './dist/thingsboard/analog/develop/uplink.test.js',
                 format: 'iife'
             },
             {
@@ -424,6 +477,11 @@ export default [
         input: './src/targets/thingsboard/analog/uplink/loriot/index.js',
         output: [
             {
+                file: './dist/thingsboard/analog/loriot/develop/uplink.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/thingsboard/analog/uplink/loriot/init.js', 'utf8')
+            },
+            {
                 file: './dist/thingsboard/analog/loriot/uplink.min.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/thingsboard/analog/uplink/loriot/init.js', 'utf8'),
@@ -437,19 +495,19 @@ export default [
         ]
     },
 
-    // ThingsBoard MTX downlink
+    // ThingsBoard MTX1 downlink
     {
-        input: './src/targets/thingsboard/mtx/downlink/index.js',
+        input: './src/targets/thingsboard/mtx1/downlink/index.js',
         output: [
             {
-                file: './dist/thingsboard/mtx/downlink.js',
+                file: './dist/thingsboard/mtx1/develop/downlink.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/thingsboard/mtx/downlink/init.js', 'utf8')
+                banner: readFileSync('./src/targets/thingsboard/mtx1/downlink/init.js', 'utf8')
             },
             {
-                file: './dist/thingsboard/mtx/downlink.min.js',
+                file: './dist/thingsboard/mtx1/downlink.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/thingsboard/mtx/downlink/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/thingsboard/mtx1/downlink/init.js', 'utf8'),
                 plugins: [terser(thingsboardTerserOptions)]
             }
         ],
@@ -461,44 +519,45 @@ export default [
             }),
             nodeResolve(),
             thingsboardBabelPlugin,
-            processTemplate('./src/targets/thingsboard/mtx/downlink/template.js')
+            processTemplate('./src/targets/thingsboard/mtx1/downlink/template.js')
         ]
     },
 
-    // ThingsBoard MTX downlink tests
+    // ThingsBoard MTX1 downlink tests
     {
-        input: './src/targets/thingsboard/mtx/downlink/test.js',
+        input: './src/targets/thingsboard/mtx1/downlink/test.js',
         output: [
             {
-                file: './dist/thingsboard/mtx/downlink.test.js',
+                file: './dist/thingsboard/mtx1/develop/downlink.test.js',
                 format: 'iife'
             },
             {
-                file: './dist/thingsboard/mtx/downlink.test.min.js',
+                file: './dist/thingsboard/mtx1/downlink.test.min.js',
                 format: 'iife',
                 plugins: [terser(thingsboardTerserOptions)]
             }
         ],
         plugins: [
+            // commonjs(),
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
-            processTemplate('./src/targets/thingsboard/mtx/downlink/template.test.js')
+            processTemplate('./src/targets/thingsboard/mtx1/downlink/template.test.js')
         ]
     },
 
-    // ThingsBoard MTX uplink
+    // ThingsBoard MTX1 uplink
     {
-        input: './src/targets/thingsboard/mtx/uplink/index.js',
+        input: './src/targets/thingsboard/mtx1/uplink/index.js',
         output: [
             {
-                file: './dist/thingsboard/mtx/uplink.js',
+                file: './dist/thingsboard/mtx1/develop/uplink.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/thingsboard/mtx/uplink/init.js', 'utf8')
+                banner: readFileSync('./src/targets/thingsboard/mtx1/uplink/init.js', 'utf8')
             },
             {
-                file: './dist/thingsboard/mtx/uplink.min.js',
+                file: './dist/thingsboard/mtx1/uplink.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/thingsboard/mtx/uplink/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/thingsboard/mtx1/uplink/init.js', 'utf8'),
                 plugins: [terser(thingsboardTerserOptions)]
             }
         ],
@@ -510,28 +569,29 @@ export default [
             }),
             nodeResolve(),
             thingsboardBabelPlugin,
-            processTemplate('./src/targets/thingsboard/mtx/uplink/template.js')
+            processTemplate('./src/targets/thingsboard/mtx1/uplink/template.js')
         ]
     },
 
-    // ThingsBoard MTX uplink tests
+    // ThingsBoard MTX1 uplink tests
     {
-        input: './src/targets/thingsboard/mtx/uplink/test.js',
+        input: './src/targets/thingsboard/mtx1/uplink/test.js',
         output: [
             {
-                file: './dist/thingsboard/mtx/uplink.test.js',
+                file: './dist/thingsboard/mtx1/develop/uplink.test.js',
                 format: 'iife'
             },
             {
-                file: './dist/thingsboard/mtx/uplink.test.min.js',
+                file: './dist/thingsboard/mtx1/uplink.test.min.js',
                 format: 'iife',
                 plugins: [terser(thingsboardTerserOptions)]
             }
         ],
         plugins: [
+            // commonjs(),
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
-            processTemplate('./src/targets/thingsboard/mtx/uplink/template.test.js')
+            processTemplate('./src/targets/thingsboard/mtx1/uplink/template.test.js')
         ]
     },
 
@@ -541,7 +601,7 @@ export default [
         input: './src/targets/thingsboard/mtx3/downlink/index.js',
         output: [
             {
-                file: './dist/thingsboard/mtx3/downlink.js',
+                file: './dist/thingsboard/mtx3/develop/downlink.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/thingsboard/mtx3/downlink/init.js', 'utf8')
             },
@@ -569,7 +629,7 @@ export default [
         input: './src/targets/thingsboard/mtx3/downlink/test.js',
         output: [
             {
-                file: './dist/thingsboard/mtx3/downlink.test.js',
+                file: './dist/thingsboard/mtx3/develop/downlink.test.js',
                 format: 'iife'
             },
             {
@@ -579,6 +639,7 @@ export default [
             }
         ],
         plugins: [
+            //commonjs(),
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/thingsboard/mtx3/downlink/template.test.js')
@@ -590,7 +651,7 @@ export default [
         input: './src/targets/thingsboard/mtx3/uplink/index.js',
         output: [
             {
-                file: './dist/thingsboard/mtx3/uplink.js',
+                file: './dist/thingsboard/mtx3/develop/uplink.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/thingsboard/mtx3/uplink/init.js', 'utf8')
             },
@@ -618,7 +679,7 @@ export default [
         input: './src/targets/thingsboard/mtx3/uplink/test.js',
         output: [
             {
-                file: './dist/thingsboard/mtx3/uplink.test.js',
+                file: './dist/thingsboard/mtx3/develop/uplink.test.js',
                 format: 'iife'
             },
             {
@@ -628,6 +689,7 @@ export default [
             }
         ],
         plugins: [
+            //commonjs(),
             nodeResolve(),
             babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/thingsboard/mtx3/uplink/template.test.js')
@@ -640,7 +702,7 @@ export default [
         input: './src/targets/ttn/analog/downlink/index.js',
         output: [
             {
-                file: './dist/ttn/analog/downlink.js',
+                file: './dist/ttn/analog/develop/downlink.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/ttn/analog/downlink/init.js', 'utf8')
             },
@@ -663,7 +725,7 @@ export default [
         input: './src/targets/ttn/analog/uplink/index.js',
         output: [
             {
-                file: './dist/ttn/analog/uplink.js',
+                file: './dist/ttn/analog/develop/uplink.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/ttn/analog/uplink/init.js', 'utf8')
             },
