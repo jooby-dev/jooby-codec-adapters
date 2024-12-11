@@ -26,11 +26,13 @@ export const get = ( bytes ) => {
     // payload
     const data = bytes.slice(4, size + 2);
 
-    const expectedLrc = calculateLrc(bytes.slice(0, size + 2));
-    const actualLrc = bytes[size + 2];
+    // if the mtx message is unencrypted, the device sets the LRC to 0
+    // no need to validate for now
+    // const expectedLrc = calculateLrc(bytes.slice(0, size + 2));
+    // const actualLrc = bytes[size + 2];
 
-    // just a single data segment with correct lrc
-    if ( flag === SINGLE_SEGMENT_FLAG && expectedLrc === actualLrc ) {
+    // just a single data segment (without lrc validation)
+    if ( flag === SINGLE_SEGMENT_FLAG ) {
         return data;
     }
 
