@@ -81,7 +81,7 @@ function decodeDownlink ( input ) {
   Output must be an object with the following fields:
     * data - object representing the decoded payload
 */
-function decodeUplink( input ) {
+function decodeUplink ( input ) {
     var segment = getDataSegment(input.bytes);
     var message = null;
 

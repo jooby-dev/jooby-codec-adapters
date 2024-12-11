@@ -694,7 +694,7 @@ export default [
             babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/thingsboard/mtx3/uplink/template.test.js')
         ]
-    }, /**/
+    },
 
 
     // The Things Network analog downlink
@@ -741,21 +741,21 @@ export default [
             thingsboardBabelPlugin,
             processTemplate('./src/targets/ttn/analog/uplink/template.js')
         ]
-    },
+    },  /**/
 
     // The Things Network MTX
     {
-        input: './src/targets/ttn/mtx/index.js',
+        input: './src/targets/ttn/mtx1/index.js',
         output: [
             {
-                file: './dist/ttn/mtx/full.js',
+                file: './dist/ttn/mtx1/develop/full.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/ttn/mtx/init.js', 'utf8')
+                banner: readFileSync('./src/targets/ttn/mtx1/init.js', 'utf8')
             },
             {
-                file: './dist/ttn/mtx/full.min.js',
+                file: './dist/ttn/mtx1/full.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/ttn/mtx/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/ttn/mtx1/init.js', 'utf8'),
                 plugins: [terser(ttnTerserOptions)]
             }
         ],
@@ -767,7 +767,7 @@ export default [
             }),
             nodeResolve(),
             thingsboardBabelPlugin,
-            processTemplate('./src/targets/ttn/mtx/template.js')
+            processTemplate('./src/targets/ttn/mtx1/template.js')
         ]
     },
 
