@@ -1,5 +1,5 @@
 import {nodeResolve} from '@rollup/plugin-node-resolve';
-//import commonjs from '@rollup/plugin-commonjs';
+import commonjs from '@rollup/plugin-commonjs';
 import alias from '@rollup/plugin-alias';
 import {babel} from '@rollup/plugin-babel';
 import terser from '@rollup/plugin-terser';
@@ -52,6 +52,12 @@ const thingsboardBabelPlugin = babel({
         '@babel/plugin-transform-template-literals',
         '@babel/plugin-transform-computed-properties'
     ]
+});
+
+const ttnBabelPlugin = babel({
+    babelHelpers: 'bundled',
+    presets: ['@babel/preset-env'],
+    targets: 'defaults'
 });
 
 
@@ -694,70 +700,70 @@ export default [
             babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/thingsboard/mtx3/uplink/template.test.js')
         ]
-    },
+    }, /**/
 
-
-    // The Things Network analog downlink
+    // The Things Network analog (hardware type GASIC)
     {
-        input: './src/targets/ttn/analog/downlink/index.js',
+        input: './src/targets/ttn/analog-gasic/index.js',
         output: [
             {
-                file: './dist/ttn/analog/develop/downlink.js',
+                file: './dist/ttn/analog-gasic.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/ttn/analog/downlink/init.js', 'utf8')
-            },
-            {
-                file: './dist/ttn/analog/downlink.min.js',
-                format: 'iife',
-                banner: readFileSync('./src/targets/ttn/analog/downlink/init.js', 'utf8'),
-                plugins: [terser(ttnTerserOptions)]
-            }
-        ],
-        plugins: [
-            nodeResolve(),
-            thingsboardBabelPlugin,
-            processTemplate('./src/targets/ttn/analog/downlink/template.js')
-        ]
-    },
-
-    // The Things Network analog uplink
-    {
-        input: './src/targets/ttn/analog/uplink/index.js',
-        output: [
-            {
-                file: './dist/ttn/analog/develop/uplink.js',
-                format: 'iife',
-                banner: readFileSync('./src/targets/ttn/analog/uplink/init.js', 'utf8')
-            },
+                //banner: readFileSync('./src/targets/ttn/analog-gasic/init.js', 'utf8')
+            }/* ,
             {
                 file: './dist/ttn/analog/uplink.min.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/ttn/analog/uplink/init.js', 'utf8'),
                 plugins: [terser(ttnTerserOptions)]
-            }
+            } */
         ],
         plugins: [
             nodeResolve(),
-            thingsboardBabelPlugin,
-            processTemplate('./src/targets/ttn/analog/uplink/template.js')
+            ttnBabelPlugin,
+            processTemplate('./src/targets/ttn/analog-gasic/template.js')
         ]
-    },  /**/
+    },
 
-    // The Things Network MTX
+    // The Things Network analog (hardware type GASIC) test
+    {
+        input: './src/targets/ttn/analog-gasic/test.js',
+        output: [
+            {
+                file: './dist/ttn/analog-gasic.test.js',
+                //format: 'iife',
+                //banner: readFileSync('./src/targets/ttn/analog-gasic/init.js', 'utf8')
+            }/* ,
+            {
+                file: './dist/ttn/analog/uplink.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/analog/uplink/init.js', 'utf8'),
+                plugins: [terser(ttnTerserOptions)]
+            } */
+        ],
+        plugins: [
+            nodeResolve(),
+            ttnBabelPlugin,
+            processTemplate('./src/targets/ttn/analog-gasic/template.js')
+        ],
+        external: ['node:test', 'node:assert']
+    },
+
+    // The Things Network MTX1
     {
         input: './src/targets/ttn/mtx1/index.js',
         output: [
             {
-                file: './dist/ttn/mtx1/develop/full.js',
+                file: './dist/ttn/mtx1.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/ttn/mtx1/init.js', 'utf8')
-            },
+                //banner: readFileSync('./src/targets/ttn/mtx1/init.js', 'utf8')
+            }/* ,
             {
                 file: './dist/ttn/mtx1/full.min.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/ttn/mtx1/init.js', 'utf8'),
                 plugins: [terser(ttnTerserOptions)]
-            }
+            } */
         ],
         plugins: [
             alias({
@@ -766,9 +772,39 @@ export default [
                 ]
             }),
             nodeResolve(),
-            thingsboardBabelPlugin,
+            ttnBabelPlugin,
             processTemplate('./src/targets/ttn/mtx1/template.js')
         ]
+    },
+
+    // The Things Network MTX1 test
+    {
+        input: './src/targets/ttn/mtx1/test.js',
+        output: [
+            {
+                file: './dist/ttn/mtx1.test.js',
+                //format: 'iife',
+                //banner: readFileSync('./src/targets/ttn/mtx1/init.js', 'utf8')
+            }/* ,
+            {
+                file: './dist/ttn/mtx1/full.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/mtx1/init.js', 'utf8'),
+                plugins: [terser(ttnTerserOptions)]
+            } */
+        ],
+        plugins: [
+            alias({
+                entries: [
+                    {find: '../utils/crypto.js', replacement: path.resolve('./src/utils/crypto.js')}
+                ]
+            }),
+            commonjs(),
+            nodeResolve(),
+            ttnBabelPlugin,
+            processTemplate('./src/targets/ttn/mtx1/template.js')
+        ],
+        external: ['node:test', 'node:assert']
     },
 
     /* // The Things Network MTX3 downlink
