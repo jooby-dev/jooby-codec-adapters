@@ -1,11 +1,8 @@
-import './polyfills.js';
-
-import * as message from 'jooby-codec/mtx1/message';
+import * as mtxMessage from 'jooby-codec/mtx1/message';
 import * as dataSegment from '../../../utils/dataSegment.js';
 
 
 // export
-fromBytes = message.uplink.fromBytes;
-toBytes = message.downlink.toBytes;
+message = mtxMessage;
 getDataSegment = dataSegment.get;
 setDataSegment = dataSegment.set;
