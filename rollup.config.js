@@ -702,21 +702,48 @@ export default [
         ]
     }, /**/
 
+
+    // The Things Network analog (hardware type GASI3)
+    {
+        input: './src/targets/ttn/analog-gasi3/index.js',
+        output: [
+            {
+                file: './dist/ttn/analog-gasi3.js',
+                format: 'iife'
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            ttnBabelPlugin,
+            processTemplate('./src/targets/ttn/analog-gasi3/template.js')
+        ]
+    },
+
+    // The Things Network analog (hardware type GASI3) test
+    {
+        input: './src/targets/ttn/analog-gasi3/test.js',
+        output: [
+            {
+                file: './dist/ttn/analog-gasi3.test.js'
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            ttnBabelPlugin,
+            processTemplate('./src/targets/ttn/analog-gasi3/template.js')
+        ],
+        external: ['node:test', 'node:assert']
+    },
+
+
     // The Things Network analog (hardware type GASIC)
     {
         input: './src/targets/ttn/analog-gasic/index.js',
         output: [
             {
                 file: './dist/ttn/analog-gasic.js',
-                format: 'iife',
-                //banner: readFileSync('./src/targets/ttn/analog-gasic/init.js', 'utf8')
-            }/* ,
-            {
-                file: './dist/ttn/analog/uplink.min.js',
-                format: 'iife',
-                banner: readFileSync('./src/targets/ttn/analog/uplink/init.js', 'utf8'),
-                plugins: [terser(ttnTerserOptions)]
-            } */
+                format: 'iife'
+            }
         ],
         plugins: [
             nodeResolve(),
@@ -730,16 +757,8 @@ export default [
         input: './src/targets/ttn/analog-gasic/test.js',
         output: [
             {
-                file: './dist/ttn/analog-gasic.test.js',
-                //format: 'iife',
-                //banner: readFileSync('./src/targets/ttn/analog-gasic/init.js', 'utf8')
-            }/* ,
-            {
-                file: './dist/ttn/analog/uplink.min.js',
-                format: 'iife',
-                banner: readFileSync('./src/targets/ttn/analog/uplink/init.js', 'utf8'),
-                plugins: [terser(ttnTerserOptions)]
-            } */
+                file: './dist/ttn/analog-gasic.test.js'
+            }
         ],
         plugins: [
             nodeResolve(),
@@ -748,6 +767,40 @@ export default [
         ],
         external: ['node:test', 'node:assert']
     },
+
+
+    // The Things Network analog (hardware type IMP4EU)
+    {
+        input: './src/targets/ttn/analog-imp4eu/index.js',
+        output: [
+            {
+                file: './dist/ttn/analog-imp4eu.js',
+                format: 'iife'
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            ttnBabelPlugin,
+            processTemplate('./src/targets/ttn/analog-imp4eu/template.js')
+        ]
+    },
+
+    // The Things Network analog (hardware type IMP4EU) test
+    {
+        input: './src/targets/ttn/analog-imp4eu/test.js',
+        output: [
+            {
+                file: './dist/ttn/analog-imp4eu.test.js'
+            }
+        ],
+        plugins: [
+            nodeResolve(),
+            ttnBabelPlugin,
+            processTemplate('./src/targets/ttn/analog-imp4eu/template.js')
+        ],
+        external: ['node:test', 'node:assert']
+    },
+
 
     // The Things Network MTX1
     {
