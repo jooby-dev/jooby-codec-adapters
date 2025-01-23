@@ -25,9 +25,9 @@ var fromBytes, getDataSegment;
   function _defineProperty(e, r, t) {
     return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
       value: t,
-      enumerable: !0,
-      configurable: !0,
-      writable: !0
+      enumerable: true,
+      configurable: true,
+      writable: true
     }) : e[r] = t, e;
   }
   function _iterableToArray(r) {
@@ -41,15 +41,15 @@ var fromBytes, getDataSegment;
         i,
         u,
         a = [],
-        f = !0,
-        o = !1;
+        f = true,
+        o = false;
       try {
         if (i = (t = t.call(r)).next, 0 === l) {
           if (Object(t) !== t) return;
           f = !1;
         } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0);
       } catch (r) {
-        o = !0, n = r;
+        o = true, n = r;
       } finally {
         try {
           if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return;
@@ -78,7 +78,7 @@ var fromBytes, getDataSegment;
   function _toPrimitive(t, r) {
     if ("object" != typeof t || !t) return t;
     var e = t[Symbol.toPrimitive];
-    if (void 0 !== e) {
+    if (undefined !== e) {
       var i = e.call(t, r || "default");
       if ("object" != typeof i) return i;
       throw new TypeError("@@toPrimitive must return a primitive value.");
@@ -93,7 +93,7 @@ var fromBytes, getDataSegment;
     if (r) {
       if ("string" == typeof r) return _arrayLikeToArray(r, a);
       var t = {}.toString.call(r).slice(8, -1);
-      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
+      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : undefined;
     }
   }
 
@@ -520,7 +520,7 @@ var fromBytes, getDataSegment;
     getInt8: function () {
       var result = readUint8(this.data, this.offset);
       this.offset += INT8_SIZE;
-      return result & 0x80 ? result ^ -0x100 : result;
+      return result & 0x80 ? result ^ -256 : result;
     },
     setUint8: function (value) {
       writeUint8(this.data, this.offset, value);
@@ -540,7 +540,7 @@ var fromBytes, getDataSegment;
       var isLittleEndian = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.isLittleEndian;
       var result = readUint16(this.data, this.offset, isLittleEndian);
       this.offset += INT16_SIZE;
-      return result & 0x8000 ? result ^ -0x10000 : result;
+      return result & 0x8000 ? result ^ -65536 : result;
     },
     setUint16: function (value) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.isLittleEndian;
@@ -562,7 +562,7 @@ var fromBytes, getDataSegment;
       var isLittleEndian = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.isLittleEndian;
       var result = readUint24(this.data, this.offset, isLittleEndian);
       this.offset += INT24_SIZE;
-      return result & 0x800000 ? result ^ -0x1000000 : result;
+      return result & 0x800000 ? result ^ -16777216 : result;
     },
     setUint24: function (value) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.isLittleEndian;
@@ -584,7 +584,7 @@ var fromBytes, getDataSegment;
       var isLittleEndian = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.isLittleEndian;
       var result = readUint32(this.data, this.offset, isLittleEndian);
       this.offset += INT32_SIZE;
-      return result & 0x80000000 ? result ^ -0x100000000 : result;
+      return result & 0x80000000 ? result ^ -4294967296 : result;
     },
     setUint32: function (value) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.isLittleEndian;
@@ -1472,11 +1472,11 @@ var fromBytes, getDataSegment;
   };
   CommandBinaryBuffer$2.prototype.setFrameHeader = function (_ref2) {
     var _ref2$type = _ref2.type,
-      type = _ref2$type === void 0 ? defaultFrameHeader.type : _ref2$type,
+      type = _ref2$type === undefined ? defaultFrameHeader.type : _ref2$type,
       _ref2$destination = _ref2.destination,
-      destination = _ref2$destination === void 0 ? defaultFrameHeader.destination : _ref2$destination,
+      destination = _ref2$destination === undefined ? defaultFrameHeader.destination : _ref2$destination,
       _ref2$source = _ref2.source,
-      source = _ref2$source === void 0 ? defaultFrameHeader.source : _ref2$source;
+      source = _ref2$source === undefined ? defaultFrameHeader.source : _ref2$source;
     this.setUint8(type);
     this.setUint16(destination);
     this.setUint16(source);
@@ -3179,27 +3179,7 @@ var fromBytes, getDataSegment;
 
   invertObject(screenIds);
 
-  var RATE_2400 = 2400;
-  var RATE_9600 = 9600;
-  var valueToRate = {
-    plc: {
-      0: RATE_9600,
-      2: RATE_2400,
-      4: RATE_9600
-    },
-    optoport: {
-      0: RATE_2400,
-      2: RATE_2400,
-      4: RATE_9600
-    }
-  };
-  var rateToValue = {
-    plc: invertObject(valueToRate.plc),
-    optoport: invertObject(valueToRate.optoport)
-  };
-
-  var A_PLUS_R_PLUS_R_MINUS = 1;
-  var A_MINUS_R_PLUS_R_MINUS = 2;
+  invertObject(downlinkIds);
 
   var ENERGY_T0_FAULT = 0x01;
   var ENERGY_T1_FAULT = 0x02;
@@ -3513,6 +3493,28 @@ var fromBytes, getDataSegment;
   });
 
   var eventNames = invertObject(events);
+
+  var RATE_2400 = 2400;
+  var RATE_9600 = 9600;
+  var valueToRate = {
+    plc: {
+      0: RATE_9600,
+      2: RATE_2400,
+      4: RATE_9600
+    },
+    optoport: {
+      0: RATE_2400,
+      2: RATE_2400,
+      4: RATE_9600
+    }
+  };
+  var rateToValue = {
+    plc: invertObject(valueToRate.plc),
+    optoport: invertObject(valueToRate.optoport)
+  };
+
+  var A_PLUS_R_PLUS_R_MINUS = 1;
+  var A_MINUS_R_PLUS_R_MINUS = 2;
 
   var id$u = getCriticalEvent;
   var maxSize$4 = 9;
@@ -4326,8 +4328,6 @@ var fromBytes, getDataSegment;
     var buffer = new CommandBinaryBuffer(bytes);
     return buffer.getDayMaxDemandResponse();
   };
-
-  invertObject(downlinkIds);
 
   var maxSize$3 = 7;
 

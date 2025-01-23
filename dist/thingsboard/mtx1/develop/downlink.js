@@ -37,12 +37,12 @@ var toBytes, setDataSegment, getBase64FromBytes;
         i,
         u,
         a = [],
-        f = !0,
-        o = !1;
+        f = true,
+        o = false;
       try {
         if (i = (t = t.call(r)).next, 0 === l) ; else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0);
       } catch (r) {
-        o = !0, n = r;
+        o = true, n = r;
       } finally {
         try {
           if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return;
@@ -69,7 +69,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     if (r) {
       if ("string" == typeof r) return _arrayLikeToArray(r, a);
       var t = {}.toString.call(r).slice(8, -1);
-      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
+      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : undefined;
     }
   }
 
@@ -240,7 +240,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getInt8: function () {
       var result = readUint8(this.data, this.offset);
       this.offset += INT8_SIZE;
-      return result & 0x80 ? result ^ -0x100 : result;
+      return result & 0x80 ? result ^ -256 : result;
     },
     setUint8: function (value) {
       writeUint8(this.data, this.offset, value);
@@ -260,7 +260,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
       var isLittleEndian = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.isLittleEndian;
       var result = readUint16(this.data, this.offset, isLittleEndian);
       this.offset += INT16_SIZE;
-      return result & 0x8000 ? result ^ -0x10000 : result;
+      return result & 0x8000 ? result ^ -65536 : result;
     },
     setUint16: function (value) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.isLittleEndian;
@@ -282,7 +282,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
       var isLittleEndian = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.isLittleEndian;
       var result = readUint24(this.data, this.offset, isLittleEndian);
       this.offset += INT24_SIZE;
-      return result & 0x800000 ? result ^ -0x1000000 : result;
+      return result & 0x800000 ? result ^ -16777216 : result;
     },
     setUint24: function (value) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.isLittleEndian;
@@ -304,7 +304,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
       var isLittleEndian = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.isLittleEndian;
       var result = readUint32(this.data, this.offset, isLittleEndian);
       this.offset += INT32_SIZE;
-      return result & 0x80000000 ? result ^ -0x100000000 : result;
+      return result & 0x80000000 ? result ^ -4294967296 : result;
     },
     setUint32: function (value) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.isLittleEndian;
@@ -1229,11 +1229,11 @@ var toBytes, setDataSegment, getBase64FromBytes;
   };
   CommandBinaryBuffer$1.prototype.setFrameHeader = function (_ref2) {
     var _ref2$type = _ref2.type,
-      type = _ref2$type === void 0 ? defaultFrameHeader.type : _ref2$type,
+      type = _ref2$type === undefined ? defaultFrameHeader.type : _ref2$type,
       _ref2$destination = _ref2.destination,
-      destination = _ref2$destination === void 0 ? defaultFrameHeader.destination : _ref2$destination,
+      destination = _ref2$destination === undefined ? defaultFrameHeader.destination : _ref2$destination,
       _ref2$source = _ref2.source,
-      source = _ref2$source === void 0 ? defaultFrameHeader.source : _ref2$source;
+      source = _ref2$source === undefined ? defaultFrameHeader.source : _ref2$source;
     this.setUint8(type);
     this.setUint16(destination);
     this.setUint16(source);
@@ -2725,9 +2725,10 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var getToBytes = function (toBytesMap) {
     return function (commands, _ref) {
       var _ref2;
-      var messageId = _ref.messageId,
+      var _ref$messageId = _ref.messageId,
+        messageId = _ref$messageId === undefined ? 1 : _ref$messageId,
         _ref$accessLevel = _ref.accessLevel,
-        accessLevel = _ref$accessLevel === void 0 ? READ_ONLY : _ref$accessLevel,
+        accessLevel = _ref$accessLevel === undefined ? READ_ONLY : _ref$accessLevel,
         aesKey = _ref.aesKey;
       var commandBytes = commands.map(function (command) {
         if ('id' in command) {

@@ -37,12 +37,12 @@ var toBytes, setDataSegment, getBase64FromBytes;
         i,
         u,
         a = [],
-        f = !0,
-        o = !1;
+        f = true,
+        o = false;
       try {
         if (i = (t = t.call(r)).next, 0 === l) ; else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0);
       } catch (r) {
-        o = !0, n = r;
+        o = true, n = r;
       } finally {
         try {
           if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return;
@@ -69,7 +69,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     if (r) {
       if ("string" == typeof r) return _arrayLikeToArray(r, a);
       var t = {}.toString.call(r).slice(8, -1);
-      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
+      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : undefined;
     }
   }
 
@@ -240,7 +240,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getInt8: function () {
       var result = readUint8(this.data, this.offset);
       this.offset += INT8_SIZE;
-      return result & 0x80 ? result ^ -0x100 : result;
+      return result & 0x80 ? result ^ -256 : result;
     },
     setUint8: function (value) {
       writeUint8(this.data, this.offset, value);
@@ -260,7 +260,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
       var isLittleEndian = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.isLittleEndian;
       var result = readUint16(this.data, this.offset, isLittleEndian);
       this.offset += INT16_SIZE;
-      return result & 0x8000 ? result ^ -0x10000 : result;
+      return result & 0x8000 ? result ^ -65536 : result;
     },
     setUint16: function (value) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.isLittleEndian;
@@ -282,7 +282,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
       var isLittleEndian = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.isLittleEndian;
       var result = readUint24(this.data, this.offset, isLittleEndian);
       this.offset += INT24_SIZE;
-      return result & 0x800000 ? result ^ -0x1000000 : result;
+      return result & 0x800000 ? result ^ -16777216 : result;
     },
     setUint24: function (value) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.isLittleEndian;
@@ -304,7 +304,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
       var isLittleEndian = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.isLittleEndian;
       var result = readUint32(this.data, this.offset, isLittleEndian);
       this.offset += INT32_SIZE;
-      return result & 0x80000000 ? result ^ -0x100000000 : result;
+      return result & 0x80000000 ? result ^ -4294967296 : result;
     },
     setUint32: function (value) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.isLittleEndian;
@@ -1228,11 +1228,11 @@ var toBytes, setDataSegment, getBase64FromBytes;
   };
   CommandBinaryBuffer$2.prototype.setFrameHeader = function (_ref2) {
     var _ref2$type = _ref2.type,
-      type = _ref2$type === void 0 ? defaultFrameHeader.type : _ref2$type,
+      type = _ref2$type === undefined ? defaultFrameHeader.type : _ref2$type,
       _ref2$destination = _ref2.destination,
-      destination = _ref2$destination === void 0 ? defaultFrameHeader.destination : _ref2$destination,
+      destination = _ref2$destination === undefined ? defaultFrameHeader.destination : _ref2$destination,
       _ref2$source = _ref2.source,
-      source = _ref2$source === void 0 ? defaultFrameHeader.source : _ref2$source;
+      source = _ref2$source === undefined ? defaultFrameHeader.source : _ref2$source;
     this.setUint8(type);
     this.setUint16(destination);
     this.setUint16(source);
@@ -2611,9 +2611,10 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var getToBytes = function (toBytesMap) {
     return function (commands, _ref) {
       var _ref2;
-      var messageId = _ref.messageId,
+      var _ref$messageId = _ref.messageId,
+        messageId = _ref$messageId === undefined ? 1 : _ref$messageId,
         _ref$accessLevel = _ref.accessLevel,
-        accessLevel = _ref$accessLevel === void 0 ? READ_ONLY : _ref$accessLevel,
+        accessLevel = _ref$accessLevel === undefined ? READ_ONLY : _ref$accessLevel,
         aesKey = _ref.aesKey;
       var commandBytes = commands.map(function (command) {
         if ('id' in command) {
@@ -2763,24 +2764,228 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   invertObject(screenIds);
 
-  var RATE_2400 = 2400;
-  var RATE_9600 = 9600;
-  var valueToRate = {
-    plc: {
-      0: RATE_9600,
-      2: RATE_2400,
-      4: RATE_9600
-    },
-    optoport: {
-      0: RATE_2400,
-      2: RATE_2400,
-      4: RATE_9600
-    }
-  };
-  var rateToValue = {
-    plc: invertObject(valueToRate.plc),
-    optoport: invertObject(valueToRate.optoport)
-  };
+  var getDayEnergies = 0x78;
+  var getDayMaxPower = 0x79;
+  var errorResponse$1 = 0xfe;
+
+  var uplinkIds$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    activateRatePlan: activateRatePlan$1,
+    errorResponse: errorResponse$1,
+    getBuildVersion: getBuildVersion$1,
+    getCorrectTime: getCorrectTime$1,
+    getCriticalEvent: getCriticalEvent$1,
+    getCurrentStatusMeter: getCurrentStatusMeter$1,
+    getCurrentValues: getCurrentValues$1,
+    getDateTime: getDateTime$1,
+    getDayDemand: getDayDemand$1,
+    getDayDemandExport: getDayDemandExport$1,
+    getDayEnergies: getDayEnergies,
+    getDayMaxDemand: getDayMaxDemand$1,
+    getDayMaxDemandExport: getDayMaxDemandExport$1,
+    getDayMaxDemandPrevious: getDayMaxDemandPrevious,
+    getDayMaxPower: getDayMaxPower,
+    getDayProfile: getDayProfile$1,
+    getDemand: getDemand$1,
+    getDeviceId: getDeviceId$1,
+    getDeviceType: getDeviceType$1,
+    getDisplayParam: getDisplayParam$1,
+    getEnergy: getEnergy$1,
+    getEnergyDayPrevious: getEnergyDayPrevious$1,
+    getEnergyExport: getEnergyExport$1,
+    getEnergyExportDayPrevious: getEnergyExportDayPrevious$1,
+    getEventStatus: getEventStatus$1,
+    getEvents: getEvents$1,
+    getEventsCounters: getEventsCounters$1,
+    getExtendedCurrentValues: getExtendedCurrentValues$1,
+    getExtendedCurrentValues2: getExtendedCurrentValues2,
+    getHalfHourDemand: getHalfHourDemand$1,
+    getHalfHourDemandExport: getHalfHourDemandExport$1,
+    getHalfHourDemandPrevious: getHalfHourDemandPrevious,
+    getHalfhoursEnergies: getHalfhoursEnergies$1,
+    getMagneticFieldThreshold: getMagneticFieldThreshold$1,
+    getMeterInfo: getMeterInfo$1,
+    getMonthDemand: getMonthDemand$1,
+    getMonthDemandExport: getMonthDemandExport$1,
+    getMonthMaxDemand: getMonthMaxDemand$1,
+    getMonthMaxDemandExport: getMonthMaxDemandExport$1,
+    getOperatorParameters: getOperatorParameters$1,
+    getOperatorParametersExtended3: getOperatorParametersExtended3$1,
+    getRatePlanInfo: getRatePlanInfo$1,
+    getSaldo: getSaldo$1,
+    getSaldoParameters: getSaldoParameters$1,
+    getSeasonProfile: getSeasonProfile$1,
+    getSpecialDay: getSpecialDay$1,
+    getVersion: getVersion$1,
+    prepareRatePlan: prepareRatePlan$1,
+    resetPowerMaxDay: resetPowerMaxDay$1,
+    resetPowerMaxMonth: resetPowerMaxMonth$1,
+    runTariffPlan: runTariffPlan$1,
+    setAccessKey: setAccessKey$1,
+    setCorrectDateTime: setCorrectDateTime$1,
+    setCorrectTime: setCorrectTime$1,
+    setDateTime: setDateTime$1,
+    setDayProfile: setDayProfile$1,
+    setDisplayParam: setDisplayParam$1,
+    setOperatorParameters: setOperatorParameters$1,
+    setOperatorParametersExtended3: setOperatorParametersExtended3$1,
+    setSaldo: setSaldo$1,
+    setSaldoParameters: setSaldoParameters$1,
+    setSeasonProfile: setSeasonProfile$1,
+    setSpecialDay: setSpecialDay$1,
+    setSpecialOperation: setSpecialOperation$1,
+    turnRelayOff: turnRelayOff$1,
+    turnRelayOn: turnRelayOn$1
+  });
+
+  invertObject(uplinkIds$1);
+
+  var getEventStatus = 0x01;
+  var getEnergyDayPrevious = 0x03;
+  var getDeviceType = 0x04;
+  var getDeviceId = 0x05;
+  var getDateTime = 0x07;
+  var setDateTime = 0x08;
+  var setAccessKey = 0x09;
+  var getCurrentValues = 0x0d;
+  var getEnergy = 0x0f;
+  var setDayProfile = 0x10;
+  var setSeasonProfile = 0x11;
+  var setSpecialDay = 0x12;
+  var activateRatePlan = 0x13;
+  var prepareRatePlan = 0x14;
+  var getHalfHourDemand = 0x15;
+  var getDayDemand = 0x16;
+  var getMonthDemand = 0x17;
+  var turnRelayOn = 0x18;
+  var turnRelayOff = 0x19;
+  var setCorrectTime = 0x1c;
+  var getOperatorParameters = 0x1e;
+  var setOperatorParameters = 0x1f;
+  var getVersion = 0x28;
+  var getSaldo = 0x29;
+  var setSaldo = 0x2a;
+  var getRatePlanInfo = 0x2c;
+  var getSaldoParameters = 0x2e;
+  var setSaldoParameters = 0x2f;
+  var getDayMaxDemand = 0x31;
+  var getMonthMaxDemand = 0x32;
+  var getEvents = 0x33;
+  var getEventsCounters = 0x34;
+  var resetPowerMaxDay = 0x35;
+  var resetPowerMaxMonth = 0x36;
+  var getCurrentStatusMeter = 0x39;
+  var getExtendedCurrentValues = 0x3a;
+  var getDayProfile = 0x3b;
+  var getSeasonProfile = 0x3c;
+  var getSpecialDay = 0x3d;
+  var getCorrectTime = 0x3e;
+  var getOperatorParametersExtended = 0x3f;
+  var setOperatorParametersExtended = 0x40;
+  var setOperatorParametersExtended2 = 0x45;
+  var runTariffPlan = 0x46;
+  var getOperatorParametersExtended2 = 0x47;
+  var getHalfHourDemandVari = 0x48;
+  var getHalfHourDemandVare = 0x49;
+  var getEnergyExport = 0x4e;
+  var getDayDemandExport = 0x4f;
+  var getEnergyExportDayPrevious = 0x50;
+  var getMonthDemandExport = 0x52;
+  var getHalfHourDemandExport = 0x53;
+  var getHalfHourDemandVariExport = 0x54;
+  var getHalfHourDemandVareExport = 0x55;
+  var getCriticalEvent = 0x56;
+  var getDayMaxDemandExport = 0x58;
+  var getMonthMaxDemandExport = 0x59;
+  var getHalfHourDemandChannel = 0x5a;
+  var setCorrectDateTime = 0x5c;
+  var setDisplayParam = 0x5d;
+  var getDisplayParam = 0x5e;
+  var setSpecialOperation = 0x64;
+  var getMagneticFieldThreshold = 0x6d;
+  var getHalfhoursEnergies = 0x6f;
+  var getBuildVersion = 0x70;
+  var getOperatorParametersExtended3 = 0x71;
+  var setOperatorParametersExtended3 = 0x72;
+  var setOperatorParametersExtended4 = 0x75;
+  var getDemand = 0x76;
+  var getMeterInfo = 0x7a;
+
+  var downlinkIds = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    activateRatePlan: activateRatePlan,
+    getBuildVersion: getBuildVersion,
+    getCorrectTime: getCorrectTime,
+    getCriticalEvent: getCriticalEvent,
+    getCurrentStatusMeter: getCurrentStatusMeter,
+    getCurrentValues: getCurrentValues,
+    getDateTime: getDateTime,
+    getDayDemand: getDayDemand,
+    getDayDemandExport: getDayDemandExport,
+    getDayMaxDemand: getDayMaxDemand,
+    getDayMaxDemandExport: getDayMaxDemandExport,
+    getDayProfile: getDayProfile,
+    getDemand: getDemand,
+    getDeviceId: getDeviceId,
+    getDeviceType: getDeviceType,
+    getDisplayParam: getDisplayParam,
+    getEnergy: getEnergy,
+    getEnergyDayPrevious: getEnergyDayPrevious,
+    getEnergyExport: getEnergyExport,
+    getEnergyExportDayPrevious: getEnergyExportDayPrevious,
+    getEventStatus: getEventStatus,
+    getEvents: getEvents,
+    getEventsCounters: getEventsCounters,
+    getExtendedCurrentValues: getExtendedCurrentValues,
+    getHalfHourDemand: getHalfHourDemand,
+    getHalfHourDemandChannel: getHalfHourDemandChannel,
+    getHalfHourDemandExport: getHalfHourDemandExport,
+    getHalfHourDemandVare: getHalfHourDemandVare,
+    getHalfHourDemandVareExport: getHalfHourDemandVareExport,
+    getHalfHourDemandVari: getHalfHourDemandVari,
+    getHalfHourDemandVariExport: getHalfHourDemandVariExport,
+    getHalfhoursEnergies: getHalfhoursEnergies,
+    getMagneticFieldThreshold: getMagneticFieldThreshold,
+    getMeterInfo: getMeterInfo,
+    getMonthDemand: getMonthDemand,
+    getMonthDemandExport: getMonthDemandExport,
+    getMonthMaxDemand: getMonthMaxDemand,
+    getMonthMaxDemandExport: getMonthMaxDemandExport,
+    getOperatorParameters: getOperatorParameters,
+    getOperatorParametersExtended: getOperatorParametersExtended,
+    getOperatorParametersExtended2: getOperatorParametersExtended2,
+    getOperatorParametersExtended3: getOperatorParametersExtended3,
+    getRatePlanInfo: getRatePlanInfo,
+    getSaldo: getSaldo,
+    getSaldoParameters: getSaldoParameters,
+    getSeasonProfile: getSeasonProfile,
+    getSpecialDay: getSpecialDay,
+    getVersion: getVersion,
+    prepareRatePlan: prepareRatePlan,
+    resetPowerMaxDay: resetPowerMaxDay,
+    resetPowerMaxMonth: resetPowerMaxMonth,
+    runTariffPlan: runTariffPlan,
+    setAccessKey: setAccessKey,
+    setCorrectDateTime: setCorrectDateTime,
+    setCorrectTime: setCorrectTime,
+    setDateTime: setDateTime,
+    setDayProfile: setDayProfile,
+    setDisplayParam: setDisplayParam,
+    setOperatorParameters: setOperatorParameters,
+    setOperatorParametersExtended: setOperatorParametersExtended,
+    setOperatorParametersExtended2: setOperatorParametersExtended2,
+    setOperatorParametersExtended3: setOperatorParametersExtended3,
+    setOperatorParametersExtended4: setOperatorParametersExtended4,
+    setSaldo: setSaldo,
+    setSaldoParameters: setSaldoParameters,
+    setSeasonProfile: setSeasonProfile,
+    setSpecialDay: setSpecialDay,
+    setSpecialOperation: setSpecialOperation,
+    turnRelayOff: turnRelayOff,
+    turnRelayOn: turnRelayOn
+  });
+
+  invertObject(downlinkIds);
 
   var ENERGY_T0_FAULT = 0x01;
   var ENERGY_T1_FAULT = 0x02;
@@ -3095,80 +3300,12 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   var eventNames = invertObject(events);
 
-  var getEventStatus = 0x01;
-  var getEnergyDayPrevious = 0x03;
-  var getDeviceType = 0x04;
-  var getDeviceId = 0x05;
-  var getDateTime = 0x07;
-  var setDateTime = 0x08;
-  var setAccessKey = 0x09;
-  var getCurrentValues = 0x0d;
-  var getEnergy = 0x0f;
-  var setDayProfile = 0x10;
-  var setSeasonProfile = 0x11;
-  var setSpecialDay = 0x12;
-  var activateRatePlan = 0x13;
-  var prepareRatePlan = 0x14;
-  var getHalfHourDemand = 0x15;
-  var getDayDemand = 0x16;
-  var getMonthDemand = 0x17;
-  var turnRelayOn = 0x18;
-  var turnRelayOff = 0x19;
-  var setCorrectTime = 0x1c;
-  var getOperatorParameters = 0x1e;
-  var setOperatorParameters = 0x1f;
-  var getVersion = 0x28;
-  var getSaldo = 0x29;
-  var setSaldo = 0x2a;
-  var getRatePlanInfo = 0x2c;
-  var getSaldoParameters = 0x2e;
-  var setSaldoParameters = 0x2f;
-  var getDayMaxDemand = 0x31;
-  var getMonthMaxDemand = 0x32;
-  var getEvents = 0x33;
-  var getEventsCounters = 0x34;
-  var resetPowerMaxDay = 0x35;
-  var resetPowerMaxMonth = 0x36;
-  var getCurrentStatusMeter = 0x39;
-  var getExtendedCurrentValues = 0x3a;
-  var getDayProfile = 0x3b;
-  var getSeasonProfile = 0x3c;
-  var getSpecialDay = 0x3d;
-  var getCorrectTime = 0x3e;
-  var getOperatorParametersExtended = 0x3f;
-  var setOperatorParametersExtended = 0x40;
-  var setOperatorParametersExtended2 = 0x45;
-  var runTariffPlan = 0x46;
-  var getOperatorParametersExtended2 = 0x47;
-  var getHalfHourDemandVari = 0x48;
-  var getHalfHourDemandVare = 0x49;
-  var getEnergyExport = 0x4e;
-  var getDayDemandExport = 0x4f;
-  var getEnergyExportDayPrevious = 0x50;
-  var getMonthDemandExport = 0x52;
-  var getHalfHourDemandExport = 0x53;
-  var getHalfHourDemandVariExport = 0x54;
-  var getHalfHourDemandVareExport = 0x55;
-  var getCriticalEvent = 0x56;
-  var getDayMaxDemandExport = 0x58;
-  var getMonthMaxDemandExport = 0x59;
-  var getHalfHourDemandChannel = 0x5a;
-  var setCorrectDateTime = 0x5c;
-  var setDisplayParam = 0x5d;
-  var getDisplayParam = 0x5e;
-  var setSpecialOperation = 0x64;
-  var getMagneticFieldThreshold = 0x6d;
-  var getHalfhoursEnergies = 0x6f;
-  var getBuildVersion = 0x70;
-  var getOperatorParametersExtended3 = 0x71;
-  var setOperatorParametersExtended3 = 0x72;
-  var setOperatorParametersExtended4 = 0x75;
-  var getDemand = 0x76;
-  var getMeterInfo = 0x7a;
+  var errorResponse = 0xfe;
 
-  var downlinkIds = /*#__PURE__*/Object.freeze({
+  var uplinkIds = /*#__PURE__*/Object.freeze({
     __proto__: null,
     activateRatePlan: activateRatePlan,
+    errorResponse: errorResponse,
     getBuildVersion: getBuildVersion,
     getCorrectTime: getCorrectTime,
     getCriticalEvent: getCriticalEvent,
@@ -3240,7 +3377,26 @@ var toBytes, setDataSegment, getBase64FromBytes;
     turnRelayOn: turnRelayOn
   });
 
-  invertObject(downlinkIds);
+  invertObject(uplinkIds);
+
+  var RATE_2400 = 2400;
+  var RATE_9600 = 9600;
+  var valueToRate = {
+    plc: {
+      0: RATE_9600,
+      2: RATE_2400,
+      4: RATE_9600
+    },
+    optoport: {
+      0: RATE_2400,
+      2: RATE_2400,
+      4: RATE_9600
+    }
+  };
+  var rateToValue = {
+    plc: invertObject(valueToRate.plc),
+    optoport: invertObject(valueToRate.optoport)
+  };
 
   var id$k = getCriticalEvent;
   var toBytes$m = function (parameters) {

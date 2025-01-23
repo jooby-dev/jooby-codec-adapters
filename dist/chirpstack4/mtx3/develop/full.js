@@ -218,7 +218,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         getInt8() {
             const result = readUint8(this.data, this.offset);
             this.offset += INT8_SIZE;
-            return result & 0x80 ? result ^ -0x100 : result;
+            return result & 0x80 ? result ^ -256 : result;
         },
         setUint8(value) {
             writeUint8(this.data, this.offset, value);
@@ -236,7 +236,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         getInt16(isLittleEndian = this.isLittleEndian) {
             const result = readUint16(this.data, this.offset, isLittleEndian);
             this.offset += INT16_SIZE;
-            return result & 0x8000 ? result ^ -0x10000 : result;
+            return result & 0x8000 ? result ^ -65536 : result;
         },
         setUint16(value, isLittleEndian = this.isLittleEndian) {
             writeUint16(this.data, this.offset, value, isLittleEndian);
@@ -254,7 +254,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         getInt24(isLittleEndian = this.isLittleEndian) {
             const result = readUint24(this.data, this.offset, isLittleEndian);
             this.offset += INT24_SIZE;
-            return result & 0x800000 ? result ^ -0x1000000 : result;
+            return result & 0x800000 ? result ^ -16777216 : result;
         },
         setUint24(value, isLittleEndian = this.isLittleEndian) {
             writeUint24(this.data, this.offset, value, isLittleEndian);
@@ -272,7 +272,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         getInt32(isLittleEndian = this.isLittleEndian) {
             const result = readUint32(this.data, this.offset, isLittleEndian);
             this.offset += INT32_SIZE;
-            return result & 0x80000000 ? result ^ -0x100000000 : result;
+            return result & 0x80000000 ? result ^ -4294967296 : result;
         },
         setUint32(value, isLittleEndian = this.isLittleEndian) {
             writeUint32(this.data, this.offset, value, isLittleEndian);
@@ -2863,7 +2863,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         }
         return message;
     };
-    const getToBytes$1 = toBytesMap => (commands, { messageId, accessLevel = READ_ONLY, aesKey }) => {
+    const getToBytes$1 = toBytesMap => (commands, { messageId = 1, accessLevel = READ_ONLY, aesKey }) => {
         const commandBytes = commands.map(command => {
             if ('id' in command) {
                 return toBytesMap[command.id](command.parameters || {});
@@ -3011,24 +3011,228 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     invertObject(screenIds);
 
-    const RATE_2400 = 2400;
-    const RATE_9600 = 9600;
-    const valueToRate = {
-        plc: {
-            0: RATE_9600,
-            2: RATE_2400,
-            4: RATE_9600
-        },
-        optoport: {
-            0: RATE_2400,
-            2: RATE_2400,
-            4: RATE_9600
-        }
-    };
-    const rateToValue = {
-        plc: invertObject(valueToRate.plc),
-        optoport: invertObject(valueToRate.optoport)
-    };
+    const getDayEnergies = 0x78;
+    const getDayMaxPower = 0x79;
+    const errorResponse$1 = 0xfe;
+
+    var uplinkIds$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        activateRatePlan: activateRatePlan$1,
+        errorResponse: errorResponse$1,
+        getBuildVersion: getBuildVersion$1,
+        getCorrectTime: getCorrectTime$1,
+        getCriticalEvent: getCriticalEvent$1,
+        getCurrentStatusMeter: getCurrentStatusMeter$1,
+        getCurrentValues: getCurrentValues$1,
+        getDateTime: getDateTime$1,
+        getDayDemand: getDayDemand$1,
+        getDayDemandExport: getDayDemandExport$1,
+        getDayEnergies: getDayEnergies,
+        getDayMaxDemand: getDayMaxDemand$1,
+        getDayMaxDemandExport: getDayMaxDemandExport$1,
+        getDayMaxDemandPrevious: getDayMaxDemandPrevious,
+        getDayMaxPower: getDayMaxPower,
+        getDayProfile: getDayProfile$1,
+        getDemand: getDemand$1,
+        getDeviceId: getDeviceId$1,
+        getDeviceType: getDeviceType$1,
+        getDisplayParam: getDisplayParam$1,
+        getEnergy: getEnergy$1,
+        getEnergyDayPrevious: getEnergyDayPrevious$1,
+        getEnergyExport: getEnergyExport$1,
+        getEnergyExportDayPrevious: getEnergyExportDayPrevious$1,
+        getEventStatus: getEventStatus$1,
+        getEvents: getEvents$1,
+        getEventsCounters: getEventsCounters$1,
+        getExtendedCurrentValues: getExtendedCurrentValues$1,
+        getExtendedCurrentValues2: getExtendedCurrentValues2,
+        getHalfHourDemand: getHalfHourDemand$1,
+        getHalfHourDemandExport: getHalfHourDemandExport$1,
+        getHalfHourDemandPrevious: getHalfHourDemandPrevious,
+        getHalfhoursEnergies: getHalfhoursEnergies$1,
+        getMagneticFieldThreshold: getMagneticFieldThreshold$1,
+        getMeterInfo: getMeterInfo$1,
+        getMonthDemand: getMonthDemand$1,
+        getMonthDemandExport: getMonthDemandExport$1,
+        getMonthMaxDemand: getMonthMaxDemand$1,
+        getMonthMaxDemandExport: getMonthMaxDemandExport$1,
+        getOperatorParameters: getOperatorParameters$1,
+        getOperatorParametersExtended3: getOperatorParametersExtended3$1,
+        getRatePlanInfo: getRatePlanInfo$1,
+        getSaldo: getSaldo$1,
+        getSaldoParameters: getSaldoParameters$1,
+        getSeasonProfile: getSeasonProfile$1,
+        getSpecialDay: getSpecialDay$1,
+        getVersion: getVersion$1,
+        prepareRatePlan: prepareRatePlan$1,
+        resetPowerMaxDay: resetPowerMaxDay$1,
+        resetPowerMaxMonth: resetPowerMaxMonth$1,
+        runTariffPlan: runTariffPlan$1,
+        setAccessKey: setAccessKey$1,
+        setCorrectDateTime: setCorrectDateTime$1,
+        setCorrectTime: setCorrectTime$1,
+        setDateTime: setDateTime$1,
+        setDayProfile: setDayProfile$1,
+        setDisplayParam: setDisplayParam$1,
+        setOperatorParameters: setOperatorParameters$1,
+        setOperatorParametersExtended3: setOperatorParametersExtended3$1,
+        setSaldo: setSaldo$1,
+        setSaldoParameters: setSaldoParameters$1,
+        setSeasonProfile: setSeasonProfile$1,
+        setSpecialDay: setSpecialDay$1,
+        setSpecialOperation: setSpecialOperation$1,
+        turnRelayOff: turnRelayOff$1,
+        turnRelayOn: turnRelayOn$1
+    });
+
+    var commandNames = invertObject(uplinkIds$1);
+
+    const getEventStatus = 0x01;
+    const getEnergyDayPrevious = 0x03;
+    const getDeviceType = 0x04;
+    const getDeviceId = 0x05;
+    const getDateTime = 0x07;
+    const setDateTime = 0x08;
+    const setAccessKey = 0x09;
+    const getCurrentValues = 0x0d;
+    const getEnergy = 0x0f;
+    const setDayProfile = 0x10;
+    const setSeasonProfile = 0x11;
+    const setSpecialDay = 0x12;
+    const activateRatePlan = 0x13;
+    const prepareRatePlan = 0x14;
+    const getHalfHourDemand = 0x15;
+    const getDayDemand = 0x16;
+    const getMonthDemand = 0x17;
+    const turnRelayOn = 0x18;
+    const turnRelayOff = 0x19;
+    const setCorrectTime = 0x1c;
+    const getOperatorParameters = 0x1e;
+    const setOperatorParameters = 0x1f;
+    const getVersion = 0x28;
+    const getSaldo = 0x29;
+    const setSaldo = 0x2a;
+    const getRatePlanInfo = 0x2c;
+    const getSaldoParameters = 0x2e;
+    const setSaldoParameters = 0x2f;
+    const getDayMaxDemand = 0x31;
+    const getMonthMaxDemand = 0x32;
+    const getEvents = 0x33;
+    const getEventsCounters = 0x34;
+    const resetPowerMaxDay = 0x35;
+    const resetPowerMaxMonth = 0x36;
+    const getCurrentStatusMeter = 0x39;
+    const getExtendedCurrentValues = 0x3a;
+    const getDayProfile = 0x3b;
+    const getSeasonProfile = 0x3c;
+    const getSpecialDay = 0x3d;
+    const getCorrectTime = 0x3e;
+    const getOperatorParametersExtended = 0x3f;
+    const setOperatorParametersExtended = 0x40;
+    const setOperatorParametersExtended2 = 0x45;
+    const runTariffPlan = 0x46;
+    const getOperatorParametersExtended2 = 0x47;
+    const getHalfHourDemandVari = 0x48;
+    const getHalfHourDemandVare = 0x49;
+    const getEnergyExport = 0x4e;
+    const getDayDemandExport = 0x4f;
+    const getEnergyExportDayPrevious = 0x50;
+    const getMonthDemandExport = 0x52;
+    const getHalfHourDemandExport = 0x53;
+    const getHalfHourDemandVariExport = 0x54;
+    const getHalfHourDemandVareExport = 0x55;
+    const getCriticalEvent = 0x56;
+    const getDayMaxDemandExport = 0x58;
+    const getMonthMaxDemandExport = 0x59;
+    const getHalfHourDemandChannel = 0x5a;
+    const setCorrectDateTime = 0x5c;
+    const setDisplayParam = 0x5d;
+    const getDisplayParam = 0x5e;
+    const setSpecialOperation = 0x64;
+    const getMagneticFieldThreshold = 0x6d;
+    const getHalfhoursEnergies = 0x6f;
+    const getBuildVersion = 0x70;
+    const getOperatorParametersExtended3 = 0x71;
+    const setOperatorParametersExtended3 = 0x72;
+    const setOperatorParametersExtended4 = 0x75;
+    const getDemand = 0x76;
+    const getMeterInfo = 0x7a;
+
+    var downlinkIds = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        activateRatePlan: activateRatePlan,
+        getBuildVersion: getBuildVersion,
+        getCorrectTime: getCorrectTime,
+        getCriticalEvent: getCriticalEvent,
+        getCurrentStatusMeter: getCurrentStatusMeter,
+        getCurrentValues: getCurrentValues,
+        getDateTime: getDateTime,
+        getDayDemand: getDayDemand,
+        getDayDemandExport: getDayDemandExport,
+        getDayMaxDemand: getDayMaxDemand,
+        getDayMaxDemandExport: getDayMaxDemandExport,
+        getDayProfile: getDayProfile,
+        getDemand: getDemand,
+        getDeviceId: getDeviceId,
+        getDeviceType: getDeviceType,
+        getDisplayParam: getDisplayParam,
+        getEnergy: getEnergy,
+        getEnergyDayPrevious: getEnergyDayPrevious,
+        getEnergyExport: getEnergyExport,
+        getEnergyExportDayPrevious: getEnergyExportDayPrevious,
+        getEventStatus: getEventStatus,
+        getEvents: getEvents,
+        getEventsCounters: getEventsCounters,
+        getExtendedCurrentValues: getExtendedCurrentValues,
+        getHalfHourDemand: getHalfHourDemand,
+        getHalfHourDemandChannel: getHalfHourDemandChannel,
+        getHalfHourDemandExport: getHalfHourDemandExport,
+        getHalfHourDemandVare: getHalfHourDemandVare,
+        getHalfHourDemandVareExport: getHalfHourDemandVareExport,
+        getHalfHourDemandVari: getHalfHourDemandVari,
+        getHalfHourDemandVariExport: getHalfHourDemandVariExport,
+        getHalfhoursEnergies: getHalfhoursEnergies,
+        getMagneticFieldThreshold: getMagneticFieldThreshold,
+        getMeterInfo: getMeterInfo,
+        getMonthDemand: getMonthDemand,
+        getMonthDemandExport: getMonthDemandExport,
+        getMonthMaxDemand: getMonthMaxDemand,
+        getMonthMaxDemandExport: getMonthMaxDemandExport,
+        getOperatorParameters: getOperatorParameters,
+        getOperatorParametersExtended: getOperatorParametersExtended,
+        getOperatorParametersExtended2: getOperatorParametersExtended2,
+        getOperatorParametersExtended3: getOperatorParametersExtended3,
+        getRatePlanInfo: getRatePlanInfo,
+        getSaldo: getSaldo,
+        getSaldoParameters: getSaldoParameters,
+        getSeasonProfile: getSeasonProfile,
+        getSpecialDay: getSpecialDay,
+        getVersion: getVersion,
+        prepareRatePlan: prepareRatePlan,
+        resetPowerMaxDay: resetPowerMaxDay,
+        resetPowerMaxMonth: resetPowerMaxMonth,
+        runTariffPlan: runTariffPlan,
+        setAccessKey: setAccessKey,
+        setCorrectDateTime: setCorrectDateTime,
+        setCorrectTime: setCorrectTime,
+        setDateTime: setDateTime,
+        setDayProfile: setDayProfile,
+        setDisplayParam: setDisplayParam,
+        setOperatorParameters: setOperatorParameters,
+        setOperatorParametersExtended: setOperatorParametersExtended,
+        setOperatorParametersExtended2: setOperatorParametersExtended2,
+        setOperatorParametersExtended3: setOperatorParametersExtended3,
+        setOperatorParametersExtended4: setOperatorParametersExtended4,
+        setSaldo: setSaldo,
+        setSaldoParameters: setSaldoParameters,
+        setSeasonProfile: setSeasonProfile,
+        setSpecialDay: setSpecialDay,
+        setSpecialOperation: setSpecialOperation,
+        turnRelayOff: turnRelayOff,
+        turnRelayOn: turnRelayOn
+    });
+
+    var downlinkNames = invertObject(downlinkIds);
 
     const ENERGY_T0_FAULT = 0x01;
     const ENERGY_T1_FAULT = 0x02;
@@ -3343,80 +3547,12 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     var eventNames = invertObject(events);
 
-    const getEventStatus = 0x01;
-    const getEnergyDayPrevious = 0x03;
-    const getDeviceType = 0x04;
-    const getDeviceId = 0x05;
-    const getDateTime = 0x07;
-    const setDateTime = 0x08;
-    const setAccessKey = 0x09;
-    const getCurrentValues = 0x0d;
-    const getEnergy = 0x0f;
-    const setDayProfile = 0x10;
-    const setSeasonProfile = 0x11;
-    const setSpecialDay = 0x12;
-    const activateRatePlan = 0x13;
-    const prepareRatePlan = 0x14;
-    const getHalfHourDemand = 0x15;
-    const getDayDemand = 0x16;
-    const getMonthDemand = 0x17;
-    const turnRelayOn = 0x18;
-    const turnRelayOff = 0x19;
-    const setCorrectTime = 0x1c;
-    const getOperatorParameters = 0x1e;
-    const setOperatorParameters = 0x1f;
-    const getVersion = 0x28;
-    const getSaldo = 0x29;
-    const setSaldo = 0x2a;
-    const getRatePlanInfo = 0x2c;
-    const getSaldoParameters = 0x2e;
-    const setSaldoParameters = 0x2f;
-    const getDayMaxDemand = 0x31;
-    const getMonthMaxDemand = 0x32;
-    const getEvents = 0x33;
-    const getEventsCounters = 0x34;
-    const resetPowerMaxDay = 0x35;
-    const resetPowerMaxMonth = 0x36;
-    const getCurrentStatusMeter = 0x39;
-    const getExtendedCurrentValues = 0x3a;
-    const getDayProfile = 0x3b;
-    const getSeasonProfile = 0x3c;
-    const getSpecialDay = 0x3d;
-    const getCorrectTime = 0x3e;
-    const getOperatorParametersExtended = 0x3f;
-    const setOperatorParametersExtended = 0x40;
-    const setOperatorParametersExtended2 = 0x45;
-    const runTariffPlan = 0x46;
-    const getOperatorParametersExtended2 = 0x47;
-    const getHalfHourDemandVari = 0x48;
-    const getHalfHourDemandVare = 0x49;
-    const getEnergyExport = 0x4e;
-    const getDayDemandExport = 0x4f;
-    const getEnergyExportDayPrevious = 0x50;
-    const getMonthDemandExport = 0x52;
-    const getHalfHourDemandExport = 0x53;
-    const getHalfHourDemandVariExport = 0x54;
-    const getHalfHourDemandVareExport = 0x55;
-    const getCriticalEvent = 0x56;
-    const getDayMaxDemandExport = 0x58;
-    const getMonthMaxDemandExport = 0x59;
-    const getHalfHourDemandChannel = 0x5a;
-    const setCorrectDateTime = 0x5c;
-    const setDisplayParam = 0x5d;
-    const getDisplayParam = 0x5e;
-    const setSpecialOperation = 0x64;
-    const getMagneticFieldThreshold = 0x6d;
-    const getHalfhoursEnergies = 0x6f;
-    const getBuildVersion = 0x70;
-    const getOperatorParametersExtended3 = 0x71;
-    const setOperatorParametersExtended3 = 0x72;
-    const setOperatorParametersExtended4 = 0x75;
-    const getDemand = 0x76;
-    const getMeterInfo = 0x7a;
+    const errorResponse = 0xfe;
 
-    var downlinkIds = /*#__PURE__*/Object.freeze({
+    var uplinkIds = /*#__PURE__*/Object.freeze({
         __proto__: null,
         activateRatePlan: activateRatePlan,
+        errorResponse: errorResponse,
         getBuildVersion: getBuildVersion,
         getCorrectTime: getCorrectTime,
         getCriticalEvent: getCriticalEvent,
@@ -3488,7 +3624,26 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         turnRelayOn: turnRelayOn
     });
 
-    var downlinkNames = invertObject(downlinkIds);
+    var uplinkNames = invertObject(uplinkIds);
+
+    const RATE_2400 = 2400;
+    const RATE_9600 = 9600;
+    const valueToRate = {
+        plc: {
+            0: RATE_9600,
+            2: RATE_2400,
+            4: RATE_9600
+        },
+        optoport: {
+            0: RATE_2400,
+            2: RATE_2400,
+            4: RATE_9600
+        }
+    };
+    const rateToValue = {
+        plc: invertObject(valueToRate.plc),
+        optoport: invertObject(valueToRate.optoport)
+    };
 
     const id$1s = getCriticalEvent;
     downlinkNames[getCriticalEvent];
@@ -4568,82 +4723,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     fromBytesMap$1[id$19] = fromBytes$1b;
     fromBytesMap$1[id$18] = fromBytes$1a;
 
-    const getDayEnergies = 0x78;
-    const getDayMaxPower = 0x79;
-    const errorResponse$1 = 0xfe;
-
-    var uplinkIds$1 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        activateRatePlan: activateRatePlan$1,
-        errorResponse: errorResponse$1,
-        getBuildVersion: getBuildVersion$1,
-        getCorrectTime: getCorrectTime$1,
-        getCriticalEvent: getCriticalEvent$1,
-        getCurrentStatusMeter: getCurrentStatusMeter$1,
-        getCurrentValues: getCurrentValues$1,
-        getDateTime: getDateTime$1,
-        getDayDemand: getDayDemand$1,
-        getDayDemandExport: getDayDemandExport$1,
-        getDayEnergies: getDayEnergies,
-        getDayMaxDemand: getDayMaxDemand$1,
-        getDayMaxDemandExport: getDayMaxDemandExport$1,
-        getDayMaxDemandPrevious: getDayMaxDemandPrevious,
-        getDayMaxPower: getDayMaxPower,
-        getDayProfile: getDayProfile$1,
-        getDemand: getDemand$1,
-        getDeviceId: getDeviceId$1,
-        getDeviceType: getDeviceType$1,
-        getDisplayParam: getDisplayParam$1,
-        getEnergy: getEnergy$1,
-        getEnergyDayPrevious: getEnergyDayPrevious$1,
-        getEnergyExport: getEnergyExport$1,
-        getEnergyExportDayPrevious: getEnergyExportDayPrevious$1,
-        getEventStatus: getEventStatus$1,
-        getEvents: getEvents$1,
-        getEventsCounters: getEventsCounters$1,
-        getExtendedCurrentValues: getExtendedCurrentValues$1,
-        getExtendedCurrentValues2: getExtendedCurrentValues2,
-        getHalfHourDemand: getHalfHourDemand$1,
-        getHalfHourDemandExport: getHalfHourDemandExport$1,
-        getHalfHourDemandPrevious: getHalfHourDemandPrevious,
-        getHalfhoursEnergies: getHalfhoursEnergies$1,
-        getMagneticFieldThreshold: getMagneticFieldThreshold$1,
-        getMeterInfo: getMeterInfo$1,
-        getMonthDemand: getMonthDemand$1,
-        getMonthDemandExport: getMonthDemandExport$1,
-        getMonthMaxDemand: getMonthMaxDemand$1,
-        getMonthMaxDemandExport: getMonthMaxDemandExport$1,
-        getOperatorParameters: getOperatorParameters$1,
-        getOperatorParametersExtended3: getOperatorParametersExtended3$1,
-        getRatePlanInfo: getRatePlanInfo$1,
-        getSaldo: getSaldo$1,
-        getSaldoParameters: getSaldoParameters$1,
-        getSeasonProfile: getSeasonProfile$1,
-        getSpecialDay: getSpecialDay$1,
-        getVersion: getVersion$1,
-        prepareRatePlan: prepareRatePlan$1,
-        resetPowerMaxDay: resetPowerMaxDay$1,
-        resetPowerMaxMonth: resetPowerMaxMonth$1,
-        runTariffPlan: runTariffPlan$1,
-        setAccessKey: setAccessKey$1,
-        setCorrectDateTime: setCorrectDateTime$1,
-        setCorrectTime: setCorrectTime$1,
-        setDateTime: setDateTime$1,
-        setDayProfile: setDayProfile$1,
-        setDisplayParam: setDisplayParam$1,
-        setOperatorParameters: setOperatorParameters$1,
-        setOperatorParametersExtended3: setOperatorParametersExtended3$1,
-        setSaldo: setSaldo$1,
-        setSaldoParameters: setSaldoParameters$1,
-        setSeasonProfile: setSeasonProfile$1,
-        setSpecialDay: setSpecialDay$1,
-        setSpecialOperation: setSpecialOperation$1,
-        turnRelayOff: turnRelayOff$1,
-        turnRelayOn: turnRelayOn$1
-    });
-
-    var commandNames = invertObject(uplinkIds$1);
-
     const id$17 = activateRatePlan$1;
     commandNames[activateRatePlan$1];
     const maxSize$U = 0;
@@ -5339,85 +5418,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         return {};
     };
     const toBytes$x = () => toBytes$2g(id$w);
-
-    const errorResponse = 0xfe;
-
-    var uplinkIds = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        activateRatePlan: activateRatePlan,
-        errorResponse: errorResponse,
-        getBuildVersion: getBuildVersion,
-        getCorrectTime: getCorrectTime,
-        getCriticalEvent: getCriticalEvent,
-        getCurrentStatusMeter: getCurrentStatusMeter,
-        getCurrentValues: getCurrentValues,
-        getDateTime: getDateTime,
-        getDayDemand: getDayDemand,
-        getDayDemandExport: getDayDemandExport,
-        getDayMaxDemand: getDayMaxDemand,
-        getDayMaxDemandExport: getDayMaxDemandExport,
-        getDayProfile: getDayProfile,
-        getDemand: getDemand,
-        getDeviceId: getDeviceId,
-        getDeviceType: getDeviceType,
-        getDisplayParam: getDisplayParam,
-        getEnergy: getEnergy,
-        getEnergyDayPrevious: getEnergyDayPrevious,
-        getEnergyExport: getEnergyExport,
-        getEnergyExportDayPrevious: getEnergyExportDayPrevious,
-        getEventStatus: getEventStatus,
-        getEvents: getEvents,
-        getEventsCounters: getEventsCounters,
-        getExtendedCurrentValues: getExtendedCurrentValues,
-        getHalfHourDemand: getHalfHourDemand,
-        getHalfHourDemandChannel: getHalfHourDemandChannel,
-        getHalfHourDemandExport: getHalfHourDemandExport,
-        getHalfHourDemandVare: getHalfHourDemandVare,
-        getHalfHourDemandVareExport: getHalfHourDemandVareExport,
-        getHalfHourDemandVari: getHalfHourDemandVari,
-        getHalfHourDemandVariExport: getHalfHourDemandVariExport,
-        getHalfhoursEnergies: getHalfhoursEnergies,
-        getMagneticFieldThreshold: getMagneticFieldThreshold,
-        getMeterInfo: getMeterInfo,
-        getMonthDemand: getMonthDemand,
-        getMonthDemandExport: getMonthDemandExport,
-        getMonthMaxDemand: getMonthMaxDemand,
-        getMonthMaxDemandExport: getMonthMaxDemandExport,
-        getOperatorParameters: getOperatorParameters,
-        getOperatorParametersExtended: getOperatorParametersExtended,
-        getOperatorParametersExtended2: getOperatorParametersExtended2,
-        getOperatorParametersExtended3: getOperatorParametersExtended3,
-        getRatePlanInfo: getRatePlanInfo,
-        getSaldo: getSaldo,
-        getSaldoParameters: getSaldoParameters,
-        getSeasonProfile: getSeasonProfile,
-        getSpecialDay: getSpecialDay,
-        getVersion: getVersion,
-        prepareRatePlan: prepareRatePlan,
-        resetPowerMaxDay: resetPowerMaxDay,
-        resetPowerMaxMonth: resetPowerMaxMonth,
-        runTariffPlan: runTariffPlan,
-        setAccessKey: setAccessKey,
-        setCorrectDateTime: setCorrectDateTime,
-        setCorrectTime: setCorrectTime,
-        setDateTime: setDateTime,
-        setDayProfile: setDayProfile,
-        setDisplayParam: setDisplayParam,
-        setOperatorParameters: setOperatorParameters,
-        setOperatorParametersExtended: setOperatorParametersExtended,
-        setOperatorParametersExtended2: setOperatorParametersExtended2,
-        setOperatorParametersExtended3: setOperatorParametersExtended3,
-        setOperatorParametersExtended4: setOperatorParametersExtended4,
-        setSaldo: setSaldo,
-        setSaldoParameters: setSaldoParameters,
-        setSeasonProfile: setSeasonProfile,
-        setSpecialDay: setSpecialDay,
-        setSpecialOperation: setSpecialOperation,
-        turnRelayOff: turnRelayOff,
-        turnRelayOn: turnRelayOn
-    });
-
-    var uplinkNames = invertObject(uplinkIds);
 
     const { id: id$v, name, headerSize, accessLevel, maxSize: maxSize$k, isLoraOnly, toBytes: toBytes$w } = mtx1;
     const fromBytes$x = getFromBytes$1(uplinkNames);

@@ -29,9 +29,9 @@ var logs = '';
           s: F,
           n: function () {
             return n >= r.length ? {
-              done: !0
+              done: true
             } : {
-              done: !1,
+              done: false,
               value: r[n++]
             };
           },
@@ -44,8 +44,8 @@ var logs = '';
       throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
     }
     var o,
-      a = !0,
-      u = !1;
+      a = true,
+      u = false;
     return {
       s: function () {
         t = t.call(r);
@@ -55,7 +55,7 @@ var logs = '';
         return a = r.done, r;
       },
       e: function (r) {
-        u = !0, o = r;
+        u = true, o = r;
       },
       f: function () {
         try {
@@ -69,9 +69,9 @@ var logs = '';
   function _defineProperty(e, r, t) {
     return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
       value: t,
-      enumerable: !0,
-      configurable: !0,
-      writable: !0
+      enumerable: true,
+      configurable: true,
+      writable: true
     }) : e[r] = t, e;
   }
   function _iterableToArray(r) {
@@ -85,15 +85,15 @@ var logs = '';
         i,
         u,
         a = [],
-        f = !0,
-        o = !1;
+        f = true,
+        o = false;
       try {
         if (i = (t = t.call(r)).next, 0 === l) {
           if (Object(t) !== t) return;
           f = !1;
         } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0);
       } catch (r) {
-        o = !0, n = r;
+        o = true, n = r;
       } finally {
         try {
           if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return;
@@ -123,7 +123,7 @@ var logs = '';
   function _objectSpread2(e) {
     for (var r = 1; r < arguments.length; r++) {
       var t = null != arguments[r] ? arguments[r] : {};
-      r % 2 ? ownKeys(Object(t), !0).forEach(function (r) {
+      r % 2 ? ownKeys(Object(t), true).forEach(function (r) {
         _defineProperty(e, r, t[r]);
       }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) {
         Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
@@ -143,7 +143,7 @@ var logs = '';
   function _toPrimitive(t, r) {
     if ("object" != typeof t || !t) return t;
     var e = t[Symbol.toPrimitive];
-    if (void 0 !== e) {
+    if (undefined !== e) {
       var i = e.call(t, r || "default");
       if ("object" != typeof i) return i;
       throw new TypeError("@@toPrimitive must return a primitive value.");
@@ -158,7 +158,7 @@ var logs = '';
     if (r) {
       if ("string" == typeof r) return _arrayLikeToArray(r, a);
       var t = {}.toString.call(r).slice(8, -1);
-      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
+      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : undefined;
     }
   }
 
@@ -329,7 +329,7 @@ var logs = '';
     getInt8: function getInt8() {
       var result = readUint8(this.data, this.offset);
       this.offset += INT8_SIZE;
-      return result & 0x80 ? result ^ -0x100 : result;
+      return result & 0x80 ? result ^ -256 : result;
     },
     setUint8: function setUint8(value) {
       writeUint8(this.data, this.offset, value);
@@ -349,7 +349,7 @@ var logs = '';
       var isLittleEndian = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.isLittleEndian;
       var result = readUint16(this.data, this.offset, isLittleEndian);
       this.offset += INT16_SIZE;
-      return result & 0x8000 ? result ^ -0x10000 : result;
+      return result & 0x8000 ? result ^ -65536 : result;
     },
     setUint16: function setUint16(value) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.isLittleEndian;
@@ -371,7 +371,7 @@ var logs = '';
       var isLittleEndian = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.isLittleEndian;
       var result = readUint24(this.data, this.offset, isLittleEndian);
       this.offset += INT24_SIZE;
-      return result & 0x800000 ? result ^ -0x1000000 : result;
+      return result & 0x800000 ? result ^ -16777216 : result;
     },
     setUint24: function setUint24(value) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.isLittleEndian;
@@ -393,7 +393,7 @@ var logs = '';
       var isLittleEndian = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.isLittleEndian;
       var result = readUint32(this.data, this.offset, isLittleEndian);
       this.offset += INT32_SIZE;
-      return result & 0x80000000 ? result ^ -0x100000000 : result;
+      return result & 0x80000000 ? result ^ -4294967296 : result;
     },
     setUint32: function setUint32(value) {
       var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.isLittleEndian;
@@ -574,40 +574,40 @@ var logs = '';
       throw new Error('Device type bytes wrong size');
     }
     var type = ['MTX '];
-    type.push((_nibbles1$nibbles$ = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$ !== void 0 ? _nibbles1$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles2$nibbles$ = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$ !== void 0 ? _nibbles2$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles3$nibbles$ = nibbles3[nibbles[2]]) !== null && _nibbles3$nibbles$ !== void 0 ? _nibbles3$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles3$nibbles$2 = nibbles3[nibbles[3]]) !== null && _nibbles3$nibbles$2 !== void 0 ? _nibbles3$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles1$nibbles$ = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$ !== undefined ? _nibbles1$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles2$nibbles$ = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$ !== undefined ? _nibbles2$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles3$nibbles$ = nibbles3[nibbles[2]]) !== null && _nibbles3$nibbles$ !== undefined ? _nibbles3$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles3$nibbles$2 = nibbles3[nibbles[3]]) !== null && _nibbles3$nibbles$2 !== undefined ? _nibbles3$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
     type.push('.');
-    type.push((_nibbles4$nibbles$ = nibbles4[nibbles[4]]) !== null && _nibbles4$nibbles$ !== void 0 ? _nibbles4$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles5$nibbles$ = nibbles5[nibbles[5]]) !== null && _nibbles5$nibbles$ !== void 0 ? _nibbles5$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles4$nibbles$ = nibbles4[nibbles[4]]) !== null && _nibbles4$nibbles$ !== undefined ? _nibbles4$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles5$nibbles$ = nibbles5[nibbles[5]]) !== null && _nibbles5$nibbles$ !== undefined ? _nibbles5$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
     type.push('.');
-    type.push((_nibbles6$nibbles$ = nibbles6[nibbles[6]]) !== null && _nibbles6$nibbles$ !== void 0 ? _nibbles6$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles7$nibbles$ = nibbles7[nibbles[7]]) !== null && _nibbles7$nibbles$ !== void 0 ? _nibbles7$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles6$nibbles$ = nibbles6[nibbles[6]]) !== null && _nibbles6$nibbles$ !== undefined ? _nibbles6$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles7$nibbles$ = nibbles7[nibbles[7]]) !== null && _nibbles7$nibbles$ !== undefined ? _nibbles7$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
     var revision = nibbles[8];
-    type.push((_nibbles8$nibbles$ = nibbles8[nibbles[9]]) !== null && _nibbles8$nibbles$ !== void 0 ? _nibbles8$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles8$nibbles$ = nibbles8[nibbles[9]]) !== null && _nibbles8$nibbles$ !== undefined ? _nibbles8$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
     type.push('-');
     var deviceProtocolIndex;
     if (nibbles.length < 14 || nibbles[12] === 0 && nibbles[13] === 0) {
       var _nibbles9$nibbles$;
-      type.push((_nibbles9$nibbles$ = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$ !== void 0 ? _nibbles9$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$ = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$ !== undefined ? _nibbles9$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
       deviceProtocolIndex = 11;
     } else if (nibbles[13] === 0) {
       var _nibbles9$nibbles$2, _nibbles9$nibbles$3;
-      type.push((_nibbles9$nibbles$2 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$2 !== void 0 ? _nibbles9$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles9$nibbles$3 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$3 !== void 0 ? _nibbles9$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$2 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$2 !== undefined ? _nibbles9$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$3 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$3 !== undefined ? _nibbles9$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
       deviceProtocolIndex = 12;
     } else {
       var _nibbles9$nibbles$4, _nibbles9$nibbles$5, _nibbles9$nibbles$6;
-      type.push((_nibbles9$nibbles$4 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$4 !== void 0 ? _nibbles9$nibbles$4 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles9$nibbles$5 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$5 !== void 0 ? _nibbles9$nibbles$5 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles9$nibbles$6 = nibbles9[nibbles[12]]) !== null && _nibbles9$nibbles$6 !== void 0 ? _nibbles9$nibbles$6 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$4 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$4 !== undefined ? _nibbles9$nibbles$4 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$5 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$5 !== undefined ? _nibbles9$nibbles$5 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$6 = nibbles9[nibbles[12]]) !== null && _nibbles9$nibbles$6 !== undefined ? _nibbles9$nibbles$6 : DEVICE_TYPE_INVALID_CHAR);
       deviceProtocolIndex = 13;
     }
     var deviceProtocolNibble = nibbles[deviceProtocolIndex];
     if (deviceProtocolNibble && deviceProtocolNibble !== 0) {
       var _nibbles11$deviceProt;
-      type.push((_nibbles11$deviceProt = nibbles11[deviceProtocolNibble]) !== null && _nibbles11$deviceProt !== void 0 ? _nibbles11$deviceProt : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles11$deviceProt = nibbles11[deviceProtocolNibble]) !== null && _nibbles11$deviceProt !== undefined ? _nibbles11$deviceProt : DEVICE_TYPE_INVALID_CHAR);
     }
     return {
       type: type.join(''),
@@ -634,7 +634,7 @@ var logs = '';
     }
     nibbles.push(nibbles6.indexOf(type[8]));
     nibbles.push(nibbles7.indexOf(type[9]));
-    nibbles.push(revision !== null && revision !== void 0 ? revision : 0);
+    nibbles.push(revision !== null && revision !== undefined ? revision : 0);
     nibbles.push(nibbles8.indexOf(type[10]));
     if (type[11] !== '-') {
       throw new Error('Wrong format');
@@ -661,13 +661,13 @@ var logs = '';
     }
     var type = ['MTX '];
     var separator = nibbles[1] === 5 ? '-' : ' ';
-    type.push((_nibbles1$nibbles$2 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$2 !== void 0 ? _nibbles1$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles2$nibbles$2 = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$2 !== void 0 ? _nibbles2$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles1$nibbles$2 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$2 !== undefined ? _nibbles1$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles2$nibbles$2 = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$2 !== undefined ? _nibbles2$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
     type.push(separator);
     for (var index = 2; index < nibbles.length; index++) {
       if (nibbles[index] !== 0) {
         var _nibbles10$nibbles$in;
-        type.push((_nibbles10$nibbles$in = nibbles10[nibbles[index]]) !== null && _nibbles10$nibbles$in !== void 0 ? _nibbles10$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
+        type.push((_nibbles10$nibbles$in = nibbles10[nibbles[index]]) !== null && _nibbles10$nibbles$in !== undefined ? _nibbles10$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
       }
     }
     return {
@@ -704,11 +704,11 @@ var logs = '';
       throw new Error('The buffer is too small');
     }
     var type = [];
-    type.push((_nibbles1$nibbles$3 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$3 !== void 0 ? _nibbles1$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles1$nibbles$3 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$3 !== undefined ? _nibbles1$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
     for (var index = 1; index < nibbles.length; index++) {
       if (nibbles[index] !== 0) {
         var _nibbles12$nibbles$in;
-        type.push((_nibbles12$nibbles$in = nibbles12[nibbles[index]]) !== null && _nibbles12$nibbles$in !== void 0 ? _nibbles12$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
+        type.push((_nibbles12$nibbles$in = nibbles12[nibbles[index]]) !== null && _nibbles12$nibbles$in !== undefined ? _nibbles12$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
       }
     }
     return {
@@ -1324,11 +1324,11 @@ var logs = '';
   };
   CommandBinaryBuffer$2.prototype.setFrameHeader = function (_ref2) {
     var _ref2$type = _ref2.type,
-      type = _ref2$type === void 0 ? defaultFrameHeader.type : _ref2$type,
+      type = _ref2$type === undefined ? defaultFrameHeader.type : _ref2$type,
       _ref2$destination = _ref2.destination,
-      destination = _ref2$destination === void 0 ? defaultFrameHeader.destination : _ref2$destination,
+      destination = _ref2$destination === undefined ? defaultFrameHeader.destination : _ref2$destination,
       _ref2$source = _ref2.source,
-      source = _ref2$source === void 0 ? defaultFrameHeader.source : _ref2$source;
+      source = _ref2$source === undefined ? defaultFrameHeader.source : _ref2$source;
     this.setUint8(type);
     this.setUint16(destination);
     this.setUint16(source);
@@ -3901,7 +3901,7 @@ var logs = '';
   var name$x = commandNames$1[setAccessKey$2];
   var headerSize$x = 2;
   var maxSize$x = 1 + KEY_SIZE;
-  var accessLevel$x = READ_ONLY;
+  var accessLevel$x = READ_WRITE;
   var isLoraOnly$x = false;
   var examples$x = {
     'set key for READ_ONLY access level': {
@@ -4860,27 +4860,228 @@ var logs = '';
 
   invertObject(screenIds);
 
-  var RATE_2400 = 2400;
-  var RATE_9600 = 9600;
-  var valueToRate = {
-    plc: {
-      0: RATE_9600,
-      2: RATE_2400,
-      4: RATE_9600
-    },
-    optoport: {
-      0: RATE_2400,
-      2: RATE_2400,
-      4: RATE_9600
-    }
-  };
-  var rateToValue = {
-    plc: invertObject(valueToRate.plc),
-    optoport: invertObject(valueToRate.optoport)
-  };
+  var getDayEnergies = 0x78;
+  var getDayMaxPower = 0x79;
+  var errorResponse$1 = 0xfe;
 
-  var A_PLUS_R_PLUS_R_MINUS = 1;
-  var A_MINUS_R_PLUS_R_MINUS = 2;
+  var uplinkIds$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    activateRatePlan: activateRatePlan$2,
+    errorResponse: errorResponse$1,
+    getBuildVersion: getBuildVersion$2,
+    getCorrectTime: getCorrectTime$2,
+    getCriticalEvent: getCriticalEvent$2,
+    getCurrentStatusMeter: getCurrentStatusMeter$2,
+    getCurrentValues: getCurrentValues$2,
+    getDateTime: getDateTime$2,
+    getDayDemand: getDayDemand$2,
+    getDayDemandExport: getDayDemandExport$2,
+    getDayEnergies: getDayEnergies,
+    getDayMaxDemand: getDayMaxDemand$2,
+    getDayMaxDemandExport: getDayMaxDemandExport$2,
+    getDayMaxDemandPrevious: getDayMaxDemandPrevious,
+    getDayMaxPower: getDayMaxPower,
+    getDayProfile: getDayProfile$2,
+    getDemand: getDemand$2,
+    getDeviceId: getDeviceId$2,
+    getDeviceType: getDeviceType$2,
+    getDisplayParam: getDisplayParam$2,
+    getEnergy: getEnergy$2,
+    getEnergyDayPrevious: getEnergyDayPrevious$2,
+    getEnergyExport: getEnergyExport$2,
+    getEnergyExportDayPrevious: getEnergyExportDayPrevious$2,
+    getEventStatus: getEventStatus$2,
+    getEvents: getEvents$2,
+    getEventsCounters: getEventsCounters$2,
+    getExtendedCurrentValues: getExtendedCurrentValues$2,
+    getExtendedCurrentValues2: getExtendedCurrentValues2,
+    getHalfHourDemand: getHalfHourDemand$2,
+    getHalfHourDemandExport: getHalfHourDemandExport$2,
+    getHalfHourDemandPrevious: getHalfHourDemandPrevious,
+    getHalfhoursEnergies: getHalfhoursEnergies$2,
+    getMagneticFieldThreshold: getMagneticFieldThreshold$2,
+    getMeterInfo: getMeterInfo$2,
+    getMonthDemand: getMonthDemand$2,
+    getMonthDemandExport: getMonthDemandExport$2,
+    getMonthMaxDemand: getMonthMaxDemand$2,
+    getMonthMaxDemandExport: getMonthMaxDemandExport$2,
+    getOperatorParameters: getOperatorParameters$2,
+    getOperatorParametersExtended3: getOperatorParametersExtended3$2,
+    getRatePlanInfo: getRatePlanInfo$2,
+    getSaldo: getSaldo$2,
+    getSaldoParameters: getSaldoParameters$2,
+    getSeasonProfile: getSeasonProfile$2,
+    getSpecialDay: getSpecialDay$2,
+    getVersion: getVersion$2,
+    prepareRatePlan: prepareRatePlan$2,
+    resetPowerMaxDay: resetPowerMaxDay$2,
+    resetPowerMaxMonth: resetPowerMaxMonth$2,
+    runTariffPlan: runTariffPlan$2,
+    setAccessKey: setAccessKey$2,
+    setCorrectDateTime: setCorrectDateTime$2,
+    setCorrectTime: setCorrectTime$2,
+    setDateTime: setDateTime$2,
+    setDayProfile: setDayProfile$2,
+    setDisplayParam: setDisplayParam$2,
+    setOperatorParameters: setOperatorParameters$2,
+    setOperatorParametersExtended3: setOperatorParametersExtended3$2,
+    setSaldo: setSaldo$2,
+    setSaldoParameters: setSaldoParameters$2,
+    setSeasonProfile: setSeasonProfile$2,
+    setSpecialDay: setSpecialDay$2,
+    setSpecialOperation: setSpecialOperation$2,
+    turnRelayOff: turnRelayOff$2,
+    turnRelayOn: turnRelayOn$2
+  });
+
+  invertObject(uplinkIds$1);
+
+  var getEventStatus = 0x01;
+  var getEnergyDayPrevious$1 = 0x03;
+  var getDeviceType = 0x04;
+  var getDeviceId = 0x05;
+  var getDateTime = 0x07;
+  var setDateTime = 0x08;
+  var setAccessKey = 0x09;
+  var getCurrentValues = 0x0d;
+  var getEnergy$1 = 0x0f;
+  var setDayProfile = 0x10;
+  var setSeasonProfile = 0x11;
+  var setSpecialDay = 0x12;
+  var activateRatePlan = 0x13;
+  var prepareRatePlan = 0x14;
+  var getHalfHourDemand = 0x15;
+  var getDayDemand$1 = 0x16;
+  var getMonthDemand = 0x17;
+  var turnRelayOn = 0x18;
+  var turnRelayOff = 0x19;
+  var setCorrectTime = 0x1c;
+  var getOperatorParameters = 0x1e;
+  var setOperatorParameters$1 = 0x1f;
+  var getVersion = 0x28;
+  var getSaldo = 0x29;
+  var setSaldo = 0x2a;
+  var getRatePlanInfo = 0x2c;
+  var getSaldoParameters = 0x2e;
+  var setSaldoParameters = 0x2f;
+  var getDayMaxDemand = 0x31;
+  var getMonthMaxDemand = 0x32;
+  var getEvents = 0x33;
+  var getEventsCounters = 0x34;
+  var resetPowerMaxDay = 0x35;
+  var resetPowerMaxMonth = 0x36;
+  var getCurrentStatusMeter = 0x39;
+  var getExtendedCurrentValues = 0x3a;
+  var getDayProfile = 0x3b;
+  var getSeasonProfile = 0x3c;
+  var getSpecialDay = 0x3d;
+  var getCorrectTime = 0x3e;
+  var getOperatorParametersExtended$1 = 0x3f;
+  var setOperatorParametersExtended$1 = 0x40;
+  var setOperatorParametersExtended2$1 = 0x45;
+  var runTariffPlan = 0x46;
+  var getOperatorParametersExtended2$1 = 0x47;
+  var getHalfHourDemandVari$1 = 0x48;
+  var getHalfHourDemandVare$1 = 0x49;
+  var getEnergyExport$1 = 0x4e;
+  var getDayDemandExport$1 = 0x4f;
+  var getEnergyExportDayPrevious$1 = 0x50;
+  var getMonthDemandExport = 0x52;
+  var getHalfHourDemandExport = 0x53;
+  var getHalfHourDemandVariExport$1 = 0x54;
+  var getHalfHourDemandVareExport$1 = 0x55;
+  var getCriticalEvent$1 = 0x56;
+  var getDayMaxDemandExport = 0x58;
+  var getMonthMaxDemandExport = 0x59;
+  var getHalfHourDemandChannel$1 = 0x5a;
+  var setCorrectDateTime = 0x5c;
+  var setDisplayParam$1 = 0x5d;
+  var getDisplayParam$1 = 0x5e;
+  var setSpecialOperation = 0x64;
+  var getMagneticFieldThreshold = 0x6d;
+  var getHalfhoursEnergies = 0x6f;
+  var getBuildVersion = 0x70;
+  var getOperatorParametersExtended3 = 0x71;
+  var setOperatorParametersExtended3 = 0x72;
+  var setOperatorParametersExtended4$1 = 0x75;
+  var getDemand$1 = 0x76;
+  var getMeterInfo = 0x7a;
+
+  var downlinkIds = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    activateRatePlan: activateRatePlan,
+    getBuildVersion: getBuildVersion,
+    getCorrectTime: getCorrectTime,
+    getCriticalEvent: getCriticalEvent$1,
+    getCurrentStatusMeter: getCurrentStatusMeter,
+    getCurrentValues: getCurrentValues,
+    getDateTime: getDateTime,
+    getDayDemand: getDayDemand$1,
+    getDayDemandExport: getDayDemandExport$1,
+    getDayMaxDemand: getDayMaxDemand,
+    getDayMaxDemandExport: getDayMaxDemandExport,
+    getDayProfile: getDayProfile,
+    getDemand: getDemand$1,
+    getDeviceId: getDeviceId,
+    getDeviceType: getDeviceType,
+    getDisplayParam: getDisplayParam$1,
+    getEnergy: getEnergy$1,
+    getEnergyDayPrevious: getEnergyDayPrevious$1,
+    getEnergyExport: getEnergyExport$1,
+    getEnergyExportDayPrevious: getEnergyExportDayPrevious$1,
+    getEventStatus: getEventStatus,
+    getEvents: getEvents,
+    getEventsCounters: getEventsCounters,
+    getExtendedCurrentValues: getExtendedCurrentValues,
+    getHalfHourDemand: getHalfHourDemand,
+    getHalfHourDemandChannel: getHalfHourDemandChannel$1,
+    getHalfHourDemandExport: getHalfHourDemandExport,
+    getHalfHourDemandVare: getHalfHourDemandVare$1,
+    getHalfHourDemandVareExport: getHalfHourDemandVareExport$1,
+    getHalfHourDemandVari: getHalfHourDemandVari$1,
+    getHalfHourDemandVariExport: getHalfHourDemandVariExport$1,
+    getHalfhoursEnergies: getHalfhoursEnergies,
+    getMagneticFieldThreshold: getMagneticFieldThreshold,
+    getMeterInfo: getMeterInfo,
+    getMonthDemand: getMonthDemand,
+    getMonthDemandExport: getMonthDemandExport,
+    getMonthMaxDemand: getMonthMaxDemand,
+    getMonthMaxDemandExport: getMonthMaxDemandExport,
+    getOperatorParameters: getOperatorParameters,
+    getOperatorParametersExtended: getOperatorParametersExtended$1,
+    getOperatorParametersExtended2: getOperatorParametersExtended2$1,
+    getOperatorParametersExtended3: getOperatorParametersExtended3,
+    getRatePlanInfo: getRatePlanInfo,
+    getSaldo: getSaldo,
+    getSaldoParameters: getSaldoParameters,
+    getSeasonProfile: getSeasonProfile,
+    getSpecialDay: getSpecialDay,
+    getVersion: getVersion,
+    prepareRatePlan: prepareRatePlan,
+    resetPowerMaxDay: resetPowerMaxDay,
+    resetPowerMaxMonth: resetPowerMaxMonth,
+    runTariffPlan: runTariffPlan,
+    setAccessKey: setAccessKey,
+    setCorrectDateTime: setCorrectDateTime,
+    setCorrectTime: setCorrectTime,
+    setDateTime: setDateTime,
+    setDayProfile: setDayProfile,
+    setDisplayParam: setDisplayParam$1,
+    setOperatorParameters: setOperatorParameters$1,
+    setOperatorParametersExtended: setOperatorParametersExtended$1,
+    setOperatorParametersExtended2: setOperatorParametersExtended2$1,
+    setOperatorParametersExtended3: setOperatorParametersExtended3,
+    setOperatorParametersExtended4: setOperatorParametersExtended4$1,
+    setSaldo: setSaldo,
+    setSaldoParameters: setSaldoParameters,
+    setSeasonProfile: setSeasonProfile,
+    setSpecialDay: setSpecialDay,
+    setSpecialOperation: setSpecialOperation,
+    turnRelayOff: turnRelayOff,
+    turnRelayOn: turnRelayOn
+  });
+
+  var commandNames = invertObject(downlinkIds);
 
   var ENERGY_T0_FAULT = 0x01;
   var ENERGY_T1_FAULT = 0x02;
@@ -5195,80 +5396,12 @@ var logs = '';
 
   var eventNames = invertObject(events);
 
-  var getEventStatus = 0x01;
-  var getEnergyDayPrevious$1 = 0x03;
-  var getDeviceType = 0x04;
-  var getDeviceId = 0x05;
-  var getDateTime = 0x07;
-  var setDateTime = 0x08;
-  var setAccessKey = 0x09;
-  var getCurrentValues = 0x0d;
-  var getEnergy$1 = 0x0f;
-  var setDayProfile = 0x10;
-  var setSeasonProfile = 0x11;
-  var setSpecialDay = 0x12;
-  var activateRatePlan = 0x13;
-  var prepareRatePlan = 0x14;
-  var getHalfHourDemand = 0x15;
-  var getDayDemand$1 = 0x16;
-  var getMonthDemand = 0x17;
-  var turnRelayOn = 0x18;
-  var turnRelayOff = 0x19;
-  var setCorrectTime = 0x1c;
-  var getOperatorParameters = 0x1e;
-  var setOperatorParameters$1 = 0x1f;
-  var getVersion = 0x28;
-  var getSaldo = 0x29;
-  var setSaldo = 0x2a;
-  var getRatePlanInfo = 0x2c;
-  var getSaldoParameters = 0x2e;
-  var setSaldoParameters = 0x2f;
-  var getDayMaxDemand = 0x31;
-  var getMonthMaxDemand = 0x32;
-  var getEvents = 0x33;
-  var getEventsCounters = 0x34;
-  var resetPowerMaxDay = 0x35;
-  var resetPowerMaxMonth = 0x36;
-  var getCurrentStatusMeter = 0x39;
-  var getExtendedCurrentValues = 0x3a;
-  var getDayProfile = 0x3b;
-  var getSeasonProfile = 0x3c;
-  var getSpecialDay = 0x3d;
-  var getCorrectTime = 0x3e;
-  var getOperatorParametersExtended$1 = 0x3f;
-  var setOperatorParametersExtended$1 = 0x40;
-  var setOperatorParametersExtended2$1 = 0x45;
-  var runTariffPlan = 0x46;
-  var getOperatorParametersExtended2$1 = 0x47;
-  var getHalfHourDemandVari$1 = 0x48;
-  var getHalfHourDemandVare$1 = 0x49;
-  var getEnergyExport$1 = 0x4e;
-  var getDayDemandExport$1 = 0x4f;
-  var getEnergyExportDayPrevious$1 = 0x50;
-  var getMonthDemandExport = 0x52;
-  var getHalfHourDemandExport = 0x53;
-  var getHalfHourDemandVariExport$1 = 0x54;
-  var getHalfHourDemandVareExport$1 = 0x55;
-  var getCriticalEvent$1 = 0x56;
-  var getDayMaxDemandExport = 0x58;
-  var getMonthMaxDemandExport = 0x59;
-  var getHalfHourDemandChannel$1 = 0x5a;
-  var setCorrectDateTime = 0x5c;
-  var setDisplayParam$1 = 0x5d;
-  var getDisplayParam$1 = 0x5e;
-  var setSpecialOperation = 0x64;
-  var getMagneticFieldThreshold = 0x6d;
-  var getHalfhoursEnergies = 0x6f;
-  var getBuildVersion = 0x70;
-  var getOperatorParametersExtended3 = 0x71;
-  var setOperatorParametersExtended3 = 0x72;
-  var setOperatorParametersExtended4$1 = 0x75;
-  var getDemand$1 = 0x76;
-  var getMeterInfo = 0x7a;
+  var errorResponse = 0xfe;
 
-  var downlinkIds = /*#__PURE__*/Object.freeze({
+  var uplinkIds = /*#__PURE__*/Object.freeze({
     __proto__: null,
     activateRatePlan: activateRatePlan,
+    errorResponse: errorResponse,
     getBuildVersion: getBuildVersion,
     getCorrectTime: getCorrectTime,
     getCriticalEvent: getCriticalEvent$1,
@@ -5340,7 +5473,29 @@ var logs = '';
     turnRelayOn: turnRelayOn
   });
 
-  var commandNames = invertObject(downlinkIds);
+  invertObject(uplinkIds);
+
+  var RATE_2400 = 2400;
+  var RATE_9600 = 9600;
+  var valueToRate = {
+    plc: {
+      0: RATE_9600,
+      2: RATE_2400,
+      4: RATE_9600
+    },
+    optoport: {
+      0: RATE_2400,
+      2: RATE_2400,
+      4: RATE_9600
+    }
+  };
+  var rateToValue = {
+    plc: invertObject(valueToRate.plc),
+    optoport: invertObject(valueToRate.optoport)
+  };
+
+  var A_PLUS_R_PLUS_R_MINUS = 1;
+  var A_MINUS_R_PLUS_R_MINUS = 2;
 
   var id$k = getCriticalEvent$1;
   var name$k = commandNames[getCriticalEvent$1];
@@ -6119,9 +6274,9 @@ var logs = '';
     };
   };
   var toBytes$j = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer(parameters !== null && parameters !== void 0 && parameters.energyType ? MAX_COMMAND_SIZE$1 : MIN_COMMAND_SIZE$1);
-    buffer.setDate(parameters === null || parameters === void 0 ? void 0 : parameters.date);
-    if (parameters !== null && parameters !== void 0 && parameters.energyType) {
+    var buffer = new CommandBinaryBuffer(parameters !== null && parameters !== undefined && parameters.energyType ? MAX_COMMAND_SIZE$1 : MIN_COMMAND_SIZE$1);
+    buffer.setDate(parameters === null || parameters === undefined ? undefined : parameters.date);
+    if (parameters !== null && parameters !== undefined && parameters.energyType) {
       buffer.setUint8(parameters.energyType);
     }
     return toBytes$16(id$j, buffer.data);
@@ -7521,7 +7676,7 @@ var logs = '';
     var output = '';
     for (var commandName in commands) {
       var command = commands[commandName];
-      var examples = command === null || command === void 0 ? void 0 : command.examples;
+      var examples = command === null || command === undefined ? undefined : command.examples;
       if (command) {
         output += commandName + ' ';
         for (var exampleName in examples) {

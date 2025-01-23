@@ -157,7 +157,7 @@
         getInt8() {
             const result = readUint8(this.data, this.offset);
             this.offset += INT8_SIZE;
-            return result & 0x80 ? result ^ -0x100 : result;
+            return result & 0x80 ? result ^ -256 : result;
         },
         setUint8(value) {
             writeUint8(this.data, this.offset, value);
@@ -175,7 +175,7 @@
         getInt16(isLittleEndian = this.isLittleEndian) {
             const result = readUint16(this.data, this.offset, isLittleEndian);
             this.offset += INT16_SIZE;
-            return result & 0x8000 ? result ^ -0x10000 : result;
+            return result & 0x8000 ? result ^ -65536 : result;
         },
         setUint16(value, isLittleEndian = this.isLittleEndian) {
             writeUint16(this.data, this.offset, value, isLittleEndian);
@@ -193,7 +193,7 @@
         getInt24(isLittleEndian = this.isLittleEndian) {
             const result = readUint24(this.data, this.offset, isLittleEndian);
             this.offset += INT24_SIZE;
-            return result & 0x800000 ? result ^ -0x1000000 : result;
+            return result & 0x800000 ? result ^ -16777216 : result;
         },
         setUint24(value, isLittleEndian = this.isLittleEndian) {
             writeUint24(this.data, this.offset, value, isLittleEndian);
@@ -211,7 +211,7 @@
         getInt32(isLittleEndian = this.isLittleEndian) {
             const result = readUint32(this.data, this.offset, isLittleEndian);
             this.offset += INT32_SIZE;
-            return result & 0x80000000 ? result ^ -0x100000000 : result;
+            return result & 0x80000000 ? result ^ -4294967296 : result;
         },
         setUint32(value, isLittleEndian = this.isLittleEndian) {
             writeUint32(this.data, this.offset, value, isLittleEndian);
@@ -4306,7 +4306,7 @@
     const name$1g = commandNames$1[setAccessKey$2];
     const headerSize$1g = 2;
     const maxSize$1g = 1 + KEY_SIZE;
-    const accessLevel$1g = READ_ONLY;
+    const accessLevel$1g = READ_WRITE;
     const isLoraOnly$1g = false;
     const examples$1g = {
         'set key for READ_ONLY access level': {

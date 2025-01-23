@@ -157,7 +157,7 @@
         getInt8() {
             const result = readUint8(this.data, this.offset);
             this.offset += INT8_SIZE;
-            return result & 0x80 ? result ^ -0x100 : result;
+            return result & 0x80 ? result ^ -256 : result;
         },
         setUint8(value) {
             writeUint8(this.data, this.offset, value);
@@ -175,7 +175,7 @@
         getInt16(isLittleEndian = this.isLittleEndian) {
             const result = readUint16(this.data, this.offset, isLittleEndian);
             this.offset += INT16_SIZE;
-            return result & 0x8000 ? result ^ -0x10000 : result;
+            return result & 0x8000 ? result ^ -65536 : result;
         },
         setUint16(value, isLittleEndian = this.isLittleEndian) {
             writeUint16(this.data, this.offset, value, isLittleEndian);
@@ -193,7 +193,7 @@
         getInt24(isLittleEndian = this.isLittleEndian) {
             const result = readUint24(this.data, this.offset, isLittleEndian);
             this.offset += INT24_SIZE;
-            return result & 0x800000 ? result ^ -0x1000000 : result;
+            return result & 0x800000 ? result ^ -16777216 : result;
         },
         setUint24(value, isLittleEndian = this.isLittleEndian) {
             writeUint24(this.data, this.offset, value, isLittleEndian);
@@ -211,7 +211,7 @@
         getInt32(isLittleEndian = this.isLittleEndian) {
             const result = readUint32(this.data, this.offset, isLittleEndian);
             this.offset += INT32_SIZE;
-            return result & 0x80000000 ? result ^ -0x100000000 : result;
+            return result & 0x80000000 ? result ^ -4294967296 : result;
         },
         setUint32(value, isLittleEndian = this.isLittleEndian) {
             writeUint32(this.data, this.offset, value, isLittleEndian);
@@ -3576,7 +3576,7 @@
     const name$1G = commandNames$3[setAccessKey$3];
     const headerSize$1G = 2;
     const maxSize$1G = 1 + KEY_SIZE;
-    const accessLevel$1G = READ_ONLY;
+    const accessLevel$1G = READ_WRITE;
     const isLoraOnly$1G = false;
     const examples$1G = {
         'set key for READ_ONLY access level': {
@@ -4556,30 +4556,231 @@
 
     invertObject(screenIds);
 
+    const getDayEnergies = 0x78;
+    const getDayMaxPower = 0x79;
+    const errorResponse$2 = 0xfe;
+
+    var uplinkIds$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        activateRatePlan: activateRatePlan$3,
+        errorResponse: errorResponse$2,
+        getBuildVersion: getBuildVersion$3,
+        getCorrectTime: getCorrectTime$3,
+        getCriticalEvent: getCriticalEvent$3,
+        getCurrentStatusMeter: getCurrentStatusMeter$3,
+        getCurrentValues: getCurrentValues$3,
+        getDateTime: getDateTime$3,
+        getDayDemand: getDayDemand$3,
+        getDayDemandExport: getDayDemandExport$3,
+        getDayEnergies: getDayEnergies,
+        getDayMaxDemand: getDayMaxDemand$3,
+        getDayMaxDemandExport: getDayMaxDemandExport$3,
+        getDayMaxDemandPrevious: getDayMaxDemandPrevious,
+        getDayMaxPower: getDayMaxPower,
+        getDayProfile: getDayProfile$3,
+        getDemand: getDemand$3,
+        getDeviceId: getDeviceId$3,
+        getDeviceType: getDeviceType$3,
+        getDisplayParam: getDisplayParam$3,
+        getEnergy: getEnergy$3,
+        getEnergyDayPrevious: getEnergyDayPrevious$3,
+        getEnergyExport: getEnergyExport$3,
+        getEnergyExportDayPrevious: getEnergyExportDayPrevious$3,
+        getEventStatus: getEventStatus$3,
+        getEvents: getEvents$3,
+        getEventsCounters: getEventsCounters$3,
+        getExtendedCurrentValues: getExtendedCurrentValues$3,
+        getExtendedCurrentValues2: getExtendedCurrentValues2,
+        getHalfHourDemand: getHalfHourDemand$3,
+        getHalfHourDemandExport: getHalfHourDemandExport$3,
+        getHalfHourDemandPrevious: getHalfHourDemandPrevious,
+        getHalfhoursEnergies: getHalfhoursEnergies$3,
+        getMagneticFieldThreshold: getMagneticFieldThreshold$3,
+        getMeterInfo: getMeterInfo$3,
+        getMonthDemand: getMonthDemand$3,
+        getMonthDemandExport: getMonthDemandExport$3,
+        getMonthMaxDemand: getMonthMaxDemand$3,
+        getMonthMaxDemandExport: getMonthMaxDemandExport$3,
+        getOperatorParameters: getOperatorParameters$3,
+        getOperatorParametersExtended3: getOperatorParametersExtended3$3,
+        getRatePlanInfo: getRatePlanInfo$3,
+        getSaldo: getSaldo$3,
+        getSaldoParameters: getSaldoParameters$3,
+        getSeasonProfile: getSeasonProfile$3,
+        getSpecialDay: getSpecialDay$3,
+        getVersion: getVersion$3,
+        prepareRatePlan: prepareRatePlan$3,
+        resetPowerMaxDay: resetPowerMaxDay$3,
+        resetPowerMaxMonth: resetPowerMaxMonth$3,
+        runTariffPlan: runTariffPlan$3,
+        setAccessKey: setAccessKey$3,
+        setCorrectDateTime: setCorrectDateTime$3,
+        setCorrectTime: setCorrectTime$3,
+        setDateTime: setDateTime$3,
+        setDayProfile: setDayProfile$3,
+        setDisplayParam: setDisplayParam$3,
+        setOperatorParameters: setOperatorParameters$3,
+        setOperatorParametersExtended3: setOperatorParametersExtended3$3,
+        setSaldo: setSaldo$3,
+        setSaldoParameters: setSaldoParameters$3,
+        setSeasonProfile: setSeasonProfile$3,
+        setSpecialDay: setSpecialDay$3,
+        setSpecialOperation: setSpecialOperation$3,
+        turnRelayOff: turnRelayOff$3,
+        turnRelayOn: turnRelayOn$3
+    });
+
+    var commandNames$2 = invertObject(uplinkIds$1);
+
     const A = 0b00000000;
     const G_FULL = 0b00010001;
 
-    const RATE_2400 = 2400;
-    const RATE_9600 = 9600;
-    const valueToRate = {
-        plc: {
-            0: RATE_9600,
-            2: RATE_2400,
-            4: RATE_9600
-        },
-        optoport: {
-            0: RATE_2400,
-            2: RATE_2400,
-            4: RATE_9600
-        }
-    };
-    const rateToValue = {
-        plc: invertObject(valueToRate.plc),
-        optoport: invertObject(valueToRate.optoport)
-    };
+    const getEventStatus$1 = 0x01;
+    const getEnergyDayPrevious$2 = 0x03;
+    const getDeviceType$1 = 0x04;
+    const getDeviceId$1 = 0x05;
+    const getDateTime$1 = 0x07;
+    const setDateTime$1 = 0x08;
+    const setAccessKey$1 = 0x09;
+    const getCurrentValues$1 = 0x0d;
+    const getEnergy$2 = 0x0f;
+    const setDayProfile$1 = 0x10;
+    const setSeasonProfile$1 = 0x11;
+    const setSpecialDay$1 = 0x12;
+    const activateRatePlan$1 = 0x13;
+    const prepareRatePlan$1 = 0x14;
+    const getHalfHourDemand$1 = 0x15;
+    const getDayDemand$2 = 0x16;
+    const getMonthDemand$1 = 0x17;
+    const turnRelayOn$1 = 0x18;
+    const turnRelayOff$1 = 0x19;
+    const setCorrectTime$1 = 0x1c;
+    const getOperatorParameters$1 = 0x1e;
+    const setOperatorParameters$2 = 0x1f;
+    const getVersion$1 = 0x28;
+    const getSaldo$1 = 0x29;
+    const setSaldo$1 = 0x2a;
+    const getRatePlanInfo$1 = 0x2c;
+    const getSaldoParameters$1 = 0x2e;
+    const setSaldoParameters$1 = 0x2f;
+    const getDayMaxDemand$1 = 0x31;
+    const getMonthMaxDemand$1 = 0x32;
+    const getEvents$1 = 0x33;
+    const getEventsCounters$1 = 0x34;
+    const resetPowerMaxDay$1 = 0x35;
+    const resetPowerMaxMonth$1 = 0x36;
+    const getCurrentStatusMeter$1 = 0x39;
+    const getExtendedCurrentValues$1 = 0x3a;
+    const getDayProfile$1 = 0x3b;
+    const getSeasonProfile$1 = 0x3c;
+    const getSpecialDay$1 = 0x3d;
+    const getCorrectTime$1 = 0x3e;
+    const getOperatorParametersExtended$2 = 0x3f;
+    const setOperatorParametersExtended$2 = 0x40;
+    const setOperatorParametersExtended2$2 = 0x45;
+    const runTariffPlan$1 = 0x46;
+    const getOperatorParametersExtended2$2 = 0x47;
+    const getHalfHourDemandVari$2 = 0x48;
+    const getHalfHourDemandVare$2 = 0x49;
+    const getEnergyExport$2 = 0x4e;
+    const getDayDemandExport$2 = 0x4f;
+    const getEnergyExportDayPrevious$2 = 0x50;
+    const getMonthDemandExport$1 = 0x52;
+    const getHalfHourDemandExport$1 = 0x53;
+    const getHalfHourDemandVariExport$2 = 0x54;
+    const getHalfHourDemandVareExport$2 = 0x55;
+    const getCriticalEvent$2 = 0x56;
+    const getDayMaxDemandExport$1 = 0x58;
+    const getMonthMaxDemandExport$1 = 0x59;
+    const getHalfHourDemandChannel$2 = 0x5a;
+    const setCorrectDateTime$1 = 0x5c;
+    const setDisplayParam$2 = 0x5d;
+    const getDisplayParam$2 = 0x5e;
+    const setSpecialOperation$1 = 0x64;
+    const getMagneticFieldThreshold$1 = 0x6d;
+    const getHalfhoursEnergies$1 = 0x6f;
+    const getBuildVersion$1 = 0x70;
+    const getOperatorParametersExtended3$1 = 0x71;
+    const setOperatorParametersExtended3$1 = 0x72;
+    const setOperatorParametersExtended4$2 = 0x75;
+    const getDemand$2 = 0x76;
+    const getMeterInfo$1 = 0x7a;
 
-    const A_PLUS_R_PLUS_R_MINUS = 1;
-    const A_MINUS_R_PLUS_R_MINUS = 2;
+    var downlinkIds = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        activateRatePlan: activateRatePlan$1,
+        getBuildVersion: getBuildVersion$1,
+        getCorrectTime: getCorrectTime$1,
+        getCriticalEvent: getCriticalEvent$2,
+        getCurrentStatusMeter: getCurrentStatusMeter$1,
+        getCurrentValues: getCurrentValues$1,
+        getDateTime: getDateTime$1,
+        getDayDemand: getDayDemand$2,
+        getDayDemandExport: getDayDemandExport$2,
+        getDayMaxDemand: getDayMaxDemand$1,
+        getDayMaxDemandExport: getDayMaxDemandExport$1,
+        getDayProfile: getDayProfile$1,
+        getDemand: getDemand$2,
+        getDeviceId: getDeviceId$1,
+        getDeviceType: getDeviceType$1,
+        getDisplayParam: getDisplayParam$2,
+        getEnergy: getEnergy$2,
+        getEnergyDayPrevious: getEnergyDayPrevious$2,
+        getEnergyExport: getEnergyExport$2,
+        getEnergyExportDayPrevious: getEnergyExportDayPrevious$2,
+        getEventStatus: getEventStatus$1,
+        getEvents: getEvents$1,
+        getEventsCounters: getEventsCounters$1,
+        getExtendedCurrentValues: getExtendedCurrentValues$1,
+        getHalfHourDemand: getHalfHourDemand$1,
+        getHalfHourDemandChannel: getHalfHourDemandChannel$2,
+        getHalfHourDemandExport: getHalfHourDemandExport$1,
+        getHalfHourDemandVare: getHalfHourDemandVare$2,
+        getHalfHourDemandVareExport: getHalfHourDemandVareExport$2,
+        getHalfHourDemandVari: getHalfHourDemandVari$2,
+        getHalfHourDemandVariExport: getHalfHourDemandVariExport$2,
+        getHalfhoursEnergies: getHalfhoursEnergies$1,
+        getMagneticFieldThreshold: getMagneticFieldThreshold$1,
+        getMeterInfo: getMeterInfo$1,
+        getMonthDemand: getMonthDemand$1,
+        getMonthDemandExport: getMonthDemandExport$1,
+        getMonthMaxDemand: getMonthMaxDemand$1,
+        getMonthMaxDemandExport: getMonthMaxDemandExport$1,
+        getOperatorParameters: getOperatorParameters$1,
+        getOperatorParametersExtended: getOperatorParametersExtended$2,
+        getOperatorParametersExtended2: getOperatorParametersExtended2$2,
+        getOperatorParametersExtended3: getOperatorParametersExtended3$1,
+        getRatePlanInfo: getRatePlanInfo$1,
+        getSaldo: getSaldo$1,
+        getSaldoParameters: getSaldoParameters$1,
+        getSeasonProfile: getSeasonProfile$1,
+        getSpecialDay: getSpecialDay$1,
+        getVersion: getVersion$1,
+        prepareRatePlan: prepareRatePlan$1,
+        resetPowerMaxDay: resetPowerMaxDay$1,
+        resetPowerMaxMonth: resetPowerMaxMonth$1,
+        runTariffPlan: runTariffPlan$1,
+        setAccessKey: setAccessKey$1,
+        setCorrectDateTime: setCorrectDateTime$1,
+        setCorrectTime: setCorrectTime$1,
+        setDateTime: setDateTime$1,
+        setDayProfile: setDayProfile$1,
+        setDisplayParam: setDisplayParam$2,
+        setOperatorParameters: setOperatorParameters$2,
+        setOperatorParametersExtended: setOperatorParametersExtended$2,
+        setOperatorParametersExtended2: setOperatorParametersExtended2$2,
+        setOperatorParametersExtended3: setOperatorParametersExtended3$1,
+        setOperatorParametersExtended4: setOperatorParametersExtended4$2,
+        setSaldo: setSaldo$1,
+        setSaldoParameters: setSaldoParameters$1,
+        setSeasonProfile: setSeasonProfile$1,
+        setSpecialDay: setSpecialDay$1,
+        setSpecialOperation: setSpecialOperation$1,
+        turnRelayOff: turnRelayOff$1,
+        turnRelayOn: turnRelayOn$1
+    });
+
+    var commandNames$1 = invertObject(downlinkIds);
 
     const ENERGY_T0_FAULT = 0x01;
     const ENERGY_T1_FAULT = 0x02;
@@ -4894,80 +5095,12 @@
 
     var eventNames = invertObject(events);
 
-    const getEventStatus$1 = 0x01;
-    const getEnergyDayPrevious$2 = 0x03;
-    const getDeviceType$1 = 0x04;
-    const getDeviceId$1 = 0x05;
-    const getDateTime$1 = 0x07;
-    const setDateTime$1 = 0x08;
-    const setAccessKey$1 = 0x09;
-    const getCurrentValues$1 = 0x0d;
-    const getEnergy$2 = 0x0f;
-    const setDayProfile$1 = 0x10;
-    const setSeasonProfile$1 = 0x11;
-    const setSpecialDay$1 = 0x12;
-    const activateRatePlan$1 = 0x13;
-    const prepareRatePlan$1 = 0x14;
-    const getHalfHourDemand$1 = 0x15;
-    const getDayDemand$2 = 0x16;
-    const getMonthDemand$1 = 0x17;
-    const turnRelayOn$1 = 0x18;
-    const turnRelayOff$1 = 0x19;
-    const setCorrectTime$1 = 0x1c;
-    const getOperatorParameters$1 = 0x1e;
-    const setOperatorParameters$2 = 0x1f;
-    const getVersion$1 = 0x28;
-    const getSaldo$1 = 0x29;
-    const setSaldo$1 = 0x2a;
-    const getRatePlanInfo$1 = 0x2c;
-    const getSaldoParameters$1 = 0x2e;
-    const setSaldoParameters$1 = 0x2f;
-    const getDayMaxDemand$1 = 0x31;
-    const getMonthMaxDemand$1 = 0x32;
-    const getEvents$1 = 0x33;
-    const getEventsCounters$1 = 0x34;
-    const resetPowerMaxDay$1 = 0x35;
-    const resetPowerMaxMonth$1 = 0x36;
-    const getCurrentStatusMeter$1 = 0x39;
-    const getExtendedCurrentValues$1 = 0x3a;
-    const getDayProfile$1 = 0x3b;
-    const getSeasonProfile$1 = 0x3c;
-    const getSpecialDay$1 = 0x3d;
-    const getCorrectTime$1 = 0x3e;
-    const getOperatorParametersExtended$2 = 0x3f;
-    const setOperatorParametersExtended$2 = 0x40;
-    const setOperatorParametersExtended2$2 = 0x45;
-    const runTariffPlan$1 = 0x46;
-    const getOperatorParametersExtended2$2 = 0x47;
-    const getHalfHourDemandVari$2 = 0x48;
-    const getHalfHourDemandVare$2 = 0x49;
-    const getEnergyExport$2 = 0x4e;
-    const getDayDemandExport$2 = 0x4f;
-    const getEnergyExportDayPrevious$2 = 0x50;
-    const getMonthDemandExport$1 = 0x52;
-    const getHalfHourDemandExport$1 = 0x53;
-    const getHalfHourDemandVariExport$2 = 0x54;
-    const getHalfHourDemandVareExport$2 = 0x55;
-    const getCriticalEvent$2 = 0x56;
-    const getDayMaxDemandExport$1 = 0x58;
-    const getMonthMaxDemandExport$1 = 0x59;
-    const getHalfHourDemandChannel$2 = 0x5a;
-    const setCorrectDateTime$1 = 0x5c;
-    const setDisplayParam$2 = 0x5d;
-    const getDisplayParam$2 = 0x5e;
-    const setSpecialOperation$1 = 0x64;
-    const getMagneticFieldThreshold$1 = 0x6d;
-    const getHalfhoursEnergies$1 = 0x6f;
-    const getBuildVersion$1 = 0x70;
-    const getOperatorParametersExtended3$1 = 0x71;
-    const setOperatorParametersExtended3$1 = 0x72;
-    const setOperatorParametersExtended4$2 = 0x75;
-    const getDemand$2 = 0x76;
-    const getMeterInfo$1 = 0x7a;
+    const errorResponse$1 = 0xfe;
 
-    var downlinkIds = /*#__PURE__*/Object.freeze({
+    var uplinkIds = /*#__PURE__*/Object.freeze({
         __proto__: null,
         activateRatePlan: activateRatePlan$1,
+        errorResponse: errorResponse$1,
         getBuildVersion: getBuildVersion$1,
         getCorrectTime: getCorrectTime$1,
         getCriticalEvent: getCriticalEvent$2,
@@ -5039,10 +5172,32 @@
         turnRelayOn: turnRelayOn$1
     });
 
-    var commandNames$2 = invertObject(downlinkIds);
+    var commandNames = invertObject(uplinkIds);
+
+    const RATE_2400 = 2400;
+    const RATE_9600 = 9600;
+    const valueToRate = {
+        plc: {
+            0: RATE_9600,
+            2: RATE_2400,
+            4: RATE_9600
+        },
+        optoport: {
+            0: RATE_2400,
+            2: RATE_2400,
+            4: RATE_9600
+        }
+    };
+    const rateToValue = {
+        plc: invertObject(valueToRate.plc),
+        optoport: invertObject(valueToRate.optoport)
+    };
+
+    const A_PLUS_R_PLUS_R_MINUS = 1;
+    const A_MINUS_R_PLUS_R_MINUS = 2;
 
     const id$1t = getCriticalEvent$2;
-    const name$1t = commandNames$2[getCriticalEvent$2];
+    const name$1t = commandNames$1[getCriticalEvent$2];
     const headerSize$1t = 2;
     const accessLevel$1t = READ_ONLY;
     const maxSize$1t = 2;
@@ -5725,7 +5880,7 @@
     const MIN_COMMAND_SIZE$2 = 3;
     const MAX_COMMAND_SIZE$4 = 4;
     const id$1s = getDayDemand$2;
-    const name$1s = commandNames$2[getDayDemand$2];
+    const name$1s = commandNames$1[getDayDemand$2];
     const headerSize$1s = 2;
     const maxSize$1s = MAX_COMMAND_SIZE$4;
     const accessLevel$1s = READ_ONLY;
@@ -5802,7 +5957,7 @@
     });
 
     const id$1r = getDayDemandExport$2;
-    const name$1r = commandNames$2[getDayDemandExport$2];
+    const name$1r = commandNames$1[getDayDemandExport$2];
     const headerSize$1r = 2;
     const maxSize$1r = 3;
     const accessLevel$1r = READ_ONLY;
@@ -5851,7 +6006,7 @@
     });
 
     const id$1q = getDemand$2;
-    const name$1q = commandNames$2[getDemand$2];
+    const name$1q = commandNames$1[getDemand$2];
     const headerSize$1q = 2;
     const maxSize$1q = 7;
     const accessLevel$1q = READ_ONLY;
@@ -5907,7 +6062,7 @@
     });
 
     const id$1p = getDisplayParam$2;
-    const name$1p = commandNames$2[getDisplayParam$2];
+    const name$1p = commandNames$1[getDisplayParam$2];
     const headerSize$1p = 2;
     const maxSize$1p = 1;
     const accessLevel$1p = READ_ONLY;
@@ -5949,7 +6104,7 @@
     });
 
     const id$1o = getEnergy$2;
-    const name$1o = commandNames$2[getEnergy$2];
+    const name$1o = commandNames$1[getEnergy$2];
     const headerSize$1o = 2;
     const maxSize$1o = 0;
     const accessLevel$1o = READ_ONLY;
@@ -5991,7 +6146,7 @@
     const MIN_COMMAND_SIZE$1 = 0;
     const MAX_COMMAND_SIZE$3 = 1;
     const id$1n = getEnergyDayPrevious$2;
-    const name$1n = commandNames$2[getEnergyDayPrevious$2];
+    const name$1n = commandNames$1[getEnergyDayPrevious$2];
     const headerSize$1n = 2;
     const maxSize$1n = MAX_COMMAND_SIZE$3;
     const accessLevel$1n = READ_ONLY;
@@ -6054,7 +6209,7 @@
     });
 
     const id$1m = getEnergyExport$2;
-    const name$1m = commandNames$2[getEnergyExport$2];
+    const name$1m = commandNames$1[getEnergyExport$2];
     const headerSize$1m = 2;
     const maxSize$1m = 0;
     const accessLevel$1m = READ_ONLY;
@@ -6094,7 +6249,7 @@
     });
 
     const id$1l = getEnergyExportDayPrevious$2;
-    const name$1l = commandNames$2[getEnergyExportDayPrevious$2];
+    const name$1l = commandNames$1[getEnergyExportDayPrevious$2];
     const headerSize$1l = 2;
     const maxSize$1l = 0;
     const accessLevel$1l = READ_ONLY;
@@ -6134,7 +6289,7 @@
     });
 
     const id$1k = getHalfHourDemandChannel$2;
-    const name$1k = commandNames$2[getHalfHourDemandChannel$2];
+    const name$1k = commandNames$1[getHalfHourDemandChannel$2];
     const headerSize$1k = 2;
     const maxSize$1k = 5;
     const accessLevel$1k = READ_ONLY;
@@ -6193,7 +6348,7 @@
     });
 
     const id$1j = getHalfHourDemandVare$2;
-    const name$1j = commandNames$2[getHalfHourDemandVare$2];
+    const name$1j = commandNames$1[getHalfHourDemandVare$2];
     const headerSize$1j = 2;
     const maxSize$1j = 3;
     const accessLevel$1j = READ_ONLY;
@@ -6242,7 +6397,7 @@
     });
 
     const id$1i = getHalfHourDemandVareExport$2;
-    const name$1i = commandNames$2[getHalfHourDemandVareExport$2];
+    const name$1i = commandNames$1[getHalfHourDemandVareExport$2];
     const headerSize$1i = 2;
     const maxSize$1i = 3;
     const accessLevel$1i = READ_ONLY;
@@ -6291,7 +6446,7 @@
     });
 
     const id$1h = getHalfHourDemandVari$2;
-    const name$1h = commandNames$2[getHalfHourDemandVari$2];
+    const name$1h = commandNames$1[getHalfHourDemandVari$2];
     const headerSize$1h = 2;
     const maxSize$1h = 3;
     const accessLevel$1h = READ_ONLY;
@@ -6340,7 +6495,7 @@
     });
 
     const id$1g = getHalfHourDemandVariExport$2;
-    const name$1g = commandNames$2[getHalfHourDemandVariExport$2];
+    const name$1g = commandNames$1[getHalfHourDemandVariExport$2];
     const headerSize$1g = 2;
     const maxSize$1g = 3;
     const accessLevel$1g = READ_ONLY;
@@ -6389,7 +6544,7 @@
     });
 
     const id$1f = getOperatorParametersExtended$2;
-    const name$1f = commandNames$2[getOperatorParametersExtended$2];
+    const name$1f = commandNames$1[getOperatorParametersExtended$2];
     const headerSize$1f = 2;
     const maxSize$1f = 0;
     const accessLevel$1f = READ_ONLY;
@@ -6429,7 +6584,7 @@
     });
 
     const id$1e = getOperatorParametersExtended2$2;
-    const name$1e = commandNames$2[getOperatorParametersExtended2$2];
+    const name$1e = commandNames$1[getOperatorParametersExtended2$2];
     const headerSize$1e = 2;
     const maxSize$1e = 0;
     const accessLevel$1e = READ_ONLY;
@@ -6469,7 +6624,7 @@
     });
 
     const id$1d = setDisplayParam$2;
-    const name$1d = commandNames$2[setDisplayParam$2];
+    const name$1d = commandNames$1[setDisplayParam$2];
     const headerSize$1d = 2;
     const maxSize$1d = 65;
     const accessLevel$1d = READ_WRITE;
@@ -6533,7 +6688,7 @@
     });
 
     const id$1c = setOperatorParameters$2;
-    const name$1c = commandNames$2[setOperatorParameters$2];
+    const name$1c = commandNames$1[setOperatorParameters$2];
     const headerSize$1c = 2;
     const maxSize$1c = OPERATOR_PARAMETERS_SIZE;
     const accessLevel$1c = READ_WRITE;
@@ -6794,7 +6949,7 @@
     });
 
     const id$1b = setOperatorParametersExtended$2;
-    const name$1b = commandNames$2[setOperatorParametersExtended$2];
+    const name$1b = commandNames$1[setOperatorParametersExtended$2];
     const headerSize$1b = 2;
     const maxSize$1b = OPERATOR_PARAMETERS_EXTENDED_SIZE;
     const accessLevel$1b = READ_WRITE;
@@ -6856,7 +7011,7 @@
     });
 
     const id$1a = setOperatorParametersExtended2$2;
-    const name$1a = commandNames$2[setOperatorParametersExtended2$2];
+    const name$1a = commandNames$1[setOperatorParametersExtended2$2];
     const headerSize$1a = 2;
     const maxSize$1a = OPERATOR_PARAMETERS_EXTENDED2_SIZE;
     const accessLevel$1a = READ_WRITE;
@@ -6940,7 +7095,7 @@
     });
 
     const id$19 = setOperatorParametersExtended4$2;
-    const name$19 = commandNames$2[setOperatorParametersExtended4$2];
+    const name$19 = commandNames$1[setOperatorParametersExtended4$2];
     const headerSize$19 = 2;
     const maxSize$19 = OPERATOR_PARAMETERS_EXTENDED4_SIZE;
     const accessLevel$19 = READ_WRITE;
@@ -7229,84 +7384,8 @@
         turnRelayOn: turnRelayOn$2
     });
 
-    const getDayEnergies = 0x78;
-    const getDayMaxPower = 0x79;
-    const errorResponse$2 = 0xfe;
-
-    var uplinkIds$1 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        activateRatePlan: activateRatePlan$3,
-        errorResponse: errorResponse$2,
-        getBuildVersion: getBuildVersion$3,
-        getCorrectTime: getCorrectTime$3,
-        getCriticalEvent: getCriticalEvent$3,
-        getCurrentStatusMeter: getCurrentStatusMeter$3,
-        getCurrentValues: getCurrentValues$3,
-        getDateTime: getDateTime$3,
-        getDayDemand: getDayDemand$3,
-        getDayDemandExport: getDayDemandExport$3,
-        getDayEnergies: getDayEnergies,
-        getDayMaxDemand: getDayMaxDemand$3,
-        getDayMaxDemandExport: getDayMaxDemandExport$3,
-        getDayMaxDemandPrevious: getDayMaxDemandPrevious,
-        getDayMaxPower: getDayMaxPower,
-        getDayProfile: getDayProfile$3,
-        getDemand: getDemand$3,
-        getDeviceId: getDeviceId$3,
-        getDeviceType: getDeviceType$3,
-        getDisplayParam: getDisplayParam$3,
-        getEnergy: getEnergy$3,
-        getEnergyDayPrevious: getEnergyDayPrevious$3,
-        getEnergyExport: getEnergyExport$3,
-        getEnergyExportDayPrevious: getEnergyExportDayPrevious$3,
-        getEventStatus: getEventStatus$3,
-        getEvents: getEvents$3,
-        getEventsCounters: getEventsCounters$3,
-        getExtendedCurrentValues: getExtendedCurrentValues$3,
-        getExtendedCurrentValues2: getExtendedCurrentValues2,
-        getHalfHourDemand: getHalfHourDemand$3,
-        getHalfHourDemandExport: getHalfHourDemandExport$3,
-        getHalfHourDemandPrevious: getHalfHourDemandPrevious,
-        getHalfhoursEnergies: getHalfhoursEnergies$3,
-        getMagneticFieldThreshold: getMagneticFieldThreshold$3,
-        getMeterInfo: getMeterInfo$3,
-        getMonthDemand: getMonthDemand$3,
-        getMonthDemandExport: getMonthDemandExport$3,
-        getMonthMaxDemand: getMonthMaxDemand$3,
-        getMonthMaxDemandExport: getMonthMaxDemandExport$3,
-        getOperatorParameters: getOperatorParameters$3,
-        getOperatorParametersExtended3: getOperatorParametersExtended3$3,
-        getRatePlanInfo: getRatePlanInfo$3,
-        getSaldo: getSaldo$3,
-        getSaldoParameters: getSaldoParameters$3,
-        getSeasonProfile: getSeasonProfile$3,
-        getSpecialDay: getSpecialDay$3,
-        getVersion: getVersion$3,
-        prepareRatePlan: prepareRatePlan$3,
-        resetPowerMaxDay: resetPowerMaxDay$3,
-        resetPowerMaxMonth: resetPowerMaxMonth$3,
-        runTariffPlan: runTariffPlan$3,
-        setAccessKey: setAccessKey$3,
-        setCorrectDateTime: setCorrectDateTime$3,
-        setCorrectTime: setCorrectTime$3,
-        setDateTime: setDateTime$3,
-        setDayProfile: setDayProfile$3,
-        setDisplayParam: setDisplayParam$3,
-        setOperatorParameters: setOperatorParameters$3,
-        setOperatorParametersExtended3: setOperatorParametersExtended3$3,
-        setSaldo: setSaldo$3,
-        setSaldoParameters: setSaldoParameters$3,
-        setSeasonProfile: setSeasonProfile$3,
-        setSpecialDay: setSpecialDay$3,
-        setSpecialOperation: setSpecialOperation$3,
-        turnRelayOff: turnRelayOff$3,
-        turnRelayOn: turnRelayOn$3
-    });
-
-    var commandNames$1 = invertObject(uplinkIds$1);
-
     const id$18 = activateRatePlan$3;
-    const name$18 = commandNames$1[activateRatePlan$3];
+    const name$18 = commandNames$2[activateRatePlan$3];
     const headerSize$18 = 2;
     const maxSize$18 = 0;
     const accessLevel$18 = READ_WRITE;
@@ -7346,7 +7425,7 @@
     });
 
     const id$17 = getBuildVersion$3;
-    const name$17 = commandNames$1[getBuildVersion$3];
+    const name$17 = commandNames$2[getBuildVersion$3];
     const headerSize$17 = 2;
     const maxSize$17 = 6;
     const accessLevel$17 = READ_ONLY;
@@ -7406,7 +7485,7 @@
     });
 
     const id$16 = getCorrectTime$3;
-    const name$16 = commandNames$1[getCorrectTime$3];
+    const name$16 = commandNames$2[getCorrectTime$3];
     const headerSize$16 = 2;
     const accessLevel$16 = READ_ONLY;
     const maxSize$16 = 9;
@@ -7459,7 +7538,7 @@
     });
 
     const id$15 = getDateTime$3;
-    const name$15 = commandNames$1[getDateTime$3];
+    const name$15 = commandNames$2[getDateTime$3];
     const headerSize$15 = 2;
     const maxSize$15 = 8;
     const accessLevel$15 = READ_ONLY;
@@ -7513,7 +7592,7 @@
     const MAX_PERIODS_NUMBER = 8;
     const PERIODS_FINAL_BYTE = 0xff;
     const id$14 = getDayProfile$3;
-    const name$14 = commandNames$1[getDayProfile$3];
+    const name$14 = commandNames$2[getDayProfile$3];
     const headerSize$14 = 2;
     const maxSize$14 = MAX_PERIODS_NUMBER;
     const accessLevel$14 = READ_ONLY;
@@ -7596,7 +7675,7 @@
     });
 
     const id$13 = getDeviceId$3;
-    const name$13 = commandNames$1[getDeviceId$3];
+    const name$13 = commandNames$2[getDeviceId$3];
     const headerSize$13 = 2;
     const accessLevel$13 = READ_ONLY;
     const maxSize$13 = 8;
@@ -7644,7 +7723,7 @@
     });
 
     const id$12 = getDeviceType$3;
-    const name$12 = commandNames$1[getDeviceType$3];
+    const name$12 = commandNames$2[getDeviceType$3];
     const headerSize$12 = 2;
     const accessLevel$12 = READ_ONLY;
     const maxSize$12 = 9;
@@ -7709,7 +7788,7 @@
     const COMMAND_BODY_SIZE = 14;
     const OLD_COMMAND_BODY_SIZE = 20;
     const id$11 = getEventsCounters$3;
-    const name$11 = commandNames$1[getEventsCounters$3];
+    const name$11 = commandNames$2[getEventsCounters$3];
     const headerSize$11 = 2;
     const accessLevel$11 = READ_ONLY;
     const maxSize$11 = OLD_COMMAND_BODY_SIZE;
@@ -7778,7 +7857,7 @@
     });
 
     const id$10 = getEventStatus$3;
-    const name$10 = commandNames$1[getEventStatus$3];
+    const name$10 = commandNames$2[getEventStatus$3];
     const headerSize$10 = 2;
     const accessLevel$10 = READ_ONLY;
     const maxSize$10 = 2;
@@ -7867,7 +7946,7 @@
         return dlms;
     };
     const id$$ = getHalfhoursEnergies$3;
-    const name$$ = commandNames$1[getHalfhoursEnergies$3];
+    const name$$ = commandNames$2[getHalfhoursEnergies$3];
     const headerSize$$ = 2;
     const maxSize$$ = DATE_SIZE + ENERGY_FLAGS_SIZE + START_HALFHOUR_SIZE + HALFHOURS_NUMBER_SIZE + MAX_HALFHOURS_ENERGY_SIZE;
     const accessLevel$$ = UNENCRYPTED;
@@ -7948,7 +8027,7 @@
     });
 
     const id$_ = getMagneticFieldThreshold$3;
-    const name$_ = commandNames$1[getMagneticFieldThreshold$3];
+    const name$_ = commandNames$2[getMagneticFieldThreshold$3];
     const headerSize$_ = 2;
     const maxSize$_ = 10;
     const accessLevel$_ = READ_ONLY;
@@ -8004,7 +8083,7 @@
     });
 
     const id$Z = getMeterInfo$3;
-    const name$Z = commandNames$1[getMeterInfo$3];
+    const name$Z = commandNames$2[getMeterInfo$3];
     const headerSize$Z = 2;
     const maxSize$Z = 1;
     const accessLevel$Z = READ_ONLY;
@@ -8040,7 +8119,7 @@
     });
 
     const id$Y = getOperatorParametersExtended3$3;
-    const name$Y = commandNames$1[getOperatorParametersExtended3$3];
+    const name$Y = commandNames$2[getOperatorParametersExtended3$3];
     const headerSize$Y = 2;
     const maxSize$Y = 17;
     const accessLevel$Y = READ_ONLY;
@@ -8098,7 +8177,7 @@
     });
 
     const id$X = getRatePlanInfo$3;
-    const name$X = commandNames$1[getRatePlanInfo$3];
+    const name$X = commandNames$2[getRatePlanInfo$3];
     const headerSize$X = 2;
     const maxSize$X = 1 + TARIFF_PLAN_SIZE * 2;
     const accessLevel$X = READ_ONLY;
@@ -8173,7 +8252,7 @@
     });
 
     const id$W = getSaldo$3;
-    const name$W = commandNames$1[getSaldo$3];
+    const name$W = commandNames$2[getSaldo$3];
     const headerSize$W = 2;
     const maxSize$W = 29;
     const accessLevel$W = READ_ONLY;
@@ -8249,7 +8328,7 @@
     });
 
     const id$V = getSaldoParameters$3;
-    const name$V = commandNames$1[getSaldoParameters$3];
+    const name$V = commandNames$2[getSaldoParameters$3];
     const headerSize$V = 2;
     const maxSize$V = 37;
     const accessLevel$V = READ_ONLY;
@@ -8333,7 +8412,7 @@
     });
 
     const id$U = getSeasonProfile$3;
-    const name$U = commandNames$1[getSeasonProfile$3];
+    const name$U = commandNames$2[getSeasonProfile$3];
     const headerSize$U = 2;
     const maxSize$U = 9;
     const accessLevel$U = READ_ONLY;
@@ -8380,7 +8459,7 @@
     });
 
     const id$T = getSpecialDay$3;
-    const name$T = commandNames$1[getSpecialDay$3];
+    const name$T = commandNames$2[getSpecialDay$3];
     const headerSize$T = 2;
     const maxSize$T = 4;
     const accessLevel$T = READ_ONLY;
@@ -8428,7 +8507,7 @@
     });
 
     const id$S = getVersion$3;
-    const name$S = commandNames$1[getVersion$3];
+    const name$S = commandNames$2[getVersion$3];
     const headerSize$S = 2;
     const maxSize$S = 10;
     const accessLevel$S = READ_ONLY;
@@ -8469,7 +8548,7 @@
     });
 
     const id$R = prepareRatePlan$3;
-    const name$R = commandNames$1[prepareRatePlan$3];
+    const name$R = commandNames$2[prepareRatePlan$3];
     const headerSize$R = 2;
     const maxSize$R = 0;
     const accessLevel$R = READ_WRITE;
@@ -8509,7 +8588,7 @@
     });
 
     const id$Q = resetPowerMaxDay$3;
-    const name$Q = commandNames$1[resetPowerMaxDay$3];
+    const name$Q = commandNames$2[resetPowerMaxDay$3];
     const headerSize$Q = 2;
     const maxSize$Q = 0;
     const accessLevel$Q = READ_WRITE;
@@ -8549,7 +8628,7 @@
     });
 
     const id$P = resetPowerMaxMonth$3;
-    const name$P = commandNames$1[resetPowerMaxMonth$3];
+    const name$P = commandNames$2[resetPowerMaxMonth$3];
     const headerSize$P = 2;
     const maxSize$P = 0;
     const accessLevel$P = READ_WRITE;
@@ -8589,7 +8668,7 @@
     });
 
     const id$O = runTariffPlan$3;
-    const name$O = commandNames$1[runTariffPlan$3];
+    const name$O = commandNames$2[runTariffPlan$3];
     const headerSize$O = 2;
     const maxSize$O = 0;
     const accessLevel$O = READ_WRITE;
@@ -8629,7 +8708,7 @@
     });
 
     const id$N = setAccessKey$3;
-    const name$N = commandNames$1[setAccessKey$3];
+    const name$N = commandNames$2[setAccessKey$3];
     const headerSize$N = 2;
     const maxSize$N = 0;
     const accessLevel$N = READ_WRITE;
@@ -8669,7 +8748,7 @@
     });
 
     const id$M = setCorrectDateTime$3;
-    const name$M = commandNames$1[setCorrectDateTime$3];
+    const name$M = commandNames$2[setCorrectDateTime$3];
     const headerSize$M = 2;
     const maxSize$M = 0;
     const accessLevel$M = READ_ONLY;
@@ -8709,7 +8788,7 @@
     });
 
     const id$L = setCorrectTime$3;
-    const name$L = commandNames$1[setCorrectTime$3];
+    const name$L = commandNames$2[setCorrectTime$3];
     const headerSize$L = 2;
     const maxSize$L = 0;
     const accessLevel$L = READ_WRITE;
@@ -8749,7 +8828,7 @@
     });
 
     const id$K = setDateTime$3;
-    const name$K = commandNames$1[setDateTime$3];
+    const name$K = commandNames$2[setDateTime$3];
     const headerSize$K = 2;
     const maxSize$K = 0;
     const accessLevel$K = READ_ONLY;
@@ -8789,7 +8868,7 @@
     });
 
     const id$J = setDayProfile$3;
-    const name$J = commandNames$1[setDayProfile$3];
+    const name$J = commandNames$2[setDayProfile$3];
     const headerSize$J = 2;
     const maxSize$J = 0;
     const accessLevel$J = READ_WRITE;
@@ -8829,7 +8908,7 @@
     });
 
     const id$I = setDisplayParam$3;
-    const name$I = commandNames$1[setDisplayParam$3];
+    const name$I = commandNames$2[setDisplayParam$3];
     const headerSize$I = 2;
     const maxSize$I = 0;
     const accessLevel$I = READ_WRITE;
@@ -8869,7 +8948,7 @@
     });
 
     const id$H = setOperatorParameters$3;
-    const name$H = commandNames$1[setOperatorParameters$3];
+    const name$H = commandNames$2[setOperatorParameters$3];
     const headerSize$H = 2;
     const maxSize$H = 0;
     const accessLevel$H = READ_WRITE;
@@ -8909,7 +8988,7 @@
     });
 
     const id$G = setOperatorParametersExtended3$3;
-    const name$G = commandNames$1[setOperatorParametersExtended3$3];
+    const name$G = commandNames$2[setOperatorParametersExtended3$3];
     const headerSize$G = 2;
     const maxSize$G = 0;
     const accessLevel$G = READ_WRITE;
@@ -8949,7 +9028,7 @@
     });
 
     const id$F = setSaldo$3;
-    const name$F = commandNames$1[setSaldo$3];
+    const name$F = commandNames$2[setSaldo$3];
     const headerSize$F = 2;
     const maxSize$F = 0;
     const accessLevel$F = READ_WRITE;
@@ -8989,7 +9068,7 @@
     });
 
     const id$E = setSaldoParameters$3;
-    const name$E = commandNames$1[setSaldoParameters$3];
+    const name$E = commandNames$2[setSaldoParameters$3];
     const headerSize$E = 2;
     const maxSize$E = 0;
     const accessLevel$E = READ_WRITE;
@@ -9029,7 +9108,7 @@
     });
 
     const id$D = setSeasonProfile$3;
-    const name$D = commandNames$1[setSeasonProfile$3];
+    const name$D = commandNames$2[setSeasonProfile$3];
     const headerSize$D = 2;
     const maxSize$D = 0;
     const accessLevel$D = READ_WRITE;
@@ -9069,7 +9148,7 @@
     });
 
     const id$C = setSpecialDay$3;
-    const name$C = commandNames$1[setSpecialDay$3];
+    const name$C = commandNames$2[setSpecialDay$3];
     const headerSize$C = 2;
     const maxSize$C = 0;
     const accessLevel$C = READ_WRITE;
@@ -9109,7 +9188,7 @@
     });
 
     const id$B = setSpecialOperation$3;
-    const name$B = commandNames$1[setSpecialOperation$3];
+    const name$B = commandNames$2[setSpecialOperation$3];
     const headerSize$B = 2;
     const maxSize$B = 1;
     const accessLevel$B = READ_WRITE;
@@ -9198,7 +9277,7 @@
     });
 
     const id$A = turnRelayOff$3;
-    const name$A = commandNames$1[turnRelayOff$3];
+    const name$A = commandNames$2[turnRelayOff$3];
     const headerSize$A = 2;
     const maxSize$A = 0;
     const accessLevel$A = READ_WRITE;
@@ -9238,7 +9317,7 @@
     });
 
     const id$z = turnRelayOn$3;
-    const name$z = commandNames$1[turnRelayOn$3];
+    const name$z = commandNames$2[turnRelayOn$3];
     const headerSize$z = 2;
     const maxSize$z = 0;
     const accessLevel$z = READ_WRITE;
@@ -9278,7 +9357,7 @@
     });
 
     const id$y = errorResponse$2;
-    const name$y = commandNames$1[errorResponse$2];
+    const name$y = commandNames$2[errorResponse$2];
     const headerSize$y = 2;
     const accessLevel$y = READ_ONLY;
     const maxSize$y = 2;
@@ -9313,7 +9392,7 @@
             errorName: resultNames[errorCode]
         };
     });
-    const fromBytes$y = getFromBytes$1(commandNames$1);
+    const fromBytes$y = getFromBytes$1(commandNames$2);
     const toBytes$y = (parameters) => {
         const buffer = new CommandBinaryBuffer$2(maxSize$y);
         buffer.setUint8(parameters.commandId);
@@ -9334,85 +9413,6 @@
         name: name$y,
         toBytes: toBytes$y
     });
-
-    const errorResponse$1 = 0xfe;
-
-    var uplinkIds = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        activateRatePlan: activateRatePlan$1,
-        errorResponse: errorResponse$1,
-        getBuildVersion: getBuildVersion$1,
-        getCorrectTime: getCorrectTime$1,
-        getCriticalEvent: getCriticalEvent$2,
-        getCurrentStatusMeter: getCurrentStatusMeter$1,
-        getCurrentValues: getCurrentValues$1,
-        getDateTime: getDateTime$1,
-        getDayDemand: getDayDemand$2,
-        getDayDemandExport: getDayDemandExport$2,
-        getDayMaxDemand: getDayMaxDemand$1,
-        getDayMaxDemandExport: getDayMaxDemandExport$1,
-        getDayProfile: getDayProfile$1,
-        getDemand: getDemand$2,
-        getDeviceId: getDeviceId$1,
-        getDeviceType: getDeviceType$1,
-        getDisplayParam: getDisplayParam$2,
-        getEnergy: getEnergy$2,
-        getEnergyDayPrevious: getEnergyDayPrevious$2,
-        getEnergyExport: getEnergyExport$2,
-        getEnergyExportDayPrevious: getEnergyExportDayPrevious$2,
-        getEventStatus: getEventStatus$1,
-        getEvents: getEvents$1,
-        getEventsCounters: getEventsCounters$1,
-        getExtendedCurrentValues: getExtendedCurrentValues$1,
-        getHalfHourDemand: getHalfHourDemand$1,
-        getHalfHourDemandChannel: getHalfHourDemandChannel$2,
-        getHalfHourDemandExport: getHalfHourDemandExport$1,
-        getHalfHourDemandVare: getHalfHourDemandVare$2,
-        getHalfHourDemandVareExport: getHalfHourDemandVareExport$2,
-        getHalfHourDemandVari: getHalfHourDemandVari$2,
-        getHalfHourDemandVariExport: getHalfHourDemandVariExport$2,
-        getHalfhoursEnergies: getHalfhoursEnergies$1,
-        getMagneticFieldThreshold: getMagneticFieldThreshold$1,
-        getMeterInfo: getMeterInfo$1,
-        getMonthDemand: getMonthDemand$1,
-        getMonthDemandExport: getMonthDemandExport$1,
-        getMonthMaxDemand: getMonthMaxDemand$1,
-        getMonthMaxDemandExport: getMonthMaxDemandExport$1,
-        getOperatorParameters: getOperatorParameters$1,
-        getOperatorParametersExtended: getOperatorParametersExtended$2,
-        getOperatorParametersExtended2: getOperatorParametersExtended2$2,
-        getOperatorParametersExtended3: getOperatorParametersExtended3$1,
-        getRatePlanInfo: getRatePlanInfo$1,
-        getSaldo: getSaldo$1,
-        getSaldoParameters: getSaldoParameters$1,
-        getSeasonProfile: getSeasonProfile$1,
-        getSpecialDay: getSpecialDay$1,
-        getVersion: getVersion$1,
-        prepareRatePlan: prepareRatePlan$1,
-        resetPowerMaxDay: resetPowerMaxDay$1,
-        resetPowerMaxMonth: resetPowerMaxMonth$1,
-        runTariffPlan: runTariffPlan$1,
-        setAccessKey: setAccessKey$1,
-        setCorrectDateTime: setCorrectDateTime$1,
-        setCorrectTime: setCorrectTime$1,
-        setDateTime: setDateTime$1,
-        setDayProfile: setDayProfile$1,
-        setDisplayParam: setDisplayParam$2,
-        setOperatorParameters: setOperatorParameters$2,
-        setOperatorParametersExtended: setOperatorParametersExtended$2,
-        setOperatorParametersExtended2: setOperatorParametersExtended2$2,
-        setOperatorParametersExtended3: setOperatorParametersExtended3$1,
-        setOperatorParametersExtended4: setOperatorParametersExtended4$2,
-        setSaldo: setSaldo$1,
-        setSaldoParameters: setSaldoParameters$1,
-        setSeasonProfile: setSeasonProfile$1,
-        setSpecialDay: setSpecialDay$1,
-        setSpecialOperation: setSpecialOperation$1,
-        turnRelayOff: turnRelayOff$1,
-        turnRelayOn: turnRelayOn$1
-    });
-
-    var commandNames = invertObject(uplinkIds);
 
     const { id: id$x, name: name$x, headerSize: headerSize$x, accessLevel: accessLevel$x, maxSize: maxSize$x, isLoraOnly: isLoraOnly$x, toBytes: toBytes$x } = mtx1$1;
     const examples$x = {
@@ -10620,7 +10620,7 @@
     const BODY_WITHOUT_EVENTS_SIZE = 3 + 1;
     const EVENT_SIZE = 4;
     const id$j = getEvents$3;
-    const name$j = commandNames$1[getEvents$3];
+    const name$j = commandNames$2[getEvents$3];
     const headerSize$j = 2;
     const accessLevel$j = READ_ONLY;
     const maxSize$j = BODY_WITHOUT_EVENTS_SIZE + 255 * EVENT_SIZE;
