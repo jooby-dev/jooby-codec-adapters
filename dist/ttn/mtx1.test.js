@@ -4435,7 +4435,7 @@ const id$1g = setAccessKey$2;
 const name$1g = downlinkNames[setAccessKey$2];
 const headerSize$1g = 2;
 const maxSize$1g = 1 + KEY_SIZE;
-const accessLevel$1g = READ_ONLY;
+const accessLevel$1g = READ_WRITE;
 const isLoraOnly$1g = false;
 const examples$1g = {
   'set key for READ_ONLY access level': {
