@@ -143,8 +143,8 @@ var logs = '';
   function _toPrimitive(t, r) {
     if ("object" != typeof t || !t) return t;
     var e = t[Symbol.toPrimitive];
-    if (undefined !== e) {
-      var i = e.call(t, r || "default");
+    if (void 0 !== e) {
+      var i = e.call(t, r);
       if ("object" != typeof i) return i;
       throw new TypeError("@@toPrimitive must return a primitive value.");
     }
@@ -158,7 +158,7 @@ var logs = '';
     if (r) {
       if ("string" == typeof r) return _arrayLikeToArray(r, a);
       var t = {}.toString.call(r).slice(8, -1);
-      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : undefined;
+      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
     }
   }
 
@@ -574,40 +574,40 @@ var logs = '';
       throw new Error('Device type bytes wrong size');
     }
     var type = ['MTX '];
-    type.push((_nibbles1$nibbles$ = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$ !== undefined ? _nibbles1$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles2$nibbles$ = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$ !== undefined ? _nibbles2$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles3$nibbles$ = nibbles3[nibbles[2]]) !== null && _nibbles3$nibbles$ !== undefined ? _nibbles3$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles3$nibbles$2 = nibbles3[nibbles[3]]) !== null && _nibbles3$nibbles$2 !== undefined ? _nibbles3$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles1$nibbles$ = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$ !== void 0 ? _nibbles1$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles2$nibbles$ = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$ !== void 0 ? _nibbles2$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles3$nibbles$ = nibbles3[nibbles[2]]) !== null && _nibbles3$nibbles$ !== void 0 ? _nibbles3$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles3$nibbles$2 = nibbles3[nibbles[3]]) !== null && _nibbles3$nibbles$2 !== void 0 ? _nibbles3$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
     type.push('.');
-    type.push((_nibbles4$nibbles$ = nibbles4[nibbles[4]]) !== null && _nibbles4$nibbles$ !== undefined ? _nibbles4$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles5$nibbles$ = nibbles5[nibbles[5]]) !== null && _nibbles5$nibbles$ !== undefined ? _nibbles5$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles4$nibbles$ = nibbles4[nibbles[4]]) !== null && _nibbles4$nibbles$ !== void 0 ? _nibbles4$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles5$nibbles$ = nibbles5[nibbles[5]]) !== null && _nibbles5$nibbles$ !== void 0 ? _nibbles5$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
     type.push('.');
-    type.push((_nibbles6$nibbles$ = nibbles6[nibbles[6]]) !== null && _nibbles6$nibbles$ !== undefined ? _nibbles6$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles7$nibbles$ = nibbles7[nibbles[7]]) !== null && _nibbles7$nibbles$ !== undefined ? _nibbles7$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles6$nibbles$ = nibbles6[nibbles[6]]) !== null && _nibbles6$nibbles$ !== void 0 ? _nibbles6$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles7$nibbles$ = nibbles7[nibbles[7]]) !== null && _nibbles7$nibbles$ !== void 0 ? _nibbles7$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
     var revision = nibbles[8];
-    type.push((_nibbles8$nibbles$ = nibbles8[nibbles[9]]) !== null && _nibbles8$nibbles$ !== undefined ? _nibbles8$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles8$nibbles$ = nibbles8[nibbles[9]]) !== null && _nibbles8$nibbles$ !== void 0 ? _nibbles8$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
     type.push('-');
     var deviceProtocolIndex;
     if (nibbles.length < 14 || nibbles[12] === 0 && nibbles[13] === 0) {
       var _nibbles9$nibbles$;
-      type.push((_nibbles9$nibbles$ = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$ !== undefined ? _nibbles9$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$ = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$ !== void 0 ? _nibbles9$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
       deviceProtocolIndex = 11;
     } else if (nibbles[13] === 0) {
       var _nibbles9$nibbles$2, _nibbles9$nibbles$3;
-      type.push((_nibbles9$nibbles$2 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$2 !== undefined ? _nibbles9$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles9$nibbles$3 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$3 !== undefined ? _nibbles9$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$2 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$2 !== void 0 ? _nibbles9$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$3 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$3 !== void 0 ? _nibbles9$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
       deviceProtocolIndex = 12;
     } else {
       var _nibbles9$nibbles$4, _nibbles9$nibbles$5, _nibbles9$nibbles$6;
-      type.push((_nibbles9$nibbles$4 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$4 !== undefined ? _nibbles9$nibbles$4 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles9$nibbles$5 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$5 !== undefined ? _nibbles9$nibbles$5 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles9$nibbles$6 = nibbles9[nibbles[12]]) !== null && _nibbles9$nibbles$6 !== undefined ? _nibbles9$nibbles$6 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$4 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$4 !== void 0 ? _nibbles9$nibbles$4 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$5 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$5 !== void 0 ? _nibbles9$nibbles$5 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$6 = nibbles9[nibbles[12]]) !== null && _nibbles9$nibbles$6 !== void 0 ? _nibbles9$nibbles$6 : DEVICE_TYPE_INVALID_CHAR);
       deviceProtocolIndex = 13;
     }
     var deviceProtocolNibble = nibbles[deviceProtocolIndex];
     if (deviceProtocolNibble && deviceProtocolNibble !== 0) {
       var _nibbles11$deviceProt;
-      type.push((_nibbles11$deviceProt = nibbles11[deviceProtocolNibble]) !== null && _nibbles11$deviceProt !== undefined ? _nibbles11$deviceProt : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles11$deviceProt = nibbles11[deviceProtocolNibble]) !== null && _nibbles11$deviceProt !== void 0 ? _nibbles11$deviceProt : DEVICE_TYPE_INVALID_CHAR);
     }
     return {
       type: type.join(''),
@@ -634,7 +634,7 @@ var logs = '';
     }
     nibbles.push(nibbles6.indexOf(type[8]));
     nibbles.push(nibbles7.indexOf(type[9]));
-    nibbles.push(revision !== null && revision !== undefined ? revision : 0);
+    nibbles.push(revision !== null && revision !== void 0 ? revision : 0);
     nibbles.push(nibbles8.indexOf(type[10]));
     if (type[11] !== '-') {
       throw new Error('Wrong format');
@@ -661,13 +661,13 @@ var logs = '';
     }
     var type = ['MTX '];
     var separator = nibbles[1] === 5 ? '-' : ' ';
-    type.push((_nibbles1$nibbles$2 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$2 !== undefined ? _nibbles1$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles2$nibbles$2 = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$2 !== undefined ? _nibbles2$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles1$nibbles$2 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$2 !== void 0 ? _nibbles1$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles2$nibbles$2 = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$2 !== void 0 ? _nibbles2$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
     type.push(separator);
     for (var index = 2; index < nibbles.length; index++) {
       if (nibbles[index] !== 0) {
         var _nibbles10$nibbles$in;
-        type.push((_nibbles10$nibbles$in = nibbles10[nibbles[index]]) !== null && _nibbles10$nibbles$in !== undefined ? _nibbles10$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
+        type.push((_nibbles10$nibbles$in = nibbles10[nibbles[index]]) !== null && _nibbles10$nibbles$in !== void 0 ? _nibbles10$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
       }
     }
     return {
@@ -704,11 +704,11 @@ var logs = '';
       throw new Error('The buffer is too small');
     }
     var type = [];
-    type.push((_nibbles1$nibbles$3 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$3 !== undefined ? _nibbles1$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles1$nibbles$3 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$3 !== void 0 ? _nibbles1$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
     for (var index = 1; index < nibbles.length; index++) {
       if (nibbles[index] !== 0) {
         var _nibbles12$nibbles$in;
-        type.push((_nibbles12$nibbles$in = nibbles12[nibbles[index]]) !== null && _nibbles12$nibbles$in !== undefined ? _nibbles12$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
+        type.push((_nibbles12$nibbles$in = nibbles12[nibbles[index]]) !== null && _nibbles12$nibbles$in !== void 0 ? _nibbles12$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
       }
     }
     return {
@@ -1325,11 +1325,11 @@ var logs = '';
   };
   CommandBinaryBuffer$1.prototype.setFrameHeader = function (_ref2) {
     var _ref2$type = _ref2.type,
-      type = _ref2$type === undefined ? defaultFrameHeader.type : _ref2$type,
+      type = _ref2$type === void 0 ? defaultFrameHeader.type : _ref2$type,
       _ref2$destination = _ref2.destination,
-      destination = _ref2$destination === undefined ? defaultFrameHeader.destination : _ref2$destination,
+      destination = _ref2$destination === void 0 ? defaultFrameHeader.destination : _ref2$destination,
       _ref2$source = _ref2.source,
-      source = _ref2$source === undefined ? defaultFrameHeader.source : _ref2$source;
+      source = _ref2$source === void 0 ? defaultFrameHeader.source : _ref2$source;
     this.setUint8(type);
     this.setUint16(destination);
     this.setUint16(source);
@@ -2401,9 +2401,9 @@ var logs = '';
     };
   };
   var toBytes$T = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== undefined && parameters.energyType ? MAX_COMMAND_SIZE$5 : MIN_COMMAND_SIZE$5);
-    buffer.setDate(parameters === null || parameters === undefined ? undefined : parameters.date);
-    if (parameters !== null && parameters !== undefined && parameters.energyType) {
+    var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== void 0 && parameters.energyType ? MAX_COMMAND_SIZE$5 : MIN_COMMAND_SIZE$5);
+    buffer.setDate(parameters === null || parameters === void 0 ? void 0 : parameters.date);
+    if (parameters !== null && parameters !== void 0 && parameters.energyType) {
       buffer.setUint8(parameters.energyType);
     }
     return toBytes$(id$T, buffer.data);
@@ -2476,9 +2476,9 @@ var logs = '';
     };
   };
   var toBytes$S = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== undefined && parameters.energyType ? MAX_COMMAND_SIZE$4 : MIN_COMMAND_SIZE$4);
-    buffer.setDate(parameters === null || parameters === undefined ? undefined : parameters.date);
-    if (parameters !== null && parameters !== undefined && parameters.energyType) {
+    var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== void 0 && parameters.energyType ? MAX_COMMAND_SIZE$4 : MIN_COMMAND_SIZE$4);
+    buffer.setDate(parameters === null || parameters === void 0 ? void 0 : parameters.date);
+    if (parameters !== null && parameters !== void 0 && parameters.energyType) {
       buffer.setUint8(parameters.energyType);
     }
     return toBytes$(id$S, buffer.data);
@@ -2902,8 +2902,8 @@ var logs = '';
   };
   var toBytes$J = function toBytes() {
     var parameters = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== undefined && parameters.energyType ? MAX_COMMAND_SIZE$3 : MIN_COMMAND_SIZE$3);
-    if (parameters !== null && parameters !== undefined && parameters.energyType) {
+    var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== void 0 && parameters.energyType ? MAX_COMMAND_SIZE$3 : MIN_COMMAND_SIZE$3);
+    if (parameters !== null && parameters !== void 0 && parameters.energyType) {
       buffer.setUint8(parameters.energyType);
     }
     return toBytes$(id$J, buffer.data);
@@ -3024,8 +3024,8 @@ var logs = '';
   };
   var toBytes$H = function toBytes() {
     var parameters = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== undefined && parameters.energyType ? MAX_COMMAND_SIZE$1 : MIN_COMMAND_SIZE$1);
-    if (parameters !== null && parameters !== undefined && parameters.energyType) {
+    var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== void 0 && parameters.energyType ? MAX_COMMAND_SIZE$1 : MIN_COMMAND_SIZE$1);
+    if (parameters !== null && parameters !== void 0 && parameters.energyType) {
       buffer.setUint8(parameters.energyType);
     }
     return toBytes$(id$H, buffer.data);
@@ -5734,7 +5734,7 @@ var logs = '';
     var output = '';
     for (var commandName in commands) {
       var command = commands[commandName];
-      var examples = command === null || command === undefined ? undefined : command.examples;
+      var examples = command === null || command === void 0 ? void 0 : command.examples;
       if (command) {
         output += commandName + ' ';
         for (var exampleName in examples) {

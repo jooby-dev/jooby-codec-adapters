@@ -568,6 +568,8 @@
     const NBIOT_SIM = 55;
     const CHANNEL_TYPE = 56;
     const EXTRA_PAYLOAD_ENABLE = 57;
+    const TIME_SYNCHRONIZATION_PERIOD_VIA_MAC = 58;
+    const KEEP_LORA_CONNECTION_ON_REMOVAL = 59;
 
     var deviceParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -586,6 +588,7 @@
         EXTRA_FRAME_INTERVAL: EXTRA_FRAME_INTERVAL,
         EXTRA_PAYLOAD_ENABLE: EXTRA_PAYLOAD_ENABLE,
         GEOLOCATION: GEOLOCATION,
+        KEEP_LORA_CONNECTION_ON_REMOVAL: KEEP_LORA_CONNECTION_ON_REMOVAL,
         MQTT_BROKER_ADDRESS: MQTT_BROKER_ADDRESS,
         MQTT_DATA_RECEIVE_CONFIG: MQTT_DATA_RECEIVE_CONFIG,
         MQTT_DATA_SEND_CONFIG: MQTT_DATA_SEND_CONFIG,
@@ -613,7 +616,8 @@
         REPORTING_DATA_INTERVAL: REPORTING_DATA_INTERVAL,
         REPORTING_DATA_TYPE: REPORTING_DATA_TYPE,
         RX2_CONFIG: RX2_CONFIG,
-        SERIAL_NUMBER: SERIAL_NUMBER
+        SERIAL_NUMBER: SERIAL_NUMBER,
+        TIME_SYNCHRONIZATION_PERIOD_VIA_MAC: TIME_SYNCHRONIZATION_PERIOD_VIA_MAC
     });
 
     var deviceParameterNames = invertObject(deviceParameters);
@@ -662,7 +666,6 @@
     const EXTEND_BIT_MASK = 0x80;
     const LAST_BIT_INDEX = 7;
     const DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT = 600;
-    const DATA_SENDING_INTERVAL_RESERVED_BYTES = 3;
     const PARAMETER_RX2_FREQUENCY_COEFFICIENT = 100;
     const SERIAL_NUMBER_SIZE = 6;
     const MAGNETIC_INFLUENCE_BIT_INDEX = 8;
@@ -786,7 +789,9 @@
         [EVENTS_CONFIG]: 1 + 3,
         [NBIOT_LED_INDICATION]: 1 + 2,
         [NBIOT_SIM]: 1 + 3,
-        [EXTRA_PAYLOAD_ENABLE]: 1 + 1
+        [EXTRA_PAYLOAD_ENABLE]: 1 + 1,
+        [TIME_SYNCHRONIZATION_PERIOD_VIA_MAC]: 1 + 4,
+        [KEEP_LORA_CONNECTION_ON_REMOVAL]: 1 + 1
     };
     const fourChannelsBitMask = {
         channel1: Math.pow(2, 0),
@@ -834,15 +839,17 @@
     };
     const deviceParameterConvertersMap = {
         [REPORTING_DATA_INTERVAL]: {
-            get: (buffer) => {
-                buffer.seek(buffer.offset + DATA_SENDING_INTERVAL_RESERVED_BYTES);
-                return {
-                    value: buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT
-                };
-            },
+            get: (buffer) => ({
+                specialSchedulePeriod: buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT,
+                firstDaysSpecialSchedule: buffer.getUint8(),
+                lastDaysSpecialSchedule: buffer.getUint8(),
+                period: buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT
+            }),
             set: (buffer, parameter) => {
-                buffer.seek(buffer.offset + DATA_SENDING_INTERVAL_RESERVED_BYTES);
-                buffer.setUint8(parameter.value / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+                buffer.setUint8(parameter.specialSchedulePeriod / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+                buffer.setUint8(parameter.firstDaysSpecialSchedule);
+                buffer.setUint8(parameter.lastDaysSpecialSchedule);
+                buffer.setUint8(parameter.period / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
             }
         },
         [DAY_CHECKOUT_HOUR]: {
@@ -1218,6 +1225,22 @@
             }),
             set: (buffer, parameter) => {
                 buffer.setUint8(parameter.enable);
+            }
+        },
+        [TIME_SYNCHRONIZATION_PERIOD_VIA_MAC]: {
+            get: (buffer) => ({
+                period: buffer.getUint32()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint32(parameter.period);
+            }
+        },
+        [KEEP_LORA_CONNECTION_ON_REMOVAL]: {
+            get: (buffer) => ({
+                value: buffer.getUint8() !== 0
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.value ? 1 : 0);
             }
         }
     };
@@ -2846,7 +2869,12 @@
             parameters: {
                 id: 1,
                 name: 'REPORTING_DATA_INTERVAL',
-                data: { value: 3600 }
+                data: {
+                    specialSchedulePeriod: 0,
+                    firstDaysSpecialSchedule: 0,
+                    lastDaysSpecialSchedule: 0,
+                    period: 3600
+                }
             },
             bytes: [
                 0x03, 0x05,
@@ -3294,6 +3322,38 @@
             bytes: [
                 0x03, 0x02,
                 0x39, 0x01
+            ]
+        },
+        'time synchronization period in seconds via MAC commands': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: 58,
+                name: 'TIME_SYNCHRONIZATION_PERIOD_VIA_MAC',
+                data: {
+                    period: 1440
+                }
+            },
+            bytes: [
+                0x03, 0x05,
+                0x3a, 0x00, 0x00, 0x05, 0xa0
+            ]
+        },
+        'keep its lora connection even after being removed': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: 59,
+                name: 'KEEP_LORA_CONNECTION_ON_REMOVAL',
+                data: {
+                    value: true
+                }
+            },
+            bytes: [
+                0x03, 0x02,
+                0x3b, 0x01
             ]
         }
     };
@@ -5046,7 +5106,12 @@
             parameters: {
                 id: 1,
                 name: 'REPORTING_DATA_INTERVAL',
-                data: { value: 2400 }
+                data: {
+                    specialSchedulePeriod: 0,
+                    firstDaysSpecialSchedule: 0,
+                    lastDaysSpecialSchedule: 0,
+                    period: 2400
+                }
             },
             bytes: [
                 0x04, 0x05,
@@ -5155,6 +5220,38 @@
             bytes: [
                 0x04, 0x04,
                 0x34, 0x02, 0x03, 0x14
+            ]
+        },
+        'time synchronization period in seconds via MAC commands': {
+            id: id$g,
+            name: name$g,
+            headerSize: headerSize$g,
+            parameters: {
+                id: 58,
+                name: 'TIME_SYNCHRONIZATION_PERIOD_VIA_MAC',
+                data: {
+                    period: 1440
+                }
+            },
+            bytes: [
+                0x04, 0x05,
+                0x3a, 0x00, 0x00, 0x05, 0xa0
+            ]
+        },
+        'keep lora connection even after being removed': {
+            id: id$g,
+            name: name$g,
+            headerSize: headerSize$g,
+            parameters: {
+                id: 59,
+                name: 'KEEP_LORA_CONNECTION_ON_REMOVAL',
+                data: {
+                    value: true
+                }
+            },
+            bytes: [
+                0x04, 0x02,
+                0x3b, 0x01
             ]
         }
     };

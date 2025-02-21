@@ -422,7 +422,6 @@ var fromBytes, getBytesFromHex;
     var uplinkNames = invertObject(uplinkIds);
 
     const id$B = correctTime2000$1;
-    uplinkNames[correctTime2000$1];
     const COMMAND_BODY_SIZE$8 = 1;
     const fromBytes$D = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$8) {
@@ -561,6 +560,8 @@ var fromBytes, getBytesFromHex;
     const NBIOT_SIM = 55;
     const CHANNEL_TYPE = 56;
     const EXTRA_PAYLOAD_ENABLE = 57;
+    const TIME_SYNCHRONIZATION_PERIOD_VIA_MAC = 58;
+    const KEEP_LORA_CONNECTION_ON_REMOVAL = 59;
 
     var deviceParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -579,6 +580,7 @@ var fromBytes, getBytesFromHex;
         EXTRA_FRAME_INTERVAL: EXTRA_FRAME_INTERVAL,
         EXTRA_PAYLOAD_ENABLE: EXTRA_PAYLOAD_ENABLE,
         GEOLOCATION: GEOLOCATION,
+        KEEP_LORA_CONNECTION_ON_REMOVAL: KEEP_LORA_CONNECTION_ON_REMOVAL,
         MQTT_BROKER_ADDRESS: MQTT_BROKER_ADDRESS,
         MQTT_DATA_RECEIVE_CONFIG: MQTT_DATA_RECEIVE_CONFIG,
         MQTT_DATA_SEND_CONFIG: MQTT_DATA_SEND_CONFIG,
@@ -606,7 +608,8 @@ var fromBytes, getBytesFromHex;
         REPORTING_DATA_INTERVAL: REPORTING_DATA_INTERVAL,
         REPORTING_DATA_TYPE: REPORTING_DATA_TYPE,
         RX2_CONFIG: RX2_CONFIG,
-        SERIAL_NUMBER: SERIAL_NUMBER
+        SERIAL_NUMBER: SERIAL_NUMBER,
+        TIME_SYNCHRONIZATION_PERIOD_VIA_MAC: TIME_SYNCHRONIZATION_PERIOD_VIA_MAC
     });
 
     var deviceParameterNames = invertObject(deviceParameters);
@@ -655,7 +658,6 @@ var fromBytes, getBytesFromHex;
     const EXTEND_BIT_MASK = 0x80;
     const LAST_BIT_INDEX = 7;
     const DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT = 600;
-    const DATA_SENDING_INTERVAL_RESERVED_BYTES = 3;
     const PARAMETER_RX2_FREQUENCY_COEFFICIENT = 100;
     const SERIAL_NUMBER_SIZE = 6;
     const MAGNETIC_INFLUENCE_BIT_INDEX = 8;
@@ -778,15 +780,17 @@ var fromBytes, getBytesFromHex;
     };
     const deviceParameterConvertersMap = {
         [REPORTING_DATA_INTERVAL]: {
-            get: (buffer) => {
-                buffer.seek(buffer.offset + DATA_SENDING_INTERVAL_RESERVED_BYTES);
-                return {
-                    value: buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT
-                };
-            },
+            get: (buffer) => ({
+                specialSchedulePeriod: buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT,
+                firstDaysSpecialSchedule: buffer.getUint8(),
+                lastDaysSpecialSchedule: buffer.getUint8(),
+                period: buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT
+            }),
             set: (buffer, parameter) => {
-                buffer.seek(buffer.offset + DATA_SENDING_INTERVAL_RESERVED_BYTES);
-                buffer.setUint8(parameter.value / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+                buffer.setUint8(parameter.specialSchedulePeriod / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+                buffer.setUint8(parameter.firstDaysSpecialSchedule);
+                buffer.setUint8(parameter.lastDaysSpecialSchedule);
+                buffer.setUint8(parameter.period / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
             }
         },
         [DAY_CHECKOUT_HOUR]: {
@@ -1162,6 +1166,22 @@ var fromBytes, getBytesFromHex;
             }),
             set: (buffer, parameter) => {
                 buffer.setUint8(parameter.enable);
+            }
+        },
+        [TIME_SYNCHRONIZATION_PERIOD_VIA_MAC]: {
+            get: (buffer) => ({
+                period: buffer.getUint32()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint32(parameter.period);
+            }
+        },
+        [KEEP_LORA_CONNECTION_ON_REMOVAL]: {
+            get: (buffer) => ({
+                value: buffer.getUint8() !== 0
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.value ? 1 : 0);
             }
         }
     };
@@ -1761,7 +1781,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$A = current;
-    uplinkNames[current];
     const COMMAND_BODY_MAX_SIZE$9 = 4;
     const fromBytes$C = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$9) {
@@ -1772,7 +1791,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$z = currentMc;
-    uplinkNames[currentMc];
     const COMMAND_BODY_MAX_SIZE$8 = 37;
     const fromBytes$B = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$8) {
@@ -1849,17 +1867,15 @@ var fromBytes, getBytesFromHex;
         writeImage: writeImage
     });
 
-    var commandNames = invertObject(downlinkIds);
+    invertObject(downlinkIds);
 
     const id$y = dataSegment;
-    commandNames[dataSegment];
     const fromBytes$A = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return buffer.getDataSegment();
     };
 
     const id$x = day;
-    uplinkNames[day];
     const fromBytes$z = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const date = buffer.getDate();
@@ -1872,7 +1888,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$w = dayMc;
-    uplinkNames[dayMc];
     const COMMAND_BODY_MAX_SIZE$7 = 32;
     const fromBytes$y = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$7) {
@@ -1889,14 +1904,12 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$v = exAbsCurrentMc;
-    uplinkNames[exAbsCurrentMc];
     const fromBytes$x = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return { channelList: buffer.getChannelsWithAbsoluteValues() };
     };
 
     const id$u = exAbsDayMc;
-    uplinkNames[exAbsDayMc];
     const COMMAND_BODY_MAX_SIZE$6 = 89;
     const fromBytes$w = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$6) {
@@ -1909,7 +1922,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$t = exAbsHourMc;
-    uplinkNames[exAbsHourMc];
     const COMMAND_BODY_MAX_SIZE$5 = 168;
     const fromBytes$v = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$5) {
@@ -1924,7 +1936,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$s = getArchiveDays$1;
-    uplinkNames[getArchiveDays$1];
     const fromBytes$u = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const date = buffer.getDate();
@@ -1936,7 +1947,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$r = getArchiveDaysMc$1;
-    uplinkNames[getArchiveDaysMc$1];
     const fromBytes$t = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const date = buffer.getDate();
@@ -2014,7 +2024,6 @@ var fromBytes, getBytesFromHex;
     var eventNames = invertObject(events);
 
     const id$q = getArchiveEvents$1;
-    uplinkNames[getArchiveEvents$1];
     const getEvent = (buffer) => {
         const time2000 = buffer.getTime();
         const eventId = buffer.getUint8();
@@ -2036,14 +2045,12 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$p = getArchiveHours$1;
-    uplinkNames[getArchiveHours$1];
     const fromBytes$r = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return buffer.getLegacyHourCounterWithDiff(true);
     };
 
     const id$o = getArchiveHoursMc$1;
-    uplinkNames[getArchiveHoursMc$1];
     const COMMAND_BODY_MAX_SIZE$4 = 164;
     const fromBytes$q = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$4) {
@@ -2054,7 +2061,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$n = getArchiveHoursMcEx$1;
-    uplinkNames[getArchiveHoursMcEx$1];
     const COMMAND_BODY_MAX_SIZE$3 = 255;
     const fromBytes$p = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$3) {
@@ -2065,7 +2071,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$m = getBatteryStatus$1;
-    uplinkNames[getBatteryStatus$1];
     const fromBytes$o = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return {
@@ -2082,7 +2087,6 @@ var fromBytes, getBytesFromHex;
     var channelNames = invertObject(channelTypes);
 
     const id$l = getChannelsStatus$1;
-    uplinkNames[getChannelsStatus$1];
     const getBinarySensorStatus = (buffer) => ({
         state: buffer.getUint8() !== 0
     });
@@ -2116,13 +2120,11 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$k = getChannelsTypes$1;
-    uplinkNames[getChannelsTypes$1];
     const fromBytes$m = (data) => ({
         channels: data.map(type => ({ type, typeName: channelNames[type] }))
     });
 
     const id$j = getExAbsArchiveDaysMc$1;
-    uplinkNames[getExAbsArchiveDaysMc$1];
     const fromBytes$l = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const date = buffer.getDate();
@@ -2146,14 +2148,12 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$i = getExAbsArchiveHoursMc$1;
-    uplinkNames[getExAbsArchiveHoursMc$1];
     const fromBytes$k = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return buffer.getChannelsValuesWithHourDiff(true);
     };
 
     const id$h = getLmicInfo$1;
-    uplinkNames[getLmicInfo$1];
     const COMMAND_BODY_SIZE$7 = 2;
     const lmicCapabilitiesBitMask = {
         isMulticastSupported: 1 << 0,
@@ -2173,14 +2173,12 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$g = getParameter$1;
-    uplinkNames[getParameter$1];
     const fromBytes$i = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return buffer.getResponseParameter();
     };
 
     const id$f = signalQuality;
-    uplinkNames[signalQuality];
     const COMMAND_BODY_SIZE$6 = 6;
     const fromBytes$h = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$6) {
@@ -2202,14 +2200,12 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$e = hour;
-    uplinkNames[hour];
     const fromBytes$g = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return buffer.getLegacyHourCounterWithDiff();
     };
 
     const id$d = hourMc;
-    uplinkNames[hourMc];
     const COMMAND_BODY_MAX_SIZE$2 = 164;
     const fromBytes$f = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$2) {
@@ -2220,7 +2216,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$c = hourMcEx;
-    uplinkNames[hourMcEx];
     const COMMAND_BODY_MAX_SIZE$1 = 255;
     const fromBytes$e = (data) => {
         if (data.length > COMMAND_BODY_MAX_SIZE$1) {
@@ -2231,7 +2226,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$b = lastEvent;
-    uplinkNames[lastEvent];
     const fromBytes$d = (data, config) => {
         if (!config.hardwareType) {
             throw new Error('hardwareType in config is mandatory');
@@ -2243,7 +2237,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$a = newEvent;
-    uplinkNames[newEvent];
     const COMMAND_BODY_MAX_SIZE = 14;
     const MTX_ADDRESS_SIZE = 8;
     const getVoltage = (buffer) => buffer.getUint16();
@@ -2300,7 +2293,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$9 = setParameter$1;
-    uplinkNames[setParameter$1];
     const COMMAND_BODY_SIZE$5 = 2;
     const fromBytes$b = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$5) {
@@ -2318,7 +2310,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$8 = setTime2000$1;
-    uplinkNames[setTime2000$1];
     const COMMAND_BODY_SIZE$4 = 1;
     const fromBytes$a = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$4) {
@@ -2335,7 +2326,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$7 = softRestart$1;
-    uplinkNames[softRestart$1];
     const COMMAND_BODY_SIZE$3 = 0;
     const fromBytes$9 = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$3) {
@@ -2345,7 +2335,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$6 = status;
-    uplinkNames[status];
     const UNKNOWN_BATTERY_RESISTANCE = 65535;
     const UNKNOWN_BATTERY_CAPACITY = 255;
     const fromBytes$8 = (bytes) => {
@@ -2413,7 +2402,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$5 = time2000;
-    uplinkNames[time2000];
     const COMMAND_BODY_SIZE$2 = 5;
     const fromBytes$7 = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$2) {
@@ -2431,7 +2419,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$4 = updateRun$1;
-    uplinkNames[updateRun$1];
     const COMMAND_BODY_SIZE$1 = 0;
     const fromBytes$6 = (data) => {
         if (data.length !== COMMAND_BODY_SIZE$1) {
@@ -2441,7 +2428,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$3 = usWaterMeterBatteryStatus;
-    uplinkNames[usWaterMeterBatteryStatus];
     const fromBytes$5 = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return {
@@ -2452,7 +2438,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$2 = usWaterMeterCommand$1;
-    uplinkNames[usWaterMeterCommand$1];
     const fromBytes$4 = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const length = buffer.getUint8();
@@ -2460,7 +2445,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$1 = verifyImage$1;
-    uplinkNames[verifyImage$1];
     const COMMAND_BODY_SIZE = 1;
     const fromBytes$3 = (data) => {
         if (data.length !== COMMAND_BODY_SIZE) {
@@ -2471,7 +2455,6 @@ var fromBytes, getBytesFromHex;
     };
 
     const id = writeImage$1;
-    uplinkNames[writeImage$1];
     const fromBytes$2 = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         return {

@@ -104,8 +104,8 @@ var logs = '';
   function _toPrimitive(t, r) {
     if ("object" != typeof t || !t) return t;
     var e = t[Symbol.toPrimitive];
-    if (undefined !== e) {
-      var i = e.call(t, r || "default");
+    if (void 0 !== e) {
+      var i = e.call(t, r);
       if ("object" != typeof i) return i;
       throw new TypeError("@@toPrimitive must return a primitive value.");
     }
@@ -119,7 +119,7 @@ var logs = '';
     if (r) {
       if ("string" == typeof r) return _arrayLikeToArray(r, a);
       var t = {}.toString.call(r).slice(8, -1);
-      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : undefined;
+      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
     }
   }
 
@@ -725,6 +725,8 @@ var logs = '';
   var NBIOT_SIM = 55;
   var CHANNEL_TYPE = 56;
   var EXTRA_PAYLOAD_ENABLE = 57;
+  var TIME_SYNCHRONIZATION_PERIOD_VIA_MAC = 58;
+  var KEEP_LORA_CONNECTION_ON_REMOVAL = 59;
 
   var deviceParameters = /*#__PURE__*/Object.freeze({
     __proto__: null,
@@ -743,6 +745,7 @@ var logs = '';
     EXTRA_FRAME_INTERVAL: EXTRA_FRAME_INTERVAL,
     EXTRA_PAYLOAD_ENABLE: EXTRA_PAYLOAD_ENABLE,
     GEOLOCATION: GEOLOCATION,
+    KEEP_LORA_CONNECTION_ON_REMOVAL: KEEP_LORA_CONNECTION_ON_REMOVAL,
     MQTT_BROKER_ADDRESS: MQTT_BROKER_ADDRESS,
     MQTT_DATA_RECEIVE_CONFIG: MQTT_DATA_RECEIVE_CONFIG,
     MQTT_DATA_SEND_CONFIG: MQTT_DATA_SEND_CONFIG,
@@ -770,7 +773,8 @@ var logs = '';
     REPORTING_DATA_INTERVAL: REPORTING_DATA_INTERVAL,
     REPORTING_DATA_TYPE: REPORTING_DATA_TYPE,
     RX2_CONFIG: RX2_CONFIG,
-    SERIAL_NUMBER: SERIAL_NUMBER
+    SERIAL_NUMBER: SERIAL_NUMBER,
+    TIME_SYNCHRONIZATION_PERIOD_VIA_MAC: TIME_SYNCHRONIZATION_PERIOD_VIA_MAC
   });
 
   var deviceParameterNames = invertObject(deviceParameters);
@@ -812,7 +816,6 @@ var logs = '';
   var EXTEND_BIT_MASK = 0x80;
   var LAST_BIT_INDEX = 7;
   var DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT = 600;
-  var DATA_SENDING_INTERVAL_RESERVED_BYTES = 3;
   var PARAMETER_RX2_FREQUENCY_COEFFICIENT = 100;
   var SERIAL_NUMBER_SIZE = 6;
   var MAGNETIC_INFLUENCE_BIT_INDEX = 8;
@@ -887,7 +890,7 @@ var logs = '';
     }
     return size;
   };
-  var parametersSizeMap = (_parametersSizeMap = {}, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, REPORTING_DATA_INTERVAL, 1 + 4), DAY_CHECKOUT_HOUR, 1 + 1), REPORTING_DATA_TYPE, 1 + 1), PRIORITY_DATA_DELIVERY_TYPE, 1 + 1), ACTIVATION_METHOD, 1 + 1), BATTERY_DEPASSIVATION_INFO, 1 + 6), BATTERY_MINIMAL_LOAD_TIME, 1 + 4), CHANNELS_CONFIG, 1 + 1), RX2_CONFIG, 1 + 4), ABSOLUTE_DATA, 1 + 9), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, ABSOLUTE_DATA_ENABLE, 1 + 1), SERIAL_NUMBER, 1 + 6), GEOLOCATION, 1 + 10), EXTRA_FRAME_INTERVAL, 1 + 2), ABSOLUTE_DATA_MULTI_CHANNEL, 1 + 10), ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL, 1 + 2), PULSE_CHANNELS_SCAN_CONFIG, 1 + 3), PULSE_CHANNELS_SET_CONFIG, 1 + 1), BATTERY_DEPASSIVATION_CONFIG, 1 + 4), MQTT_SSL_ENABLE, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, MQTT_DATA_RECEIVE_CONFIG, 1 + 3), MQTT_DATA_SEND_CONFIG, 1 + 3), NBIOT_SSL_CONFIG, 1 + 2), NBIOT_SSL_CACERT_SET, 1 + 4), NBIOT_SSL_CLIENT_CERT_SET, 1 + 4), NBIOT_SSL_CLIENT_KEY_SET, 1 + 4), REPORTING_DATA_CONFIG, 1 + 4), EVENTS_CONFIG, 1 + 3), NBIOT_LED_INDICATION, 1 + 2), NBIOT_SIM, 1 + 3), _defineProperty(_parametersSizeMap, EXTRA_PAYLOAD_ENABLE, 1 + 1));
+  var parametersSizeMap = (_parametersSizeMap = {}, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, REPORTING_DATA_INTERVAL, 1 + 4), DAY_CHECKOUT_HOUR, 1 + 1), REPORTING_DATA_TYPE, 1 + 1), PRIORITY_DATA_DELIVERY_TYPE, 1 + 1), ACTIVATION_METHOD, 1 + 1), BATTERY_DEPASSIVATION_INFO, 1 + 6), BATTERY_MINIMAL_LOAD_TIME, 1 + 4), CHANNELS_CONFIG, 1 + 1), RX2_CONFIG, 1 + 4), ABSOLUTE_DATA, 1 + 9), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, ABSOLUTE_DATA_ENABLE, 1 + 1), SERIAL_NUMBER, 1 + 6), GEOLOCATION, 1 + 10), EXTRA_FRAME_INTERVAL, 1 + 2), ABSOLUTE_DATA_MULTI_CHANNEL, 1 + 10), ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL, 1 + 2), PULSE_CHANNELS_SCAN_CONFIG, 1 + 3), PULSE_CHANNELS_SET_CONFIG, 1 + 1), BATTERY_DEPASSIVATION_CONFIG, 1 + 4), MQTT_SSL_ENABLE, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, MQTT_DATA_RECEIVE_CONFIG, 1 + 3), MQTT_DATA_SEND_CONFIG, 1 + 3), NBIOT_SSL_CONFIG, 1 + 2), NBIOT_SSL_CACERT_SET, 1 + 4), NBIOT_SSL_CLIENT_CERT_SET, 1 + 4), NBIOT_SSL_CLIENT_KEY_SET, 1 + 4), REPORTING_DATA_CONFIG, 1 + 4), EVENTS_CONFIG, 1 + 3), NBIOT_LED_INDICATION, 1 + 2), NBIOT_SIM, 1 + 3), _defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, EXTRA_PAYLOAD_ENABLE, 1 + 1), TIME_SYNCHRONIZATION_PERIOD_VIA_MAC, 1 + 4), KEEP_LORA_CONNECTION_ON_REMOVAL, 1 + 1));
   var fourChannelsBitMask = {
     channel1: Math.pow(2, 0),
     channel2: Math.pow(2, 1),
@@ -959,14 +962,18 @@ var logs = '';
   };
   var deviceParameterConvertersMap = (_deviceParameterConve = {}, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, REPORTING_DATA_INTERVAL, {
     get: function get(buffer) {
-      buffer.seek(buffer.offset + DATA_SENDING_INTERVAL_RESERVED_BYTES);
       return {
-        value: buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT
+        specialSchedulePeriod: buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT,
+        firstDaysSpecialSchedule: buffer.getUint8(),
+        lastDaysSpecialSchedule: buffer.getUint8(),
+        period: buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT
       };
     },
     set: function set(buffer, parameter) {
-      buffer.seek(buffer.offset + DATA_SENDING_INTERVAL_RESERVED_BYTES);
-      buffer.setUint8(parameter.value / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+      buffer.setUint8(parameter.specialSchedulePeriod / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+      buffer.setUint8(parameter.firstDaysSpecialSchedule);
+      buffer.setUint8(parameter.lastDaysSpecialSchedule);
+      buffer.setUint8(parameter.period / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
     }
   }), DAY_CHECKOUT_HOUR, {
     get: function get(buffer) {
@@ -1371,7 +1378,7 @@ var logs = '';
       buffer.setUint8(parameter.enableLed);
       buffer.setUint8(parameter.enableNbiotNetworkLed);
     }
-  }), _defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_SIM, {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_SIM, {
     get: function get(buffer) {
       return {
         enable: buffer.getUint8(),
@@ -1397,6 +1404,24 @@ var logs = '';
     },
     set: function set(buffer, parameter) {
       buffer.setUint8(parameter.enable);
+    }
+  }), TIME_SYNCHRONIZATION_PERIOD_VIA_MAC, {
+    get: function get(buffer) {
+      return {
+        period: buffer.getUint32()
+      };
+    },
+    set: function set(buffer, parameter) {
+      buffer.setUint32(parameter.period);
+    }
+  }), KEEP_LORA_CONNECTION_ON_REMOVAL, {
+    get: function get(buffer) {
+      return {
+        value: buffer.getUint8() !== 0
+      };
+    },
+    set: function set(buffer, parameter) {
+      buffer.setUint8(parameter.value ? 1 : 0);
     }
   }));
   var getParameterSize = function getParameterSize(parameter) {
@@ -2193,9 +2218,9 @@ var logs = '';
   var getStringFromBytes = function getStringFromBytes(bytes) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultFormatOptions;
     var _options$bytesConvers = options.bytesConversionFormat,
-      bytesConversionFormat = _options$bytesConvers === undefined ? defaultFormatOptions.bytesConversionFormat : _options$bytesConvers,
+      bytesConversionFormat = _options$bytesConvers === void 0 ? defaultFormatOptions.bytesConversionFormat : _options$bytesConvers,
       _options$bytesConvers2 = options.bytesConversionFormatOptions,
-      bytesConversionFormatOptions = _options$bytesConvers2 === undefined ? defaultFormatOptions.bytesConversionFormatOptions : _options$bytesConvers2;
+      bytesConversionFormatOptions = _options$bytesConvers2 === void 0 ? defaultFormatOptions.bytesConversionFormatOptions : _options$bytesConvers2;
     return bytesConversionFormat === HEX ? getHexFromBytes(bytes, bytesConversionFormatOptions) : getBase64FromBytes(bytes);
   };
 
@@ -3170,7 +3195,10 @@ var logs = '';
         id: 1,
         name: 'REPORTING_DATA_INTERVAL',
         data: {
-          value: 3600
+          specialSchedulePeriod: 0,
+          firstDaysSpecialSchedule: 0,
+          lastDaysSpecialSchedule: 0,
+          period: 3600
         }
       },
       bytes: [0x03, 0x05, 0x01, 0x00, 0x00, 0x00, 0x06]
@@ -3560,6 +3588,32 @@ var logs = '';
         }
       },
       bytes: [0x03, 0x02, 0x39, 0x01]
+    },
+    'time synchronization period in seconds via MAC commands': {
+      id: id$6,
+      name: name$6,
+      headerSize: headerSize$6,
+      parameters: {
+        id: 58,
+        name: 'TIME_SYNCHRONIZATION_PERIOD_VIA_MAC',
+        data: {
+          period: 1440
+        }
+      },
+      bytes: [0x03, 0x05, 0x3a, 0x00, 0x00, 0x05, 0xa0]
+    },
+    'keep its lora connection even after being removed': {
+      id: id$6,
+      name: name$6,
+      headerSize: headerSize$6,
+      parameters: {
+        id: 59,
+        name: 'KEEP_LORA_CONNECTION_ON_REMOVAL',
+        data: {
+          value: true
+        }
+      },
+      bytes: [0x03, 0x02, 0x3b, 0x01]
     }
   };
   var fromBytes$6 = function fromBytes(data) {
@@ -3863,7 +3917,7 @@ var logs = '';
     var output = '';
     for (var commandName in commands) {
       var command = commands[commandName];
-      var examples = command === null || command === undefined ? undefined : command.examples;
+      var examples = command === null || command === void 0 ? void 0 : command.examples;
       if (command) {
         output += commandName + ' ';
         for (var exampleName in examples) {

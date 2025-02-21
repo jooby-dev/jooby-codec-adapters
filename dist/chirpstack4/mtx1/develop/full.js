@@ -1774,10 +1774,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         turnRelayOn: turnRelayOn
     });
 
-    var downlinkNames = invertObject(downlinkIds);
+    invertObject(downlinkIds);
 
     const id$20 = activateRatePlan;
-    downlinkNames[activateRatePlan];
     const maxSize$1C = 1 + TARIFF_PLAN_SIZE;
     const fromBytes$22 = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -1794,7 +1793,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1$ = getBuildVersion;
-    downlinkNames[getBuildVersion];
     const maxSize$1B = 0;
     const fromBytes$21 = (bytes) => {
         if (bytes.length !== maxSize$1B) {
@@ -1805,7 +1803,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$21 = () => toBytes$23(id$1$);
 
     const id$1_ = getCorrectTime;
-    downlinkNames[getCorrectTime];
     const maxSize$1A = 0;
     const fromBytes$20 = (bytes) => {
         if (bytes.length !== maxSize$1A) {
@@ -1853,7 +1850,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var criticalEventNames = invertObject(criticalEvents);
 
     const id$1Z = getCriticalEvent;
-    downlinkNames[getCriticalEvent];
     const maxSize$1z = 2;
     const fromBytes$1$ = (bytes) => {
         if (bytes.length !== maxSize$1z) {
@@ -1869,7 +1865,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1$ = (parameters) => (toBytes$23(id$1Z, [parameters.event, parameters.index]));
 
     const id$1Y = getCurrentStatusMeter;
-    downlinkNames[getCurrentStatusMeter];
     const maxSize$1y = 0;
     const fromBytes$1_ = (bytes) => {
         if (bytes.length !== maxSize$1y) {
@@ -1880,7 +1875,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1_ = () => toBytes$23(id$1Y);
 
     const id$1X = getCurrentValues;
-    downlinkNames[getCurrentValues];
     const maxSize$1x = 0;
     const fromBytes$1Z = (bytes) => {
         if (bytes.length !== maxSize$1x) {
@@ -1891,7 +1885,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1Z = () => toBytes$23(id$1X);
 
     const id$1W = getDateTime;
-    downlinkNames[getDateTime];
     const maxSize$1w = 0;
     const fromBytes$1Y = (bytes) => {
         if (bytes.length !== maxSize$1w) {
@@ -1904,7 +1897,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const MIN_COMMAND_SIZE$5 = 3;
     const MAX_COMMAND_SIZE$5 = 4;
     const id$1V = getDayDemand;
-    downlinkNames[getDayDemand];
     const fromBytes$1X = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
         if (bytes.length === MAX_COMMAND_SIZE$5) {
@@ -1927,7 +1919,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const MIN_COMMAND_SIZE$4 = 3;
     const MAX_COMMAND_SIZE$4 = 4;
     const id$1U = getDayDemandExport;
-    downlinkNames[getDayDemandExport];
     const fromBytes$1W = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
         if (bytes.length === MAX_COMMAND_SIZE$4) {
@@ -1948,7 +1939,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1T = getDayMaxDemand;
-    downlinkNames[getDayMaxDemand];
     const maxSize$1v = 3;
     const fromBytes$1V = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -1961,7 +1951,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1S = getDayMaxDemandExport;
-    downlinkNames[getDayMaxDemandExport];
     const maxSize$1u = 3;
     const fromBytes$1U = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -1974,7 +1963,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1R = getDayMaxDemandPrevious;
-    downlinkNames[getDayMaxDemandPrevious];
     const maxSize$1t = 0;
     const fromBytes$1T = (bytes) => {
         if (bytes.length !== maxSize$1t) {
@@ -1985,7 +1973,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1T = () => toBytes$23(id$1R);
 
     const id$1Q = getDayProfile;
-    downlinkNames[getDayProfile];
     const maxSize$1s = 3;
     const fromBytes$1S = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
     const toBytes$1S = (parameters) => {
@@ -2000,7 +1987,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const A_MINUS = 0x02;
 
     const id$1P = getDemand;
-    downlinkNames[getDemand];
     const maxSize$1r = 7;
     const fromBytes$1R = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2013,7 +1999,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1O = getDeviceId;
-    downlinkNames[getDeviceId];
     const maxSize$1q = 0;
     const fromBytes$1Q = (bytes) => {
         if (bytes.length !== maxSize$1q) {
@@ -2024,7 +2009,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1Q = () => toBytes$23(id$1O);
 
     const id$1N = getDeviceType;
-    downlinkNames[getDeviceType];
     const maxSize$1p = 0;
     const fromBytes$1P = (data) => {
         if (data.length !== maxSize$1p) {
@@ -2035,7 +2019,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1P = () => toBytes$23(id$1N);
 
     const id$1M = getDisplayParam;
-    downlinkNames[getDisplayParam];
     const maxSize$1o = 1;
     const fromBytes$1O = ([displayMode]) => ({ displayMode });
     const toBytes$1O = (parameters) => {
@@ -2047,7 +2030,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const MIN_COMMAND_SIZE$3 = 0;
     const MAX_COMMAND_SIZE$3 = 1;
     const id$1L = getEnergy;
-    downlinkNames[getEnergy];
     const fromBytes$1N = (bytes) => {
         if (bytes.length === MAX_COMMAND_SIZE$3) {
             return { energyType: bytes[0] };
@@ -2065,7 +2047,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const MIN_COMMAND_SIZE$2 = 0;
     const MAX_COMMAND_SIZE$2 = 1;
     const id$1K = getEnergyDayPrevious;
-    downlinkNames[getEnergyDayPrevious];
     const fromBytes$1M = (bytes) => {
         const { length } = bytes;
         if (length !== MAX_COMMAND_SIZE$2 && length !== MIN_COMMAND_SIZE$2) {
@@ -2086,7 +2067,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const MIN_COMMAND_SIZE$1 = 0;
     const MAX_COMMAND_SIZE$1 = 1;
     const id$1J = getEnergyExport;
-    downlinkNames[getEnergyExport];
     const fromBytes$1L = (bytes) => {
         if (bytes.length === MAX_COMMAND_SIZE$1) {
             return { energyType: bytes[0] };
@@ -2104,7 +2084,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const MIN_COMMAND_SIZE = 0;
     const MAX_COMMAND_SIZE = 1;
     const id$1I = getEnergyExportDayPrevious;
-    downlinkNames[getEnergyExportDayPrevious];
     const fromBytes$1K = (bytes) => {
         const { length } = bytes;
         if (length !== MAX_COMMAND_SIZE && length !== MIN_COMMAND_SIZE) {
@@ -2123,7 +2102,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1H = getEvents;
-    downlinkNames[getEvents];
     const maxSize$1n = 4;
     const fromBytes$1J = (bytes) => {
         if (bytes.length !== maxSize$1n) {
@@ -2142,7 +2120,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1G = getEventsCounters;
-    downlinkNames[getEventsCounters];
     const maxSize$1m = 0;
     const fromBytes$1I = (bytes) => {
         if (bytes.length !== maxSize$1m) {
@@ -2153,7 +2130,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1I = () => toBytes$23(id$1G);
 
     const id$1F = getEventStatus;
-    downlinkNames[getEventStatus];
     const maxSize$1l = 0;
     const fromBytes$1H = (bytes) => {
         if (bytes.length !== maxSize$1l) {
@@ -2164,7 +2140,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1H = () => toBytes$23(id$1F);
 
     const id$1E = getExtendedCurrentValues;
-    downlinkNames[getExtendedCurrentValues];
     const maxSize$1k = 0;
     const fromBytes$1G = (bytes) => {
         if (bytes.length !== maxSize$1k) {
@@ -2175,7 +2150,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1G = () => toBytes$23(id$1E);
 
     const id$1D = getExtendedCurrentValues2;
-    downlinkNames[getExtendedCurrentValues2];
     const maxSize$1j = 0;
     const fromBytes$1F = (bytes) => {
         if (bytes.length !== maxSize$1j) {
@@ -2186,7 +2160,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1F = () => toBytes$23(id$1D);
 
     const id$1C = getHalfHourDemand;
-    downlinkNames[getHalfHourDemand];
     const maxSize$1i = 3;
     const fromBytes$1E = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2199,7 +2172,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1B = getHalfHourDemandExport;
-    downlinkNames[getHalfHourDemandExport];
     const maxSize$1h = 3;
     const fromBytes$1D = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2212,7 +2184,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1A = getHalfHourDemandPrevious;
-    downlinkNames[getHalfHourDemandPrevious];
     const maxSize$1g = 0;
     const fromBytes$1C = (data) => {
         if (data.length !== maxSize$1g) {
@@ -2495,7 +2466,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1z = getHalfhoursEnergies;
-    downlinkNames[getHalfhoursEnergies];
     const maxSize$1f = 5;
     const fromBytes$1B = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
@@ -2516,7 +2486,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1y = getMagneticFieldThreshold;
-    downlinkNames[getMagneticFieldThreshold];
     const maxSize$1e = 0;
     const fromBytes$1A = (bytes) => {
         if (bytes.length !== maxSize$1e) {
@@ -2527,7 +2496,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1A = () => toBytes$23(id$1y);
 
     const id$1x = getMeterInfo;
-    downlinkNames[getMeterInfo];
     const maxSize$1d = 0;
     const fromBytes$1z = (bytes) => {
         if (bytes.length !== maxSize$1d) {
@@ -2538,7 +2506,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1z = () => toBytes$23(id$1x);
 
     const id$1w = getMonthDemand;
-    downlinkNames[getMonthDemand];
     const maxSize$1c = 2;
     const fromBytes$1y = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2555,7 +2522,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1v = getMonthDemandExport;
-    downlinkNames[getMonthDemandExport];
     const maxSize$1b = 2;
     const fromBytes$1x = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2572,7 +2538,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1u = getMonthMaxDemand;
-    downlinkNames[getMonthMaxDemand];
     const fromBytes$1w = (bytes) => {
         const [year, month] = bytes;
         return { year, month };
@@ -2580,7 +2545,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1w = ({ year, month }) => (toBytes$23(id$1u, [year, month]));
 
     const id$1t = getMonthMaxDemandExport;
-    downlinkNames[getMonthMaxDemandExport];
     const fromBytes$1v = (bytes) => {
         const [year, month] = bytes;
         return { year, month };
@@ -2588,7 +2552,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1v = ({ year, month }) => (toBytes$23(id$1t, [year, month]));
 
     const id$1s = getOperatorParametersExtended3;
-    downlinkNames[getOperatorParametersExtended3];
     const maxSize$1a = 0;
     const fromBytes$1u = (bytes) => {
         if (bytes.length !== maxSize$1a) {
@@ -2599,7 +2562,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1u = () => toBytes$23(id$1s);
 
     const id$1r = getOperatorParameters;
-    downlinkNames[getOperatorParameters];
     const maxSize$19 = 0;
     const fromBytes$1t = (bytes) => {
         if (bytes.length !== maxSize$19) {
@@ -2610,12 +2572,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1t = () => toBytes$23(id$1r);
 
     const id$1q = getRatePlanInfo;
-    downlinkNames[getRatePlanInfo];
     const fromBytes$1s = (bytes) => ({ tariffTable: bytes[0] });
     const toBytes$1s = (parameters) => (toBytes$23(id$1q, [parameters.tariffTable]));
 
     const id$1p = getSaldo;
-    downlinkNames[getSaldo];
     const maxSize$18 = 0;
     const fromBytes$1r = (bytes) => {
         if (bytes.length !== maxSize$18) {
@@ -2626,7 +2586,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1r = () => toBytes$23(id$1p);
 
     const id$1o = getSaldoParameters;
-    downlinkNames[getSaldoParameters];
     const maxSize$17 = 0;
     const fromBytes$1q = (bytes) => {
         if (bytes.length !== maxSize$17) {
@@ -2637,7 +2596,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1q = () => toBytes$23(id$1o);
 
     const id$1n = getSeasonProfile;
-    downlinkNames[getSeasonProfile];
     const maxSize$16 = 3;
     const fromBytes$1p = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
     const toBytes$1p = (parameters) => {
@@ -2649,7 +2607,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1m = getSpecialDay;
-    downlinkNames[getSpecialDay];
     const maxSize$15 = 3;
     const fromBytes$1o = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
     const toBytes$1o = (parameters) => {
@@ -2661,7 +2618,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1l = getVersion;
-    downlinkNames[getVersion];
     const maxSize$14 = 0;
     const fromBytes$1n = (bytes) => {
         if (bytes.length !== maxSize$14) {
@@ -2672,7 +2628,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1n = () => toBytes$23(id$1l);
 
     const id$1k = prepareRatePlan;
-    downlinkNames[prepareRatePlan];
     const maxSize$13 = 5;
     const fromBytes$1m = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2689,7 +2644,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1j = resetPowerMaxDay;
-    downlinkNames[resetPowerMaxDay];
     const maxSize$12 = 0;
     const fromBytes$1l = (bytes) => {
         if (bytes.length !== maxSize$12) {
@@ -2700,7 +2654,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1l = () => toBytes$23(id$1j);
 
     const id$1i = resetPowerMaxMonth;
-    downlinkNames[resetPowerMaxMonth];
     const maxSize$11 = 0;
     const fromBytes$1k = (bytes) => {
         if (bytes.length !== maxSize$11) {
@@ -2711,13 +2664,11 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1k = () => toBytes$23(id$1i);
 
     const id$1h = runTariffPlan;
-    downlinkNames[runTariffPlan];
     const fromBytes$1j = (bytes) => ({ tariffTable: bytes[0] });
     const toBytes$1j = (parameters) => (toBytes$23(id$1h, [parameters.tariffTable]));
 
     const KEY_SIZE = 16;
     const id$1g = setAccessKey;
-    downlinkNames[setAccessKey];
     const maxSize$10 = 1 + KEY_SIZE;
     const fromBytes$1i = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2734,7 +2685,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1f = setCorrectDateTime;
-    downlinkNames[setCorrectDateTime];
     const maxSize$ = 2;
     const fromBytes$1h = (bytes) => {
         if (bytes.length !== maxSize$) {
@@ -2750,7 +2700,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1e = setCorrectTime;
-    downlinkNames[setCorrectTime];
     const maxSize$_ = 9;
     const fromBytes$1g = (bytes) => {
         if (bytes.length !== maxSize$_) {
@@ -2766,7 +2715,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1d = setDateTime;
-    downlinkNames[setDateTime];
     const maxSize$Z = 8;
     const fromBytes$1f = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2781,7 +2729,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const MAX_PERIODS_NUMBER$1 = 8;
     const PERIODS_FINAL_BYTE$1 = 0xff;
     const id$1c = setDayProfile;
-    downlinkNames[setDayProfile];
     const fromBytes$1e = (bytes) => {
         const finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE$1);
         const cleanBytes = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
@@ -2808,7 +2755,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1b = setDisplayParam;
-    downlinkNames[setDisplayParam];
     const maxSize$Y = 33;
     const fromBytes$1d = (bytes) => {
         if (bytes.length < 1 || bytes.length > maxSize$Y) {
@@ -2823,7 +2769,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     ]));
 
     const id$1a = setOperatorParametersExtended3;
-    downlinkNames[setOperatorParametersExtended3];
     const maxSize$X = 17;
     const fromBytes$1c = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2836,7 +2781,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$19 = setOperatorParameters;
-    downlinkNames[setOperatorParameters];
     const maxSize$W = OPERATOR_PARAMETERS_SIZE;
     const fromBytes$1b = (bytes) => {
         if (bytes.length !== maxSize$W) {
@@ -2852,7 +2796,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$18 = setSaldo;
-    downlinkNames[setSaldo];
     const maxSize$V = 12;
     const fromBytes$1a = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2879,7 +2822,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$17 = setSaldoParameters;
-    downlinkNames[setSaldoParameters];
     const maxSize$U = 37;
     const fromBytes$19 = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2892,7 +2834,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$16 = setSeasonProfile;
-    downlinkNames[setSeasonProfile];
     const maxSize$T = SEASON_PROFILE_SIZE;
     const fromBytes$18 = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2911,7 +2852,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$15 = setSpecialDay;
-    downlinkNames[setSpecialDay];
     const maxSize$S = 6;
     const fromBytes$17 = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2930,7 +2870,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$14 = setSpecialOperation;
-    downlinkNames[setSpecialOperation];
     const maxSize$R = 2;
     const fromBytes$16 = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -2964,7 +2903,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$13 = turnRelayOff;
-    downlinkNames[turnRelayOff];
     const maxSize$Q = 0;
     const fromBytes$15 = (bytes) => {
         if (bytes.length !== maxSize$Q) {
@@ -2975,7 +2913,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$15 = () => toBytes$23(id$13);
 
     const id$12 = turnRelayOn;
-    downlinkNames[turnRelayOn];
     const maxSize$P = 0;
     const fromBytes$14 = (bytes) => {
         if (bytes.length !== maxSize$P) {
@@ -3307,7 +3244,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var uplinkNames = invertObject(uplinkIds);
 
     const id$11 = activateRatePlan;
-    uplinkNames[activateRatePlan];
     const maxSize$O = 0;
     const fromBytes$13 = (bytes) => {
         if (bytes.length !== maxSize$O) {
@@ -3375,7 +3311,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var resultNames = invertObject(resultCodes);
 
     const id$10 = errorResponse;
-    uplinkNames[errorResponse];
     const maxSize$N = 2;
     const getFromBytes$1 = (commandNamesParameter) => ((bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -3397,7 +3332,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$ = getBuildVersion;
-    uplinkNames[getBuildVersion];
     const maxSize$M = 6;
     const fromBytes$11 = (bytes) => {
         if (bytes.length !== maxSize$M) {
@@ -3420,7 +3354,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$_ = getCorrectTime;
-    uplinkNames[getCorrectTime];
     const maxSize$L = 9;
     const fromBytes$10 = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -3433,7 +3366,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$Z = getCriticalEvent;
-    uplinkNames[getCriticalEvent];
     const maxSize$K = 9;
     const fromBytes$ = (bytes) => {
         if (bytes.length !== maxSize$K) {
@@ -3471,7 +3403,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$Y = getCurrentStatusMeter;
-    uplinkNames[getCurrentStatusMeter];
     const maxSize$J = 31;
     const calibrationFlagsMask = {
         calibrationEnable: 0x01,
@@ -3534,7 +3465,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$X = getCurrentValues;
-    uplinkNames[getCurrentValues];
     const maxSize$I = 32;
     const fromBytes$Z = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -3565,7 +3495,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$W = getDateTime;
-    uplinkNames[getDateTime];
     const maxSize$H = 8;
     const fromBytes$Y = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -3579,7 +3508,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const COMMAND_SIZE$5 = 19;
     const id$V = getDayDemand;
-    uplinkNames[getDayDemand];
     const fromBytes$X = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
         let parameters;
@@ -3611,7 +3539,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const COMMAND_SIZE$4 = 19;
     const id$U = getDayDemandExport;
-    uplinkNames[getDayDemandExport];
     const fromBytes$W = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
         let parameters;
@@ -3646,7 +3573,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const TARIFF_FLAGS_SIZE$1 = 1;
     const MAX_TARIFFS_ENERGIES_SIZE$1 = 6 * 4 * 4;
     const id$T = getDayEnergies;
-    uplinkNames[getDayEnergies];
     const maxSize$G = DATE_SIZE$2 + ENERGY_FLAGS_SIZE$2 + TARIFF_FLAGS_SIZE$1 + MAX_TARIFFS_ENERGIES_SIZE$1;
     const fromBytes$V = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
@@ -3663,7 +3589,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$S = getDayMaxDemand;
-    uplinkNames[getDayMaxDemand];
     const maxSize$F = 27;
     const fromBytes$U = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -3676,7 +3601,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$R = getDayMaxDemandExport;
-    uplinkNames[getDayMaxDemandExport];
     const maxSize$E = 27;
     const fromBytes$T = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -3689,7 +3613,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$Q = getDayMaxDemandPrevious;
-    uplinkNames[getDayMaxDemandPrevious];
     const maxSize$D = 27;
     const fromBytes$S = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -3706,7 +3629,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const TARIFF_FLAGS_SIZE = 1;
     const MAX_TARIFFS_ENERGIES_SIZE = 6 * 4 * (1 + 1 + 4);
     const id$P = getDayMaxPower;
-    uplinkNames[getDayMaxPower];
     const maxSize$C = DATE_SIZE$1 + ENERGY_FLAGS_SIZE$1 + TARIFF_FLAGS_SIZE + MAX_TARIFFS_ENERGIES_SIZE;
     const fromBytes$R = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
@@ -3725,7 +3647,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const MAX_PERIODS_NUMBER = 8;
     const PERIODS_FINAL_BYTE = 0xff;
     const id$O = getDayProfile;
-    uplinkNames[getDayProfile];
     const fromBytes$Q = (bytes) => {
         const finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE);
         const cleanData = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
@@ -3808,7 +3729,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     }, []);
 
     const id$N = getDemand;
-    uplinkNames[getDemand];
     const fromBytes$P = (bytes) => {
         if (!bytes || bytes.length < maxSize$1r) {
             throw new Error('Invalid uplink GetDemand byte length.');
@@ -3838,7 +3758,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$M = getDeviceId;
-    uplinkNames[getDeviceId];
     const maxSize$B = 8;
     const fromBytes$O = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -3851,7 +3770,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$L = getDeviceType;
-    uplinkNames[getDeviceType];
     const maxSize$A = 9;
     const fromBytes$N = (data) => {
         const buffer = new CommandBinaryBuffer$1(data);
@@ -3864,7 +3782,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$K = getDisplayParam;
-    uplinkNames[getDisplayParam];
     const fromBytes$M = (bytes) => {
         const [displayMode, ...order] = bytes;
         return { displayMode, order };
@@ -3873,7 +3790,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const COMMAND_SIZE$3 = 16;
     const id$J = getEnergy;
-    uplinkNames[getEnergy];
     const fromBytes$L = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
         let parameters;
@@ -3900,7 +3816,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const COMMAND_SIZE$2 = 19;
     const id$I = getEnergyDayPrevious;
-    uplinkNames[getEnergyDayPrevious];
     const fromBytes$K = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
         let parameters;
@@ -3927,7 +3842,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const COMMAND_SIZE$1 = 16;
     const id$H = getEnergyExport;
-    uplinkNames[getEnergyExport];
     const fromBytes$J = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
         let parameters;
@@ -3954,7 +3868,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const COMMAND_SIZE = 19;
     const id$G = getEnergyExportDayPrevious;
-    uplinkNames[getEnergyExportDayPrevious];
     const fromBytes$I = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
         let parameters;
@@ -3982,7 +3895,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const BODY_WITHOUT_EVENTS_SIZE = 3 + 1;
     const EVENT_SIZE = 4;
     const id$F = getEvents;
-    uplinkNames[getEvents];
     const maxSize$z = BODY_WITHOUT_EVENTS_SIZE + 255 * EVENT_SIZE;
     const getFromBytes = BinaryBufferConstructor => ((bytes) => {
         if (bytes.length > maxSize$z) {
@@ -4012,7 +3924,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const COMMAND_BODY_SIZE = 14;
     const OLD_COMMAND_BODY_SIZE = 20;
     const id$E = getEventsCounters;
-    uplinkNames[getEventsCounters];
     const fromBytes$G = (bytes) => {
         if ((bytes.length !== COMMAND_BODY_SIZE && bytes.length !== OLD_COMMAND_BODY_SIZE)) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
@@ -4042,7 +3953,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$D = getEventStatus;
-    uplinkNames[getEventStatus];
     const maxSize$y = 2;
     const fromBytes$F = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes, true);
@@ -4055,7 +3965,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$C = getExtendedCurrentValues;
-    uplinkNames[getExtendedCurrentValues];
     const maxSize$x = 4;
     const fromBytes$E = (data) => {
         const buffer = new CommandBinaryBuffer$1(data);
@@ -4072,7 +3981,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$B = getExtendedCurrentValues2;
-    uplinkNames[getExtendedCurrentValues2];
     const maxSize$w = 7;
     const fromBytes$D = (data) => {
         const buffer = new CommandBinaryBuffer$1(data);
@@ -4085,7 +3993,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$A = getHalfHourDemand;
-    uplinkNames[getHalfHourDemand];
     const fromBytes$C = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
         const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
@@ -4111,7 +4018,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$z = getHalfHourDemandExport;
-    uplinkNames[getHalfHourDemandExport];
     const fromBytes$B = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
         const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
@@ -4137,7 +4043,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$y = getHalfHourDemandPrevious;
-    uplinkNames[getHalfHourDemandPrevious];
     const fromBytes$A = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
         const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
@@ -4168,7 +4073,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const HALFHOURS_NUMBER_SIZE = 1;
     const MAX_HALFHOURS_ENERGY_SIZE = 247;
     const id$x = getHalfhoursEnergies;
-    uplinkNames[getHalfhoursEnergies];
     const maxSize$v = DATE_SIZE + ENERGY_FLAGS_SIZE + START_HALFHOUR_SIZE + HALFHOURS_NUMBER_SIZE + MAX_HALFHOURS_ENERGY_SIZE;
     const fromBytes$z = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
@@ -4195,7 +4099,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$w = getMagneticFieldThreshold;
-    uplinkNames[getMagneticFieldThreshold];
     const maxSize$u = 10;
     const fromBytes$y = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -4216,12 +4119,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$v = getMeterInfo;
-    uplinkNames[getMeterInfo];
     const fromBytes$x = ([ten]) => ({ ten });
     const toBytes$w = ({ ten }) => toBytes$23(id$v, [ten]);
 
     const id$u = getMonthDemand;
-    uplinkNames[getMonthDemand];
     const maxSize$t = 18;
     const fromBytes$w = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -4240,7 +4141,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$t = getMonthDemandExport;
-    uplinkNames[getMonthDemandExport];
     const maxSize$s = 18;
     const fromBytes$v = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -4259,7 +4159,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$s = getMonthMaxDemand;
-    uplinkNames[getMonthMaxDemand];
     const maxSize$r = 2 + TARIFF_NUMBER$1 * 7;
     const fromBytes$u = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -4278,7 +4177,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$r = getMonthMaxDemandExport;
-    uplinkNames[getMonthMaxDemandExport];
     const maxSize$q = 2 + TARIFF_NUMBER$1 * 7;
     const fromBytes$t = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -4297,7 +4195,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$q = getOperatorParametersExtended3;
-    uplinkNames[getOperatorParametersExtended3];
     const maxSize$p = 17;
     const fromBytes$s = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -4310,7 +4207,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$p = getOperatorParameters;
-    uplinkNames[getOperatorParameters];
     const maxSize$o = OPERATOR_PARAMETERS_SIZE;
     const fromBytes$r = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -4323,7 +4219,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$o = getRatePlanInfo;
-    uplinkNames[getRatePlanInfo];
     const maxSize$n = 1 + TARIFF_PLAN_SIZE * 2;
     const fromBytes$q = (bytes) => {
         if (bytes.length !== maxSize$n) {
@@ -4345,7 +4240,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$n = getSaldo;
-    uplinkNames[getSaldo];
     const maxSize$m = 29;
     const fromBytes$p = (bytes) => {
         if (bytes.length !== maxSize$m) {
@@ -4379,7 +4273,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$m = getSaldoParameters;
-    uplinkNames[getSaldoParameters];
     const maxSize$l = 37;
     const fromBytes$o = (bytes) => {
         if (bytes.length !== maxSize$l) {
@@ -4395,7 +4288,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$l = getSeasonProfile;
-    uplinkNames[getSeasonProfile];
     const maxSize$k = 9;
     const fromBytes$n = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -4408,7 +4300,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$k = getSpecialDay;
-    uplinkNames[getSpecialDay];
     const maxSize$j = 4;
     const fromBytes$m = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -4421,7 +4312,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$j = getVersion;
-    uplinkNames[getVersion];
     const fromBytes$l = (bytes) => ({ version: String.fromCharCode.apply(null, [...bytes]) });
     const toBytes$k = (parameters) => {
         const version = parameters.version.split('').map(char => char.charCodeAt(0));
@@ -4429,7 +4319,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$i = prepareRatePlan;
-    uplinkNames[prepareRatePlan];
     const maxSize$i = 0;
     const fromBytes$k = (bytes) => {
         if (bytes.length !== maxSize$i) {
@@ -4440,7 +4329,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$j = () => toBytes$23(id$i);
 
     const id$h = resetPowerMaxDay;
-    uplinkNames[resetPowerMaxDay];
     const maxSize$h = 0;
     const fromBytes$j = (bytes) => {
         if (bytes.length !== maxSize$h) {
@@ -4451,7 +4339,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$i = () => toBytes$23(id$h);
 
     const id$g = resetPowerMaxMonth;
-    uplinkNames[resetPowerMaxMonth];
     const maxSize$g = 0;
     const fromBytes$i = (bytes) => {
         if (bytes.length !== maxSize$g) {
@@ -4462,7 +4349,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$h = () => toBytes$23(id$g);
 
     const id$f = runTariffPlan;
-    uplinkNames[runTariffPlan];
     const maxSize$f = 0;
     const fromBytes$h = (bytes) => {
         if (bytes.length !== maxSize$f) {
@@ -4473,7 +4359,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$g = () => toBytes$23(id$f);
 
     const id$e = setAccessKey;
-    uplinkNames[setAccessKey];
     const maxSize$e = 0;
     const fromBytes$g = (bytes) => {
         if (bytes.length !== maxSize$e) {
@@ -4484,7 +4369,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$f = () => toBytes$23(id$e);
 
     const id$d = setCorrectDateTime;
-    uplinkNames[setCorrectDateTime];
     const maxSize$d = 0;
     const fromBytes$f = (bytes) => {
         if (bytes.length !== maxSize$d) {
@@ -4495,7 +4379,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$e = () => toBytes$23(id$d);
 
     const id$c = setCorrectTime;
-    uplinkNames[setCorrectTime];
     const maxSize$c = 0;
     const fromBytes$e = (bytes) => {
         if (bytes.length !== maxSize$c) {
@@ -4506,7 +4389,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$d = () => toBytes$23(id$c);
 
     const id$b = setDateTime;
-    uplinkNames[setDateTime];
     const maxSize$b = 0;
     const fromBytes$d = (bytes) => {
         if (bytes.length !== maxSize$b) {
@@ -4517,7 +4399,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$c = () => toBytes$23(id$b);
 
     const id$a = setDayProfile;
-    uplinkNames[setDayProfile];
     const maxSize$a = 0;
     const fromBytes$c = (bytes) => {
         if (bytes.length !== maxSize$a) {
@@ -4528,7 +4409,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$b = () => toBytes$23(id$a);
 
     const id$9 = setDisplayParam;
-    uplinkNames[setDisplayParam];
     const maxSize$9 = 0;
     const fromBytes$b = (bytes) => {
         if (bytes.length !== maxSize$9) {
@@ -4539,7 +4419,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$a = () => toBytes$23(id$9);
 
     const id$8 = setOperatorParametersExtended3;
-    uplinkNames[setOperatorParametersExtended3];
     const maxSize$8 = 0;
     const fromBytes$a = (bytes) => {
         if (bytes.length !== maxSize$8) {
@@ -4550,7 +4429,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$9 = () => toBytes$23(id$8);
 
     const id$7 = setOperatorParameters;
-    uplinkNames[setOperatorParameters];
     const maxSize$7 = 0;
     const fromBytes$9 = (bytes) => {
         if (bytes.length !== maxSize$7) {
@@ -4561,7 +4439,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$8 = () => toBytes$23(id$7);
 
     const id$6 = setSaldo;
-    uplinkNames[setSaldo];
     const maxSize$6 = 0;
     const fromBytes$8 = (bytes) => {
         if (bytes.length !== maxSize$6) {
@@ -4572,7 +4449,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$7 = () => toBytes$23(id$6);
 
     const id$5 = setSaldoParameters;
-    uplinkNames[setSaldoParameters];
     const maxSize$5 = 0;
     const fromBytes$7 = (bytes) => {
         if (bytes.length !== maxSize$5) {
@@ -4583,7 +4459,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$6 = () => toBytes$23(id$5);
 
     const id$4 = setSeasonProfile;
-    uplinkNames[setSeasonProfile];
     const maxSize$4 = 0;
     const fromBytes$6 = (bytes) => {
         if (bytes.length !== maxSize$4) {
@@ -4594,7 +4469,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$5 = () => toBytes$23(id$4);
 
     const id$3 = setSpecialDay;
-    uplinkNames[setSpecialDay];
     const maxSize$3 = 0;
     const fromBytes$5 = (bytes) => {
         if (bytes.length !== maxSize$3) {
@@ -4605,7 +4479,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$4 = () => toBytes$23(id$3);
 
     const id$2 = setSpecialOperation;
-    uplinkNames[setSpecialOperation];
     const maxSize$2 = 1;
     const fromBytes$4 = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
@@ -4631,7 +4504,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$1 = turnRelayOff;
-    uplinkNames[turnRelayOff];
     const maxSize$1 = 0;
     const fromBytes$3 = (bytes) => {
         if (bytes.length !== maxSize$1) {
@@ -4642,7 +4514,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$2 = () => toBytes$23(id$1);
 
     const id = turnRelayOn;
-    uplinkNames[turnRelayOn];
     const maxSize = 0;
     const fromBytes$2 = (bytes) => {
         if (bytes.length !== maxSize) {

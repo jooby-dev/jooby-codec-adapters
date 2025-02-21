@@ -273,8 +273,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     function _toPrimitive(t, r) {
       if ("object" != typeof t || !t) return t;
       var e = t[Symbol.toPrimitive];
-      if (undefined !== e) {
-        var i = e.call(t, r || "default");
+      if (void 0 !== e) {
+        var i = e.call(t, r);
         if ("object" != typeof i) return i;
         throw new TypeError("@@toPrimitive must return a primitive value.");
       }
@@ -288,7 +288,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       if (r) {
         if ("string" == typeof r) return _arrayLikeToArray(r, a);
         var t = {}.toString.call(r).slice(8, -1);
-        return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : undefined;
+        return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
       }
     }
 
@@ -704,40 +704,40 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         throw new Error('Device type bytes wrong size');
       }
       var type = ['MTX '];
-      type.push((_nibbles1$nibbles$ = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$ !== undefined ? _nibbles1$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles2$nibbles$ = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$ !== undefined ? _nibbles2$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles3$nibbles$ = nibbles3[nibbles[2]]) !== null && _nibbles3$nibbles$ !== undefined ? _nibbles3$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles3$nibbles$2 = nibbles3[nibbles[3]]) !== null && _nibbles3$nibbles$2 !== undefined ? _nibbles3$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles1$nibbles$ = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$ !== void 0 ? _nibbles1$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles2$nibbles$ = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$ !== void 0 ? _nibbles2$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles3$nibbles$ = nibbles3[nibbles[2]]) !== null && _nibbles3$nibbles$ !== void 0 ? _nibbles3$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles3$nibbles$2 = nibbles3[nibbles[3]]) !== null && _nibbles3$nibbles$2 !== void 0 ? _nibbles3$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
       type.push('.');
-      type.push((_nibbles4$nibbles$ = nibbles4[nibbles[4]]) !== null && _nibbles4$nibbles$ !== undefined ? _nibbles4$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles5$nibbles$ = nibbles5[nibbles[5]]) !== null && _nibbles5$nibbles$ !== undefined ? _nibbles5$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles4$nibbles$ = nibbles4[nibbles[4]]) !== null && _nibbles4$nibbles$ !== void 0 ? _nibbles4$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles5$nibbles$ = nibbles5[nibbles[5]]) !== null && _nibbles5$nibbles$ !== void 0 ? _nibbles5$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
       type.push('.');
-      type.push((_nibbles6$nibbles$ = nibbles6[nibbles[6]]) !== null && _nibbles6$nibbles$ !== undefined ? _nibbles6$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles7$nibbles$ = nibbles7[nibbles[7]]) !== null && _nibbles7$nibbles$ !== undefined ? _nibbles7$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles6$nibbles$ = nibbles6[nibbles[6]]) !== null && _nibbles6$nibbles$ !== void 0 ? _nibbles6$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles7$nibbles$ = nibbles7[nibbles[7]]) !== null && _nibbles7$nibbles$ !== void 0 ? _nibbles7$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
       var revision = nibbles[8];
-      type.push((_nibbles8$nibbles$ = nibbles8[nibbles[9]]) !== null && _nibbles8$nibbles$ !== undefined ? _nibbles8$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles8$nibbles$ = nibbles8[nibbles[9]]) !== null && _nibbles8$nibbles$ !== void 0 ? _nibbles8$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
       type.push('-');
       var deviceProtocolIndex;
       if (nibbles.length < 14 || nibbles[12] === 0 && nibbles[13] === 0) {
         var _nibbles9$nibbles$;
-        type.push((_nibbles9$nibbles$ = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$ !== undefined ? _nibbles9$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+        type.push((_nibbles9$nibbles$ = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$ !== void 0 ? _nibbles9$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
         deviceProtocolIndex = 11;
       } else if (nibbles[13] === 0) {
         var _nibbles9$nibbles$2, _nibbles9$nibbles$3;
-        type.push((_nibbles9$nibbles$2 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$2 !== undefined ? _nibbles9$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-        type.push((_nibbles9$nibbles$3 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$3 !== undefined ? _nibbles9$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
+        type.push((_nibbles9$nibbles$2 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$2 !== void 0 ? _nibbles9$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+        type.push((_nibbles9$nibbles$3 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$3 !== void 0 ? _nibbles9$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
         deviceProtocolIndex = 12;
       } else {
         var _nibbles9$nibbles$4, _nibbles9$nibbles$5, _nibbles9$nibbles$6;
-        type.push((_nibbles9$nibbles$4 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$4 !== undefined ? _nibbles9$nibbles$4 : DEVICE_TYPE_INVALID_CHAR);
-        type.push((_nibbles9$nibbles$5 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$5 !== undefined ? _nibbles9$nibbles$5 : DEVICE_TYPE_INVALID_CHAR);
-        type.push((_nibbles9$nibbles$6 = nibbles9[nibbles[12]]) !== null && _nibbles9$nibbles$6 !== undefined ? _nibbles9$nibbles$6 : DEVICE_TYPE_INVALID_CHAR);
+        type.push((_nibbles9$nibbles$4 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$4 !== void 0 ? _nibbles9$nibbles$4 : DEVICE_TYPE_INVALID_CHAR);
+        type.push((_nibbles9$nibbles$5 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$5 !== void 0 ? _nibbles9$nibbles$5 : DEVICE_TYPE_INVALID_CHAR);
+        type.push((_nibbles9$nibbles$6 = nibbles9[nibbles[12]]) !== null && _nibbles9$nibbles$6 !== void 0 ? _nibbles9$nibbles$6 : DEVICE_TYPE_INVALID_CHAR);
         deviceProtocolIndex = 13;
       }
       var deviceProtocolNibble = nibbles[deviceProtocolIndex];
       if (deviceProtocolNibble && deviceProtocolNibble !== 0) {
         var _nibbles11$deviceProt;
-        type.push((_nibbles11$deviceProt = nibbles11[deviceProtocolNibble]) !== null && _nibbles11$deviceProt !== undefined ? _nibbles11$deviceProt : DEVICE_TYPE_INVALID_CHAR);
+        type.push((_nibbles11$deviceProt = nibbles11[deviceProtocolNibble]) !== null && _nibbles11$deviceProt !== void 0 ? _nibbles11$deviceProt : DEVICE_TYPE_INVALID_CHAR);
       }
       return {
         type: type.join(''),
@@ -764,7 +764,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       }
       nibbles.push(nibbles6.indexOf(type[8]));
       nibbles.push(nibbles7.indexOf(type[9]));
-      nibbles.push(revision !== null && revision !== undefined ? revision : 0);
+      nibbles.push(revision !== null && revision !== void 0 ? revision : 0);
       nibbles.push(nibbles8.indexOf(type[10]));
       if (type[11] !== '-') {
         throw new Error('Wrong format');
@@ -791,13 +791,13 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       }
       var type = ['MTX '];
       var separator = nibbles[1] === 5 ? '-' : ' ';
-      type.push((_nibbles1$nibbles$2 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$2 !== undefined ? _nibbles1$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles2$nibbles$2 = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$2 !== undefined ? _nibbles2$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles1$nibbles$2 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$2 !== void 0 ? _nibbles1$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles2$nibbles$2 = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$2 !== void 0 ? _nibbles2$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
       type.push(separator);
       for (var index = 2; index < nibbles.length; index++) {
         if (nibbles[index] !== 0) {
           var _nibbles10$nibbles$in;
-          type.push((_nibbles10$nibbles$in = nibbles10[nibbles[index]]) !== null && _nibbles10$nibbles$in !== undefined ? _nibbles10$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
+          type.push((_nibbles10$nibbles$in = nibbles10[nibbles[index]]) !== null && _nibbles10$nibbles$in !== void 0 ? _nibbles10$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
         }
       }
       return {
@@ -834,11 +834,11 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         throw new Error('The buffer is too small');
       }
       var type = [];
-      type.push((_nibbles1$nibbles$3 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$3 !== undefined ? _nibbles1$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles1$nibbles$3 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$3 !== void 0 ? _nibbles1$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
       for (var index = 1; index < nibbles.length; index++) {
         if (nibbles[index] !== 0) {
           var _nibbles12$nibbles$in;
-          type.push((_nibbles12$nibbles$in = nibbles12[nibbles[index]]) !== null && _nibbles12$nibbles$in !== undefined ? _nibbles12$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
+          type.push((_nibbles12$nibbles$in = nibbles12[nibbles[index]]) !== null && _nibbles12$nibbles$in !== void 0 ? _nibbles12$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
         }
       }
       return {
@@ -1462,11 +1462,11 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
     CommandBinaryBuffer$1.prototype.setFrameHeader = function (_ref2) {
       var _ref2$type = _ref2.type,
-        type = _ref2$type === undefined ? defaultFrameHeader.type : _ref2$type,
+        type = _ref2$type === void 0 ? defaultFrameHeader.type : _ref2$type,
         _ref2$destination = _ref2.destination,
-        destination = _ref2$destination === undefined ? defaultFrameHeader.destination : _ref2$destination,
+        destination = _ref2$destination === void 0 ? defaultFrameHeader.destination : _ref2$destination,
         _ref2$source = _ref2.source,
-        source = _ref2$source === undefined ? defaultFrameHeader.source : _ref2$source;
+        source = _ref2$source === void 0 ? defaultFrameHeader.source : _ref2$source;
       this.setUint8(type);
       this.setUint16(destination);
       this.setUint16(source);
@@ -1985,7 +1985,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       });
     };
     var getPackedEnergiesWithDateSize = function getPackedEnergiesWithDateSize(parameters) {
-      if (parameters !== null && parameters !== undefined && parameters.energyType) {
+      if (parameters !== null && parameters !== void 0 && parameters.energyType) {
         var energiesNumber = parameters.energies.filter(function (energy) {
           return energy !== null;
         }).length;
@@ -2293,9 +2293,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$1X = function toBytes(parameters) {
-      var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== undefined && parameters.energyType ? MAX_COMMAND_SIZE$5 : MIN_COMMAND_SIZE$5);
-      buffer.setDate(parameters === null || parameters === undefined ? undefined : parameters.date);
-      if (parameters !== null && parameters !== undefined && parameters.energyType) {
+      var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== void 0 && parameters.energyType ? MAX_COMMAND_SIZE$5 : MIN_COMMAND_SIZE$5);
+      buffer.setDate(parameters === null || parameters === void 0 ? void 0 : parameters.date);
+      if (parameters !== null && parameters !== void 0 && parameters.energyType) {
         buffer.setUint8(parameters.energyType);
       }
       return toBytes$23(id$1V, buffer.data);
@@ -2317,9 +2317,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$1W = function toBytes(parameters) {
-      var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== undefined && parameters.energyType ? MAX_COMMAND_SIZE$4 : MIN_COMMAND_SIZE$4);
-      buffer.setDate(parameters === null || parameters === undefined ? undefined : parameters.date);
-      if (parameters !== null && parameters !== undefined && parameters.energyType) {
+      var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== void 0 && parameters.energyType ? MAX_COMMAND_SIZE$4 : MIN_COMMAND_SIZE$4);
+      buffer.setDate(parameters === null || parameters === void 0 ? void 0 : parameters.date);
+      if (parameters !== null && parameters !== void 0 && parameters.energyType) {
         buffer.setUint8(parameters.energyType);
       }
       return toBytes$23(id$1U, buffer.data);
@@ -2453,8 +2453,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
     var toBytes$1N = function toBytes() {
       var parameters = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== undefined && parameters.energyType ? MAX_COMMAND_SIZE$3 : MIN_COMMAND_SIZE$3);
-      if (parameters !== null && parameters !== undefined && parameters.energyType) {
+      var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== void 0 && parameters.energyType ? MAX_COMMAND_SIZE$3 : MIN_COMMAND_SIZE$3);
+      if (parameters !== null && parameters !== void 0 && parameters.energyType) {
         buffer.setUint8(parameters.energyType);
       }
       return toBytes$23(id$1L, buffer.data);
@@ -2495,8 +2495,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
     var toBytes$1L = function toBytes() {
       var parameters = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== undefined && parameters.energyType ? MAX_COMMAND_SIZE$1 : MIN_COMMAND_SIZE$1);
-      if (parameters !== null && parameters !== undefined && parameters.energyType) {
+      var buffer = new CommandBinaryBuffer$1(parameters !== null && parameters !== void 0 && parameters.energyType ? MAX_COMMAND_SIZE$1 : MIN_COMMAND_SIZE$1);
+      if (parameters !== null && parameters !== void 0 && parameters.energyType) {
         buffer.setUint8(parameters.energyType);
       }
       return toBytes$23(id$1J, buffer.data);
@@ -3482,7 +3482,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       return function () {
         var bytes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
         var config = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-        var aesKey = config === null || config === undefined ? undefined : config.aesKey;
+        var aesKey = config === null || config === void 0 ? void 0 : config.aesKey;
         var commands = [];
         var _bytes = _slicedToArray(bytes, 2),
           messageId = _bytes[0],
@@ -3560,9 +3560,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       return function (commands, _ref) {
         var _ref2;
         var _ref$messageId = _ref.messageId,
-          messageId = _ref$messageId === undefined ? 1 : _ref$messageId,
+          messageId = _ref$messageId === void 0 ? 1 : _ref$messageId,
           _ref$accessLevel = _ref.accessLevel,
-          accessLevel = _ref$accessLevel === undefined ? READ_ONLY : _ref$accessLevel,
+          accessLevel = _ref$accessLevel === void 0 ? READ_ONLY : _ref$accessLevel,
           aesKey = _ref.aesKey;
         var commandBytes = commands.map(function (command) {
           if ('id' in command) {
@@ -4093,7 +4093,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
     var toBytes$W = function toBytes(parameters) {
       var size = COMMAND_SIZE$5;
-      if (parameters !== null && parameters !== undefined && parameters.energyType) {
+      if (parameters !== null && parameters !== void 0 && parameters.energyType) {
         var energiesNumber = parameters.energies.filter(function (energy) {
           return energy !== null;
         }).length;
@@ -4124,7 +4124,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
     var toBytes$V = function toBytes(parameters) {
       var size = COMMAND_SIZE$4;
-      if (parameters !== null && parameters !== undefined && parameters.energyType) {
+      if (parameters !== null && parameters !== void 0 && parameters.energyType) {
         var energiesNumber = parameters.energies.filter(function (energy) {
           return energy !== null;
         }).length;
@@ -4274,7 +4274,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var energyFromBinary = function energyFromBinary(bytes, offset) {
       var periodMin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 30;
       return bytes.reduce(function (collector, value, index) {
-        collector.push(energyFromWord(value, (offset !== null && offset !== undefined ? offset : 0) + index, periodMin));
+        collector.push(energyFromWord(value, (offset !== null && offset !== void 0 ? offset : 0) + index, periodMin));
         return collector;
       }, []);
     };
@@ -4306,7 +4306,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var voltageFromBinary = function voltageFromBinary(bytes, offset) {
       var periodMin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 30;
       return bytes.reduce(function (collector, value, index) {
-        collector.push(voltageFromWord(value, (offset !== null && offset !== undefined ? offset : 0) + index, periodMin));
+        collector.push(voltageFromWord(value, (offset !== null && offset !== void 0 ? offset : 0) + index, periodMin));
         return collector;
       }, []);
     };
@@ -4403,7 +4403,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
     var toBytes$K = function toBytes(parameters) {
       var size = COMMAND_SIZE$3;
-      if (parameters !== null && parameters !== undefined && parameters.energyType) {
+      if (parameters !== null && parameters !== void 0 && parameters.energyType) {
         var energiesNumber = parameters.energies.filter(function (energy) {
           return energy !== null;
         }).length;
@@ -4454,7 +4454,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
     var toBytes$I = function toBytes(parameters) {
       var size = COMMAND_SIZE$1;
-      if (parameters !== null && parameters !== undefined && parameters.energyType) {
+      if (parameters !== null && parameters !== void 0 && parameters.energyType) {
         var energiesNumber = parameters.energies.filter(function (energy) {
           return energy !== null;
         }).length;
