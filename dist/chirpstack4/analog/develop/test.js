@@ -523,6 +523,8 @@
     const ELIMP = 11;
     const GASIC = 12;
     const US_WATER = 13;
+    const PLC2LORA = 14;
+    const LORA = 21;
     const NBIOT = 24;
 
     const REPORTING_DATA_INTERVAL = 1;
@@ -6122,6 +6124,8 @@
                 }
                 break;
             case MTXLORA:
+            case PLC2LORA:
+            case LORA:
                 data = {
                     time2000: buffer.getUint32(),
                     resetReason: buffer.getUint8(),

@@ -616,6 +616,8 @@ var IMP4IN = 10;
 var ELIMP = 11;
 var GASIC = 12;
 var US_WATER = 13;
+var PLC2LORA = 14;
+var LORA = 21;
 var NBIOT = 24;
 
 var REPORTING_DATA_INTERVAL = 1;
@@ -2732,6 +2734,8 @@ var fromBytes$8 = function (bytes) {
       }
       break;
     case MTXLORA:
+    case PLC2LORA:
+    case LORA:
       data = {
         time2000: buffer.getUint32(),
         resetReason: buffer.getUint8(),
