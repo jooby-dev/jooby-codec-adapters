@@ -1996,6 +1996,204 @@ var toBytes, setDataSegment, getBase64FromBytes;
     return toBytes$18(id$X);
   };
 
+  var OK = 0;
+  var UNKNOWN_COMMAND = 0x80;
+  var NOT_ALIGNED_DATA = 0x81;
+  var DECRYPTION_FAILURE = 0x82;
+  var UNKNOWN_PROTOCOL = 0x83;
+  var BAD_MESSAGE = 0x84;
+  var BAD_DATA_LENGTH = 0x85;
+  var BAD_ARRAY_INDEX = 0x86;
+  var NOT_PREPARED_RATE_PLAN = 0x87;
+  var BAD_RATE_PLAN_ID = 0x88;
+  var BAD_RATE_PLAN_SIZE = 0x89;
+  var BAD_RESPONSE_LENGTH = 0x90;
+  var NO_DATA_FOR_DATE = 0x91;
+  var CALIBRATION_DISABLED = 0x92;
+  var ACCESS_DENIED = 0x93;
+  var BAD_SALDO_WRITE = 0x95;
+  var BLOCKED_METER = 0x97;
+  var UNENCRYPTED_COMMAND_DISABLED = 0x98;
+  var TIME_CORRECTION_FAILURE = 0x99;
+  var INVALID_CORRECTION_INTERVAL = 0x9a;
+  var TIME_CORRECTION_OUT_HALF_HOUR_DISABLED = 0x9b;
+  var BAD_BLOCK_NUMBER = 0x9c;
+  var OUT_OFF_RANGE = 0x9f;
+  var SET_METER_TYPE_FAILURE = 0xa0;
+  var INTERNAL = 0xf0;
+
+  var resultCodes = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ACCESS_DENIED: ACCESS_DENIED,
+    BAD_ARRAY_INDEX: BAD_ARRAY_INDEX,
+    BAD_BLOCK_NUMBER: BAD_BLOCK_NUMBER,
+    BAD_DATA_LENGTH: BAD_DATA_LENGTH,
+    BAD_MESSAGE: BAD_MESSAGE,
+    BAD_RATE_PLAN_ID: BAD_RATE_PLAN_ID,
+    BAD_RATE_PLAN_SIZE: BAD_RATE_PLAN_SIZE,
+    BAD_RESPONSE_LENGTH: BAD_RESPONSE_LENGTH,
+    BAD_SALDO_WRITE: BAD_SALDO_WRITE,
+    BLOCKED_METER: BLOCKED_METER,
+    CALIBRATION_DISABLED: CALIBRATION_DISABLED,
+    DECRYPTION_FAILURE: DECRYPTION_FAILURE,
+    INTERNAL: INTERNAL,
+    INVALID_CORRECTION_INTERVAL: INVALID_CORRECTION_INTERVAL,
+    NOT_ALIGNED_DATA: NOT_ALIGNED_DATA,
+    NOT_PREPARED_RATE_PLAN: NOT_PREPARED_RATE_PLAN,
+    NO_DATA_FOR_DATE: NO_DATA_FOR_DATE,
+    OK: OK,
+    OUT_OFF_RANGE: OUT_OFF_RANGE,
+    SET_METER_TYPE_FAILURE: SET_METER_TYPE_FAILURE,
+    TIME_CORRECTION_FAILURE: TIME_CORRECTION_FAILURE,
+    TIME_CORRECTION_OUT_HALF_HOUR_DISABLED: TIME_CORRECTION_OUT_HALF_HOUR_DISABLED,
+    UNENCRYPTED_COMMAND_DISABLED: UNENCRYPTED_COMMAND_DISABLED,
+    UNKNOWN_COMMAND: UNKNOWN_COMMAND,
+    UNKNOWN_PROTOCOL: UNKNOWN_PROTOCOL
+  });
+
+  invertObject(resultCodes);
+
+  var SET_ALL_SEGMENT_DISPLAY$1 = 1;
+  var SOFTWARE_VERSION$1 = 2;
+  var TOTAL_ACTIVE_ENERGY$1 = 3;
+  var ACTIVE_ENERGY_T1$1 = 4;
+  var ACTIVE_ENERGY_T2$1 = 5;
+  var ACTIVE_ENERGY_T3$1 = 6;
+  var ACTIVE_ENERGY_T4$1 = 7;
+  var ACTIVE_POWER_PER_PHASE = 8;
+  var ACTIVE_POWER_IN_NEUTRAL = 9;
+  var CURRENT_IN_PHASE = 10;
+  var CURRENT_IN_NEUTRAL$1 = 11;
+  var VOLTAGE = 12;
+  var HOUR_MINUTE_SECOND$1 = 13;
+  var DATE_MONTH_YEAR$1 = 14;
+  var TOTAL_EXPORTED_ACTIVE_ENERGY$1 = 15;
+  var EXPORTED_ACTIVE_ENERGY_T1$1 = 16;
+  var EXPORTED_ACTIVE_ENERGY_T2$1 = 17;
+  var EXPORTED_ACTIVE_ENERGY_T3$1 = 18;
+  var EXPORTED_ACTIVE_ENERGY_T4$1 = 19;
+  var POWER_COEFFICIENT_PHASE_A$1 = 20;
+  var POWER_COEFFICIENT_PHASE_B$1 = 21;
+  var BATTERY_VOLTAGE$1 = 22;
+  var POWER_THRESHOLD_T1$1 = 23;
+  var POWER_THRESHOLD_T2$1 = 24;
+  var POWER_THRESHOLD_T3$1 = 25;
+  var POWER_THRESHOLD_T4$1 = 26;
+  var MAGNET_INDUCTION$1 = 28;
+  var CURRENT_BALANCE$1 = 30;
+  var OPTOPORT_SPEED$1 = 31;
+
+  var screenIds$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ACTIVE_ENERGY_T1: ACTIVE_ENERGY_T1$1,
+    ACTIVE_ENERGY_T2: ACTIVE_ENERGY_T2$1,
+    ACTIVE_ENERGY_T3: ACTIVE_ENERGY_T3$1,
+    ACTIVE_ENERGY_T4: ACTIVE_ENERGY_T4$1,
+    ACTIVE_POWER_IN_NEUTRAL: ACTIVE_POWER_IN_NEUTRAL,
+    ACTIVE_POWER_PER_PHASE: ACTIVE_POWER_PER_PHASE,
+    BATTERY_VOLTAGE: BATTERY_VOLTAGE$1,
+    CURRENT_BALANCE: CURRENT_BALANCE$1,
+    CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL$1,
+    CURRENT_IN_PHASE: CURRENT_IN_PHASE,
+    DATE_MONTH_YEAR: DATE_MONTH_YEAR$1,
+    EXPORTED_ACTIVE_ENERGY_T1: EXPORTED_ACTIVE_ENERGY_T1$1,
+    EXPORTED_ACTIVE_ENERGY_T2: EXPORTED_ACTIVE_ENERGY_T2$1,
+    EXPORTED_ACTIVE_ENERGY_T3: EXPORTED_ACTIVE_ENERGY_T3$1,
+    EXPORTED_ACTIVE_ENERGY_T4: EXPORTED_ACTIVE_ENERGY_T4$1,
+    HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND$1,
+    MAGNET_INDUCTION: MAGNET_INDUCTION$1,
+    OPTOPORT_SPEED: OPTOPORT_SPEED$1,
+    POWER_COEFFICIENT_PHASE_A: POWER_COEFFICIENT_PHASE_A$1,
+    POWER_COEFFICIENT_PHASE_B: POWER_COEFFICIENT_PHASE_B$1,
+    POWER_THRESHOLD_T1: POWER_THRESHOLD_T1$1,
+    POWER_THRESHOLD_T2: POWER_THRESHOLD_T2$1,
+    POWER_THRESHOLD_T3: POWER_THRESHOLD_T3$1,
+    POWER_THRESHOLD_T4: POWER_THRESHOLD_T4$1,
+    SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY$1,
+    SOFTWARE_VERSION: SOFTWARE_VERSION$1,
+    TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY$1,
+    TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY$1,
+    VOLTAGE: VOLTAGE
+  });
+
+  invertObject(screenIds$1);
+
+  var getDayEnergies = 0x78;
+  var getDayMaxPower = 0x79;
+  var errorResponse$1 = 0xfe;
+
+  var uplinkIds$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    activateRatePlan: activateRatePlan$1,
+    errorResponse: errorResponse$1,
+    getBuildVersion: getBuildVersion$1,
+    getCorrectTime: getCorrectTime$1,
+    getCriticalEvent: getCriticalEvent$1,
+    getCurrentStatusMeter: getCurrentStatusMeter$1,
+    getCurrentValues: getCurrentValues$1,
+    getDateTime: getDateTime$1,
+    getDayDemand: getDayDemand$1,
+    getDayDemandExport: getDayDemandExport$1,
+    getDayEnergies: getDayEnergies,
+    getDayMaxDemand: getDayMaxDemand$1,
+    getDayMaxDemandExport: getDayMaxDemandExport$1,
+    getDayMaxDemandPrevious: getDayMaxDemandPrevious,
+    getDayMaxPower: getDayMaxPower,
+    getDayProfile: getDayProfile$1,
+    getDemand: getDemand$1,
+    getDeviceId: getDeviceId$1,
+    getDeviceType: getDeviceType$1,
+    getDisplayParam: getDisplayParam$1,
+    getEnergy: getEnergy$1,
+    getEnergyDayPrevious: getEnergyDayPrevious$1,
+    getEnergyExport: getEnergyExport$1,
+    getEnergyExportDayPrevious: getEnergyExportDayPrevious$1,
+    getEventStatus: getEventStatus$1,
+    getEvents: getEvents$1,
+    getEventsCounters: getEventsCounters$1,
+    getExtendedCurrentValues: getExtendedCurrentValues$1,
+    getExtendedCurrentValues2: getExtendedCurrentValues2,
+    getHalfHourDemand: getHalfHourDemand$1,
+    getHalfHourDemandExport: getHalfHourDemandExport$1,
+    getHalfHourDemandPrevious: getHalfHourDemandPrevious,
+    getHalfhoursEnergies: getHalfhoursEnergies$1,
+    getMagneticFieldThreshold: getMagneticFieldThreshold$1,
+    getMeterInfo: getMeterInfo$1,
+    getMonthDemand: getMonthDemand$1,
+    getMonthDemandExport: getMonthDemandExport$1,
+    getMonthMaxDemand: getMonthMaxDemand$1,
+    getMonthMaxDemandExport: getMonthMaxDemandExport$1,
+    getOperatorParameters: getOperatorParameters$1,
+    getOperatorParametersExtended3: getOperatorParametersExtended3$1,
+    getRatePlanInfo: getRatePlanInfo$1,
+    getSaldo: getSaldo$1,
+    getSaldoParameters: getSaldoParameters$1,
+    getSeasonProfile: getSeasonProfile$1,
+    getSpecialDay: getSpecialDay$1,
+    getVersion: getVersion$1,
+    prepareRatePlan: prepareRatePlan$1,
+    resetPowerMaxDay: resetPowerMaxDay$1,
+    resetPowerMaxMonth: resetPowerMaxMonth$1,
+    runTariffPlan: runTariffPlan$1,
+    setAccessKey: setAccessKey$1,
+    setCorrectDateTime: setCorrectDateTime$1,
+    setCorrectTime: setCorrectTime$1,
+    setDateTime: setDateTime$1,
+    setDayProfile: setDayProfile$1,
+    setDisplayParam: setDisplayParam$1,
+    setOperatorParameters: setOperatorParameters$1,
+    setOperatorParametersExtended3: setOperatorParametersExtended3$1,
+    setSaldo: setSaldo$1,
+    setSaldoParameters: setSaldoParameters$1,
+    setSeasonProfile: setSeasonProfile$1,
+    setSpecialDay: setSpecialDay$1,
+    setSpecialOperation: setSpecialOperation$1,
+    turnRelayOff: turnRelayOff$1,
+    turnRelayOn: turnRelayOn$1
+  });
+
+  invertObject(uplinkIds$1);
+
   var id$W = getEvents$1;
   var maxSize$u = 4;
   var toBytes$Y = function (parameters) {
@@ -2641,204 +2839,6 @@ var toBytes, setDataSegment, getBase64FromBytes;
       return header.concat(body);
     };
   };
-
-  var OK = 0;
-  var UNKNOWN_COMMAND = 0x80;
-  var NOT_ALIGNED_DATA = 0x81;
-  var DECRYPTION_FAILURE = 0x82;
-  var UNKNOWN_PROTOCOL = 0x83;
-  var BAD_MESSAGE = 0x84;
-  var BAD_DATA_LENGTH = 0x85;
-  var BAD_ARRAY_INDEX = 0x86;
-  var NOT_PREPARED_RATE_PLAN = 0x87;
-  var BAD_RATE_PLAN_ID = 0x88;
-  var BAD_RATE_PLAN_SIZE = 0x89;
-  var BAD_RESPONSE_LENGTH = 0x90;
-  var NO_DATA_FOR_DATE = 0x91;
-  var CALIBRATION_DISABLED = 0x92;
-  var ACCESS_DENIED = 0x93;
-  var BAD_SALDO_WRITE = 0x95;
-  var BLOCKED_METER = 0x97;
-  var UNENCRYPTED_COMMAND_DISABLED = 0x98;
-  var TIME_CORRECTION_FAILURE = 0x99;
-  var INVALID_CORRECTION_INTERVAL = 0x9a;
-  var TIME_CORRECTION_OUT_HALF_HOUR_DISABLED = 0x9b;
-  var BAD_BLOCK_NUMBER = 0x9c;
-  var OUT_OFF_RANGE = 0x9f;
-  var SET_METER_TYPE_FAILURE = 0xa0;
-  var INTERNAL = 0xf0;
-
-  var resultCodes = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    ACCESS_DENIED: ACCESS_DENIED,
-    BAD_ARRAY_INDEX: BAD_ARRAY_INDEX,
-    BAD_BLOCK_NUMBER: BAD_BLOCK_NUMBER,
-    BAD_DATA_LENGTH: BAD_DATA_LENGTH,
-    BAD_MESSAGE: BAD_MESSAGE,
-    BAD_RATE_PLAN_ID: BAD_RATE_PLAN_ID,
-    BAD_RATE_PLAN_SIZE: BAD_RATE_PLAN_SIZE,
-    BAD_RESPONSE_LENGTH: BAD_RESPONSE_LENGTH,
-    BAD_SALDO_WRITE: BAD_SALDO_WRITE,
-    BLOCKED_METER: BLOCKED_METER,
-    CALIBRATION_DISABLED: CALIBRATION_DISABLED,
-    DECRYPTION_FAILURE: DECRYPTION_FAILURE,
-    INTERNAL: INTERNAL,
-    INVALID_CORRECTION_INTERVAL: INVALID_CORRECTION_INTERVAL,
-    NOT_ALIGNED_DATA: NOT_ALIGNED_DATA,
-    NOT_PREPARED_RATE_PLAN: NOT_PREPARED_RATE_PLAN,
-    NO_DATA_FOR_DATE: NO_DATA_FOR_DATE,
-    OK: OK,
-    OUT_OFF_RANGE: OUT_OFF_RANGE,
-    SET_METER_TYPE_FAILURE: SET_METER_TYPE_FAILURE,
-    TIME_CORRECTION_FAILURE: TIME_CORRECTION_FAILURE,
-    TIME_CORRECTION_OUT_HALF_HOUR_DISABLED: TIME_CORRECTION_OUT_HALF_HOUR_DISABLED,
-    UNENCRYPTED_COMMAND_DISABLED: UNENCRYPTED_COMMAND_DISABLED,
-    UNKNOWN_COMMAND: UNKNOWN_COMMAND,
-    UNKNOWN_PROTOCOL: UNKNOWN_PROTOCOL
-  });
-
-  invertObject(resultCodes);
-
-  var SET_ALL_SEGMENT_DISPLAY$1 = 1;
-  var SOFTWARE_VERSION$1 = 2;
-  var TOTAL_ACTIVE_ENERGY$1 = 3;
-  var ACTIVE_ENERGY_T1$1 = 4;
-  var ACTIVE_ENERGY_T2$1 = 5;
-  var ACTIVE_ENERGY_T3$1 = 6;
-  var ACTIVE_ENERGY_T4$1 = 7;
-  var ACTIVE_POWER_PER_PHASE = 8;
-  var ACTIVE_POWER_IN_NEUTRAL = 9;
-  var CURRENT_IN_PHASE = 10;
-  var CURRENT_IN_NEUTRAL$1 = 11;
-  var VOLTAGE = 12;
-  var HOUR_MINUTE_SECOND$1 = 13;
-  var DATE_MONTH_YEAR$1 = 14;
-  var TOTAL_EXPORTED_ACTIVE_ENERGY$1 = 15;
-  var EXPORTED_ACTIVE_ENERGY_T1$1 = 16;
-  var EXPORTED_ACTIVE_ENERGY_T2$1 = 17;
-  var EXPORTED_ACTIVE_ENERGY_T3$1 = 18;
-  var EXPORTED_ACTIVE_ENERGY_T4$1 = 19;
-  var POWER_COEFFICIENT_PHASE_A$1 = 20;
-  var POWER_COEFFICIENT_PHASE_B$1 = 21;
-  var BATTERY_VOLTAGE$1 = 22;
-  var POWER_THRESHOLD_T1$1 = 23;
-  var POWER_THRESHOLD_T2$1 = 24;
-  var POWER_THRESHOLD_T3$1 = 25;
-  var POWER_THRESHOLD_T4$1 = 26;
-  var MAGNET_INDUCTION$1 = 28;
-  var CURRENT_BALANCE$1 = 30;
-  var OPTOPORT_SPEED$1 = 31;
-
-  var screenIds$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    ACTIVE_ENERGY_T1: ACTIVE_ENERGY_T1$1,
-    ACTIVE_ENERGY_T2: ACTIVE_ENERGY_T2$1,
-    ACTIVE_ENERGY_T3: ACTIVE_ENERGY_T3$1,
-    ACTIVE_ENERGY_T4: ACTIVE_ENERGY_T4$1,
-    ACTIVE_POWER_IN_NEUTRAL: ACTIVE_POWER_IN_NEUTRAL,
-    ACTIVE_POWER_PER_PHASE: ACTIVE_POWER_PER_PHASE,
-    BATTERY_VOLTAGE: BATTERY_VOLTAGE$1,
-    CURRENT_BALANCE: CURRENT_BALANCE$1,
-    CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL$1,
-    CURRENT_IN_PHASE: CURRENT_IN_PHASE,
-    DATE_MONTH_YEAR: DATE_MONTH_YEAR$1,
-    EXPORTED_ACTIVE_ENERGY_T1: EXPORTED_ACTIVE_ENERGY_T1$1,
-    EXPORTED_ACTIVE_ENERGY_T2: EXPORTED_ACTIVE_ENERGY_T2$1,
-    EXPORTED_ACTIVE_ENERGY_T3: EXPORTED_ACTIVE_ENERGY_T3$1,
-    EXPORTED_ACTIVE_ENERGY_T4: EXPORTED_ACTIVE_ENERGY_T4$1,
-    HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND$1,
-    MAGNET_INDUCTION: MAGNET_INDUCTION$1,
-    OPTOPORT_SPEED: OPTOPORT_SPEED$1,
-    POWER_COEFFICIENT_PHASE_A: POWER_COEFFICIENT_PHASE_A$1,
-    POWER_COEFFICIENT_PHASE_B: POWER_COEFFICIENT_PHASE_B$1,
-    POWER_THRESHOLD_T1: POWER_THRESHOLD_T1$1,
-    POWER_THRESHOLD_T2: POWER_THRESHOLD_T2$1,
-    POWER_THRESHOLD_T3: POWER_THRESHOLD_T3$1,
-    POWER_THRESHOLD_T4: POWER_THRESHOLD_T4$1,
-    SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY$1,
-    SOFTWARE_VERSION: SOFTWARE_VERSION$1,
-    TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY$1,
-    TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY$1,
-    VOLTAGE: VOLTAGE
-  });
-
-  invertObject(screenIds$1);
-
-  var getDayEnergies = 0x78;
-  var getDayMaxPower = 0x79;
-  var errorResponse$1 = 0xfe;
-
-  var uplinkIds$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    activateRatePlan: activateRatePlan$1,
-    errorResponse: errorResponse$1,
-    getBuildVersion: getBuildVersion$1,
-    getCorrectTime: getCorrectTime$1,
-    getCriticalEvent: getCriticalEvent$1,
-    getCurrentStatusMeter: getCurrentStatusMeter$1,
-    getCurrentValues: getCurrentValues$1,
-    getDateTime: getDateTime$1,
-    getDayDemand: getDayDemand$1,
-    getDayDemandExport: getDayDemandExport$1,
-    getDayEnergies: getDayEnergies,
-    getDayMaxDemand: getDayMaxDemand$1,
-    getDayMaxDemandExport: getDayMaxDemandExport$1,
-    getDayMaxDemandPrevious: getDayMaxDemandPrevious,
-    getDayMaxPower: getDayMaxPower,
-    getDayProfile: getDayProfile$1,
-    getDemand: getDemand$1,
-    getDeviceId: getDeviceId$1,
-    getDeviceType: getDeviceType$1,
-    getDisplayParam: getDisplayParam$1,
-    getEnergy: getEnergy$1,
-    getEnergyDayPrevious: getEnergyDayPrevious$1,
-    getEnergyExport: getEnergyExport$1,
-    getEnergyExportDayPrevious: getEnergyExportDayPrevious$1,
-    getEventStatus: getEventStatus$1,
-    getEvents: getEvents$1,
-    getEventsCounters: getEventsCounters$1,
-    getExtendedCurrentValues: getExtendedCurrentValues$1,
-    getExtendedCurrentValues2: getExtendedCurrentValues2,
-    getHalfHourDemand: getHalfHourDemand$1,
-    getHalfHourDemandExport: getHalfHourDemandExport$1,
-    getHalfHourDemandPrevious: getHalfHourDemandPrevious,
-    getHalfhoursEnergies: getHalfhoursEnergies$1,
-    getMagneticFieldThreshold: getMagneticFieldThreshold$1,
-    getMeterInfo: getMeterInfo$1,
-    getMonthDemand: getMonthDemand$1,
-    getMonthDemandExport: getMonthDemandExport$1,
-    getMonthMaxDemand: getMonthMaxDemand$1,
-    getMonthMaxDemandExport: getMonthMaxDemandExport$1,
-    getOperatorParameters: getOperatorParameters$1,
-    getOperatorParametersExtended3: getOperatorParametersExtended3$1,
-    getRatePlanInfo: getRatePlanInfo$1,
-    getSaldo: getSaldo$1,
-    getSaldoParameters: getSaldoParameters$1,
-    getSeasonProfile: getSeasonProfile$1,
-    getSpecialDay: getSpecialDay$1,
-    getVersion: getVersion$1,
-    prepareRatePlan: prepareRatePlan$1,
-    resetPowerMaxDay: resetPowerMaxDay$1,
-    resetPowerMaxMonth: resetPowerMaxMonth$1,
-    runTariffPlan: runTariffPlan$1,
-    setAccessKey: setAccessKey$1,
-    setCorrectDateTime: setCorrectDateTime$1,
-    setCorrectTime: setCorrectTime$1,
-    setDateTime: setDateTime$1,
-    setDayProfile: setDayProfile$1,
-    setDisplayParam: setDisplayParam$1,
-    setOperatorParameters: setOperatorParameters$1,
-    setOperatorParametersExtended3: setOperatorParametersExtended3$1,
-    setSaldo: setSaldo$1,
-    setSaldoParameters: setSaldoParameters$1,
-    setSeasonProfile: setSeasonProfile$1,
-    setSpecialDay: setSpecialDay$1,
-    setSpecialOperation: setSpecialOperation$1,
-    turnRelayOff: turnRelayOff$1,
-    turnRelayOn: turnRelayOn$1
-  });
-
-  invertObject(uplinkIds$1);
 
   var getEventStatus = 0x01;
   var getEnergyDayPrevious = 0x03;
@@ -4265,7 +4265,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     this.setUint8(parameters.period);
   };
   CommandBinaryBuffer.prototype.getOperatorParametersExtended2 = function () {
-    return {
+    var operatorParametersExtended2 = {
       deltaCorMin: this.getUint8(),
       timeoutMagnetOff: this.getUint8(),
       relaySetExt: toObject(relaySetExtMask, this.getUint8()),
@@ -4281,10 +4281,16 @@ var toBytes, setDataSegment, getBase64FromBytes;
       channel4: this.getUint8(),
       channel5: this.getUint8(),
       channel6: this.getUint8(),
-      timeCorrectPeriod: this.getUint8()
+      timeCorrectPeriod: 0,
+      timeCorrectPassHalfhour: false
     };
+    var timeCorrectPeriod = this.getUint8();
+    operatorParametersExtended2.timeCorrectPeriod = timeCorrectPeriod & 0x7f;
+    operatorParametersExtended2.timeCorrectPassHalfhour = !!(timeCorrectPeriod & 0x80);
+    return operatorParametersExtended2;
   };
   CommandBinaryBuffer.prototype.setOperatorParametersExtended2 = function (operatorParametersExtended2) {
+    var timeCorrectPeriod = operatorParametersExtended2.timeCorrectPeriod | (operatorParametersExtended2.timeCorrectPassHalfhour ? 0x80 : 0);
     this.setUint8(operatorParametersExtended2.deltaCorMin);
     this.setUint8(operatorParametersExtended2.timeoutMagnetOff);
     this.setUint8(fromObject(relaySetExtMask, operatorParametersExtended2.relaySetExt));
@@ -4300,7 +4306,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     this.setUint8(operatorParametersExtended2.channel4);
     this.setUint8(operatorParametersExtended2.channel5);
     this.setUint8(operatorParametersExtended2.channel6);
-    this.setUint8(operatorParametersExtended2.timeCorrectPeriod);
+    this.setUint8(timeCorrectPeriod);
   };
   CommandBinaryBuffer.prototype.getOperatorParametersExtended4 = function () {
     return {

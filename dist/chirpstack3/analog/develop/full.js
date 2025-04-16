@@ -4062,6 +4062,7 @@ var fromBytes, toBytes;
         case IMP4IN:
         case GASIC:
         case NBIOT:
+        case US_WATER:
           {
             var statusData = {
               batteryVoltage: buffer.getBatteryVoltage(),

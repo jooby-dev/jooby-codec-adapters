@@ -2781,7 +2781,7 @@
     var A_PLUS = 0x01;
     var A_MINUS = 0x02;
     var VOLTAGE_10 = 0x40;
-    var VOLTAGE = 0xa0;
+    var VOLTAGE$1 = 0xa0;
 
     var id$1P = getDemand$2;
     var name$1P = commandNames$1[getDemand$2];
@@ -2912,6 +2912,211 @@
         toBytes: toBytes$1N
     });
 
+    var OK = 0;
+    var UNKNOWN_COMMAND = 0x80;
+    var NOT_ALIGNED_DATA = 0x81;
+    var DECRYPTION_FAILURE = 0x82;
+    var UNKNOWN_PROTOCOL = 0x83;
+    var BAD_MESSAGE = 0x84;
+    var BAD_DATA_LENGTH = 0x85;
+    var BAD_ARRAY_INDEX = 0x86;
+    var NOT_PREPARED_RATE_PLAN = 0x87;
+    var BAD_RATE_PLAN_ID = 0x88;
+    var BAD_RATE_PLAN_SIZE = 0x89;
+    var BAD_RESPONSE_LENGTH = 0x90;
+    var NO_DATA_FOR_DATE = 0x91;
+    var CALIBRATION_DISABLED = 0x92;
+    var ACCESS_DENIED = 0x93;
+    var BAD_SALDO_WRITE = 0x95;
+    var BLOCKED_METER = 0x97;
+    var UNENCRYPTED_COMMAND_DISABLED = 0x98;
+    var TIME_CORRECTION_FAILURE = 0x99;
+    var INVALID_CORRECTION_INTERVAL = 0x9a;
+    var TIME_CORRECTION_OUT_HALF_HOUR_DISABLED = 0x9b;
+    var BAD_BLOCK_NUMBER = 0x9c;
+    var OUT_OFF_RANGE = 0x9f;
+    var SET_METER_TYPE_FAILURE = 0xa0;
+    var INTERNAL = 0xf0;
+
+    var resultCodes = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        ACCESS_DENIED: ACCESS_DENIED,
+        BAD_ARRAY_INDEX: BAD_ARRAY_INDEX,
+        BAD_BLOCK_NUMBER: BAD_BLOCK_NUMBER,
+        BAD_DATA_LENGTH: BAD_DATA_LENGTH,
+        BAD_MESSAGE: BAD_MESSAGE,
+        BAD_RATE_PLAN_ID: BAD_RATE_PLAN_ID,
+        BAD_RATE_PLAN_SIZE: BAD_RATE_PLAN_SIZE,
+        BAD_RESPONSE_LENGTH: BAD_RESPONSE_LENGTH,
+        BAD_SALDO_WRITE: BAD_SALDO_WRITE,
+        BLOCKED_METER: BLOCKED_METER,
+        CALIBRATION_DISABLED: CALIBRATION_DISABLED,
+        DECRYPTION_FAILURE: DECRYPTION_FAILURE,
+        INTERNAL: INTERNAL,
+        INVALID_CORRECTION_INTERVAL: INVALID_CORRECTION_INTERVAL,
+        NOT_ALIGNED_DATA: NOT_ALIGNED_DATA,
+        NOT_PREPARED_RATE_PLAN: NOT_PREPARED_RATE_PLAN,
+        NO_DATA_FOR_DATE: NO_DATA_FOR_DATE,
+        OK: OK,
+        OUT_OFF_RANGE: OUT_OFF_RANGE,
+        SET_METER_TYPE_FAILURE: SET_METER_TYPE_FAILURE,
+        TIME_CORRECTION_FAILURE: TIME_CORRECTION_FAILURE,
+        TIME_CORRECTION_OUT_HALF_HOUR_DISABLED: TIME_CORRECTION_OUT_HALF_HOUR_DISABLED,
+        UNENCRYPTED_COMMAND_DISABLED: UNENCRYPTED_COMMAND_DISABLED,
+        UNKNOWN_COMMAND: UNKNOWN_COMMAND,
+        UNKNOWN_PROTOCOL: UNKNOWN_PROTOCOL
+    });
+
+    var resultNames = invertObject(resultCodes);
+
+    var SET_ALL_SEGMENT_DISPLAY = 1;
+    var SOFTWARE_VERSION = 2;
+    var TOTAL_ACTIVE_ENERGY = 3;
+    var ACTIVE_ENERGY_T1 = 4;
+    var ACTIVE_ENERGY_T2 = 5;
+    var ACTIVE_ENERGY_T3 = 6;
+    var ACTIVE_ENERGY_T4 = 7;
+    var ACTIVE_POWER_PER_PHASE = 8;
+    var ACTIVE_POWER_IN_NEUTRAL = 9;
+    var CURRENT_IN_PHASE = 10;
+    var CURRENT_IN_NEUTRAL = 11;
+    var VOLTAGE = 12;
+    var HOUR_MINUTE_SECOND = 13;
+    var DATE_MONTH_YEAR = 14;
+    var TOTAL_EXPORTED_ACTIVE_ENERGY = 15;
+    var EXPORTED_ACTIVE_ENERGY_T1 = 16;
+    var EXPORTED_ACTIVE_ENERGY_T2 = 17;
+    var EXPORTED_ACTIVE_ENERGY_T3 = 18;
+    var EXPORTED_ACTIVE_ENERGY_T4 = 19;
+    var POWER_COEFFICIENT_PHASE_A = 20;
+    var POWER_COEFFICIENT_PHASE_B = 21;
+    var BATTERY_VOLTAGE = 22;
+    var POWER_THRESHOLD_T1 = 23;
+    var POWER_THRESHOLD_T2 = 24;
+    var POWER_THRESHOLD_T3 = 25;
+    var POWER_THRESHOLD_T4 = 26;
+    var MAGNET_INDUCTION = 28;
+    var CURRENT_BALANCE = 30;
+    var OPTOPORT_SPEED = 31;
+
+    var screenIds = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        ACTIVE_ENERGY_T1: ACTIVE_ENERGY_T1,
+        ACTIVE_ENERGY_T2: ACTIVE_ENERGY_T2,
+        ACTIVE_ENERGY_T3: ACTIVE_ENERGY_T3,
+        ACTIVE_ENERGY_T4: ACTIVE_ENERGY_T4,
+        ACTIVE_POWER_IN_NEUTRAL: ACTIVE_POWER_IN_NEUTRAL,
+        ACTIVE_POWER_PER_PHASE: ACTIVE_POWER_PER_PHASE,
+        BATTERY_VOLTAGE: BATTERY_VOLTAGE,
+        CURRENT_BALANCE: CURRENT_BALANCE,
+        CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL,
+        CURRENT_IN_PHASE: CURRENT_IN_PHASE,
+        DATE_MONTH_YEAR: DATE_MONTH_YEAR,
+        EXPORTED_ACTIVE_ENERGY_T1: EXPORTED_ACTIVE_ENERGY_T1,
+        EXPORTED_ACTIVE_ENERGY_T2: EXPORTED_ACTIVE_ENERGY_T2,
+        EXPORTED_ACTIVE_ENERGY_T3: EXPORTED_ACTIVE_ENERGY_T3,
+        EXPORTED_ACTIVE_ENERGY_T4: EXPORTED_ACTIVE_ENERGY_T4,
+        HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND,
+        MAGNET_INDUCTION: MAGNET_INDUCTION,
+        OPTOPORT_SPEED: OPTOPORT_SPEED,
+        POWER_COEFFICIENT_PHASE_A: POWER_COEFFICIENT_PHASE_A,
+        POWER_COEFFICIENT_PHASE_B: POWER_COEFFICIENT_PHASE_B,
+        POWER_THRESHOLD_T1: POWER_THRESHOLD_T1,
+        POWER_THRESHOLD_T2: POWER_THRESHOLD_T2,
+        POWER_THRESHOLD_T3: POWER_THRESHOLD_T3,
+        POWER_THRESHOLD_T4: POWER_THRESHOLD_T4,
+        SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY,
+        SOFTWARE_VERSION: SOFTWARE_VERSION,
+        TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY,
+        TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY,
+        VOLTAGE: VOLTAGE
+    });
+
+    invertObject(screenIds);
+
+    var getDayEnergies$1 = 0x78;
+    var getDayMaxPower$1 = 0x79;
+    var errorResponse$1 = 0xfe;
+
+    var uplinkIds = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        activateRatePlan: activateRatePlan$2,
+        errorResponse: errorResponse$1,
+        getBuildVersion: getBuildVersion$2,
+        getCorrectTime: getCorrectTime$2,
+        getCriticalEvent: getCriticalEvent$2,
+        getCurrentStatusMeter: getCurrentStatusMeter$2,
+        getCurrentValues: getCurrentValues$2,
+        getDateTime: getDateTime$2,
+        getDayDemand: getDayDemand$2,
+        getDayDemandExport: getDayDemandExport$2,
+        getDayEnergies: getDayEnergies$1,
+        getDayMaxDemand: getDayMaxDemand$2,
+        getDayMaxDemandExport: getDayMaxDemandExport$2,
+        getDayMaxDemandPrevious: getDayMaxDemandPrevious$2,
+        getDayMaxPower: getDayMaxPower$1,
+        getDayProfile: getDayProfile$2,
+        getDemand: getDemand$2,
+        getDeviceId: getDeviceId$2,
+        getDeviceType: getDeviceType$2,
+        getDisplayParam: getDisplayParam$2,
+        getEnergy: getEnergy$2,
+        getEnergyDayPrevious: getEnergyDayPrevious$2,
+        getEnergyExport: getEnergyExport$2,
+        getEnergyExportDayPrevious: getEnergyExportDayPrevious$2,
+        getEventStatus: getEventStatus$2,
+        getEvents: getEvents$2,
+        getEventsCounters: getEventsCounters$2,
+        getExtendedCurrentValues: getExtendedCurrentValues$2,
+        getExtendedCurrentValues2: getExtendedCurrentValues2$2,
+        getHalfHourDemand: getHalfHourDemand$2,
+        getHalfHourDemandExport: getHalfHourDemandExport$2,
+        getHalfHourDemandPrevious: getHalfHourDemandPrevious$2,
+        getHalfhoursEnergies: getHalfhoursEnergies$2,
+        getMagneticFieldThreshold: getMagneticFieldThreshold$2,
+        getMeterInfo: getMeterInfo$2,
+        getMonthDemand: getMonthDemand$2,
+        getMonthDemandExport: getMonthDemandExport$2,
+        getMonthMaxDemand: getMonthMaxDemand$2,
+        getMonthMaxDemandExport: getMonthMaxDemandExport$2,
+        getOperatorParameters: getOperatorParameters$2,
+        getOperatorParametersExtended3: getOperatorParametersExtended3$2,
+        getRatePlanInfo: getRatePlanInfo$2,
+        getSaldo: getSaldo$2,
+        getSaldoParameters: getSaldoParameters$2,
+        getSeasonProfile: getSeasonProfile$2,
+        getSpecialDay: getSpecialDay$2,
+        getVersion: getVersion$2,
+        prepareRatePlan: prepareRatePlan$2,
+        resetPowerMaxDay: resetPowerMaxDay$2,
+        resetPowerMaxMonth: resetPowerMaxMonth$2,
+        runTariffPlan: runTariffPlan$2,
+        setAccessKey: setAccessKey$2,
+        setCorrectDateTime: setCorrectDateTime$2,
+        setCorrectTime: setCorrectTime$2,
+        setDateTime: setDateTime$2,
+        setDayProfile: setDayProfile$2,
+        setDisplayParam: setDisplayParam$2,
+        setOperatorParameters: setOperatorParameters$2,
+        setOperatorParametersExtended3: setOperatorParametersExtended3$2,
+        setSaldo: setSaldo$2,
+        setSaldoParameters: setSaldoParameters$2,
+        setSeasonProfile: setSeasonProfile$2,
+        setSpecialDay: setSpecialDay$2,
+        setSpecialOperation: setSpecialOperation$2,
+        turnRelayOff: turnRelayOff$2,
+        turnRelayOn: turnRelayOn$2
+    });
+
+    var commandNames = invertObject(uplinkIds);
+
+    var ADDITIONAL = 1;
+
+    var A = 0;
+    var G_FULL = 17;
+
+    var RESET_INFLUENCE_SCREENS = 0x55;
+
     var id$1M = getDisplayParam$2;
     var name$1M = commandNames$1[getDisplayParam$2];
     var headerSize$1M = 2;
@@ -2926,7 +3131,7 @@
         maxSize: maxSize$1M,
         accessLevel: accessLevel$1M,
         parameters: {
-          displayMode: 1
+          displayMode: ADDITIONAL
         },
         bytes: [0x5e, 0x01, 0x01]
       }
@@ -5573,8 +5778,6 @@
         toBytes: toBytes$15
     });
 
-    var RESET_INFLUENCE_SCREENS = 0x55;
-
     var id$14 = setSpecialOperation$2;
     var name$14 = commandNames$1[setSpecialOperation$2];
     var headerSize$14 = 2;
@@ -5816,82 +6019,6 @@
         turnRelayOn: turnRelayOn$1
     });
 
-    var getDayEnergies$1 = 0x78;
-    var getDayMaxPower$1 = 0x79;
-    var errorResponse$1 = 0xfe;
-
-    var uplinkIds = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        activateRatePlan: activateRatePlan$2,
-        errorResponse: errorResponse$1,
-        getBuildVersion: getBuildVersion$2,
-        getCorrectTime: getCorrectTime$2,
-        getCriticalEvent: getCriticalEvent$2,
-        getCurrentStatusMeter: getCurrentStatusMeter$2,
-        getCurrentValues: getCurrentValues$2,
-        getDateTime: getDateTime$2,
-        getDayDemand: getDayDemand$2,
-        getDayDemandExport: getDayDemandExport$2,
-        getDayEnergies: getDayEnergies$1,
-        getDayMaxDemand: getDayMaxDemand$2,
-        getDayMaxDemandExport: getDayMaxDemandExport$2,
-        getDayMaxDemandPrevious: getDayMaxDemandPrevious$2,
-        getDayMaxPower: getDayMaxPower$1,
-        getDayProfile: getDayProfile$2,
-        getDemand: getDemand$2,
-        getDeviceId: getDeviceId$2,
-        getDeviceType: getDeviceType$2,
-        getDisplayParam: getDisplayParam$2,
-        getEnergy: getEnergy$2,
-        getEnergyDayPrevious: getEnergyDayPrevious$2,
-        getEnergyExport: getEnergyExport$2,
-        getEnergyExportDayPrevious: getEnergyExportDayPrevious$2,
-        getEventStatus: getEventStatus$2,
-        getEvents: getEvents$2,
-        getEventsCounters: getEventsCounters$2,
-        getExtendedCurrentValues: getExtendedCurrentValues$2,
-        getExtendedCurrentValues2: getExtendedCurrentValues2$2,
-        getHalfHourDemand: getHalfHourDemand$2,
-        getHalfHourDemandExport: getHalfHourDemandExport$2,
-        getHalfHourDemandPrevious: getHalfHourDemandPrevious$2,
-        getHalfhoursEnergies: getHalfhoursEnergies$2,
-        getMagneticFieldThreshold: getMagneticFieldThreshold$2,
-        getMeterInfo: getMeterInfo$2,
-        getMonthDemand: getMonthDemand$2,
-        getMonthDemandExport: getMonthDemandExport$2,
-        getMonthMaxDemand: getMonthMaxDemand$2,
-        getMonthMaxDemandExport: getMonthMaxDemandExport$2,
-        getOperatorParameters: getOperatorParameters$2,
-        getOperatorParametersExtended3: getOperatorParametersExtended3$2,
-        getRatePlanInfo: getRatePlanInfo$2,
-        getSaldo: getSaldo$2,
-        getSaldoParameters: getSaldoParameters$2,
-        getSeasonProfile: getSeasonProfile$2,
-        getSpecialDay: getSpecialDay$2,
-        getVersion: getVersion$2,
-        prepareRatePlan: prepareRatePlan$2,
-        resetPowerMaxDay: resetPowerMaxDay$2,
-        resetPowerMaxMonth: resetPowerMaxMonth$2,
-        runTariffPlan: runTariffPlan$2,
-        setAccessKey: setAccessKey$2,
-        setCorrectDateTime: setCorrectDateTime$2,
-        setCorrectTime: setCorrectTime$2,
-        setDateTime: setDateTime$2,
-        setDayProfile: setDayProfile$2,
-        setDisplayParam: setDisplayParam$2,
-        setOperatorParameters: setOperatorParameters$2,
-        setOperatorParametersExtended3: setOperatorParametersExtended3$2,
-        setSaldo: setSaldo$2,
-        setSaldoParameters: setSaldoParameters$2,
-        setSeasonProfile: setSeasonProfile$2,
-        setSpecialDay: setSpecialDay$2,
-        setSpecialOperation: setSpecialOperation$2,
-        turnRelayOff: turnRelayOff$2,
-        turnRelayOn: turnRelayOn$2
-    });
-
-    var commandNames = invertObject(uplinkIds);
-
     var id$11 = activateRatePlan$2;
     var name$11 = commandNames[activateRatePlan$2];
     var headerSize$11 = 2;
@@ -5931,63 +6058,6 @@
         name: name$11,
         toBytes: toBytes$11
     });
-
-    var OK = 0;
-    var UNKNOWN_COMMAND = 0x80;
-    var NOT_ALIGNED_DATA = 0x81;
-    var DECRYPTION_FAILURE = 0x82;
-    var UNKNOWN_PROTOCOL = 0x83;
-    var BAD_MESSAGE = 0x84;
-    var BAD_DATA_LENGTH = 0x85;
-    var BAD_ARRAY_INDEX = 0x86;
-    var NOT_PREPARED_RATE_PLAN = 0x87;
-    var BAD_RATE_PLAN_ID = 0x88;
-    var BAD_RATE_PLAN_SIZE = 0x89;
-    var BAD_RESPONSE_LENGTH = 0x90;
-    var NO_DATA_FOR_DATE = 0x91;
-    var CALIBRATION_DISABLED = 0x92;
-    var ACCESS_DENIED = 0x93;
-    var BAD_SALDO_WRITE = 0x95;
-    var BLOCKED_METER = 0x97;
-    var UNENCRYPTED_COMMAND_DISABLED = 0x98;
-    var TIME_CORRECTION_FAILURE = 0x99;
-    var INVALID_CORRECTION_INTERVAL = 0x9a;
-    var TIME_CORRECTION_OUT_HALF_HOUR_DISABLED = 0x9b;
-    var BAD_BLOCK_NUMBER = 0x9c;
-    var OUT_OFF_RANGE = 0x9f;
-    var SET_METER_TYPE_FAILURE = 0xa0;
-    var INTERNAL = 0xf0;
-
-    var resultCodes = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        ACCESS_DENIED: ACCESS_DENIED,
-        BAD_ARRAY_INDEX: BAD_ARRAY_INDEX,
-        BAD_BLOCK_NUMBER: BAD_BLOCK_NUMBER,
-        BAD_DATA_LENGTH: BAD_DATA_LENGTH,
-        BAD_MESSAGE: BAD_MESSAGE,
-        BAD_RATE_PLAN_ID: BAD_RATE_PLAN_ID,
-        BAD_RATE_PLAN_SIZE: BAD_RATE_PLAN_SIZE,
-        BAD_RESPONSE_LENGTH: BAD_RESPONSE_LENGTH,
-        BAD_SALDO_WRITE: BAD_SALDO_WRITE,
-        BLOCKED_METER: BLOCKED_METER,
-        CALIBRATION_DISABLED: CALIBRATION_DISABLED,
-        DECRYPTION_FAILURE: DECRYPTION_FAILURE,
-        INTERNAL: INTERNAL,
-        INVALID_CORRECTION_INTERVAL: INVALID_CORRECTION_INTERVAL,
-        NOT_ALIGNED_DATA: NOT_ALIGNED_DATA,
-        NOT_PREPARED_RATE_PLAN: NOT_PREPARED_RATE_PLAN,
-        NO_DATA_FOR_DATE: NO_DATA_FOR_DATE,
-        OK: OK,
-        OUT_OFF_RANGE: OUT_OFF_RANGE,
-        SET_METER_TYPE_FAILURE: SET_METER_TYPE_FAILURE,
-        TIME_CORRECTION_FAILURE: TIME_CORRECTION_FAILURE,
-        TIME_CORRECTION_OUT_HALF_HOUR_DISABLED: TIME_CORRECTION_OUT_HALF_HOUR_DISABLED,
-        UNENCRYPTED_COMMAND_DISABLED: UNENCRYPTED_COMMAND_DISABLED,
-        UNKNOWN_COMMAND: UNKNOWN_COMMAND,
-        UNKNOWN_PROTOCOL: UNKNOWN_PROTOCOL
-    });
-
-    var resultNames = invertObject(resultCodes);
 
     var id$10 = errorResponse$1;
     var name$10 = commandNames[errorResponse$1];
@@ -7445,7 +7515,7 @@
             month: 10,
             date: 2
           },
-          energyType: VOLTAGE,
+          energyType: VOLTAGE$1,
           firstIndex: 0,
           count: 1,
           period: 60,
@@ -7466,7 +7536,7 @@
             month: 10,
             date: 2
           },
-          energyType: VOLTAGE,
+          energyType: VOLTAGE$1,
           firstIndex: 25,
           count: 1,
           period: 60,
@@ -7598,9 +7668,6 @@
         name: name$M,
         toBytes: toBytes$M
     });
-
-    var A = 0;
-    var G_FULL = 17;
 
     var id$L = getDeviceType$2;
     var name$L = commandNames[getDeviceType$2];

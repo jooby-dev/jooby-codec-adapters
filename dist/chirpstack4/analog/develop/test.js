@@ -6100,6 +6100,7 @@
             case IMP4IN:
             case GASIC:
             case NBIOT:
+            case US_WATER:
                 {
                     const statusData = {
                         batteryVoltage: buffer.getBatteryVoltage(),

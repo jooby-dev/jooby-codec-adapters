@@ -5448,6 +5448,8 @@
         optoport: invertObject(valueToRate.optoport)
     };
 
+    const MAIN_2 = 1;
+
     const A_PLUS_R_PLUS_R_MINUS = 1;
     const A_MINUS_R_PLUS_R_MINUS = 2;
 
@@ -6066,7 +6068,7 @@
         this.setUint8(parameters.period);
     };
     CommandBinaryBuffer.prototype.getOperatorParametersExtended2 = function () {
-        return {
+        const operatorParametersExtended2 = {
             deltaCorMin: this.getUint8(),
             timeoutMagnetOff: this.getUint8(),
             relaySetExt: toObject(relaySetExtMask, this.getUint8()),
@@ -6082,10 +6084,17 @@
             channel4: this.getUint8(),
             channel5: this.getUint8(),
             channel6: this.getUint8(),
-            timeCorrectPeriod: this.getUint8()
+            timeCorrectPeriod: 0,
+            timeCorrectPassHalfhour: false
         };
+        const timeCorrectPeriod = this.getUint8();
+        operatorParametersExtended2.timeCorrectPeriod = timeCorrectPeriod & 0x7f;
+        operatorParametersExtended2.timeCorrectPassHalfhour = !!(timeCorrectPeriod & 0x80);
+        return operatorParametersExtended2;
     };
     CommandBinaryBuffer.prototype.setOperatorParametersExtended2 = function (operatorParametersExtended2) {
+        const timeCorrectPeriod = operatorParametersExtended2.timeCorrectPeriod
+            | (operatorParametersExtended2.timeCorrectPassHalfhour ? 0x80 : 0);
         this.setUint8(operatorParametersExtended2.deltaCorMin);
         this.setUint8(operatorParametersExtended2.timeoutMagnetOff);
         this.setUint8(fromObject(relaySetExtMask, operatorParametersExtended2.relaySetExt));
@@ -6101,7 +6110,7 @@
         this.setUint8(operatorParametersExtended2.channel4);
         this.setUint8(operatorParametersExtended2.channel5);
         this.setUint8(operatorParametersExtended2.channel6);
-        this.setUint8(operatorParametersExtended2.timeCorrectPeriod);
+        this.setUint8(timeCorrectPeriod);
     };
     CommandBinaryBuffer.prototype.getOperatorParametersExtended4 = function () {
         return {
@@ -6330,7 +6339,7 @@
             maxSize: maxSize$1p,
             accessLevel: accessLevel$1p,
             parameters: {
-                displayMode: 1
+                displayMode: MAIN_2
             },
             bytes: [
                 0x5e, 0x01,
@@ -6338,7 +6347,9 @@
             ]
         }
     };
-    const fromBytes$1p = ([displayMode]) => ({ displayMode });
+    const fromBytes$1p = ([displayMode]) => ({
+        displayMode: displayMode
+    });
     const toBytes$1p = (parameters) => {
         const buffer = new CommandBinaryBuffer(maxSize$1p);
         buffer.setUint8(parameters.displayMode);
@@ -7300,7 +7311,8 @@
                 channel4: 4,
                 channel5: 5,
                 channel6: 6,
-                timeCorrectPeriod: 24
+                timeCorrectPeriod: 24,
+                timeCorrectPassHalfhour: true
             },
             bytes: [
                 0x45, 0x1c,
@@ -7319,7 +7331,7 @@
                 0x04,
                 0x05,
                 0x06,
-                0x18
+                0x98
             ]
         }
     };
@@ -12645,7 +12657,8 @@
                 channel4: 4,
                 channel5: 5,
                 channel6: 6,
-                timeCorrectPeriod: 24
+                timeCorrectPeriod: 24,
+                timeCorrectPassHalfhour: true
             },
             bytes: [
                 0x47, 0x1c,
@@ -12664,7 +12677,7 @@
                 0x04,
                 0x05,
                 0x06,
-                0x18
+                0x98
             ]
         }
     };

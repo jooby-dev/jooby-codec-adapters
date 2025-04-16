@@ -4405,7 +4405,7 @@ var fromBytes, getDataSegment;
     this.setUint8(parameters.period);
   };
   CommandBinaryBuffer.prototype.getOperatorParametersExtended2 = function () {
-    return {
+    var operatorParametersExtended2 = {
       deltaCorMin: this.getUint8(),
       timeoutMagnetOff: this.getUint8(),
       relaySetExt: toObject(relaySetExtMask, this.getUint8()),
@@ -4421,10 +4421,16 @@ var fromBytes, getDataSegment;
       channel4: this.getUint8(),
       channel5: this.getUint8(),
       channel6: this.getUint8(),
-      timeCorrectPeriod: this.getUint8()
+      timeCorrectPeriod: 0,
+      timeCorrectPassHalfhour: false
     };
+    var timeCorrectPeriod = this.getUint8();
+    operatorParametersExtended2.timeCorrectPeriod = timeCorrectPeriod & 0x7f;
+    operatorParametersExtended2.timeCorrectPassHalfhour = !!(timeCorrectPeriod & 0x80);
+    return operatorParametersExtended2;
   };
   CommandBinaryBuffer.prototype.setOperatorParametersExtended2 = function (operatorParametersExtended2) {
+    var timeCorrectPeriod = operatorParametersExtended2.timeCorrectPeriod | (operatorParametersExtended2.timeCorrectPassHalfhour ? 0x80 : 0);
     this.setUint8(operatorParametersExtended2.deltaCorMin);
     this.setUint8(operatorParametersExtended2.timeoutMagnetOff);
     this.setUint8(fromObject(relaySetExtMask, operatorParametersExtended2.relaySetExt));
@@ -4440,7 +4446,7 @@ var fromBytes, getDataSegment;
     this.setUint8(operatorParametersExtended2.channel4);
     this.setUint8(operatorParametersExtended2.channel5);
     this.setUint8(operatorParametersExtended2.channel6);
-    this.setUint8(operatorParametersExtended2.timeCorrectPeriod);
+    this.setUint8(timeCorrectPeriod);
   };
   CommandBinaryBuffer.prototype.getOperatorParametersExtended4 = function () {
     return {

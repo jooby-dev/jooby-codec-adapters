@@ -5834,6 +5834,8 @@
       optoport: invertObject(valueToRate.optoport)
     };
 
+    var MAIN_2 = 1;
+
     var A_PLUS_R_PLUS_R_MINUS = 1;
     var A_MINUS_R_PLUS_R_MINUS = 2;
 
@@ -6503,7 +6505,7 @@
       this.setUint8(parameters.period);
     };
     CommandBinaryBuffer.prototype.getOperatorParametersExtended2 = function () {
-      return {
+      var operatorParametersExtended2 = {
         deltaCorMin: this.getUint8(),
         timeoutMagnetOff: this.getUint8(),
         relaySetExt: toObject(relaySetExtMask, this.getUint8()),
@@ -6519,10 +6521,16 @@
         channel4: this.getUint8(),
         channel5: this.getUint8(),
         channel6: this.getUint8(),
-        timeCorrectPeriod: this.getUint8()
+        timeCorrectPeriod: 0,
+        timeCorrectPassHalfhour: false
       };
+      var timeCorrectPeriod = this.getUint8();
+      operatorParametersExtended2.timeCorrectPeriod = timeCorrectPeriod & 0x7f;
+      operatorParametersExtended2.timeCorrectPassHalfhour = !!(timeCorrectPeriod & 0x80);
+      return operatorParametersExtended2;
     };
     CommandBinaryBuffer.prototype.setOperatorParametersExtended2 = function (operatorParametersExtended2) {
+      var timeCorrectPeriod = operatorParametersExtended2.timeCorrectPeriod | (operatorParametersExtended2.timeCorrectPassHalfhour ? 0x80 : 0);
       this.setUint8(operatorParametersExtended2.deltaCorMin);
       this.setUint8(operatorParametersExtended2.timeoutMagnetOff);
       this.setUint8(fromObject(relaySetExtMask, operatorParametersExtended2.relaySetExt));
@@ -6538,7 +6546,7 @@
       this.setUint8(operatorParametersExtended2.channel4);
       this.setUint8(operatorParametersExtended2.channel5);
       this.setUint8(operatorParametersExtended2.channel6);
-      this.setUint8(operatorParametersExtended2.timeCorrectPeriod);
+      this.setUint8(timeCorrectPeriod);
     };
     CommandBinaryBuffer.prototype.getOperatorParametersExtended4 = function () {
       return {
@@ -6760,7 +6768,7 @@
         maxSize: maxSize$1p,
         accessLevel: accessLevel$1p,
         parameters: {
-          displayMode: 1
+          displayMode: MAIN_2
         },
         bytes: [0x5e, 0x01, 0x01]
       }
@@ -7705,9 +7713,10 @@
           channel4: 4,
           channel5: 5,
           channel6: 6,
-          timeCorrectPeriod: 24
+          timeCorrectPeriod: 24,
+          timeCorrectPassHalfhour: true
         },
-        bytes: [0x45, 0x1c, 0x0f, 0x05, 0x05, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x18]
+        bytes: [0x45, 0x1c, 0x0f, 0x05, 0x05, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x98]
       }
     };
     var fromBytes$18 = function fromBytes(bytes) {
@@ -12561,9 +12570,10 @@
           channel4: 4,
           channel5: 5,
           channel6: 6,
-          timeCorrectPeriod: 24
+          timeCorrectPeriod: 24,
+          timeCorrectPassHalfhour: true
         },
-        bytes: [0x47, 0x1c, 0x0f, 0x05, 0x05, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x18]
+        bytes: [0x47, 0x1c, 0x0f, 0x05, 0x05, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x98]
       }
     };
     var fromBytes$3 = function fromBytes(bytes) {
