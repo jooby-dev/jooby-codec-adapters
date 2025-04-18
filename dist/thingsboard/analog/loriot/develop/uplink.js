@@ -2590,6 +2590,9 @@ var fromBytes, getBytesFromHex;
       case OPTOLOW:
       case OPTOFLASH:
       case JOIN_ACCEPT:
+      case DEPASS_DONE:
+      case WATER_NO_RESPONSE:
+      case OPTOSENSOR_ERROR:
         eventData = {
           time2000: buffer.getTime()
         };
@@ -2633,8 +2636,14 @@ var fromBytes, getBytesFromHex;
           temperature: buffer.getInt8()
         };
         break;
+      case WATER_EVENT:
+        eventData = {
+          time2000: buffer.getTime(),
+          status: buffer.getEventStatus(US_WATER)
+        };
+        break;
       default:
-        throw new Error("Event ".concat(id$a, " is not supported"));
+        throw new Error("Event ".concat(eventId, " is not supported"));
     }
     return {
       id: eventId,

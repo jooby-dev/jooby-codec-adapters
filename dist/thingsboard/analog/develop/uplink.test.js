@@ -4310,6 +4310,33 @@ var logs = '';
       },
       bytes: [0x15, 0x0e, 0x0b, 0x02, 0x2b, 0xc0, 0x31, 0x60, 0x00, 0x1a, 0x79, 0x88, 0x17, 0x01, 0x23, 0x56]
     },
+    'event for WATER_EVENT': {
+      id: id$a,
+      name: name$a,
+      headerSize: headerSize$a,
+      parameters: {
+        id: 19,
+        name: 'WATER_EVENT',
+        sequenceNumber: 46,
+        data: {
+          time2000: 798110025,
+          status: {
+            event: {
+              transportMode: false,
+              frequencyOutput: false,
+              reverseFlow: true,
+              tamperBreak: false,
+              leakage: false,
+              pipeBreak: false,
+              pipeEmpty: false,
+              batteryDischarge: false
+            },
+            error: 0
+          }
+        }
+      },
+      bytes: [0x15, 0x08, 0x13, 0x2e, 0x2f, 0x92, 0x31, 0x49, 0x04, 0x00]
+    },
     'event for CONNECT': {
       id: id$a,
       name: name$a,
@@ -4404,6 +4431,9 @@ var logs = '';
       case OPTOLOW:
       case OPTOFLASH:
       case JOIN_ACCEPT:
+      case DEPASS_DONE:
+      case WATER_NO_RESPONSE:
+      case OPTOSENSOR_ERROR:
         eventData = {
           time2000: buffer.getTime()
         };
@@ -4447,8 +4477,14 @@ var logs = '';
           temperature: buffer.getInt8()
         };
         break;
+      case WATER_EVENT:
+        eventData = {
+          time2000: buffer.getTime(),
+          status: buffer.getEventStatus(US_WATER)
+        };
+        break;
       default:
-        throw new Error("Event ".concat(id$a, " is not supported"));
+        throw new Error("Event ".concat(eventId, " is not supported"));
     }
     return {
       id: eventId,
@@ -4476,6 +4512,9 @@ var logs = '';
       case OPTOLOW:
       case OPTOFLASH:
       case JOIN_ACCEPT:
+      case DEPASS_DONE:
+      case WATER_NO_RESPONSE:
+      case OPTOSENSOR_ERROR:
         buffer.setTime(data.time2000);
         break;
       case BATTERY_ALARM:
@@ -4505,8 +4544,12 @@ var logs = '';
         buffer.setChannelValue(data.channel);
         buffer.setInt8(data.temperature);
         break;
+      case WATER_EVENT:
+        buffer.setTime(data.time2000);
+        buffer.setEventStatus(US_WATER, data.status);
+        break;
       default:
-        throw new Error("Event ".concat(id$a, " is not supported"));
+        throw new Error("Event ".concat(eventId, " is not supported"));
     }
     return toBytes$C(id$a, buffer.getBytesToOffset());
   };

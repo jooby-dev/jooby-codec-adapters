@@ -20,7 +20,7 @@
         "@rollup/plugin-babel": "^6.0.4",
         "@rollup/plugin-node-resolve": "^16.0.0",
         "@rollup/plugin-terser": "^0.4.4",
-        "jooby-codec": "^5.6.0",
+        "jooby-codec": "^5.10.0",
         "nodemon": "^3.1.0",
         "rollup": "^4.13.0"
     }

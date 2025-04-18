@@ -3316,6 +3316,9 @@ var fromBytes, toBytes;
             case OPTOLOW:
             case OPTOFLASH:
             case JOIN_ACCEPT:
+            case DEPASS_DONE:
+            case WATER_NO_RESPONSE:
+            case OPTOSENSOR_ERROR:
                 eventData = { time2000: buffer.getTime() };
                 break;
             case BATTERY_ALARM:
@@ -3340,8 +3343,11 @@ var fromBytes, toBytes;
             case TEMPERATURE_SENSOR_HIGH_TEMPERATURE:
                 eventData = { time2000: buffer.getTime(), channel: buffer.getChannelValue(), temperature: buffer.getInt8() };
                 break;
+            case WATER_EVENT:
+                eventData = { time2000: buffer.getTime(), status: buffer.getEventStatus(US_WATER) };
+                break;
             default:
-                throw new Error(`Event ${id$a} is not supported`);
+                throw new Error(`Event ${eventId} is not supported`);
         }
         return { id: eventId, name: eventName, sequenceNumber, data: eventData };
     };
@@ -3362,6 +3368,9 @@ var fromBytes, toBytes;
             case OPTOLOW:
             case OPTOFLASH:
             case JOIN_ACCEPT:
+            case DEPASS_DONE:
+            case WATER_NO_RESPONSE:
+            case OPTOSENSOR_ERROR:
                 buffer.setTime(data.time2000);
                 break;
             case BATTERY_ALARM:
@@ -3391,8 +3400,12 @@ var fromBytes, toBytes;
                 buffer.setChannelValue(data.channel);
                 buffer.setInt8(data.temperature);
                 break;
+            case WATER_EVENT:
+                buffer.setTime(data.time2000);
+                buffer.setEventStatus(US_WATER, data.status);
+                break;
             default:
-                throw new Error(`Event ${id$a} is not supported`);
+                throw new Error(`Event ${eventId} is not supported`);
         }
         return toBytes$13(id$a, buffer.getBytesToOffset());
     };
