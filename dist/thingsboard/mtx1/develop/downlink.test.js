@@ -3015,6 +3015,7 @@ var logs = '';
 
   invertObject(uplinkIds);
 
+  var MAIN = 0;
   var ADDITIONAL = 1;
 
   var RESET_INFLUENCE_SCREENS = 0x55;
@@ -5160,7 +5161,7 @@ var logs = '';
       maxSize: maxSize$9,
       accessLevel: accessLevel$9,
       parameters: {
-        displayMode: 0,
+        displayMode: MAIN,
         order: [4, 5, 6, 7]
       },
       bytes: [0x5d, 0x05, 0x00, 0x04, 0x05, 0x06, 0x07]
@@ -5172,7 +5173,7 @@ var logs = '';
       maxSize: maxSize$9,
       accessLevel: accessLevel$9,
       parameters: {
-        displayMode: 1,
+        displayMode: ADDITIONAL,
         order: []
       },
       bytes: [0x5d, 0x01, 0x01]

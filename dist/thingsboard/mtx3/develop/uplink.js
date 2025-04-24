@@ -2452,6 +2452,71 @@ var fromBytes, getDataSegment;
     return buffer.getDeviceType();
   };
 
+  var SET_ALL_SEGMENT_DISPLAY$1 = 1;
+  var SOFTWARE_VERSION$1 = 2;
+  var TOTAL_ACTIVE_ENERGY$1 = 3;
+  var ACTIVE_ENERGY_T1$1 = 4;
+  var ACTIVE_ENERGY_T2$1 = 5;
+  var ACTIVE_ENERGY_T3$1 = 6;
+  var ACTIVE_ENERGY_T4$1 = 7;
+  var ACTIVE_POWER_PER_PHASE = 8;
+  var ACTIVE_POWER_IN_NEUTRAL = 9;
+  var CURRENT_IN_PHASE = 10;
+  var CURRENT_IN_NEUTRAL$1 = 11;
+  var VOLTAGE = 12;
+  var HOUR_MINUTE_SECOND$1 = 13;
+  var DATE_MONTH_YEAR$1 = 14;
+  var TOTAL_EXPORTED_ACTIVE_ENERGY$1 = 15;
+  var EXPORTED_ACTIVE_ENERGY_T1$1 = 16;
+  var EXPORTED_ACTIVE_ENERGY_T2$1 = 17;
+  var EXPORTED_ACTIVE_ENERGY_T3$1 = 18;
+  var EXPORTED_ACTIVE_ENERGY_T4$1 = 19;
+  var POWER_COEFFICIENT_PHASE_A$1 = 20;
+  var POWER_COEFFICIENT_PHASE_B$1 = 21;
+  var BATTERY_VOLTAGE$1 = 22;
+  var POWER_THRESHOLD_T1$1 = 23;
+  var POWER_THRESHOLD_T2$1 = 24;
+  var POWER_THRESHOLD_T3$1 = 25;
+  var POWER_THRESHOLD_T4$1 = 26;
+  var MAGNET_INDUCTION$1 = 28;
+  var CURRENT_BALANCE$1 = 30;
+  var OPTOPORT_SPEED$1 = 31;
+
+  var screenIds$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ACTIVE_ENERGY_T1: ACTIVE_ENERGY_T1$1,
+    ACTIVE_ENERGY_T2: ACTIVE_ENERGY_T2$1,
+    ACTIVE_ENERGY_T3: ACTIVE_ENERGY_T3$1,
+    ACTIVE_ENERGY_T4: ACTIVE_ENERGY_T4$1,
+    ACTIVE_POWER_IN_NEUTRAL: ACTIVE_POWER_IN_NEUTRAL,
+    ACTIVE_POWER_PER_PHASE: ACTIVE_POWER_PER_PHASE,
+    BATTERY_VOLTAGE: BATTERY_VOLTAGE$1,
+    CURRENT_BALANCE: CURRENT_BALANCE$1,
+    CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL$1,
+    CURRENT_IN_PHASE: CURRENT_IN_PHASE,
+    DATE_MONTH_YEAR: DATE_MONTH_YEAR$1,
+    EXPORTED_ACTIVE_ENERGY_T1: EXPORTED_ACTIVE_ENERGY_T1$1,
+    EXPORTED_ACTIVE_ENERGY_T2: EXPORTED_ACTIVE_ENERGY_T2$1,
+    EXPORTED_ACTIVE_ENERGY_T3: EXPORTED_ACTIVE_ENERGY_T3$1,
+    EXPORTED_ACTIVE_ENERGY_T4: EXPORTED_ACTIVE_ENERGY_T4$1,
+    HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND$1,
+    MAGNET_INDUCTION: MAGNET_INDUCTION$1,
+    OPTOPORT_SPEED: OPTOPORT_SPEED$1,
+    POWER_COEFFICIENT_PHASE_A: POWER_COEFFICIENT_PHASE_A$1,
+    POWER_COEFFICIENT_PHASE_B: POWER_COEFFICIENT_PHASE_B$1,
+    POWER_THRESHOLD_T1: POWER_THRESHOLD_T1$1,
+    POWER_THRESHOLD_T2: POWER_THRESHOLD_T2$1,
+    POWER_THRESHOLD_T3: POWER_THRESHOLD_T3$1,
+    POWER_THRESHOLD_T4: POWER_THRESHOLD_T4$1,
+    SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY$1,
+    SOFTWARE_VERSION: SOFTWARE_VERSION$1,
+    TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY$1,
+    TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY$1,
+    VOLTAGE: VOLTAGE
+  });
+
+  invertObject(screenIds$1);
+
   var BODY_WITHOUT_EVENTS_SIZE = 3 + 1;
   var EVENT_SIZE = 4;
   var id$ = getEvents$1;
@@ -3113,71 +3178,6 @@ var fromBytes, getDataSegment;
 
   var id$v = id$16;
   var fromBytes$x = getFromBytes$2(uplinkNames);
-
-  var SET_ALL_SEGMENT_DISPLAY$1 = 1;
-  var SOFTWARE_VERSION$1 = 2;
-  var TOTAL_ACTIVE_ENERGY$1 = 3;
-  var ACTIVE_ENERGY_T1$1 = 4;
-  var ACTIVE_ENERGY_T2$1 = 5;
-  var ACTIVE_ENERGY_T3$1 = 6;
-  var ACTIVE_ENERGY_T4$1 = 7;
-  var ACTIVE_POWER_PER_PHASE = 8;
-  var ACTIVE_POWER_IN_NEUTRAL = 9;
-  var CURRENT_IN_PHASE = 10;
-  var CURRENT_IN_NEUTRAL$1 = 11;
-  var VOLTAGE = 12;
-  var HOUR_MINUTE_SECOND$1 = 13;
-  var DATE_MONTH_YEAR$1 = 14;
-  var TOTAL_EXPORTED_ACTIVE_ENERGY$1 = 15;
-  var EXPORTED_ACTIVE_ENERGY_T1$1 = 16;
-  var EXPORTED_ACTIVE_ENERGY_T2$1 = 17;
-  var EXPORTED_ACTIVE_ENERGY_T3$1 = 18;
-  var EXPORTED_ACTIVE_ENERGY_T4$1 = 19;
-  var POWER_COEFFICIENT_PHASE_A$1 = 20;
-  var POWER_COEFFICIENT_PHASE_B$1 = 21;
-  var BATTERY_VOLTAGE$1 = 22;
-  var POWER_THRESHOLD_T1$1 = 23;
-  var POWER_THRESHOLD_T2$1 = 24;
-  var POWER_THRESHOLD_T3$1 = 25;
-  var POWER_THRESHOLD_T4$1 = 26;
-  var MAGNET_INDUCTION$1 = 28;
-  var CURRENT_BALANCE$1 = 30;
-  var OPTOPORT_SPEED$1 = 31;
-
-  var screenIds$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    ACTIVE_ENERGY_T1: ACTIVE_ENERGY_T1$1,
-    ACTIVE_ENERGY_T2: ACTIVE_ENERGY_T2$1,
-    ACTIVE_ENERGY_T3: ACTIVE_ENERGY_T3$1,
-    ACTIVE_ENERGY_T4: ACTIVE_ENERGY_T4$1,
-    ACTIVE_POWER_IN_NEUTRAL: ACTIVE_POWER_IN_NEUTRAL,
-    ACTIVE_POWER_PER_PHASE: ACTIVE_POWER_PER_PHASE,
-    BATTERY_VOLTAGE: BATTERY_VOLTAGE$1,
-    CURRENT_BALANCE: CURRENT_BALANCE$1,
-    CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL$1,
-    CURRENT_IN_PHASE: CURRENT_IN_PHASE,
-    DATE_MONTH_YEAR: DATE_MONTH_YEAR$1,
-    EXPORTED_ACTIVE_ENERGY_T1: EXPORTED_ACTIVE_ENERGY_T1$1,
-    EXPORTED_ACTIVE_ENERGY_T2: EXPORTED_ACTIVE_ENERGY_T2$1,
-    EXPORTED_ACTIVE_ENERGY_T3: EXPORTED_ACTIVE_ENERGY_T3$1,
-    EXPORTED_ACTIVE_ENERGY_T4: EXPORTED_ACTIVE_ENERGY_T4$1,
-    HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND$1,
-    MAGNET_INDUCTION: MAGNET_INDUCTION$1,
-    OPTOPORT_SPEED: OPTOPORT_SPEED$1,
-    POWER_COEFFICIENT_PHASE_A: POWER_COEFFICIENT_PHASE_A$1,
-    POWER_COEFFICIENT_PHASE_B: POWER_COEFFICIENT_PHASE_B$1,
-    POWER_THRESHOLD_T1: POWER_THRESHOLD_T1$1,
-    POWER_THRESHOLD_T2: POWER_THRESHOLD_T2$1,
-    POWER_THRESHOLD_T3: POWER_THRESHOLD_T3$1,
-    POWER_THRESHOLD_T4: POWER_THRESHOLD_T4$1,
-    SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY$1,
-    SOFTWARE_VERSION: SOFTWARE_VERSION$1,
-    TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY$1,
-    TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY$1,
-    VOLTAGE: VOLTAGE
-  });
-
-  invertObject(screenIds$1);
 
   invertObject(downlinkIds);
 
@@ -3905,7 +3905,7 @@ var fromBytes, getDataSegment;
     MAX_EXPORTED_ACTIVE_POWER_MONTH_T2: 1 << 30,
     MAX_EXPORTED_ACTIVE_POWER_MONTH_T3: 1 << 31
   };
-  var displaySet4Mask = {
+  var displaySet4BaseMask = {
     MAX_EXPORTED_ACTIVE_POWER_MONTH_T4: 1 << 0,
     MAX_EXPORTED_REACTIVE_POWER_DAY_T1: 1 << 1,
     MAX_EXPORTED_REACTIVE_POWER_DAY_T2: 1 << 2,
@@ -3931,11 +3931,11 @@ var fromBytes, getDataSegment;
     POWER_THRESHOLD_T1: 1 << 22,
     POWER_THRESHOLD_T2: 1 << 23,
     POWER_THRESHOLD_T3: 1 << 24,
-    POWER_THRESHOLD_T4: 1 << 25,
-    OPTOPORT_SPEED: 1 << 26,
-    MAGNET_INDUCTION: 1 << 27,
+    POWER_THRESHOLD_T4: 1 << 25
+  };
+  var displaySet4Mask = {
+    ...displaySet4BaseMask,
     SORT_DISPLAY_SCREENS: 1 << 29,
-    TURN_OFF_DISPLAY: 1 << 30,
     AUTO_SCREEN_SCROLLING: 1 << 31
   };
   var displaySet5Mask = {
@@ -3993,7 +3993,9 @@ var fromBytes, getDataSegment;
     ALLOW_BROWNOUT_INDICATION: 1 << 7
   };
   var displaySet24Mask = {
-    OPTOPORT_SPEED: 1 << 26
+    ...displaySet4BaseMask,
+    OPTOPORT_SPEED: 1 << 26,
+    MAGNET_INDUCTION: 1 << 27
   };
   var relaySetExtMask = {
     RELAY_OFF_MAGNET: 1 << 0,
@@ -4411,9 +4413,9 @@ var fromBytes, getDataSegment;
       relaySetExt: toObject(relaySetExtMask, this.getUint8()),
       timeoutMagnetOn: this.getUint8(),
       phaseDefault: this.getUint8(),
-      displaySet21: this.getUint32(),
-      displaySet22: this.getUint32(),
-      displaySet23: this.getUint32(),
+      displaySet21: toObject(displaySet1Mask, this.getUint32()),
+      displaySet22: toObject(displaySet2Mask, this.getUint32()),
+      displaySet23: toObject(displaySet3Mask, this.getUint32()),
       displaySet24: toObject(displaySet24Mask, this.getUint32()),
       channel1: this.getUint8(),
       channel2: this.getUint8(),
@@ -4436,9 +4438,9 @@ var fromBytes, getDataSegment;
     this.setUint8(fromObject(relaySetExtMask, operatorParametersExtended2.relaySetExt));
     this.setUint8(operatorParametersExtended2.timeoutMagnetOn);
     this.setUint8(operatorParametersExtended2.phaseDefault);
-    this.setUint32(operatorParametersExtended2.displaySet21);
-    this.setUint32(operatorParametersExtended2.displaySet22);
-    this.setUint32(operatorParametersExtended2.displaySet23);
+    this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended2.displaySet21));
+    this.setUint32(fromObject(displaySet2Mask, operatorParametersExtended2.displaySet22));
+    this.setUint32(fromObject(displaySet3Mask, operatorParametersExtended2.displaySet23));
     this.setUint32(fromObject(displaySet24Mask, operatorParametersExtended2.displaySet24));
     this.setUint8(operatorParametersExtended2.channel1);
     this.setUint8(operatorParametersExtended2.channel2);

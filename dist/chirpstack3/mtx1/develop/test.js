@@ -3110,6 +3110,7 @@
 
     var commandNames = invertObject(uplinkIds);
 
+    var MAIN = 0;
     var ADDITIONAL = 1;
 
     var A = 0;
@@ -5258,7 +5259,7 @@
         maxSize: maxSize$1b,
         accessLevel: accessLevel$1b,
         parameters: {
-          displayMode: 0,
+          displayMode: MAIN,
           order: [4, 5, 6, 7]
         },
         bytes: [0x5d, 0x05, 0x00, 0x04, 0x05, 0x06, 0x07]
@@ -5270,7 +5271,7 @@
         maxSize: maxSize$1b,
         accessLevel: accessLevel$1b,
         parameters: {
-          displayMode: 1,
+          displayMode: ADDITIONAL,
           order: []
         },
         bytes: [0x5d, 0x01, 0x01]
@@ -7740,7 +7741,7 @@
         maxSize: maxSize$K,
         accessLevel: accessLevel$K,
         parameters: {
-          displayMode: 0,
+          displayMode: MAIN,
           order: [4, 5, 6, 7]
         },
         bytes: [0x5e, 0x05, 0x00, 0x04, 0x05, 0x06, 0x07]
@@ -7751,7 +7752,7 @@
         maxSize: maxSize$K,
         accessLevel: accessLevel$K,
         parameters: {
-          displayMode: 1,
+          displayMode: ADDITIONAL,
           order: []
         },
         bytes: [0x5e, 0x01, 0x01]

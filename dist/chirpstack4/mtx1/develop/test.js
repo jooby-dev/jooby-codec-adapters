@@ -2753,6 +2753,7 @@
 
     var commandNames = invertObject(uplinkIds);
 
+    const MAIN = 0;
     const ADDITIONAL = 1;
 
     const A = 0b00000000;
@@ -2782,9 +2783,7 @@
             ]
         }
     };
-    const fromBytes$1M = ([displayMode]) => ({
-        displayMode: displayMode
-    });
+    const fromBytes$1M = ([displayMode]) => ({ displayMode });
     const toBytes$1M = (parameters) => {
         const buffer = new CommandBinaryBuffer$1(maxSize$1M);
         buffer.setUint8(parameters.displayMode);
@@ -4853,7 +4852,7 @@
             maxSize: maxSize$1b,
             accessLevel: accessLevel$1b,
             parameters: {
-                displayMode: 0,
+                displayMode: MAIN,
                 order: [4, 5, 6, 7]
             },
             bytes: [
@@ -4868,7 +4867,7 @@
             maxSize: maxSize$1b,
             accessLevel: accessLevel$1b,
             parameters: {
-                displayMode: 1,
+                displayMode: ADDITIONAL,
                 order: []
             },
             bytes: [
@@ -7514,7 +7513,7 @@
             maxSize: maxSize$K,
             accessLevel: accessLevel$K,
             parameters: {
-                displayMode: 0,
+                displayMode: MAIN,
                 order: [4, 5, 6, 7]
             },
             bytes: [
@@ -7528,7 +7527,7 @@
             maxSize: maxSize$K,
             accessLevel: accessLevel$K,
             parameters: {
-                displayMode: 1,
+                displayMode: ADDITIONAL,
                 order: []
             },
             bytes: [

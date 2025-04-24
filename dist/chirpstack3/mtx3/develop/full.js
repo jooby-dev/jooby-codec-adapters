@@ -4469,7 +4469,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       MAX_EXPORTED_ACTIVE_POWER_MONTH_T2: 1 << 30,
       MAX_EXPORTED_ACTIVE_POWER_MONTH_T3: 1 << 31
     };
-    var displaySet4Mask = {
+    var displaySet4BaseMask = {
       MAX_EXPORTED_ACTIVE_POWER_MONTH_T4: 1 << 0,
       MAX_EXPORTED_REACTIVE_POWER_DAY_T1: 1 << 1,
       MAX_EXPORTED_REACTIVE_POWER_DAY_T2: 1 << 2,
@@ -4495,13 +4495,12 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       POWER_THRESHOLD_T1: 1 << 22,
       POWER_THRESHOLD_T2: 1 << 23,
       POWER_THRESHOLD_T3: 1 << 24,
-      POWER_THRESHOLD_T4: 1 << 25,
-      OPTOPORT_SPEED: 1 << 26,
-      MAGNET_INDUCTION: 1 << 27,
-      SORT_DISPLAY_SCREENS: 1 << 29,
-      TURN_OFF_DISPLAY: 1 << 30,
-      AUTO_SCREEN_SCROLLING: 1 << 31
+      POWER_THRESHOLD_T4: 1 << 25
     };
+    var displaySet4Mask = _objectSpread2(_objectSpread2({}, displaySet4BaseMask), {}, {
+      SORT_DISPLAY_SCREENS: 1 << 29,
+      AUTO_SCREEN_SCROLLING: 1 << 31
+    });
     var displaySet5Mask = {
       EVENT: 1 << 0,
       PROFILE_P01: 1 << 1,
@@ -4556,9 +4555,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       MAGNET_SCREEN_CONST: 1 << 5,
       ALLOW_BROWNOUT_INDICATION: 1 << 7
     };
-    var displaySet24Mask = {
-      OPTOPORT_SPEED: 1 << 26
-    };
+    var displaySet24Mask = _objectSpread2(_objectSpread2({}, displaySet4BaseMask), {}, {
+      OPTOPORT_SPEED: 1 << 26,
+      MAGNET_INDUCTION: 1 << 27
+    });
     var relaySetExtMask = {
       RELAY_OFF_MAGNET: 1 << 0,
       RELAY_ON_MAGNET_TIMEOUT: 1 << 1,
@@ -4984,9 +4984,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         relaySetExt: toObject(relaySetExtMask, this.getUint8()),
         timeoutMagnetOn: this.getUint8(),
         phaseDefault: this.getUint8(),
-        displaySet21: this.getUint32(),
-        displaySet22: this.getUint32(),
-        displaySet23: this.getUint32(),
+        displaySet21: toObject(displaySet1Mask, this.getUint32()),
+        displaySet22: toObject(displaySet2Mask, this.getUint32()),
+        displaySet23: toObject(displaySet3Mask, this.getUint32()),
         displaySet24: toObject(displaySet24Mask, this.getUint32()),
         channel1: this.getUint8(),
         channel2: this.getUint8(),
@@ -5009,9 +5009,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       this.setUint8(fromObject(relaySetExtMask, operatorParametersExtended2.relaySetExt));
       this.setUint8(operatorParametersExtended2.timeoutMagnetOn);
       this.setUint8(operatorParametersExtended2.phaseDefault);
-      this.setUint32(operatorParametersExtended2.displaySet21);
-      this.setUint32(operatorParametersExtended2.displaySet22);
-      this.setUint32(operatorParametersExtended2.displaySet23);
+      this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended2.displaySet21));
+      this.setUint32(fromObject(displaySet2Mask, operatorParametersExtended2.displaySet22));
+      this.setUint32(fromObject(displaySet3Mask, operatorParametersExtended2.displaySet23));
       this.setUint32(fromObject(displaySet24Mask, operatorParametersExtended2.displaySet24));
       this.setUint8(operatorParametersExtended2.channel1);
       this.setUint8(operatorParametersExtended2.channel2);

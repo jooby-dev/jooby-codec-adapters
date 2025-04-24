@@ -2218,9 +2218,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const id$1M = getDisplayParam;
     const maxSize$1o = 1;
-    const fromBytes$1O = ([displayMode]) => ({
-        displayMode: displayMode
-    });
+    const fromBytes$1O = ([displayMode]) => ({ displayMode });
     const toBytes$1O = (parameters) => {
         const buffer = new CommandBinaryBuffer$1(maxSize$1o);
         buffer.setUint8(parameters.displayMode);

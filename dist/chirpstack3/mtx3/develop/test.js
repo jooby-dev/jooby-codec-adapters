@@ -5834,6 +5834,7 @@
       optoport: invertObject(valueToRate.optoport)
     };
 
+    var MAIN_1 = 0;
     var MAIN_2 = 1;
 
     var A_PLUS_R_PLUS_R_MINUS = 1;
@@ -5996,7 +5997,7 @@
       MAX_EXPORTED_ACTIVE_POWER_MONTH_T2: 1 << 30,
       MAX_EXPORTED_ACTIVE_POWER_MONTH_T3: 1 << 31
     };
-    var displaySet4Mask = {
+    var displaySet4BaseMask = {
       MAX_EXPORTED_ACTIVE_POWER_MONTH_T4: 1 << 0,
       MAX_EXPORTED_REACTIVE_POWER_DAY_T1: 1 << 1,
       MAX_EXPORTED_REACTIVE_POWER_DAY_T2: 1 << 2,
@@ -6022,13 +6023,12 @@
       POWER_THRESHOLD_T1: 1 << 22,
       POWER_THRESHOLD_T2: 1 << 23,
       POWER_THRESHOLD_T3: 1 << 24,
-      POWER_THRESHOLD_T4: 1 << 25,
-      OPTOPORT_SPEED: 1 << 26,
-      MAGNET_INDUCTION: 1 << 27,
-      SORT_DISPLAY_SCREENS: 1 << 29,
-      TURN_OFF_DISPLAY: 1 << 30,
-      AUTO_SCREEN_SCROLLING: 1 << 31
+      POWER_THRESHOLD_T4: 1 << 25
     };
+    var displaySet4Mask = _objectSpread2(_objectSpread2({}, displaySet4BaseMask), {}, {
+      SORT_DISPLAY_SCREENS: 1 << 29,
+      AUTO_SCREEN_SCROLLING: 1 << 31
+    });
     var displaySet5Mask = {
       EVENT: 1 << 0,
       PROFILE_P01: 1 << 1,
@@ -6083,9 +6083,10 @@
       MAGNET_SCREEN_CONST: 1 << 5,
       ALLOW_BROWNOUT_INDICATION: 1 << 7
     };
-    var displaySet24Mask = {
-      OPTOPORT_SPEED: 1 << 26
-    };
+    var displaySet24Mask = _objectSpread2(_objectSpread2({}, displaySet4BaseMask), {}, {
+      OPTOPORT_SPEED: 1 << 26,
+      MAGNET_INDUCTION: 1 << 27
+    });
     var relaySetExtMask = {
       RELAY_OFF_MAGNET: 1 << 0,
       RELAY_ON_MAGNET_TIMEOUT: 1 << 1,
@@ -6511,9 +6512,9 @@
         relaySetExt: toObject(relaySetExtMask, this.getUint8()),
         timeoutMagnetOn: this.getUint8(),
         phaseDefault: this.getUint8(),
-        displaySet21: this.getUint32(),
-        displaySet22: this.getUint32(),
-        displaySet23: this.getUint32(),
+        displaySet21: toObject(displaySet1Mask, this.getUint32()),
+        displaySet22: toObject(displaySet2Mask, this.getUint32()),
+        displaySet23: toObject(displaySet3Mask, this.getUint32()),
         displaySet24: toObject(displaySet24Mask, this.getUint32()),
         channel1: this.getUint8(),
         channel2: this.getUint8(),
@@ -6536,9 +6537,9 @@
       this.setUint8(fromObject(relaySetExtMask, operatorParametersExtended2.relaySetExt));
       this.setUint8(operatorParametersExtended2.timeoutMagnetOn);
       this.setUint8(operatorParametersExtended2.phaseDefault);
-      this.setUint32(operatorParametersExtended2.displaySet21);
-      this.setUint32(operatorParametersExtended2.displaySet22);
-      this.setUint32(operatorParametersExtended2.displaySet23);
+      this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended2.displaySet21));
+      this.setUint32(fromObject(displaySet2Mask, operatorParametersExtended2.displaySet22));
+      this.setUint32(fromObject(displaySet3Mask, operatorParametersExtended2.displaySet23));
       this.setUint32(fromObject(displaySet24Mask, operatorParametersExtended2.displaySet24));
       this.setUint8(operatorParametersExtended2.channel1);
       this.setUint8(operatorParametersExtended2.channel2);
@@ -7321,7 +7322,7 @@
         maxSize: maxSize$1d,
         accessLevel: accessLevel$1d,
         parameters: {
-          displayMode: 0,
+          displayMode: MAIN_1,
           order: [4, 5, 6, 7]
         },
         bytes: [0x5d, 0x05, 0x00, 0x04, 0x05, 0x06, 0x07]
@@ -7333,7 +7334,7 @@
         maxSize: maxSize$1d,
         accessLevel: accessLevel$1d,
         parameters: {
-          displayMode: 1,
+          displayMode: MAIN_2,
           order: []
         },
         bytes: [0x5d, 0x01, 0x01]
@@ -7588,10 +7589,7 @@
             POWER_THRESHOLD_T2: false,
             POWER_THRESHOLD_T3: false,
             POWER_THRESHOLD_T4: false,
-            OPTOPORT_SPEED: false,
-            MAGNET_INDUCTION: false,
             SORT_DISPLAY_SCREENS: false,
-            TURN_OFF_DISPLAY: false,
             AUTO_SCREEN_SCROLLING: true
           }
         },
@@ -7701,11 +7699,137 @@
           },
           timeoutMagnetOn: 5,
           phaseDefault: 1,
-          displaySet21: 0,
-          displaySet22: 0,
-          displaySet23: 0,
+          displaySet21: {
+            SET_ALL_SEGMENT_DISPLAY: false,
+            SOFTWARE_VERSION: false,
+            TOTAL_ACTIVE_ENERGY: false,
+            ACTIVE_ENERGY_T1: false,
+            ACTIVE_ENERGY_T2: false,
+            ACTIVE_ENERGY_T3: false,
+            ACTIVE_ENERGY_T4: false,
+            TOTAL_REACTIVE_ENERGY: false,
+            REACTIVE_ENERGY_T1: false,
+            REACTIVE_ENERGY_T2: false,
+            REACTIVE_ENERGY_T3: false,
+            REACTIVE_ENERGY_T4: false,
+            TOTAL_NEGATIVE_REACTIVE_ENERGY: false,
+            NEGATIVE_REACTIVE_ENERGY_T1: false,
+            NEGATIVE_REACTIVE_ENERGY_T2: false,
+            NEGATIVE_REACTIVE_ENERGY_T3: false,
+            NEGATIVE_REACTIVE_ENERGY_T4: false,
+            TOTAL_EXPORTED_ACTIVE_ENERGY: false,
+            EXPORTED_ACTIVE_ENERGY_T1: false,
+            EXPORTED_ACTIVE_ENERGY_T2: false,
+            EXPORTED_ACTIVE_ENERGY_T3: false,
+            EXPORTED_ACTIVE_ENERGY_T4: false,
+            TOTAL_EXPORTED_REACTIVE_ENERGY: false,
+            EXPORTED_REACTIVE_ENERGY_T1: false,
+            EXPORTED_REACTIVE_ENERGY_T2: false,
+            EXPORTED_REACTIVE_ENERGY_T3: false,
+            EXPORTED_REACTIVE_ENERGY_T4: false,
+            TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: false,
+            EXPORTED_NEGATIVE_REACTIVE_ENERGY_T1: false,
+            EXPORTED_NEGATIVE_REACTIVE_ENERGY_T2: false,
+            EXPORTED_NEGATIVE_REACTIVE_ENERGY_T3: false,
+            EXPORTED_NEGATIVE_REACTIVE_ENERGY_T4: false
+          },
+          displaySet22: {
+            CURRENT_IN_PHASE_A: false,
+            CURRENT_IN_PHASE_B: false,
+            CURRENT_IN_PHASE_C: false,
+            CURRENT_IN_NEUTRAL: false,
+            VOLTAGE_IN_PHASE_A: false,
+            VOLTAGE_IN_PHASE_B: false,
+            VOLTAGE_IN_PHASE_C: false,
+            BATTERY_VOLTAGE: false,
+            FREQUENCY: false,
+            ACTIVE_POWER_SUM: false,
+            ACTIVE_POWER_PHASE_A: false,
+            ACTIVE_POWER_PHASE_B: false,
+            ACTIVE_POWER_PHASE_C: false,
+            REACTIVE_POWER_QPLUS_SUM: false,
+            REACTIVE_POWER_QPLUS_PHASE_A: false,
+            REACTIVE_POWER_QPLUS_PHASE_B: false,
+            REACTIVE_POWER_QPLUS_PHASE_C: false,
+            REACTIVE_POWER_QMINUS_SUM: false,
+            REACTIVE_POWER_QMINUS_PHASE_A: false,
+            REACTIVE_POWER_QMINUS_PHASE_B: false,
+            REACTIVE_POWER_QMINUS_PHASE_C: false,
+            POWER_COEFFICIENT_SUM: false,
+            POWER_COEFFICIENT_PHASE_A: false,
+            POWER_COEFFICIENT_PHASE_B: false,
+            POWER_COEFFICIENT_PHASE_C: false,
+            APPARENT_POWER_QPLUS_SUM: false,
+            APPARENT_POWER_QPLUS_PHASE_A: false,
+            APPARENT_POWER_QPLUS_PHASE_B: false,
+            APPARENT_POWER_QPLUS_PHASE_C: false,
+            APPARENT_POWER_QMINUS_SUM: false,
+            APPARENT_POWER_QMINUS_PHASE_A: false,
+            APPARENT_POWER_QMINUS_PHASE_B: false
+          },
+          displaySet23: {
+            APPARENT_POWER_QMINUS_PHASE_C: false,
+            MAX_ACTIVE_POWER_DAY_T1: false,
+            MAX_ACTIVE_POWER_DAY_T2: false,
+            MAX_ACTIVE_POWER_DAY_T3: false,
+            MAX_ACTIVE_POWER_DAY_T4: false,
+            MAX_ACTIVE_POWER_MONTH_T1: false,
+            MAX_ACTIVE_POWER_MONTH_T2: false,
+            MAX_ACTIVE_POWER_MONTH_T3: false,
+            MAX_ACTIVE_POWER_MONTH_T4: false,
+            MAX_REACTIVE_POWER_DAY_T1: false,
+            MAX_REACTIVE_POWER_DAY_T2: false,
+            MAX_REACTIVE_POWER_DAY_T3: false,
+            MAX_REACTIVE_POWER_DAY_T4: false,
+            MAX_REACTIVE_POWER_MONTH_T1: false,
+            MAX_REACTIVE_POWER_MONTH_T2: false,
+            MAX_REACTIVE_POWER_MONTH_T3: false,
+            MAX_REACTIVE_POWER_MONTH_T4: false,
+            MAX_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+            MAX_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+            MAX_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+            MAX_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+            MAX_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+            MAX_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+            MAX_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+            MAX_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
+            MAX_EXPORTED_ACTIVE_POWER_DAY_T1: false,
+            MAX_EXPORTED_ACTIVE_POWER_DAY_T2: false,
+            MAX_EXPORTED_ACTIVE_POWER_DAY_T3: false,
+            MAX_EXPORTED_ACTIVE_POWER_DAY_T4: false,
+            MAX_EXPORTED_ACTIVE_POWER_MONTH_T1: false,
+            MAX_EXPORTED_ACTIVE_POWER_MONTH_T2: false,
+            MAX_EXPORTED_ACTIVE_POWER_MONTH_T3: false
+          },
           displaySet24: {
-            OPTOPORT_SPEED: true
+            MAX_EXPORTED_ACTIVE_POWER_MONTH_T4: false,
+            MAX_EXPORTED_REACTIVE_POWER_DAY_T1: false,
+            MAX_EXPORTED_REACTIVE_POWER_DAY_T2: false,
+            MAX_EXPORTED_REACTIVE_POWER_DAY_T3: false,
+            MAX_EXPORTED_REACTIVE_POWER_DAY_T4: false,
+            MAX_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
+            MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
+            MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
+            MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+            HOUR_MINUTE_SECOND: false,
+            DATE_MONTH_YEAR: false,
+            CURRENT_TRANSFORMATION_RATIO: false,
+            VOLTAGE_TRANSFORMATION_RATIO: false,
+            CURRENT_BALANCE: false,
+            POWER_THRESHOLD_T1: false,
+            POWER_THRESHOLD_T2: false,
+            POWER_THRESHOLD_T3: false,
+            POWER_THRESHOLD_T4: false,
+            OPTOPORT_SPEED: true,
+            MAGNET_INDUCTION: false
           },
           channel1: 1,
           channel2: 2,
@@ -10822,7 +10946,7 @@
         maxSize: maxSize$o,
         accessLevel: accessLevel$o,
         parameters: {
-          displayMode: 0,
+          displayMode: MAIN_1,
           order: [4, 5, 6, 7]
         },
         bytes: [0x5e, 0x05, 0x00, 0x04, 0x05, 0x06, 0x07]
@@ -10833,7 +10957,7 @@
         maxSize: maxSize$o,
         accessLevel: accessLevel$o,
         parameters: {
-          displayMode: 1,
+          displayMode: MAIN_2,
           order: []
         },
         bytes: [0x5e, 0x01, 0x01]
@@ -12451,10 +12575,7 @@
             POWER_THRESHOLD_T2: false,
             POWER_THRESHOLD_T3: false,
             POWER_THRESHOLD_T4: false,
-            OPTOPORT_SPEED: false,
-            MAGNET_INDUCTION: false,
             SORT_DISPLAY_SCREENS: false,
-            TURN_OFF_DISPLAY: false,
             AUTO_SCREEN_SCROLLING: true
           }
         },
@@ -12558,11 +12679,137 @@
           },
           timeoutMagnetOn: 5,
           phaseDefault: 1,
-          displaySet21: 0,
-          displaySet22: 0,
-          displaySet23: 0,
+          displaySet21: {
+            SET_ALL_SEGMENT_DISPLAY: false,
+            SOFTWARE_VERSION: false,
+            TOTAL_ACTIVE_ENERGY: false,
+            ACTIVE_ENERGY_T1: false,
+            ACTIVE_ENERGY_T2: false,
+            ACTIVE_ENERGY_T3: false,
+            ACTIVE_ENERGY_T4: false,
+            TOTAL_REACTIVE_ENERGY: false,
+            REACTIVE_ENERGY_T1: false,
+            REACTIVE_ENERGY_T2: false,
+            REACTIVE_ENERGY_T3: false,
+            REACTIVE_ENERGY_T4: false,
+            TOTAL_NEGATIVE_REACTIVE_ENERGY: false,
+            NEGATIVE_REACTIVE_ENERGY_T1: false,
+            NEGATIVE_REACTIVE_ENERGY_T2: false,
+            NEGATIVE_REACTIVE_ENERGY_T3: false,
+            NEGATIVE_REACTIVE_ENERGY_T4: false,
+            TOTAL_EXPORTED_ACTIVE_ENERGY: false,
+            EXPORTED_ACTIVE_ENERGY_T1: false,
+            EXPORTED_ACTIVE_ENERGY_T2: false,
+            EXPORTED_ACTIVE_ENERGY_T3: false,
+            EXPORTED_ACTIVE_ENERGY_T4: false,
+            TOTAL_EXPORTED_REACTIVE_ENERGY: false,
+            EXPORTED_REACTIVE_ENERGY_T1: false,
+            EXPORTED_REACTIVE_ENERGY_T2: false,
+            EXPORTED_REACTIVE_ENERGY_T3: false,
+            EXPORTED_REACTIVE_ENERGY_T4: false,
+            TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: false,
+            EXPORTED_NEGATIVE_REACTIVE_ENERGY_T1: false,
+            EXPORTED_NEGATIVE_REACTIVE_ENERGY_T2: false,
+            EXPORTED_NEGATIVE_REACTIVE_ENERGY_T3: false,
+            EXPORTED_NEGATIVE_REACTIVE_ENERGY_T4: false
+          },
+          displaySet22: {
+            CURRENT_IN_PHASE_A: false,
+            CURRENT_IN_PHASE_B: false,
+            CURRENT_IN_PHASE_C: false,
+            CURRENT_IN_NEUTRAL: false,
+            VOLTAGE_IN_PHASE_A: false,
+            VOLTAGE_IN_PHASE_B: false,
+            VOLTAGE_IN_PHASE_C: false,
+            BATTERY_VOLTAGE: false,
+            FREQUENCY: false,
+            ACTIVE_POWER_SUM: false,
+            ACTIVE_POWER_PHASE_A: false,
+            ACTIVE_POWER_PHASE_B: false,
+            ACTIVE_POWER_PHASE_C: false,
+            REACTIVE_POWER_QPLUS_SUM: false,
+            REACTIVE_POWER_QPLUS_PHASE_A: false,
+            REACTIVE_POWER_QPLUS_PHASE_B: false,
+            REACTIVE_POWER_QPLUS_PHASE_C: false,
+            REACTIVE_POWER_QMINUS_SUM: false,
+            REACTIVE_POWER_QMINUS_PHASE_A: false,
+            REACTIVE_POWER_QMINUS_PHASE_B: false,
+            REACTIVE_POWER_QMINUS_PHASE_C: false,
+            POWER_COEFFICIENT_SUM: false,
+            POWER_COEFFICIENT_PHASE_A: false,
+            POWER_COEFFICIENT_PHASE_B: false,
+            POWER_COEFFICIENT_PHASE_C: false,
+            APPARENT_POWER_QPLUS_SUM: false,
+            APPARENT_POWER_QPLUS_PHASE_A: false,
+            APPARENT_POWER_QPLUS_PHASE_B: false,
+            APPARENT_POWER_QPLUS_PHASE_C: false,
+            APPARENT_POWER_QMINUS_SUM: false,
+            APPARENT_POWER_QMINUS_PHASE_A: false,
+            APPARENT_POWER_QMINUS_PHASE_B: false
+          },
+          displaySet23: {
+            APPARENT_POWER_QMINUS_PHASE_C: false,
+            MAX_ACTIVE_POWER_DAY_T1: false,
+            MAX_ACTIVE_POWER_DAY_T2: false,
+            MAX_ACTIVE_POWER_DAY_T3: false,
+            MAX_ACTIVE_POWER_DAY_T4: false,
+            MAX_ACTIVE_POWER_MONTH_T1: false,
+            MAX_ACTIVE_POWER_MONTH_T2: false,
+            MAX_ACTIVE_POWER_MONTH_T3: false,
+            MAX_ACTIVE_POWER_MONTH_T4: false,
+            MAX_REACTIVE_POWER_DAY_T1: false,
+            MAX_REACTIVE_POWER_DAY_T2: false,
+            MAX_REACTIVE_POWER_DAY_T3: false,
+            MAX_REACTIVE_POWER_DAY_T4: false,
+            MAX_REACTIVE_POWER_MONTH_T1: false,
+            MAX_REACTIVE_POWER_MONTH_T2: false,
+            MAX_REACTIVE_POWER_MONTH_T3: false,
+            MAX_REACTIVE_POWER_MONTH_T4: false,
+            MAX_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+            MAX_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+            MAX_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+            MAX_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+            MAX_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+            MAX_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+            MAX_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+            MAX_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
+            MAX_EXPORTED_ACTIVE_POWER_DAY_T1: false,
+            MAX_EXPORTED_ACTIVE_POWER_DAY_T2: false,
+            MAX_EXPORTED_ACTIVE_POWER_DAY_T3: false,
+            MAX_EXPORTED_ACTIVE_POWER_DAY_T4: false,
+            MAX_EXPORTED_ACTIVE_POWER_MONTH_T1: false,
+            MAX_EXPORTED_ACTIVE_POWER_MONTH_T2: false,
+            MAX_EXPORTED_ACTIVE_POWER_MONTH_T3: false
+          },
           displaySet24: {
-            OPTOPORT_SPEED: true
+            MAX_EXPORTED_ACTIVE_POWER_MONTH_T4: false,
+            MAX_EXPORTED_REACTIVE_POWER_DAY_T1: false,
+            MAX_EXPORTED_REACTIVE_POWER_DAY_T2: false,
+            MAX_EXPORTED_REACTIVE_POWER_DAY_T3: false,
+            MAX_EXPORTED_REACTIVE_POWER_DAY_T4: false,
+            MAX_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
+            MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
+            MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
+            MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
+            MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+            HOUR_MINUTE_SECOND: false,
+            DATE_MONTH_YEAR: false,
+            CURRENT_TRANSFORMATION_RATIO: false,
+            VOLTAGE_TRANSFORMATION_RATIO: false,
+            CURRENT_BALANCE: false,
+            POWER_THRESHOLD_T1: false,
+            POWER_THRESHOLD_T2: false,
+            POWER_THRESHOLD_T3: false,
+            POWER_THRESHOLD_T4: false,
+            OPTOPORT_SPEED: true,
+            MAGNET_INDUCTION: false
           },
           channel1: 1,
           channel2: 2,

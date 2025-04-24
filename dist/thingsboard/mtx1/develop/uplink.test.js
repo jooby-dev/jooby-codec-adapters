@@ -3772,7 +3772,7 @@ var logs = '';
   var A_PLUS = 0x01;
   var A_MINUS = 0x02;
   var VOLTAGE_10 = 0x40;
-  var VOLTAGE = 0xa0;
+  var VOLTAGE$1 = 0xa0;
 
   var commandNames = invertObject(downlinkIds);
 
@@ -3983,7 +3983,7 @@ var logs = '';
           month: 10,
           date: 2
         },
-        energyType: VOLTAGE,
+        energyType: VOLTAGE$1,
         firstIndex: 0,
         count: 1,
         period: 60,
@@ -4004,7 +4004,7 @@ var logs = '';
           month: 10,
           date: 2
         },
-        energyType: VOLTAGE,
+        energyType: VOLTAGE$1,
         firstIndex: 25,
         count: 1,
         period: 60,
@@ -4197,6 +4197,74 @@ var logs = '';
     toBytes: toBytes$L
   });
 
+  var SET_ALL_SEGMENT_DISPLAY = 1;
+  var SOFTWARE_VERSION = 2;
+  var TOTAL_ACTIVE_ENERGY = 3;
+  var ACTIVE_ENERGY_T1 = 4;
+  var ACTIVE_ENERGY_T2 = 5;
+  var ACTIVE_ENERGY_T3 = 6;
+  var ACTIVE_ENERGY_T4 = 7;
+  var ACTIVE_POWER_PER_PHASE = 8;
+  var ACTIVE_POWER_IN_NEUTRAL = 9;
+  var CURRENT_IN_PHASE = 10;
+  var CURRENT_IN_NEUTRAL = 11;
+  var VOLTAGE = 12;
+  var HOUR_MINUTE_SECOND = 13;
+  var DATE_MONTH_YEAR = 14;
+  var TOTAL_EXPORTED_ACTIVE_ENERGY = 15;
+  var EXPORTED_ACTIVE_ENERGY_T1 = 16;
+  var EXPORTED_ACTIVE_ENERGY_T2 = 17;
+  var EXPORTED_ACTIVE_ENERGY_T3 = 18;
+  var EXPORTED_ACTIVE_ENERGY_T4 = 19;
+  var POWER_COEFFICIENT_PHASE_A = 20;
+  var POWER_COEFFICIENT_PHASE_B = 21;
+  var BATTERY_VOLTAGE = 22;
+  var POWER_THRESHOLD_T1 = 23;
+  var POWER_THRESHOLD_T2 = 24;
+  var POWER_THRESHOLD_T3 = 25;
+  var POWER_THRESHOLD_T4 = 26;
+  var MAGNET_INDUCTION = 28;
+  var CURRENT_BALANCE = 30;
+  var OPTOPORT_SPEED = 31;
+
+  var screenIds = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ACTIVE_ENERGY_T1: ACTIVE_ENERGY_T1,
+    ACTIVE_ENERGY_T2: ACTIVE_ENERGY_T2,
+    ACTIVE_ENERGY_T3: ACTIVE_ENERGY_T3,
+    ACTIVE_ENERGY_T4: ACTIVE_ENERGY_T4,
+    ACTIVE_POWER_IN_NEUTRAL: ACTIVE_POWER_IN_NEUTRAL,
+    ACTIVE_POWER_PER_PHASE: ACTIVE_POWER_PER_PHASE,
+    BATTERY_VOLTAGE: BATTERY_VOLTAGE,
+    CURRENT_BALANCE: CURRENT_BALANCE,
+    CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL,
+    CURRENT_IN_PHASE: CURRENT_IN_PHASE,
+    DATE_MONTH_YEAR: DATE_MONTH_YEAR,
+    EXPORTED_ACTIVE_ENERGY_T1: EXPORTED_ACTIVE_ENERGY_T1,
+    EXPORTED_ACTIVE_ENERGY_T2: EXPORTED_ACTIVE_ENERGY_T2,
+    EXPORTED_ACTIVE_ENERGY_T3: EXPORTED_ACTIVE_ENERGY_T3,
+    EXPORTED_ACTIVE_ENERGY_T4: EXPORTED_ACTIVE_ENERGY_T4,
+    HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND,
+    MAGNET_INDUCTION: MAGNET_INDUCTION,
+    OPTOPORT_SPEED: OPTOPORT_SPEED,
+    POWER_COEFFICIENT_PHASE_A: POWER_COEFFICIENT_PHASE_A,
+    POWER_COEFFICIENT_PHASE_B: POWER_COEFFICIENT_PHASE_B,
+    POWER_THRESHOLD_T1: POWER_THRESHOLD_T1,
+    POWER_THRESHOLD_T2: POWER_THRESHOLD_T2,
+    POWER_THRESHOLD_T3: POWER_THRESHOLD_T3,
+    POWER_THRESHOLD_T4: POWER_THRESHOLD_T4,
+    SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY,
+    SOFTWARE_VERSION: SOFTWARE_VERSION,
+    TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY,
+    TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY,
+    VOLTAGE: VOLTAGE
+  });
+
+  invertObject(screenIds);
+
+  var MAIN = 0;
+  var ADDITIONAL = 1;
+
   var id$K = getDisplayParam$1;
   var name$K = commandNames$1[getDisplayParam$1];
   var headerSize$K = 2;
@@ -4211,7 +4279,7 @@ var logs = '';
       maxSize: maxSize$K,
       accessLevel: accessLevel$K,
       parameters: {
-        displayMode: 0,
+        displayMode: MAIN,
         order: [4, 5, 6, 7]
       },
       bytes: [0x5e, 0x05, 0x00, 0x04, 0x05, 0x06, 0x07]
@@ -4222,7 +4290,7 @@ var logs = '';
       maxSize: maxSize$K,
       accessLevel: accessLevel$K,
       parameters: {
-        displayMode: 1,
+        displayMode: ADDITIONAL,
         order: []
       },
       bytes: [0x5e, 0x01, 0x01]
