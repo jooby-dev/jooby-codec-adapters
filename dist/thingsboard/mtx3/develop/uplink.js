@@ -1458,6 +1458,15 @@ var fromBytes, getDataSegment;
       timeCorrectPassHalfhour: false
     };
   };
+  CommandBinaryBuffer$2.getDefaultOperatorParametersExtended3 = function () {
+    return {
+      pmaxMinusThreshold0: 0,
+      pmaxMinusThreshold1: 0,
+      pmaxMinusThreshold2: 0,
+      pmaxMinusThreshold3: 0,
+      relaySet: toObject(operatorParametersExtended3RelaySetMask, 0)
+    };
+  };
   CommandBinaryBuffer$2.prototype.getFrameHeader = function () {
     var type = this.getUint8();
     var typeName = frameNames[type];
@@ -4100,6 +4109,36 @@ var fromBytes, getDataSegment;
       displaySet4: toObject(displaySet4Mask, 2147876864)
     };
   };
+  CommandBinaryBuffer.getDefaultOperatorParametersExtended = function () {
+    return {
+      timeoutRelayOn: 1,
+      define1: toObject(define1Mask, 0),
+      timeoutRelayKey: 0,
+      timeoutRelayAuto: 5
+    };
+  };
+  CommandBinaryBuffer.getDefaultOperatorParametersExtended2 = function () {
+    return {
+      deltaCorMin: 0,
+      timeoutMagnetOff: 5,
+      relaySetExt: toObject(relaySetExtMask, 0),
+      timeoutMagnetOn: 5,
+      phaseDefault: 3,
+      displaySet21: toObject(displaySet1Mask, 4231),
+      displaySet22: toObject(displaySet2Mask, 31597303),
+      displaySet23: toObject(displaySet3Mask, 0),
+      displaySet24: toObject(displaySet24Mask, 393216),
+      channel1: 0,
+      channel2: 0,
+      channel3: 0,
+      channel4: 0,
+      channel5: 0,
+      channel6: 0,
+      timeCorrectPeriod: 24,
+      timeCorrectPassHalfhour: false
+    };
+  };
+  CommandBinaryBuffer.getDefaultOperatorParametersExtended3 = CommandBinaryBuffer$2.getDefaultOperatorParametersExtended3;
   CommandBinaryBuffer.prototype.getOperatorParameters = function () {
     return {
       vpThreshold: this.getUint32(),

@@ -1311,6 +1311,15 @@ var logs = '';
       timeCorrectPassHalfhour: false
     };
   };
+  CommandBinaryBuffer$1.getDefaultOperatorParametersExtended3 = function () {
+    return {
+      pmaxMinusThreshold0: 0,
+      pmaxMinusThreshold1: 0,
+      pmaxMinusThreshold2: 0,
+      pmaxMinusThreshold3: 0,
+      relaySet: toObject(operatorParametersExtended3RelaySetMask, 0)
+    };
+  };
   CommandBinaryBuffer$1.prototype.getFrameHeader = function () {
     var type = this.getUint8();
     var typeName = frameNames[type];

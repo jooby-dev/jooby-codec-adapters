@@ -1109,6 +1109,13 @@
         timeCorrectPeriod: 24,
         timeCorrectPassHalfhour: false
     });
+    CommandBinaryBuffer$1.getDefaultOperatorParametersExtended3 = () => ({
+        pmaxMinusThreshold0: 0,
+        pmaxMinusThreshold1: 0,
+        pmaxMinusThreshold2: 0,
+        pmaxMinusThreshold3: 0,
+        relaySet: toObject(operatorParametersExtended3RelaySetMask, 0)
+    });
     CommandBinaryBuffer$1.prototype.getFrameHeader = function () {
         const type = this.getUint8();
         const typeName = frameNames[type];
