@@ -2399,6 +2399,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const toBytes$1C = () => toBytes$23(id$1A);
 
     const TARIFF_NUMBER = 4;
+    const ENERGY_NAMES = ['A+', 'A+R+', 'A+R-', 'A-', 'A-R+', 'A-R-'];
     const UNDEFINED_ENERGY_VALUE = 0xffffffff;
     const energiesMask = {
         'A+': 0x01,
@@ -2456,7 +2457,26 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     CommandBinaryBuffer.prototype.setEnergiesFlags = function (energies) {
         this.setUint8(getEnergiesFlags(energies));
     };
-    CommandBinaryBuffer.prototype.getHalfhoursEnergy = function (halfhoursNumber) {
+    CommandBinaryBuffer.prototype.getHalfhoursEnergy1 = function (halfhoursNumber) {
+        const halfhours = [];
+        for (let index = 0; index < halfhoursNumber; index++) {
+            const value = this.getUint16();
+            const tariff = (value >> 14) & 0b11;
+            const energy = value & 16383;
+            halfhours.push(value === UNDEFINED_ENERGY_VALUE ? undefined : { tariff, energy });
+        }
+        return halfhours;
+    };
+    CommandBinaryBuffer.prototype.setHalfhoursEnergy1 = function (halfhours) {
+        if (halfhours) {
+            for (let index = 0; index < halfhours.length; index++) {
+                const { tariff, energy } = halfhours[index];
+                const value = (tariff << 14) | energy;
+                this.setUint16(value === undefined ? UNDEFINED_ENERGY_VALUE : value);
+            }
+        }
+    };
+    CommandBinaryBuffer.prototype.getHalfhoursEnergy3 = function (halfhoursNumber) {
         const halfhours = [];
         for (let index = 0; index < halfhoursNumber; index++) {
             const value = this.getUint16();
@@ -2464,7 +2484,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         }
         return halfhours;
     };
-    CommandBinaryBuffer.prototype.setHalfhoursEnergy = function (halfhours) {
+    CommandBinaryBuffer.prototype.setHalfhoursEnergy3 = function (halfhours) {
         if (halfhours) {
             for (let index = 0; index < halfhours.length; index++) {
                 const value = halfhours[index];
@@ -2472,35 +2492,33 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
             }
         }
     };
-    CommandBinaryBuffer.prototype.getHalfhoursEnergies = function (energiesFlags, halfhoursNumber) {
+    CommandBinaryBuffer.prototype.getHalfhoursEnergies1 = function (energiesFlags, halfhoursNumber) {
         const energies = {};
-        if (energiesFlags['A+']) {
-            energies['A+'] = this.getHalfhoursEnergy(halfhoursNumber);
-        }
-        if (energiesFlags['A+R+']) {
-            energies['A+R+'] = this.getHalfhoursEnergy(halfhoursNumber);
-        }
-        if (energiesFlags['A+R-']) {
-            energies['A+R-'] = this.getHalfhoursEnergy(halfhoursNumber);
-        }
-        if (energiesFlags['A-']) {
-            energies['A-'] = this.getHalfhoursEnergy(halfhoursNumber);
-        }
-        if (energiesFlags['A-R+']) {
-            energies['A-R+'] = this.getHalfhoursEnergy(halfhoursNumber);
-        }
-        if (energiesFlags['A-R-']) {
-            energies['A-R-'] = this.getHalfhoursEnergy(halfhoursNumber);
-        }
+        ENERGY_NAMES.forEach(energyName => {
+            if (energiesFlags[energyName]) {
+                energies[energyName] = this.getHalfhoursEnergy1(halfhoursNumber);
+            }
+        });
         return energies;
     };
-    CommandBinaryBuffer.prototype.setHalfhoursEnergies = function (energies) {
-        this.setHalfhoursEnergy(energies['A+']);
-        this.setHalfhoursEnergy(energies['A+R+']);
-        this.setHalfhoursEnergy(energies['A+R-']);
-        this.setHalfhoursEnergy(energies['A-']);
-        this.setHalfhoursEnergy(energies['A-R+']);
-        this.setHalfhoursEnergy(energies['A-R-']);
+    CommandBinaryBuffer.prototype.getHalfhoursEnergies3 = function (energiesFlags, halfhoursNumber) {
+        const energies = {};
+        ENERGY_NAMES.forEach(energyName => {
+            if (energiesFlags[energyName]) {
+                energies[energyName] = this.getHalfhoursEnergy3(halfhoursNumber);
+            }
+        });
+        return energies;
+    };
+    CommandBinaryBuffer.prototype.setHalfhoursEnergies1 = function (energies) {
+        ENERGY_NAMES.forEach(energyName => {
+            this.setHalfhoursEnergy1(energies[energyName]);
+        });
+    };
+    CommandBinaryBuffer.prototype.setHalfhoursEnergies3 = function (energies) {
+        ENERGY_NAMES.forEach(energyName => {
+            this.setHalfhoursEnergy3(energies[energyName]);
+        });
     };
     CommandBinaryBuffer.prototype.getAPlusTariffEnergies = function (energyFlags) {
         const energies = {};
@@ -4156,7 +4174,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
             date,
             firstHalfhour,
             halfhoursNumber,
-            energies: buffer.getHalfhoursEnergies(energiesFlags, halfhoursNumber)
+            energies: buffer.getHalfhoursEnergies1(energiesFlags, halfhoursNumber)
         };
     };
     const toBytes$y = (parameters) => {
@@ -4166,7 +4184,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         buffer.setEnergiesFlags(energies);
         buffer.setUint8(firstHalfhour);
         buffer.setUint8(halfhoursNumber);
-        buffer.setHalfhoursEnergies(energies);
+        buffer.setHalfhoursEnergies1(energies);
         return toBytes$23(id$x, buffer.getBytesToOffset());
     };
 

@@ -1908,13 +1908,13 @@ var fromBytes, getDataSegment;
     this.setUint8(parameters.period);
   };
   CommandBinaryBuffer$1.prototype.getDayMaxDemandResponse = function () {
-    var _this10 = this;
+    var _this0 = this;
     var date = this.getDate();
     var power = new Array(TARIFF_NUMBER$1).fill(0).map(function () {
       return {
-        hours: _this10.getUint8(),
-        minutes: _this10.getUint8(),
-        power: _this10.getUint32()
+        hours: _this0.getUint8(),
+        minutes: _this0.getUint8(),
+        power: _this0.getUint32()
       };
     });
     return {
@@ -1923,12 +1923,12 @@ var fromBytes, getDataSegment;
     };
   };
   CommandBinaryBuffer$1.prototype.setDayMaxDemandResponse = function (parameters) {
-    var _this11 = this;
+    var _this1 = this;
     this.setDate(parameters.date);
     parameters.power.forEach(function (value) {
-      _this11.setUint8(value.hours);
-      _this11.setUint8(value.minutes);
-      _this11.setUint32(value.power);
+      _this1.setUint8(value.hours);
+      _this1.setUint8(value.minutes);
+      _this1.setUint32(value.power);
     });
   };
   CommandBinaryBuffer$1.prototype.getOperatorParametersExtended3 = function () {
@@ -1953,23 +1953,23 @@ var fromBytes, getDataSegment;
     this.setUint8(fromObject(operatorParametersExtended3RelaySetMask, relaySet));
   };
   CommandBinaryBuffer$1.prototype.getMonthMaxPowerByTariffs = function () {
-    var _this12 = this;
+    var _this10 = this;
     return new Array(TARIFF_NUMBER$1).fill(0).map(function () {
       return {
-        date: _this12.getUint8(),
-        hours: _this12.getUint8(),
-        minutes: _this12.getUint8(),
-        power: _this12.getUint32()
+        date: _this10.getUint8(),
+        hours: _this10.getUint8(),
+        minutes: _this10.getUint8(),
+        power: _this10.getUint32()
       };
     });
   };
   CommandBinaryBuffer$1.prototype.setMonthMaxPowerByTariffs = function (tariffs) {
-    var _this13 = this;
+    var _this11 = this;
     tariffs.forEach(function (tariff) {
-      _this13.setUint8(tariff.date);
-      _this13.setUint8(tariff.hours);
-      _this13.setUint8(tariff.minutes);
-      _this13.setUint32(tariff.power);
+      _this11.setUint8(tariff.date);
+      _this11.setUint8(tariff.hours);
+      _this11.setUint8(tariff.minutes);
+      _this11.setUint32(tariff.power);
     });
   };
 
@@ -2248,6 +2248,7 @@ var fromBytes, getDataSegment;
   };
 
   var TARIFF_NUMBER = 4;
+  var ENERGY_NAMES = ['A+', 'A+R+', 'A+R-', 'A-', 'A-R+', 'A-R-'];
   var UNDEFINED_ENERGY_VALUE = 0xffffffff;
   var energiesMask = {
     'A+': 0x01,
@@ -2313,7 +2314,31 @@ var fromBytes, getDataSegment;
   CommandBinaryBuffer.prototype.setEnergiesFlags = function (energies) {
     this.setUint8(getEnergiesFlags(energies));
   };
-  CommandBinaryBuffer.prototype.getHalfhoursEnergy = function (halfhoursNumber) {
+  CommandBinaryBuffer.prototype.getHalfhoursEnergy1 = function (halfhoursNumber) {
+    var halfhours = [];
+    for (var index = 0; index < halfhoursNumber; index++) {
+      var value = this.getUint16();
+      var tariff = value >> 14 & 0b11;
+      var energy = value & 16383;
+      halfhours.push(value === UNDEFINED_ENERGY_VALUE ? undefined : {
+        tariff: tariff,
+        energy: energy
+      });
+    }
+    return halfhours;
+  };
+  CommandBinaryBuffer.prototype.setHalfhoursEnergy1 = function (halfhours) {
+    if (halfhours) {
+      for (var index = 0; index < halfhours.length; index++) {
+        var _halfhours$index = halfhours[index],
+          tariff = _halfhours$index.tariff,
+          energy = _halfhours$index.energy;
+        var value = tariff << 14 | energy;
+        this.setUint16(value === undefined ? UNDEFINED_ENERGY_VALUE : value);
+      }
+    }
+  };
+  CommandBinaryBuffer.prototype.getHalfhoursEnergy3 = function (halfhoursNumber) {
     var halfhours = [];
     for (var index = 0; index < halfhoursNumber; index++) {
       var value = this.getUint16();
@@ -2321,7 +2346,7 @@ var fromBytes, getDataSegment;
     }
     return halfhours;
   };
-  CommandBinaryBuffer.prototype.setHalfhoursEnergy = function (halfhours) {
+  CommandBinaryBuffer.prototype.setHalfhoursEnergy3 = function (halfhours) {
     if (halfhours) {
       for (var index = 0; index < halfhours.length; index++) {
         var value = halfhours[index];
@@ -2329,35 +2354,37 @@ var fromBytes, getDataSegment;
       }
     }
   };
-  CommandBinaryBuffer.prototype.getHalfhoursEnergies = function (energiesFlags, halfhoursNumber) {
+  CommandBinaryBuffer.prototype.getHalfhoursEnergies1 = function (energiesFlags, halfhoursNumber) {
+    var _this = this;
     var energies = {};
-    if (energiesFlags['A+']) {
-      energies['A+'] = this.getHalfhoursEnergy(halfhoursNumber);
-    }
-    if (energiesFlags['A+R+']) {
-      energies['A+R+'] = this.getHalfhoursEnergy(halfhoursNumber);
-    }
-    if (energiesFlags['A+R-']) {
-      energies['A+R-'] = this.getHalfhoursEnergy(halfhoursNumber);
-    }
-    if (energiesFlags['A-']) {
-      energies['A-'] = this.getHalfhoursEnergy(halfhoursNumber);
-    }
-    if (energiesFlags['A-R+']) {
-      energies['A-R+'] = this.getHalfhoursEnergy(halfhoursNumber);
-    }
-    if (energiesFlags['A-R-']) {
-      energies['A-R-'] = this.getHalfhoursEnergy(halfhoursNumber);
-    }
+    ENERGY_NAMES.forEach(function (energyName) {
+      if (energiesFlags[energyName]) {
+        energies[energyName] = _this.getHalfhoursEnergy1(halfhoursNumber);
+      }
+    });
     return energies;
   };
-  CommandBinaryBuffer.prototype.setHalfhoursEnergies = function (energies) {
-    this.setHalfhoursEnergy(energies['A+']);
-    this.setHalfhoursEnergy(energies['A+R+']);
-    this.setHalfhoursEnergy(energies['A+R-']);
-    this.setHalfhoursEnergy(energies['A-']);
-    this.setHalfhoursEnergy(energies['A-R+']);
-    this.setHalfhoursEnergy(energies['A-R-']);
+  CommandBinaryBuffer.prototype.getHalfhoursEnergies3 = function (energiesFlags, halfhoursNumber) {
+    var _this2 = this;
+    var energies = {};
+    ENERGY_NAMES.forEach(function (energyName) {
+      if (energiesFlags[energyName]) {
+        energies[energyName] = _this2.getHalfhoursEnergy3(halfhoursNumber);
+      }
+    });
+    return energies;
+  };
+  CommandBinaryBuffer.prototype.setHalfhoursEnergies1 = function (energies) {
+    var _this3 = this;
+    ENERGY_NAMES.forEach(function (energyName) {
+      _this3.setHalfhoursEnergy1(energies[energyName]);
+    });
+  };
+  CommandBinaryBuffer.prototype.setHalfhoursEnergies3 = function (energies) {
+    var _this4 = this;
+    ENERGY_NAMES.forEach(function (energyName) {
+      _this4.setHalfhoursEnergy3(energies[energyName]);
+    });
   };
   CommandBinaryBuffer.prototype.getAPlusTariffEnergies = function (energyFlags) {
     var energies = {};
@@ -2431,7 +2458,7 @@ var fromBytes, getDataSegment;
     return tariffs;
   };
   CommandBinaryBuffer.prototype.setTariffsEnergies = function (tariffs) {
-    var _this = this;
+    var _this5 = this;
     var energiesFlags = 0;
     var tariffsFlags = 0;
     tariffs.forEach(function (tariff, index) {
@@ -2443,10 +2470,10 @@ var fromBytes, getDataSegment;
     this.setUint8(energiesFlags);
     this.setUint8(tariffsFlags);
     tariffs.forEach(function (tariff) {
-      return _this.setAPlusTariffEnergies(tariff);
+      return _this5.setAPlusTariffEnergies(tariff);
     });
     tariffs.forEach(function (tariff) {
-      return _this.setAMinusTariffEnergies(tariff);
+      return _this5.setAMinusTariffEnergies(tariff);
     });
   };
   CommandBinaryBuffer.prototype.getPowerMax = function () {
@@ -2526,7 +2553,7 @@ var fromBytes, getDataSegment;
     return tariffs;
   };
   CommandBinaryBuffer.prototype.setTariffsPowerMax = function (tariffs) {
-    var _this2 = this;
+    var _this6 = this;
     var energiesFlags = 0;
     var tariffsFlags = 0;
     tariffs.forEach(function (tariff, index) {
@@ -2538,10 +2565,10 @@ var fromBytes, getDataSegment;
     this.setUint8(energiesFlags);
     this.setUint8(tariffsFlags);
     tariffs.forEach(function (tariff) {
-      return _this2.setAPlusTariffPowerMax(tariff);
+      return _this6.setAPlusTariffPowerMax(tariff);
     });
     tariffs.forEach(function (tariff) {
-      return _this2.setAMinusTariffPowerMax(tariff);
+      return _this6.setAMinusTariffPowerMax(tariff);
     });
   };
 
@@ -2962,7 +2989,7 @@ var fromBytes, getDataSegment;
       date: date,
       firstHalfhour: firstHalfhour,
       halfhoursNumber: halfhoursNumber,
-      energies: buffer.getHalfhoursEnergies(energiesFlags, halfhoursNumber)
+      energies: buffer.getHalfhoursEnergies1(energiesFlags, halfhoursNumber)
     };
   };
 

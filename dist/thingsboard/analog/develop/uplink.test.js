@@ -1775,15 +1775,15 @@ var logs = '';
     });
   };
   CommandBinaryBuffer.prototype.getHours = function () {
-    var _byte10 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getUint8();
-    if (_byte10 === 0) {
+    var _byte0 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getUint8();
+    if (_byte0 === 0) {
       return {
         hours: 0,
         hour: 0
       };
     }
-    var hours = ((_byte10 & 0xe0) >> 5) + 1;
-    var hour = _byte10 & 0x1f;
+    var hours = ((_byte0 & 0xe0) >> 5) + 1;
+    var hour = _byte0 & 0x1f;
     return {
       hours: hours,
       hour: hour
@@ -1817,8 +1817,8 @@ var logs = '';
     var day = date.getUTCDate();
     var yearMonthByte = year << YEAR_START_INDEX | month >> MONTH_BIT_SIZE - YEAR_START_INDEX;
     var monthDateByte = (month & 0x07) << DATE_BIT_SIZE | day;
-    [yearMonthByte, monthDateByte].forEach(function (_byte11) {
-      return _this6.setUint8(_byte11);
+    [yearMonthByte, monthDateByte].forEach(function (_byte1) {
+      return _this6.setUint8(_byte1);
     });
   };
   CommandBinaryBuffer.prototype.getPulseCoefficient = function () {
@@ -1834,9 +1834,9 @@ var logs = '';
   };
   CommandBinaryBuffer.prototype.setPulseCoefficient = function (value) {
     if (value in pulseCoefficientToByteMap) {
-      var _byte12 = pulseCoefficientToByteMap[value];
-      if (_byte12) {
-        this.setUint8(_byte12);
+      var _byte10 = pulseCoefficientToByteMap[value];
+      if (_byte10) {
+        this.setUint8(_byte10);
       } else {
         throw new Error('pulseCoefficient MSB is set, but value unknown');
       }
@@ -1888,16 +1888,16 @@ var logs = '';
     return channelList;
   };
   CommandBinaryBuffer.prototype.setChannelsAbsoluteValuesWithHourDiff = function (channelList) {
-    var _this10 = this;
+    var _this0 = this;
     this.setChannels(channelList);
     channelList.forEach(function (_ref5) {
       var value = _ref5.value,
         diff = _ref5.diff,
         pulseCoefficient = _ref5.pulseCoefficient;
-      _this10.setPulseCoefficient(pulseCoefficient);
-      _this10.setExtendedValue(value);
+      _this0.setPulseCoefficient(pulseCoefficient);
+      _this0.setExtendedValue(value);
       diff.forEach(function (diffValue) {
-        return _this10.setExtendedValue(diffValue);
+        return _this0.setExtendedValue(diffValue);
       });
     });
   };
@@ -2075,22 +2075,22 @@ var logs = '';
     };
   };
   CommandBinaryBuffer.prototype.setLegacyHourDiff = function (diff) {
-    var _this11 = this;
+    var _this1 = this;
     var bytes = [diff.value >> 8, diff.value & 0xff];
     bytes[0] = CommandBinaryBuffer.setMagneticInfluenceBit(bytes[0], diff.isMagneticInfluence);
-    bytes.forEach(function (_byte13) {
-      return _this11.setUint8(_byte13);
+    bytes.forEach(function (_byte11) {
+      return _this1.setUint8(_byte11);
     });
   };
   CommandBinaryBuffer.prototype.getLegacyHourCounterWithDiff = function () {
     var isArchiveValue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
     var date = this.getDate();
-    var _byte14 = this.getUint8();
-    var _this$getHours2 = this.getHours(_byte14),
+    var _byte12 = this.getUint8();
+    var _this$getHours2 = this.getHours(_byte12),
       hour = _this$getHours2.hour;
     var value = this.getLegacyCounterValue();
     var counter = {
-      isMagneticInfluence: CommandBinaryBuffer.getMagneticInfluenceBit(_byte14),
+      isMagneticInfluence: CommandBinaryBuffer.getMagneticInfluenceBit(_byte12),
       value: isArchiveValue && value === EMPTY_VALUE ? 0 : value
     };
     var diff = [];
@@ -2105,7 +2105,7 @@ var logs = '';
     };
   };
   CommandBinaryBuffer.prototype.setLegacyHourCounterWithDiff = function (hourCounter) {
-    var _this12 = this;
+    var _this10 = this;
     var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
     var date = getDateFromTime2000(hourCounter.startTime2000);
     var hour = date.getUTCHours();
@@ -2113,16 +2113,16 @@ var logs = '';
     this.setDate(date);
     this.setHours(hour, 1);
     this.seek(this.offset - 1);
-    var _byte15 = this.getUint8();
+    var _byte13 = this.getUint8();
     this.seek(this.offset - 1);
-    this.setUint8(CommandBinaryBuffer.setMagneticInfluenceBit(_byte15, hourCounter.counter.isMagneticInfluence));
+    this.setUint8(CommandBinaryBuffer.setMagneticInfluenceBit(_byte13, hourCounter.counter.isMagneticInfluence));
     this.setLegacyCounterValue(isArchiveValue && value === 0 ? EMPTY_VALUE : value);
     hourCounter.diff.forEach(function (diffItem) {
-      return _this12.setLegacyHourDiff(diffItem);
+      return _this10.setLegacyHourDiff(diffItem);
     });
   };
   CommandBinaryBuffer.prototype.getChannelsValuesWithHourDiffExtended = function () {
-    var _this13 = this;
+    var _this11 = this;
     var isArchiveValue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
     var date = this.getDate();
     var hour = this.getUint8();
@@ -2132,9 +2132,9 @@ var logs = '';
     date.setUTCHours(hour);
     channels.forEach(function (channelIndex) {
       var diff = [];
-      var value = _this13.getExtendedValue();
+      var value = _this11.getExtendedValue();
       for (var diffHour = 0; diffHour < hours; ++diffHour) {
-        diff.push(_this13.getExtendedValue());
+        diff.push(_this11.getExtendedValue());
       }
       channelList.push({
         value: value === isArchiveValue && EMPTY_VALUE ? 0 : value,
@@ -2150,7 +2150,7 @@ var logs = '';
     };
   };
   CommandBinaryBuffer.prototype.setChannelsValuesWithHourDiffExtended = function (parameters) {
-    var _this14 = this;
+    var _this12 = this;
     var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
     var date = getDateFromTime2000(parameters.startTime2000);
     this.setDate(date);
@@ -2160,9 +2160,9 @@ var logs = '';
     parameters.channelList.forEach(function (_ref6) {
       var value = _ref6.value,
         diff = _ref6.diff;
-      _this14.setExtendedValue(isArchiveValue && value === 0 ? EMPTY_VALUE : value);
+      _this12.setExtendedValue(isArchiveValue && value === 0 ? EMPTY_VALUE : value);
       diff.forEach(function (diffValue) {
-        return _this14.setExtendedValue(diffValue);
+        return _this12.setExtendedValue(diffValue);
       });
     });
   };
