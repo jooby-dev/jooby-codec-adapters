@@ -26,11 +26,12 @@ export const get = ( bytes ) => {
     // payload
     const data = bytes.slice(4, size + 2);
 
-    const expectedLrc = calculateLrc(bytes.slice(0, size + 2));
-    const actualLrc = bytes[size + 2];
+    // lrc is not needed for MTX
+    // const expectedLrc = calculateLrc(bytes.slice(0, size + 2));
+    // const actualLrc = bytes[size + 2];
 
     // just a single data segment with correct lrc
-    if ( flag === SINGLE_SEGMENT_FLAG && expectedLrc === actualLrc ) {
+    if ( flag === SINGLE_SEGMENT_FLAG /* && expectedLrc === actualLrc */ ) {
         return data;
     }
 
