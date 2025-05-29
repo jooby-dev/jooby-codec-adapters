@@ -623,6 +623,8 @@ var fromBytes, toBytes;
     const EXTRA_PAYLOAD_ENABLE = 57;
     const TIME_SYNCHRONIZATION_PERIOD_VIA_MAC = 58;
     const KEEP_LORA_CONNECTION_ON_REMOVAL = 59;
+    const NBIOT_NTP_SERVER = 60;
+    const ACTIVATE_MODULE = 61;
 
     var deviceParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -630,6 +632,7 @@ var fromBytes, toBytes;
         ABSOLUTE_DATA_ENABLE: ABSOLUTE_DATA_ENABLE,
         ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL: ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL,
         ABSOLUTE_DATA_MULTI_CHANNEL: ABSOLUTE_DATA_MULTI_CHANNEL,
+        ACTIVATE_MODULE: ACTIVATE_MODULE,
         ACTIVATION_METHOD: ACTIVATION_METHOD,
         BATTERY_DEPASSIVATION_CONFIG: BATTERY_DEPASSIVATION_CONFIG,
         BATTERY_DEPASSIVATION_INFO: BATTERY_DEPASSIVATION_INFO,
@@ -654,6 +657,7 @@ var fromBytes, toBytes;
         NBIOT_LED_INDICATION: NBIOT_LED_INDICATION,
         NBIOT_MODULE_FIRMWARE_UPDATE: NBIOT_MODULE_FIRMWARE_UPDATE,
         NBIOT_MODULE_INFO: NBIOT_MODULE_INFO,
+        NBIOT_NTP_SERVER: NBIOT_NTP_SERVER,
         NBIOT_SIM: NBIOT_SIM,
         NBIOT_SSL_CACERT_SET: NBIOT_SSL_CACERT_SET,
         NBIOT_SSL_CACERT_WRITE: NBIOT_SSL_CACERT_WRITE,
@@ -844,7 +848,8 @@ var fromBytes, toBytes;
         [NBIOT_SIM]: 1 + 3,
         [EXTRA_PAYLOAD_ENABLE]: 1 + 1,
         [TIME_SYNCHRONIZATION_PERIOD_VIA_MAC]: 1 + 4,
-        [KEEP_LORA_CONNECTION_ON_REMOVAL]: 1 + 1
+        [KEEP_LORA_CONNECTION_ON_REMOVAL]: 1 + 1,
+        [ACTIVATE_MODULE]: 1 + 1
     };
     const fourChannelsBitMask = {
         channel1: Math.pow(2, 0),
@@ -1295,6 +1300,24 @@ var fromBytes, toBytes;
             set: (buffer, parameter) => {
                 buffer.setUint8(parameter.value ? 1 : 0);
             }
+        },
+        [NBIOT_NTP_SERVER]: {
+            get: (buffer) => ({
+                server: buffer.getString(),
+                port: buffer.getUint16()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setString(parameter.server);
+                buffer.setUint16(parameter.port);
+            }
+        },
+        [ACTIVATE_MODULE]: {
+            get: (buffer) => ({
+                enable: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.enable);
+            }
         }
     };
     const getEventStatusSize = (hardwareType) => (TWO_BYTES_HARDWARE_TYPES.indexOf(hardwareType) !== -1 ? 2 : 1);
@@ -1353,6 +1376,10 @@ var fromBytes, toBytes;
                 data = parameter.data;
                 size = 1 + getChannelTypeSize(data);
                 break;
+            case NBIOT_NTP_SERVER:
+                data = parameter.data;
+                size = 1 + 1 + data.server.length + 2;
+                break;
             default:
                 size = parametersSizeMap[parameter.id];
         }
@@ -1397,6 +1424,7 @@ var fromBytes, toBytes;
             case NBIOT_BANDS:
             case NBIOT_APN:
             case CHANNEL_TYPE:
+            case NBIOT_NTP_SERVER:
                 size = getParameterSize(parameter);
                 break;
             default:

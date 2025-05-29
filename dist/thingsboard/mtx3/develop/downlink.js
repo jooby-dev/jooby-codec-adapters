@@ -454,6 +454,18 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var nibbles10 = ['.', '0', '1', '2', '3', '4', '5', '6', 'P', 'R', 'L', 'E', 'G', '-', '/'];
   var nibbles11 = ['.', 'H', 'A', 'T', '0', '0', '0', '0', '0', '1', '2', '3', '4', '0', '0', '0'];
   var nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
+  var mtx1DeviceTypeDescriptorMask = {
+    typeMeterG: 1 << 0,
+    downgradedToA: 1 << 4,
+    supportMeterInfo: 1 << 6
+  };
+  var mtx3DeviceTypeDescriptorMask = {
+    typeMeterTransformer: 1 << 0,
+    downgradedToR: 1 << 3,
+    typeMeterG: 1 << 4,
+    supportMeterInfo: 1 << 6,
+    reactiveRPlusRMinus: 1 << 7
+  };
   var splitByte = function (byte) {
     return [byte >> 4, byte & 0x0F];
   };
@@ -517,8 +529,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     }
     return {
       type: type.join(''),
-      revision: revision,
-      meterType: 0
+      revision: revision
     };
   };
   var toBytesMtx = function (type, prefix, revision) {
@@ -575,8 +586,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
       }
     }
     return {
-      type: type.join(''),
-      meterType: 0
+      type: type.join('')
     };
   };
   var toBytesMtx2 = function (type) {
@@ -614,8 +624,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
       }
     }
     return {
-      type: type.join(''),
-      meterType: 0
+      type: type.join('')
     };
   };
   var toBytesM = function (type) {
@@ -645,17 +654,25 @@ var toBytes, setDataSegment, getBase64FromBytes;
     var deviceTypeNibble = nibbles[position];
     var deviceType = nibbles1[deviceTypeNibble];
     if (deviceType === '1' || deviceType === '3') {
-      result = fromBytesMtx(nibbles.slice(position));
+      result = {
+        ...fromBytesMtx(nibbles.slice(position)),
+        descriptor: deviceType === '1' ? {
+          meterType: 'mtx1',
+          ...toObject(mtx1DeviceTypeDescriptorMask, bytes[8])
+        } : {
+          meterType: 'mtx3',
+          ...toObject(mtx3DeviceTypeDescriptorMask, bytes[8])
+        }
+      };
     } else {
       result = deviceType === 'M' ? fromBytesM(nibbles) : fromBytesMtx2(nibbles);
     }
-    result.meterType = bytes[8];
     return result;
   };
-  var toBytes$19 = function (_ref, prefix) {
+  var toBytes$1a = function (_ref, prefix) {
     var type = _ref.type,
       revision = _ref.revision,
-      meterType = _ref.meterType;
+      descriptor = _ref.descriptor;
     if (!type.startsWith('MTX ')) {
       throw new Error('Wrong format');
     }
@@ -667,7 +684,11 @@ var toBytes, setDataSegment, getBase64FromBytes;
     } else {
       result = deviceTypeSymbol === 'M' ? toBytesM(content) : toBytesMtx2(content);
     }
-    result[8] = meterType;
+    if (descriptor?.meterType) {
+      result[8] = descriptor.meterType === 'mtx1' ? fromObject(mtx1DeviceTypeDescriptorMask, descriptor) : fromObject(mtx3DeviceTypeDescriptorMask, descriptor);
+    } else {
+      result[8] = 0;
+    }
     return result;
   };
 
@@ -779,10 +800,10 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var POWER_A_ON$1 = 0x59;
   var CMD_RELAY_2_ON$1 = 0x60;
   var CMD_RELAY_2_OFF$1 = 0x61;
-  var CROSSZERO_ENT0 = 0x62;
-  var CROSSZERO_ENT1 = 0x63;
-  var CROSSZERO_ENT2 = 0x64;
-  var CROSSZERO_ENT3 = 0x65;
+  var CROSSZERO_ENT1 = 0x62;
+  var CROSSZERO_ENT2 = 0x63;
+  var CROSSZERO_ENT3 = 0x64;
+  var CROSSZERO_ENT4 = 0x65;
   var CALFLAG_SET = 0x66;
   var CALFLAG_RESET = 0x67;
   var BAD_TEST_EEPROM$1 = 0x68;
@@ -807,10 +828,10 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var RELAY_HARD_OFF$1 = 0x94;
   var SET_SALDO_PARAM$1 = 0x9C;
   var POWER_OVER_RELAY_OFF$1 = 0x9D;
-  var CROSSZERO_EXP_ENT0 = 0x9E;
-  var CROSSZERO_EXP_ENT1 = 0x9F;
-  var CROSSZERO_EXP_ENT2 = 0xA0;
-  var CROSSZERO_EXP_ENT3 = 0xA1;
+  var CROSSZERO_EXP_ENT1 = 0x9E;
+  var CROSSZERO_EXP_ENT2 = 0x9F;
+  var CROSSZERO_EXP_ENT3 = 0xA0;
+  var CROSSZERO_EXP_ENT4 = 0xA1;
   var TIME_CORRECT_NEW = 0xA2;
   var EM_MAGNETIC_ON$1 = 0xB0;
   var EM_MAGNETIC_OFF$1 = 0xB1;
@@ -868,14 +889,14 @@ var toBytes, setDataSegment, getBase64FromBytes;
     CMD_RELAY_2_ON: CMD_RELAY_2_ON$1,
     CMD_RELAY_OFF: CMD_RELAY_OFF$1,
     CMD_RELAY_ON: CMD_RELAY_ON$1,
-    CROSSZERO_ENT0: CROSSZERO_ENT0,
     CROSSZERO_ENT1: CROSSZERO_ENT1,
     CROSSZERO_ENT2: CROSSZERO_ENT2,
     CROSSZERO_ENT3: CROSSZERO_ENT3,
-    CROSSZERO_EXP_ENT0: CROSSZERO_EXP_ENT0,
+    CROSSZERO_ENT4: CROSSZERO_ENT4,
     CROSSZERO_EXP_ENT1: CROSSZERO_EXP_ENT1,
     CROSSZERO_EXP_ENT2: CROSSZERO_EXP_ENT2,
     CROSSZERO_EXP_ENT3: CROSSZERO_EXP_ENT3,
+    CROSSZERO_EXP_ENT4: CROSSZERO_EXP_ENT4,
     CURRENT_UNEQUIL_FAULT: CURRENT_UNEQUIL_FAULT,
     CURRENT_UNEQUIL_OK: CURRENT_UNEQUIL_OK,
     EM_MAGNETIC_OFF: EM_MAGNETIC_OFF$1,
@@ -992,27 +1013,27 @@ var toBytes, setDataSegment, getBase64FromBytes;
     RELAY_ON_Y: 0x01,
     RELAY_ON_CENTER: 0x02,
     RELAY_ON_PB: 0x04,
-    RELAY_ON_TARIFF_0: 0x08,
-    RELAY_ON_TARIFF_1: 0x10,
-    RELAY_ON_TARIFF_2: 0x20,
-    RELAY_ON_TARIFF_3: 0x40,
+    RELAY_ON_TARIFF_1: 0x08,
+    RELAY_ON_TARIFF_2: 0x10,
+    RELAY_ON_TARIFF_3: 0x20,
+    RELAY_ON_TARIFF_4: 0x40,
     RELAY_ON_V_GOOD: 0x80
   };
   var relaySet2Mask = {
     RELAY_OFF_Y: 0x01,
     RELAY_OFF_CENTER: 0x02,
-    RELAY_OFF_TARIFF_0: 0x04,
-    RELAY_OFF_TARIFF_1: 0x08,
-    RELAY_OFF_TARIFF_2: 0x10,
-    RELAY_OFF_TARIFF_3: 0x20,
+    RELAY_OFF_TARIFF_1: 0x04,
+    RELAY_OFF_TARIFF_2: 0x08,
+    RELAY_OFF_TARIFF_3: 0x10,
+    RELAY_OFF_TARIFF_4: 0x20,
     RELAY_OFF_I_LIMIT: 0x40,
     RELAY_OFF_V_BAD: 0x80
   };
   var relaySet3Mask = {
-    RELAY_OFF_LIM_TARIFF_0: 0x02,
-    RELAY_OFF_LIM_TARIFF_1: 0x04,
-    RELAY_OFF_LIM_TARIFF_2: 0x08,
-    RELAY_OFF_LIM_TARIFF_3: 0x10,
+    RELAY_OFF_LIM_TARIFF_1: 0x02,
+    RELAY_OFF_LIM_TARIFF_2: 0x04,
+    RELAY_OFF_LIM_TARIFF_3: 0x08,
+    RELAY_OFF_LIM_TARIFF_4: 0x10,
     RELAY_OFF_PF_MIN: 0x20
   };
   var relaySet4Mask = {
@@ -1090,10 +1111,10 @@ var toBytes, setDataSegment, getBase64FromBytes;
     POWER_B_NEGATIVE: 2 ** 7
   };
   var operatorParametersExtended3RelaySetMask = {
-    RELAY_OFF_LIMIT_P_MINUS_T1: 0x04,
-    RELAY_OFF_LIMIT_P_MINUS_T2: 0x08,
-    RELAY_OFF_LIMIT_P_MINUS_T3: 0x10,
-    RELAY_OFF_LIMIT_P_MINUS_T4: 0x20
+    RELAY_OFF_LIMIT_P_MINUS_T1: 0x08,
+    RELAY_OFF_LIMIT_P_MINUS_T2: 0x10,
+    RELAY_OFF_LIMIT_P_MINUS_T3: 0x20,
+    RELAY_OFF_LIMIT_P_MINUS_T4: 0x40
   };
   function getPackedEnergies$1(buffer, energyType, tariffMapByte) {
     var byte = tariffMapByte >> TARIFF_NUMBER$1;
@@ -1382,7 +1403,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     return fromBytes(this.getBytes(9));
   };
   CommandBinaryBuffer$2.prototype.setDeviceType = function (deviceType) {
-    this.setBytes(toBytes$19(deviceType));
+    this.setBytes(toBytes$1a(deviceType));
   };
   CommandBinaryBuffer$2.prototype.getOperatorParameters = function () {
     var operatorParameters = {
@@ -1757,7 +1778,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     }).join(''));
   });
 
-  var toBytes$18 = function (commandId) {
+  var toBytes$19 = function (commandId) {
     var commandBytes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
     return [commandId, commandBytes.length].concat(_toConsumableArray(commandBytes));
   };
@@ -1898,23 +1919,23 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   invertObject(downlinkIds$1);
 
-  var id$15 = activateRatePlan$1;
+  var id$16 = activateRatePlan$1;
   var maxSize$y = 1 + TARIFF_PLAN_SIZE;
-  var toBytes$17 = function (parameters) {
+  var toBytes$18 = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$y);
     buffer.setUint8(parameters.tariffTable);
     buffer.setTariffPlan(parameters.tariffPlan);
-    return toBytes$18(id$15, buffer.data);
+    return toBytes$19(id$16, buffer.data);
   };
 
-  var id$14 = getBuildVersion$1;
+  var id$15 = getBuildVersion$1;
+  var toBytes$17 = function () {
+    return toBytes$19(id$15);
+  };
+
+  var id$14 = getCorrectTime$1;
   var toBytes$16 = function () {
-    return toBytes$18(id$14);
-  };
-
-  var id$13 = getCorrectTime$1;
-  var toBytes$15 = function () {
-    return toBytes$18(id$13);
+    return toBytes$19(id$14);
   };
 
   var CASE_OPEN$1 = 0;
@@ -1954,55 +1975,55 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   invertObject(criticalEvents);
 
-  var id$12 = getCurrentStatusMeter$1;
+  var id$13 = getCurrentStatusMeter$1;
+  var toBytes$15 = function () {
+    return toBytes$19(id$13);
+  };
+
+  var id$12 = getCurrentValues$1;
   var toBytes$14 = function () {
-    return toBytes$18(id$12);
+    return toBytes$19(id$12);
   };
 
-  var id$11 = getCurrentValues$1;
+  var id$11 = getDateTime$1;
   var toBytes$13 = function () {
-    return toBytes$18(id$11);
+    return toBytes$19(id$11);
   };
 
-  var id$10 = getDateTime$1;
-  var toBytes$12 = function () {
-    return toBytes$18(id$10);
-  };
-
-  var id$ = getDayMaxDemand$1;
+  var id$10 = getDayMaxDemand$1;
   var maxSize$x = 3;
-  var toBytes$11 = function (parameters) {
+  var toBytes$12 = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$x);
     buffer.setDate(parameters.date);
-    return toBytes$18(id$, buffer.data);
+    return toBytes$19(id$10, buffer.data);
   };
 
-  var id$_ = getDayMaxDemandExport$1;
+  var id$ = getDayMaxDemandExport$1;
   var maxSize$w = 3;
-  var toBytes$10 = function (parameters) {
+  var toBytes$11 = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$w);
     buffer.setDate(parameters.date);
-    return toBytes$18(id$_, buffer.data);
+    return toBytes$19(id$, buffer.data);
   };
 
-  var id$Z = getDayProfile$1;
+  var id$_ = getDayProfile$1;
   var maxSize$v = 3;
-  var toBytes$ = function (parameters) {
+  var toBytes$10 = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$v);
     buffer.setUint8(parameters.tariffTable);
     buffer.setUint8(parameters.index);
     buffer.setUint8(parameters.isActive ? 0 : 1);
-    return toBytes$18(id$Z, buffer.data);
+    return toBytes$19(id$_, buffer.data);
   };
 
-  var id$Y = getDeviceId$1;
+  var id$Z = getDeviceId$1;
+  var toBytes$ = function () {
+    return toBytes$19(id$Z);
+  };
+
+  var id$Y = getDeviceType$1;
   var toBytes$_ = function () {
-    return toBytes$18(id$Y);
-  };
-
-  var id$X = getDeviceType$1;
-  var toBytes$Z = function () {
-    return toBytes$18(id$X);
+    return toBytes$19(id$Y);
   };
 
   var OK = 0;
@@ -2203,44 +2224,44 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   invertObject(uplinkIds$1);
 
-  var id$W = getEvents$1;
+  var id$X = getEvents$1;
   var maxSize$u = 4;
-  var toBytes$Y = function (parameters) {
+  var toBytes$Z = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$u);
     buffer.setDate(parameters.date);
     buffer.setUint8(parameters.offset);
-    return toBytes$18(id$W, buffer.data);
+    return toBytes$19(id$X, buffer.data);
   };
 
-  var id$V = getEventsCounters$1;
+  var id$W = getEventsCounters$1;
+  var toBytes$Y = function () {
+    return toBytes$19(id$W);
+  };
+
+  var id$V = getEventStatus$1;
   var toBytes$X = function () {
-    return toBytes$18(id$V);
+    return toBytes$19(id$V);
   };
 
-  var id$U = getEventStatus$1;
+  var id$U = getExtendedCurrentValues$1;
   var toBytes$W = function () {
-    return toBytes$18(id$U);
+    return toBytes$19(id$U);
   };
 
-  var id$T = getExtendedCurrentValues$1;
-  var toBytes$V = function () {
-    return toBytes$18(id$T);
-  };
-
-  var id$S = getHalfHourDemand$1;
+  var id$T = getHalfHourDemand$1;
   var maxSize$t = 3;
-  var toBytes$U = function (parameters) {
+  var toBytes$V = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$t);
     buffer.setDate(parameters.date);
-    return toBytes$18(id$S, buffer.data);
+    return toBytes$19(id$T, buffer.data);
   };
 
-  var id$R = getHalfHourDemandExport$1;
+  var id$S = getHalfHourDemandExport$1;
   var maxSize$s = 3;
-  var toBytes$T = function (parameters) {
+  var toBytes$U = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$s);
     buffer.setDate(parameters.date);
-    return toBytes$18(id$R, buffer.data);
+    return toBytes$19(id$S, buffer.data);
   };
 
   var TARIFF_NUMBER = 4;
@@ -2568,171 +2589,171 @@ var toBytes, setDataSegment, getBase64FromBytes;
     });
   };
 
-  var id$Q = getHalfhoursEnergies$1;
+  var id$R = getHalfhoursEnergies$1;
   var maxSize$r = 5;
-  var toBytes$S = function (parameters) {
+  var toBytes$T = function (parameters) {
     var buffer = new CommandBinaryBuffer$1(maxSize$r);
     buffer.setDate(parameters.date);
     buffer.setEnergiesFlags(parameters.energies);
     buffer.setUint8(parameters.firstHalfhour);
     buffer.setUint8(parameters.halfhoursNumber);
-    return toBytes$18(id$Q, buffer.data);
+    return toBytes$19(id$R, buffer.data);
   };
 
-  var id$P = getMagneticFieldThreshold$1;
+  var id$Q = getMagneticFieldThreshold$1;
+  var toBytes$S = function () {
+    return toBytes$19(id$Q);
+  };
+
+  var id$P = getMeterInfo$1;
   var toBytes$R = function () {
-    return toBytes$18(id$P);
+    return toBytes$19(id$P);
   };
 
-  var id$O = getMeterInfo$1;
-  var toBytes$Q = function () {
-    return toBytes$18(id$O);
-  };
-
-  var id$N = getMonthDemand$1;
+  var id$O = getMonthDemand$1;
   var maxSize$q = 2;
-  var toBytes$P = function (parameters) {
+  var toBytes$Q = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$q);
     buffer.setUint8(parameters.year);
     buffer.setUint8(parameters.month);
-    return toBytes$18(id$N, buffer.data);
+    return toBytes$19(id$O, buffer.data);
   };
 
-  var id$M = getMonthDemandExport$1;
+  var id$N = getMonthDemandExport$1;
   var maxSize$p = 2;
-  var toBytes$O = function (parameters) {
+  var toBytes$P = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$p);
     buffer.setUint8(parameters.year);
     buffer.setUint8(parameters.month);
-    return toBytes$18(id$M, buffer.data);
+    return toBytes$19(id$N, buffer.data);
   };
 
-  var id$L = getMonthMaxDemand$1;
+  var id$M = getMonthMaxDemand$1;
+  var toBytes$O = function (_ref) {
+    var year = _ref.year,
+      month = _ref.month;
+    return toBytes$19(id$M, [year, month]);
+  };
+
+  var id$L = getMonthMaxDemandExport$1;
   var toBytes$N = function (_ref) {
     var year = _ref.year,
       month = _ref.month;
-    return toBytes$18(id$L, [year, month]);
+    return toBytes$19(id$L, [year, month]);
   };
 
-  var id$K = getMonthMaxDemandExport$1;
-  var toBytes$M = function (_ref) {
-    var year = _ref.year,
-      month = _ref.month;
-    return toBytes$18(id$K, [year, month]);
+  var id$K = getOperatorParametersExtended3$1;
+  var toBytes$M = function () {
+    return toBytes$19(id$K);
   };
 
-  var id$J = getOperatorParametersExtended3$1;
+  var id$J = getOperatorParameters$1;
   var toBytes$L = function () {
-    return toBytes$18(id$J);
+    return toBytes$19(id$J);
   };
 
-  var id$I = getOperatorParameters$1;
-  var toBytes$K = function () {
-    return toBytes$18(id$I);
+  var id$I = getRatePlanInfo$1;
+  var toBytes$K = function (parameters) {
+    return toBytes$19(id$I, [parameters.tariffTable]);
   };
 
-  var id$H = getRatePlanInfo$1;
-  var toBytes$J = function (parameters) {
-    return toBytes$18(id$H, [parameters.tariffTable]);
+  var id$H = getSaldo$1;
+  var toBytes$J = function () {
+    return toBytes$19(id$H);
   };
 
-  var id$G = getSaldo$1;
+  var id$G = getSaldoParameters$1;
   var toBytes$I = function () {
-    return toBytes$18(id$G);
+    return toBytes$19(id$G);
   };
 
-  var id$F = getSaldoParameters$1;
-  var toBytes$H = function () {
-    return toBytes$18(id$F);
-  };
-
-  var id$E = getSeasonProfile$1;
+  var id$F = getSeasonProfile$1;
   var maxSize$o = 3;
-  var toBytes$G = function (parameters) {
+  var toBytes$H = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$o);
     buffer.setUint8(parameters.tariffTable);
     buffer.setUint8(parameters.index);
     buffer.setUint8(parameters.isActive ? 0 : 1);
-    return toBytes$18(id$E, buffer.data);
+    return toBytes$19(id$F, buffer.data);
   };
 
-  var id$D = getSpecialDay$1;
+  var id$E = getSpecialDay$1;
   var maxSize$n = 3;
-  var toBytes$F = function (parameters) {
+  var toBytes$G = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$n);
     buffer.setUint8(parameters.tariffTable);
     buffer.setUint8(parameters.index);
     buffer.setUint8(parameters.isActive ? 0 : 1);
-    return toBytes$18(id$D, buffer.data);
+    return toBytes$19(id$E, buffer.data);
   };
 
-  var id$C = getVersion$1;
-  var toBytes$E = function () {
-    return toBytes$18(id$C);
+  var id$D = getVersion$1;
+  var toBytes$F = function () {
+    return toBytes$19(id$D);
   };
 
-  var id$B = prepareRatePlan$1;
+  var id$C = prepareRatePlan$1;
   var maxSize$m = 5;
-  var toBytes$D = function (parameters) {
+  var toBytes$E = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$m);
     buffer.setUint8(parameters.tariffTable);
     buffer.setUint32(parameters.id);
-    return toBytes$18(id$B, buffer.data);
+    return toBytes$19(id$C, buffer.data);
   };
 
-  var id$A = resetPowerMaxDay$1;
+  var id$B = resetPowerMaxDay$1;
+  var toBytes$D = function () {
+    return toBytes$19(id$B);
+  };
+
+  var id$A = resetPowerMaxMonth$1;
   var toBytes$C = function () {
-    return toBytes$18(id$A);
+    return toBytes$19(id$A);
   };
 
-  var id$z = resetPowerMaxMonth$1;
-  var toBytes$B = function () {
-    return toBytes$18(id$z);
-  };
-
-  var id$y = runTariffPlan$1;
-  var toBytes$A = function (parameters) {
-    return toBytes$18(id$y, [parameters.tariffTable]);
+  var id$z = runTariffPlan$1;
+  var toBytes$B = function (parameters) {
+    return toBytes$19(id$z, [parameters.tariffTable]);
   };
 
   var KEY_SIZE = 16;
-  var id$x = setAccessKey$1;
+  var id$y = setAccessKey$1;
   var maxSize$l = 1 + KEY_SIZE;
-  var toBytes$z = function (parameters) {
+  var toBytes$A = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$l);
     buffer.setUint8(parameters.accessLevel);
     buffer.setBytes(parameters.key);
-    return toBytes$18(id$x, buffer.data);
+    return toBytes$19(id$y, buffer.data);
   };
 
-  var id$w = setCorrectDateTime$1;
+  var id$x = setCorrectDateTime$1;
   var maxSize$k = 2;
-  var toBytes$y = function (parameters) {
+  var toBytes$z = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$k);
     buffer.setInt16(parameters.seconds);
-    return toBytes$18(id$w, buffer.data);
+    return toBytes$19(id$x, buffer.data);
   };
 
-  var id$v = setCorrectTime$1;
+  var id$w = setCorrectTime$1;
   var maxSize$j = 9;
-  var toBytes$x = function (parameters) {
+  var toBytes$y = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$j);
     buffer.setTimeCorrectionParameters(parameters);
-    return toBytes$18(id$v, buffer.data);
+    return toBytes$19(id$w, buffer.data);
   };
 
-  var id$u = setDateTime$1;
+  var id$v = setDateTime$1;
   var maxSize$i = 8;
-  var toBytes$w = function (parameters) {
+  var toBytes$x = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$i);
     buffer.setDateTime(parameters);
-    return toBytes$18(id$u, buffer.data);
+    return toBytes$19(id$v, buffer.data);
   };
 
   var MAX_PERIODS_NUMBER = 8;
   var PERIODS_FINAL_BYTE = 0xff;
-  var id$t = setDayProfile$1;
-  var toBytes$v = function (parameters) {
+  var id$u = setDayProfile$1;
+  var toBytes$w = function (parameters) {
     var hasPeriodsFinalByte = parameters.periods.length < MAX_PERIODS_NUMBER;
     var size = 2 + parameters.periods.length + +hasPeriodsFinalByte;
     var buffer = new CommandBinaryBuffer$2(size);
@@ -2744,20 +2765,20 @@ var toBytes, setDataSegment, getBase64FromBytes;
     if (hasPeriodsFinalByte) {
       buffer.setUint8(PERIODS_FINAL_BYTE);
     }
-    return toBytes$18(id$t, buffer.data);
+    return toBytes$19(id$u, buffer.data);
   };
 
-  var id$s = setOperatorParametersExtended3$1;
+  var id$t = setOperatorParametersExtended3$1;
   var maxSize$h = 17;
-  var toBytes$u = function (parameters) {
+  var toBytes$v = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$h);
     buffer.setOperatorParametersExtended3(parameters);
-    return toBytes$18(id$s, buffer.data);
+    return toBytes$19(id$t, buffer.data);
   };
 
-  var id$r = setSaldo$1;
+  var id$s = setSaldo$1;
   var maxSize$g = 12;
-  var toBytes$t = function (parameters) {
+  var toBytes$u = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$g);
     buffer.setUint8(parameters.date.month);
     buffer.setUint8(parameters.date.date);
@@ -2765,40 +2786,40 @@ var toBytes, setDataSegment, getBase64FromBytes;
     buffer.setUint8(parameters.date.minutes);
     buffer.setInt32(parameters.saldoNew);
     buffer.setInt32(parameters.saldoOld);
-    return toBytes$18(id$r, buffer.data);
+    return toBytes$19(id$s, buffer.data);
   };
 
-  var id$q = setSaldoParameters$1;
+  var id$r = setSaldoParameters$1;
   var maxSize$f = 37;
-  var toBytes$s = function (parameters) {
+  var toBytes$t = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$f);
     buffer.setSaldoParameters(parameters);
-    return toBytes$18(id$q, buffer.data);
+    return toBytes$19(id$r, buffer.data);
   };
 
-  var id$p = setSeasonProfile$1;
+  var id$q = setSeasonProfile$1;
   var maxSize$e = SEASON_PROFILE_SIZE;
-  var toBytes$r = function (parameters) {
+  var toBytes$s = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$e);
     buffer.setUint8(parameters.tariffTable);
     buffer.setUint8(parameters.index);
     buffer.setSeasonProfile(parameters);
-    return toBytes$18(id$p, buffer.data);
+    return toBytes$19(id$q, buffer.data);
   };
 
-  var id$o = setSpecialDay$1;
+  var id$p = setSpecialDay$1;
   var maxSize$d = 6;
-  var toBytes$q = function (parameters) {
+  var toBytes$r = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$d);
     buffer.setUint8(parameters.tariffTable);
     buffer.setUint8(parameters.index);
     buffer.setSpecialDay(parameters);
-    return toBytes$18(id$o, buffer.data);
+    return toBytes$19(id$p, buffer.data);
   };
 
-  var id$n = setSpecialOperation$1;
+  var id$o = setSpecialOperation$1;
   var maxSize$c = 2;
-  var toBytes$p = function (parameters) {
+  var toBytes$q = function (parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$c);
     var flags = 0;
     if (parameters.readScreensInfo) {
@@ -2812,17 +2833,17 @@ var toBytes, setDataSegment, getBase64FromBytes;
     }
     buffer.setUint8(parameters.type);
     buffer.setUint8(flags);
-    return toBytes$18(id$n, buffer.data);
+    return toBytes$19(id$o, buffer.data);
   };
 
-  var id$m = turnRelayOff$1;
+  var id$n = turnRelayOff$1;
+  var toBytes$p = function () {
+    return toBytes$19(id$n);
+  };
+
+  var id$m = turnRelayOn$1;
   var toBytes$o = function () {
-    return toBytes$18(id$m);
-  };
-
-  var id$l = turnRelayOn$1;
-  var toBytes$n = function () {
-    return toBytes$18(id$l);
+    return toBytes$19(id$m);
   };
 
   // this is required to shadow crypto-js implementation
@@ -3025,10 +3046,15 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   invertObject(downlinkIds);
 
-  var ENERGY_T0_FAULT = 0x01;
-  var ENERGY_T1_FAULT = 0x02;
-  var ENERGY_T2_FAULT = 0x03;
-  var ENERGY_T3_FAULT = 0x04;
+  var id$l = getCriticalEvent;
+  var toBytes$n = function (parameters) {
+    return toBytes$19(id$l, [parameters.event, parameters.index]);
+  };
+
+  var ENERGY_T1_FAULT = 0x01;
+  var ENERGY_T2_FAULT = 0x02;
+  var ENERGY_T3_FAULT = 0x03;
+  var ENERGY_T4_FAULT = 0x04;
   var ACCESS_LOCKED = 0x11;
   var ACCESS_UNLOCKED = 0x12;
   var ERR_ACCESS = 0x13;
@@ -3105,18 +3131,18 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var CHANGE_COR_TIME = 0x70;
   var CMD_RELAY_2_ON = 0x71;
   var CMD_RELAY_2_OFF = 0x72;
-  var CROSS_ZERO_ENT0 = 0x73;
-  var CROSS_ZERO_ENT1 = 0x74;
-  var CROSS_ZERO_ENT2 = 0x75;
-  var CROSS_ZERO_ENT3 = 0x76;
-  var CROSS_ZERO_VARI0 = 0x77;
-  var CROSS_ZERO_VARI1 = 0x78;
-  var CROSS_ZERO_VARI2 = 0x79;
-  var CROSS_ZERO_VARI3 = 0x7A;
-  var CROSS_ZERO_VARE0 = 0x7B;
-  var CROSS_ZERO_VARE1 = 0x7C;
-  var CROSS_ZERO_VARE2 = 0x7D;
-  var CROSS_ZERO_VARE3 = 0x7E;
+  var CROSS_ZERO_ENT1 = 0x73;
+  var CROSS_ZERO_ENT2 = 0x74;
+  var CROSS_ZERO_ENT3 = 0x75;
+  var CROSS_ZERO_ENT4 = 0x76;
+  var CROSS_ZERO_VARI1 = 0x77;
+  var CROSS_ZERO_VARI2 = 0x78;
+  var CROSS_ZERO_VARI3 = 0x79;
+  var CROSS_ZERO_VARI4 = 0x7A;
+  var CROSS_ZERO_VARE1 = 0x7B;
+  var CROSS_ZERO_VARE2 = 0x7C;
+  var CROSS_ZERO_VARE3 = 0x7D;
+  var CROSS_ZERO_VARE4 = 0x7E;
   var CALIBRATION_FLAG_SET = 0x7F;
   var CALIBRATION_FLAG_RESET = 0x80;
   var BAD_TEST_EEPROM = 0x81;
@@ -3153,18 +3179,18 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var CHANGE_PARAM_CHANNEL4 = 0xA1;
   var CHANGE_PARAM_CHANNEL5 = 0xA2;
   var CHANGE_PARAM_CHANNEL6 = 0xA3;
-  var CROSS_ZERO_EXPORT_ENT0 = 0xA4;
-  var CROSS_ZERO_EXPORT_ENT1 = 0xA5;
-  var CROSS_ZERO_EXPORT_ENT2 = 0xA6;
-  var CROSS_ZERO_EXPORT_ENT3 = 0xA7;
-  var CROSS_ZERO_EXPORT_VARI0 = 0xA8;
-  var CROSS_ZERO_EXPORT_VARI1 = 0xA9;
-  var CROSS_ZERO_EXPORT_VARI2 = 0xAA;
-  var CROSS_ZERO_EXPORT_VARI3 = 0xAB;
-  var CROSS_ZERO_EXPORT_VARE0 = 0xAC;
-  var CROSS_ZERO_EXPORT_VARE1 = 0xAD;
-  var CROSS_ZERO_EXPORT_VARE2 = 0xAE;
-  var CROSS_ZERO_EXPORT_VARE3 = 0xAF;
+  var CROSS_ZERO_EXPORT_ENT1 = 0xA4;
+  var CROSS_ZERO_EXPORT_ENT2 = 0xA5;
+  var CROSS_ZERO_EXPORT_ENT3 = 0xA6;
+  var CROSS_ZERO_EXPORT_ENT4 = 0xA7;
+  var CROSS_ZERO_EXPORT_VARI1 = 0xA8;
+  var CROSS_ZERO_EXPORT_VARI2 = 0xA9;
+  var CROSS_ZERO_EXPORT_VARI3 = 0xAA;
+  var CROSS_ZERO_EXPORT_VARI4 = 0xAB;
+  var CROSS_ZERO_EXPORT_VARE1 = 0xAC;
+  var CROSS_ZERO_EXPORT_VARE2 = 0xAD;
+  var CROSS_ZERO_EXPORT_VARE3 = 0xAE;
+  var CROSS_ZERO_EXPORT_VARE4 = 0xAF;
   var EM_MAGNETIC_ON = 0xB0;
   var EM_MAGNETIC_OFF = 0xB1;
   var RESET_EM_FLAG = 0xB2;
@@ -3226,37 +3252,37 @@ var toBytes, setDataSegment, getBase64FromBytes;
     CMD_RELAY_OFF: CMD_RELAY_OFF,
     CMD_RELAY_ON: CMD_RELAY_ON,
     COEFFICIENT_TRANSFORMATION_CHANGE: COEFFICIENT_TRANSFORMATION_CHANGE,
-    CROSS_ZERO_ENT0: CROSS_ZERO_ENT0,
     CROSS_ZERO_ENT1: CROSS_ZERO_ENT1,
     CROSS_ZERO_ENT2: CROSS_ZERO_ENT2,
     CROSS_ZERO_ENT3: CROSS_ZERO_ENT3,
-    CROSS_ZERO_EXPORT_ENT0: CROSS_ZERO_EXPORT_ENT0,
+    CROSS_ZERO_ENT4: CROSS_ZERO_ENT4,
     CROSS_ZERO_EXPORT_ENT1: CROSS_ZERO_EXPORT_ENT1,
     CROSS_ZERO_EXPORT_ENT2: CROSS_ZERO_EXPORT_ENT2,
     CROSS_ZERO_EXPORT_ENT3: CROSS_ZERO_EXPORT_ENT3,
-    CROSS_ZERO_EXPORT_VARE0: CROSS_ZERO_EXPORT_VARE0,
+    CROSS_ZERO_EXPORT_ENT4: CROSS_ZERO_EXPORT_ENT4,
     CROSS_ZERO_EXPORT_VARE1: CROSS_ZERO_EXPORT_VARE1,
     CROSS_ZERO_EXPORT_VARE2: CROSS_ZERO_EXPORT_VARE2,
     CROSS_ZERO_EXPORT_VARE3: CROSS_ZERO_EXPORT_VARE3,
-    CROSS_ZERO_EXPORT_VARI0: CROSS_ZERO_EXPORT_VARI0,
+    CROSS_ZERO_EXPORT_VARE4: CROSS_ZERO_EXPORT_VARE4,
     CROSS_ZERO_EXPORT_VARI1: CROSS_ZERO_EXPORT_VARI1,
     CROSS_ZERO_EXPORT_VARI2: CROSS_ZERO_EXPORT_VARI2,
     CROSS_ZERO_EXPORT_VARI3: CROSS_ZERO_EXPORT_VARI3,
-    CROSS_ZERO_VARE0: CROSS_ZERO_VARE0,
+    CROSS_ZERO_EXPORT_VARI4: CROSS_ZERO_EXPORT_VARI4,
     CROSS_ZERO_VARE1: CROSS_ZERO_VARE1,
     CROSS_ZERO_VARE2: CROSS_ZERO_VARE2,
     CROSS_ZERO_VARE3: CROSS_ZERO_VARE3,
-    CROSS_ZERO_VARI0: CROSS_ZERO_VARI0,
+    CROSS_ZERO_VARE4: CROSS_ZERO_VARE4,
     CROSS_ZERO_VARI1: CROSS_ZERO_VARI1,
     CROSS_ZERO_VARI2: CROSS_ZERO_VARI2,
     CROSS_ZERO_VARI3: CROSS_ZERO_VARI3,
+    CROSS_ZERO_VARI4: CROSS_ZERO_VARI4,
     EM_MAGNETIC_OFF: EM_MAGNETIC_OFF,
     EM_MAGNETIC_ON: EM_MAGNETIC_ON,
     ENERGY_REGISTER_OVERFLOW: ENERGY_REGISTER_OVERFLOW,
-    ENERGY_T0_FAULT: ENERGY_T0_FAULT,
     ENERGY_T1_FAULT: ENERGY_T1_FAULT,
     ENERGY_T2_FAULT: ENERGY_T2_FAULT,
     ENERGY_T3_FAULT: ENERGY_T3_FAULT,
+    ENERGY_T4_FAULT: ENERGY_T4_FAULT,
     ERR_ACCESS: ERR_ACCESS,
     F_MAX_OK: F_MAX_OK,
     F_MAX_OVER: F_MAX_OVER,
@@ -3378,28 +3404,28 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var VOLTAGE_IN_PHASE_B = 38;
   var VOLTAGE_IN_PHASE_C = 39;
   var BATTERY_VOLTAGE = 40;
-  var FREQUENCY = 41;
-  var ACTIVE_POWER_SUM = 42;
+  var SUPPLY_FREQUENCY = 41;
+  var TOTAL_ACTIVE_POWER = 42;
   var ACTIVE_POWER_PHASE_A = 43;
   var ACTIVE_POWER_PHASE_B = 44;
   var ACTIVE_POWER_PHASE_C = 45;
-  var REACTIVE_POWER_QPLUS_SUM = 46;
+  var TOTAL_REACTIVE_POWER_QPLUS = 46;
   var REACTIVE_POWER_QPLUS_PHASE_A = 47;
   var REACTIVE_POWER_QPLUS_PHASE_B = 48;
   var REACTIVE_POWER_QPLUS_PHASE_C = 49;
-  var REACTIVE_POWER_QMINUS_SUM = 50;
+  var TOTAL_REACTIVE_POWER_QMINUS = 50;
   var REACTIVE_POWER_QMINUS_PHASE_A = 51;
   var REACTIVE_POWER_QMINUS_PHASE_B = 52;
   var REACTIVE_POWER_QMINUS_PHASE_C = 53;
-  var POWER_COEFFICIENT_SUM = 54;
+  var TOTAL_POWER_FACTOR = 54;
   var POWER_COEFFICIENT_PHASE_A = 55;
   var POWER_COEFFICIENT_PHASE_B = 56;
   var POWER_COEFFICIENT_PHASE_C = 57;
-  var APPARENT_POWER_QPLUS_SUM = 58;
+  var TOTAL_APPARENT_POWER_QPLUS = 58;
   var APPARENT_POWER_QPLUS_PHASE_A = 59;
   var APPARENT_POWER_QPLUS_PHASE_B = 60;
   var APPARENT_POWER_QPLUS_PHASE_C = 61;
-  var APPARENT_POWER_QMINUS_SUM = 62;
+  var TOTAL_APPARENT_POWER_QMINUS = 62;
   var APPARENT_POWER_QMINUS_PHASE_A = 63;
   var APPARENT_POWER_QMINUS_PHASE_B = 64;
   var APPARENT_POWER_QMINUS_PHASE_C = 65;
@@ -3443,14 +3469,14 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var MAX_EXPORTED_REACTIVE_POWER_MONTH_T2 = 103;
   var MAX_EXPORTED_REACTIVE_POWER_MONTH_T3 = 104;
   var MAX_EXPORTED_REACTIVE_POWER_MONTH_T4 = 105;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1 = 106;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2 = 107;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3 = 108;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4 = 109;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1 = 110;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2 = 111;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3 = 112;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4 = 113;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1 = 106;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2 = 107;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3 = 108;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4 = 109;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1 = 110;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2 = 111;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3 = 112;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4 = 113;
   var HOUR_MINUTE_SECOND = 114;
   var DATE_MONTH_YEAR = 115;
   var CURRENT_TRANSFORMATION_RATIO = 116;
@@ -3472,15 +3498,12 @@ var toBytes, setDataSegment, getBase64FromBytes;
     ACTIVE_POWER_PHASE_A: ACTIVE_POWER_PHASE_A,
     ACTIVE_POWER_PHASE_B: ACTIVE_POWER_PHASE_B,
     ACTIVE_POWER_PHASE_C: ACTIVE_POWER_PHASE_C,
-    ACTIVE_POWER_SUM: ACTIVE_POWER_SUM,
     APPARENT_POWER_QMINUS_PHASE_A: APPARENT_POWER_QMINUS_PHASE_A,
     APPARENT_POWER_QMINUS_PHASE_B: APPARENT_POWER_QMINUS_PHASE_B,
     APPARENT_POWER_QMINUS_PHASE_C: APPARENT_POWER_QMINUS_PHASE_C,
-    APPARENT_POWER_QMINUS_SUM: APPARENT_POWER_QMINUS_SUM,
     APPARENT_POWER_QPLUS_PHASE_A: APPARENT_POWER_QPLUS_PHASE_A,
     APPARENT_POWER_QPLUS_PHASE_B: APPARENT_POWER_QPLUS_PHASE_B,
     APPARENT_POWER_QPLUS_PHASE_C: APPARENT_POWER_QPLUS_PHASE_C,
-    APPARENT_POWER_QPLUS_SUM: APPARENT_POWER_QPLUS_SUM,
     BATTERY_VOLTAGE: BATTERY_VOLTAGE,
     CURRENT_BALANCE: CURRENT_BALANCE,
     CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL,
@@ -3501,7 +3524,6 @@ var toBytes, setDataSegment, getBase64FromBytes;
     EXPORTED_REACTIVE_ENERGY_T2: EXPORTED_REACTIVE_ENERGY_T2,
     EXPORTED_REACTIVE_ENERGY_T3: EXPORTED_REACTIVE_ENERGY_T3,
     EXPORTED_REACTIVE_ENERGY_T4: EXPORTED_REACTIVE_ENERGY_T4,
-    FREQUENCY: FREQUENCY,
     HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND,
     MAGNET_INDUCTION: MAGNET_INDUCTION,
     MAX_ACTIVE_POWER_DAY_T1: MAX_ACTIVE_POWER_DAY_T1,
@@ -3520,6 +3542,14 @@ var toBytes, setDataSegment, getBase64FromBytes;
     MAX_EXPORTED_ACTIVE_POWER_MONTH_T2: MAX_EXPORTED_ACTIVE_POWER_MONTH_T2,
     MAX_EXPORTED_ACTIVE_POWER_MONTH_T3: MAX_EXPORTED_ACTIVE_POWER_MONTH_T3,
     MAX_EXPORTED_ACTIVE_POWER_MONTH_T4: MAX_EXPORTED_ACTIVE_POWER_MONTH_T4,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4,
     MAX_EXPORTED_REACTIVE_POWER_DAY_T1: MAX_EXPORTED_REACTIVE_POWER_DAY_T1,
     MAX_EXPORTED_REACTIVE_POWER_DAY_T2: MAX_EXPORTED_REACTIVE_POWER_DAY_T2,
     MAX_EXPORTED_REACTIVE_POWER_DAY_T3: MAX_EXPORTED_REACTIVE_POWER_DAY_T3,
@@ -3528,14 +3558,6 @@ var toBytes, setDataSegment, getBase64FromBytes;
     MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: MAX_EXPORTED_REACTIVE_POWER_MONTH_T2,
     MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: MAX_EXPORTED_REACTIVE_POWER_MONTH_T3,
     MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: MAX_EXPORTED_REACTIVE_POWER_MONTH_T4,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4,
     MAX_NEGATIVE_REACTIVE_POWER_DAY_T1: MAX_NEGATIVE_REACTIVE_POWER_DAY_T1,
     MAX_NEGATIVE_REACTIVE_POWER_DAY_T2: MAX_NEGATIVE_REACTIVE_POWER_DAY_T2,
     MAX_NEGATIVE_REACTIVE_POWER_DAY_T3: MAX_NEGATIVE_REACTIVE_POWER_DAY_T3,
@@ -3560,7 +3582,6 @@ var toBytes, setDataSegment, getBase64FromBytes;
     POWER_COEFFICIENT_PHASE_A: POWER_COEFFICIENT_PHASE_A,
     POWER_COEFFICIENT_PHASE_B: POWER_COEFFICIENT_PHASE_B,
     POWER_COEFFICIENT_PHASE_C: POWER_COEFFICIENT_PHASE_C,
-    POWER_COEFFICIENT_SUM: POWER_COEFFICIENT_SUM,
     POWER_THRESHOLD_T1: POWER_THRESHOLD_T1,
     POWER_THRESHOLD_T2: POWER_THRESHOLD_T2,
     POWER_THRESHOLD_T3: POWER_THRESHOLD_T3,
@@ -3572,19 +3593,24 @@ var toBytes, setDataSegment, getBase64FromBytes;
     REACTIVE_POWER_QMINUS_PHASE_A: REACTIVE_POWER_QMINUS_PHASE_A,
     REACTIVE_POWER_QMINUS_PHASE_B: REACTIVE_POWER_QMINUS_PHASE_B,
     REACTIVE_POWER_QMINUS_PHASE_C: REACTIVE_POWER_QMINUS_PHASE_C,
-    REACTIVE_POWER_QMINUS_SUM: REACTIVE_POWER_QMINUS_SUM,
     REACTIVE_POWER_QPLUS_PHASE_A: REACTIVE_POWER_QPLUS_PHASE_A,
     REACTIVE_POWER_QPLUS_PHASE_B: REACTIVE_POWER_QPLUS_PHASE_B,
     REACTIVE_POWER_QPLUS_PHASE_C: REACTIVE_POWER_QPLUS_PHASE_C,
-    REACTIVE_POWER_QPLUS_SUM: REACTIVE_POWER_QPLUS_SUM,
     SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY,
     SOFTWARE_VERSION: SOFTWARE_VERSION,
+    SUPPLY_FREQUENCY: SUPPLY_FREQUENCY,
     TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY,
+    TOTAL_ACTIVE_POWER: TOTAL_ACTIVE_POWER,
+    TOTAL_APPARENT_POWER_QMINUS: TOTAL_APPARENT_POWER_QMINUS,
+    TOTAL_APPARENT_POWER_QPLUS: TOTAL_APPARENT_POWER_QPLUS,
     TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY,
     TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY,
     TOTAL_EXPORTED_REACTIVE_ENERGY: TOTAL_EXPORTED_REACTIVE_ENERGY,
     TOTAL_NEGATIVE_REACTIVE_ENERGY: TOTAL_NEGATIVE_REACTIVE_ENERGY,
+    TOTAL_POWER_FACTOR: TOTAL_POWER_FACTOR,
     TOTAL_REACTIVE_ENERGY: TOTAL_REACTIVE_ENERGY,
+    TOTAL_REACTIVE_POWER_QMINUS: TOTAL_REACTIVE_POWER_QMINUS,
+    TOTAL_REACTIVE_POWER_QPLUS: TOTAL_REACTIVE_POWER_QPLUS,
     VOLTAGE_IN_PHASE_A: VOLTAGE_IN_PHASE_A,
     VOLTAGE_IN_PHASE_B: VOLTAGE_IN_PHASE_B,
     VOLTAGE_IN_PHASE_C: VOLTAGE_IN_PHASE_C,
@@ -3692,11 +3718,6 @@ var toBytes, setDataSegment, getBase64FromBytes;
     optoport: invertObject(valueToRate.optoport)
   };
 
-  var id$k = getCriticalEvent;
-  var toBytes$m = function (parameters) {
-    return toBytes$18(id$k, [parameters.event, parameters.index]);
-  };
-
   var OPERATOR_PARAMETERS_SIZE = 95;
   var OPERATOR_PARAMETERS_EXTENDED_SIZE = 9;
   var OPERATOR_PARAMETERS_EXTENDED2_SIZE = 28;
@@ -3745,28 +3766,28 @@ var toBytes, setDataSegment, getBase64FromBytes;
     VOLTAGE_IN_PHASE_B: 1 << 5,
     VOLTAGE_IN_PHASE_C: 1 << 6,
     BATTERY_VOLTAGE: 1 << 7,
-    FREQUENCY: 1 << 8,
+    SUPPLY_FREQUENCY: 1 << 8,
     ACTIVE_POWER_SUM: 1 << 9,
     ACTIVE_POWER_PHASE_A: 1 << 10,
     ACTIVE_POWER_PHASE_B: 1 << 11,
     ACTIVE_POWER_PHASE_C: 1 << 12,
-    REACTIVE_POWER_QPLUS_SUM: 1 << 13,
+    TOTAL_REACTIVE_POWER_QPLUS: 1 << 13,
     REACTIVE_POWER_QPLUS_PHASE_A: 1 << 14,
     REACTIVE_POWER_QPLUS_PHASE_B: 1 << 15,
     REACTIVE_POWER_QPLUS_PHASE_C: 1 << 16,
-    REACTIVE_POWER_QMINUS_SUM: 1 << 17,
+    TOTAL_REACTIVE_POWER_QMINUS: 1 << 17,
     REACTIVE_POWER_QMINUS_PHASE_A: 1 << 18,
     REACTIVE_POWER_QMINUS_PHASE_B: 1 << 19,
     REACTIVE_POWER_QMINUS_PHASE_C: 1 << 20,
-    POWER_COEFFICIENT_SUM: 1 << 21,
+    TOTAL_POWER_FACTOR: 1 << 21,
     POWER_COEFFICIENT_PHASE_A: 1 << 22,
     POWER_COEFFICIENT_PHASE_B: 1 << 23,
     POWER_COEFFICIENT_PHASE_C: 1 << 24,
-    APPARENT_POWER_QPLUS_SUM: 1 << 25,
+    TOTAL_APPARENT_POWER_QPLUS: 1 << 25,
     APPARENT_POWER_QPLUS_PHASE_A: 1 << 26,
     APPARENT_POWER_QPLUS_PHASE_B: 1 << 27,
     APPARENT_POWER_QPLUS_PHASE_C: 1 << 28,
-    APPARENT_POWER_QMINUS_SUM: 1 << 29,
+    TOTAL_APPARENT_POWER_QMINUS: 1 << 29,
     APPARENT_POWER_QMINUS_PHASE_A: 1 << 30,
     APPARENT_POWER_QMINUS_PHASE_B: 1 << 31
   };
@@ -3814,14 +3835,14 @@ var toBytes, setDataSegment, getBase64FromBytes;
     MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: 1 << 6,
     MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: 1 << 7,
     MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: 1 << 8,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: 1 << 9,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: 1 << 10,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: 1 << 11,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: 1 << 12,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: 1 << 13,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: 1 << 14,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: 1 << 15,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: 1 << 16,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: 1 << 9,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: 1 << 10,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: 1 << 11,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: 1 << 12,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: 1 << 13,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: 1 << 14,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: 1 << 15,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: 1 << 16,
     HOUR_MINUTE_SECOND: 1 << 17,
     DATE_MONTH_YEAR: 1 << 18,
     CURRENT_TRANSFORMATION_RATIO: 1 << 19,
@@ -3850,28 +3871,28 @@ var toBytes, setDataSegment, getBase64FromBytes;
     RELAY_ON_Y: 1 << 0,
     RELAY_ON_CENTER: 1 << 1,
     RELAY_ON_PB: 1 << 2,
-    RELAY_ON_TARIFF_0: 1 << 3,
-    RELAY_ON_TARIFF_1: 1 << 4,
-    RELAY_ON_TARIFF_2: 1 << 5,
-    RELAY_ON_TARIFF_3: 1 << 6,
+    RELAY_ON_TARIFF_1: 1 << 3,
+    RELAY_ON_TARIFF_2: 1 << 4,
+    RELAY_ON_TARIFF_3: 1 << 5,
+    RELAY_ON_TARIFF_4: 1 << 6,
     RELAY_ON_V_GOOD: 1 << 7,
     RELAY_OFF_Y: 1 << 8,
     RELAY_OFF_CENTER: 1 << 9,
-    RELAY_OFF_TARIFF_0: 1 << 10,
-    RELAY_OFF_TARIFF_1: 1 << 11,
-    RELAY_OFF_TARIFF_2: 1 << 12,
-    RELAY_OFF_TARIFF_3: 1 << 13,
+    RELAY_OFF_TARIFF_1: 1 << 10,
+    RELAY_OFF_TARIFF_2: 1 << 11,
+    RELAY_OFF_TARIFF_3: 1 << 12,
+    RELAY_OFF_TARIFF_4: 1 << 13,
     RELAY_OFF_I_LIMIT: 1 << 14,
     RELAY_OFF_V_BAD: 1 << 15,
-    RELAY_OFF_DIFF_BAD: 1 << 16,
-    RELAY_OFF_LIM_TARIFF_0: 1 << 17,
-    RELAY_OFF_LIM_TARIFF_1: 1 << 18,
-    RELAY_OFF_LIM_TARIFF_2: 1 << 19,
-    RELAY_OFF_LIM_TARIFF_3: 1 << 20,
-    RELAY_OFF_LIM_VAR_TARIFF_0: 1 << 21,
-    RELAY_OFF_LIM_VAR_TARIFF_1: 1 << 22,
-    RELAY_OFF_LIM_VAR_TARIFF_2: 1 << 23,
-    RELAY_OFF_LIM_VAR_TARIFF_3: 1 << 24,
+    RELAY_OFF_DIFF_CURRENT_BAD: 1 << 16,
+    RELAY_OFF_LIM_TARIFF_1: 1 << 17,
+    RELAY_OFF_LIM_TARIFF_2: 1 << 18,
+    RELAY_OFF_LIM_TARIFF_3: 1 << 19,
+    RELAY_OFF_LIM_TARIFF_4: 1 << 20,
+    RELAY_OFF_LIM_VAR_TARIFF_1: 1 << 21,
+    RELAY_OFF_LIM_VAR_TARIFF_2: 1 << 22,
+    RELAY_OFF_LIM_VAR_TARIFF_3: 1 << 23,
+    RELAY_OFF_LIM_VAR_TARIFF_4: 1 << 24,
     RELAY_ON_PF_MIN: 1 << 25,
     RELAY_OFF_PF_MIN: 1 << 26,
     RELAY_ON_TIMEOUT: 1 << 27,
@@ -4013,7 +4034,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
       timeoutMagnetOff: 5,
       relaySetExt: toObject(relaySetExtMask, 0),
       timeoutMagnetOn: 5,
-      phaseDefault: 3,
+      defaultPlcPhase: 3,
       displaySet21: toObject(displaySet1Mask, 4231),
       displaySet22: toObject(displaySet2Mask, 31597303),
       displaySet23: toObject(displaySet3Mask, 0),
@@ -4341,7 +4362,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
       timeoutMagnetOff: this.getUint8(),
       relaySetExt: toObject(relaySetExtMask, this.getUint8()),
       timeoutMagnetOn: this.getUint8(),
-      phaseDefault: this.getUint8(),
+      defaultPlcPhase: this.getUint8(),
       displaySet21: toObject(displaySet1Mask, this.getUint32()),
       displaySet22: toObject(displaySet2Mask, this.getUint32()),
       displaySet23: toObject(displaySet3Mask, this.getUint32()),
@@ -4366,7 +4387,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     this.setUint8(operatorParametersExtended2.timeoutMagnetOff);
     this.setUint8(fromObject(relaySetExtMask, operatorParametersExtended2.relaySetExt));
     this.setUint8(operatorParametersExtended2.timeoutMagnetOn);
-    this.setUint8(operatorParametersExtended2.phaseDefault);
+    this.setUint8(operatorParametersExtended2.defaultPlcPhase);
     this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended2.displaySet21));
     this.setUint32(fromObject(displaySet2Mask, operatorParametersExtended2.displaySet22));
     this.setUint32(fromObject(displaySet3Mask, operatorParametersExtended2.displaySet23));
@@ -4384,9 +4405,9 @@ var toBytes, setDataSegment, getBase64FromBytes;
       displaySet5: toObject(displaySet5Mask, this.getUint32()),
       displaySet25: toObject(displaySet5Mask, this.getUint32()),
       displaySet31: toObject(displaySet1Mask, this.getUint32()),
-      displaySet32: toObject(displaySet1Mask, this.getUint32()),
-      displaySet33: toObject(displaySet1Mask, this.getUint32()),
-      displaySet34: toObject(displaySet1Mask, this.getUint32()),
+      displaySet32: toObject(displaySet2Mask, this.getUint32()),
+      displaySet33: toObject(displaySet3Mask, this.getUint32()),
+      displaySet34: toObject(displaySet4Mask, this.getUint32()),
       displaySet35: toObject(displaySet5Mask, this.getUint32())
     };
   };
@@ -4394,126 +4415,131 @@ var toBytes, setDataSegment, getBase64FromBytes;
     this.setUint32(fromObject(displaySet5Mask, operatorParametersExtended.displaySet5));
     this.setUint32(fromObject(displaySet5Mask, operatorParametersExtended.displaySet25));
     this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended.displaySet31));
-    this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended.displaySet32));
-    this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended.displaySet33));
-    this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended.displaySet34));
+    this.setUint32(fromObject(displaySet2Mask, operatorParametersExtended.displaySet32));
+    this.setUint32(fromObject(displaySet3Mask, operatorParametersExtended.displaySet33));
+    this.setUint32(fromObject(displaySet4Mask, operatorParametersExtended.displaySet34));
     this.setUint32(fromObject(displaySet5Mask, operatorParametersExtended.displaySet35));
   };
 
   var MIN_COMMAND_SIZE = 3;
   var MAX_COMMAND_SIZE = 4;
-  var id$j = getDayDemand;
-  var toBytes$l = function (parameters) {
+  var id$k = getDayDemand;
+  var toBytes$m = function (parameters) {
     var buffer = new CommandBinaryBuffer(parameters?.energyType ? MAX_COMMAND_SIZE : MIN_COMMAND_SIZE);
     buffer.setDate(parameters?.date);
     if (parameters?.energyType) {
       buffer.setUint8(parameters.energyType);
     }
-    return toBytes$18(id$j, buffer.data);
+    return toBytes$19(id$k, buffer.data);
   };
 
-  var id$i = getDayDemandExport;
+  var id$j = getDayDemandExport;
   var maxSize$b = 3;
-  var toBytes$k = function (parameters) {
+  var toBytes$l = function (parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$b);
     buffer.setDate(parameters.date);
-    return toBytes$18(id$i, buffer.data);
+    return toBytes$19(id$j, buffer.data);
   };
 
-  var id$h = getDemand;
+  var id$i = getDemand;
   var maxSize$a = 7;
-  var toBytes$j = function (parameters) {
+  var toBytes$k = function (parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$a);
     buffer.setDemand(parameters);
-    return toBytes$18(id$h, buffer.data);
+    return toBytes$19(id$i, buffer.data);
   };
 
-  var id$g = getDisplayParam;
+  var id$h = getDisplayParam;
   var maxSize$9 = 1;
-  var toBytes$i = function (parameters) {
+  var toBytes$j = function (parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$9);
     buffer.setUint8(parameters.displayMode);
-    return toBytes$18(id$g, buffer.data);
+    return toBytes$19(id$h, buffer.data);
   };
 
-  var id$f = getEnergy;
-  var toBytes$h = function () {
-    return toBytes$18(id$f);
+  var id$g = getEnergy;
+  var toBytes$i = function () {
+    return toBytes$19(id$g);
   };
 
-  var id$e = getEnergyDayPrevious;
-  var toBytes$g = function (parameters) {
+  var id$f = getEnergyDayPrevious;
+  var toBytes$h = function (parameters) {
     if (parameters.energyType) {
-      return toBytes$18(id$e, [parameters.energyType]);
+      return toBytes$19(id$f, [parameters.energyType]);
     }
-    return toBytes$18(id$e);
+    return toBytes$19(id$f);
   };
 
-  var id$d = getEnergyExport;
+  var id$e = getEnergyExport;
+  var toBytes$g = function () {
+    return toBytes$19(id$e);
+  };
+
+  var id$d = getEnergyExportDayPrevious;
   var toBytes$f = function () {
-    return toBytes$18(id$d);
+    return toBytes$19(id$d);
   };
 
-  var id$c = getEnergyExportDayPrevious;
-  var toBytes$e = function () {
-    return toBytes$18(id$c);
-  };
-
-  var id$b = getHalfHourDemandChannel;
+  var id$c = getHalfHourDemandChannel;
   var maxSize$8 = 5;
-  var toBytes$d = function (parameters) {
+  var toBytes$e = function (parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$8);
     buffer.setUint8(parameters.channel);
-    buffer.setUint8(parameters.channelParameter);
+    buffer.setUint8(parameters.loadProfile);
     buffer.setDate(parameters.date);
-    return toBytes$18(id$b, buffer.data);
+    return toBytes$19(id$c, buffer.data);
   };
 
-  var id$a = getHalfHourDemandVare;
+  var id$b = getHalfHourDemandVare;
   var maxSize$7 = 3;
-  var toBytes$c = function (parameters) {
+  var toBytes$d = function (parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$7);
     buffer.setDate(parameters.date);
-    return toBytes$18(id$a, buffer.data);
+    return toBytes$19(id$b, buffer.data);
   };
 
-  var id$9 = getHalfHourDemandVareExport;
+  var id$a = getHalfHourDemandVareExport;
   var maxSize$6 = 3;
-  var toBytes$b = function (parameters) {
+  var toBytes$c = function (parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$6);
     buffer.setDate(parameters.date);
-    return toBytes$18(id$9, buffer.data);
+    return toBytes$19(id$a, buffer.data);
   };
 
-  var id$8 = getHalfHourDemandVari;
+  var id$9 = getHalfHourDemandVari;
   var maxSize$5 = 3;
-  var toBytes$a = function (parameters) {
+  var toBytes$b = function (parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$5);
     buffer.setDate(parameters.date);
-    return toBytes$18(id$8, buffer.data);
+    return toBytes$19(id$9, buffer.data);
   };
 
-  var id$7 = getHalfHourDemandVariExport;
+  var id$8 = getHalfHourDemandVariExport;
   var maxSize$4 = 3;
-  var toBytes$9 = function (parameters) {
+  var toBytes$a = function (parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$4);
     buffer.setDate(parameters.date);
-    return toBytes$18(id$7, buffer.data);
+    return toBytes$19(id$8, buffer.data);
   };
 
-  var id$6 = getOperatorParametersExtended;
+  var id$7 = getOperatorParametersExtended;
+  var toBytes$9 = function () {
+    return toBytes$19(id$7);
+  };
+
+  var id$6 = getOperatorParametersExtended2;
   var toBytes$8 = function () {
-    return toBytes$18(id$6);
+    return toBytes$19(id$6);
   };
 
-  var id$5 = getOperatorParametersExtended2;
+  var id$5 = getOperatorParametersExtended4;
   var toBytes$7 = function () {
-    return toBytes$18(id$5);
+    return toBytes$19(id$5);
   };
 
   var id$4 = setDisplayParam;
   var toBytes$6 = function (parameters) {
-    return toBytes$18(id$4, [parameters.displayMode].concat(_toConsumableArray(parameters.order)));
+    return toBytes$19(id$4, [parameters.displayMode].concat(_toConsumableArray(parameters.order)));
   };
 
   var id$3 = setOperatorParameters;
@@ -4521,7 +4547,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var toBytes$5 = function (parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$3);
     buffer.setOperatorParameters(parameters);
-    return toBytes$18(id$3, buffer.data);
+    return toBytes$19(id$3, buffer.data);
   };
 
   var id$2 = setOperatorParametersExtended;
@@ -4529,7 +4555,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var toBytes$4 = function (parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$2);
     buffer.setOperatorParametersExtended(parameters);
-    return toBytes$18(id$2, buffer.data);
+    return toBytes$19(id$2, buffer.data);
   };
 
   var id$1 = setOperatorParametersExtended2;
@@ -4537,7 +4563,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var toBytes$3 = function (parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$1);
     buffer.setOperatorParametersExtended2(parameters);
-    return toBytes$18(id$1, buffer.data);
+    return toBytes$19(id$1, buffer.data);
   };
 
   var id = setOperatorParametersExtended4;
@@ -4545,17 +4571,18 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var toBytes$2 = function (parameters) {
     var buffer = new CommandBinaryBuffer(maxSize);
     buffer.setOperatorParametersExtended4(parameters);
-    return toBytes$18(id, buffer.data);
+    return toBytes$19(id, buffer.data);
   };
 
   var toBytesMap = {};
   var toBytes$1 = getToBytes(toBytesMap);
+  toBytesMap[id$16] = toBytes$18;
   toBytesMap[id$15] = toBytes$17;
   toBytesMap[id$14] = toBytes$16;
   toBytesMap[id$13] = toBytes$15;
   toBytesMap[id$12] = toBytes$14;
   toBytesMap[id$11] = toBytes$13;
-  toBytesMap[id$10] = toBytes$12;
+  toBytesMap[id$11] = toBytes$13;
   toBytesMap[id$10] = toBytes$12;
   toBytesMap[id$] = toBytes$11;
   toBytesMap[id$_] = toBytes$10;
@@ -4574,9 +4601,9 @@ var toBytes, setDataSegment, getBase64FromBytes;
   toBytesMap[id$N] = toBytes$P;
   toBytesMap[id$M] = toBytes$O;
   toBytesMap[id$L] = toBytes$N;
+  toBytesMap[id$J] = toBytes$L;
   toBytesMap[id$K] = toBytes$M;
   toBytesMap[id$I] = toBytes$K;
-  toBytesMap[id$J] = toBytes$L;
   toBytesMap[id$H] = toBytes$J;
   toBytesMap[id$G] = toBytes$I;
   toBytesMap[id$F] = toBytes$H;

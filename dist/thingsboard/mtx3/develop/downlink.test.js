@@ -543,6 +543,18 @@ var logs = '';
   var nibbles10 = ['.', '0', '1', '2', '3', '4', '5', '6', 'P', 'R', 'L', 'E', 'G', '-', '/'];
   var nibbles11 = ['.', 'H', 'A', 'T', '0', '0', '0', '0', '0', '1', '2', '3', '4', '0', '0', '0'];
   var nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
+  var mtx1DeviceTypeDescriptorMask = {
+    typeMeterG: 1 << 0,
+    downgradedToA: 1 << 4,
+    supportMeterInfo: 1 << 6
+  };
+  var mtx3DeviceTypeDescriptorMask = {
+    typeMeterTransformer: 1 << 0,
+    downgradedToR: 1 << 3,
+    typeMeterG: 1 << 4,
+    supportMeterInfo: 1 << 6,
+    reactiveRPlusRMinus: 1 << 7
+  };
   var splitByte = function splitByte(_byte) {
     return [_byte >> 4, _byte & 0x0F];
   };
@@ -611,8 +623,7 @@ var logs = '';
     }
     return {
       type: type.join(''),
-      revision: revision,
-      meterType: 0
+      revision: revision
     };
   };
   var toBytesMtx = function toBytesMtx(type, prefix, revision) {
@@ -671,8 +682,7 @@ var logs = '';
       }
     }
     return {
-      type: type.join(''),
-      meterType: 0
+      type: type.join('')
     };
   };
   var toBytesMtx2 = function toBytesMtx2(type) {
@@ -712,8 +722,7 @@ var logs = '';
       }
     }
     return {
-      type: type.join(''),
-      meterType: 0
+      type: type.join('')
     };
   };
   var toBytesM = function toBytesM(type) {
@@ -732,7 +741,7 @@ var logs = '';
     }
     return result;
   };
-  var fromBytes$16 = function fromBytes(bytes) {
+  var fromBytes$17 = function fromBytes(bytes) {
     if (bytes.length !== 9) {
       throw new Error('The buffer is too small');
     }
@@ -743,17 +752,22 @@ var logs = '';
     var deviceTypeNibble = nibbles[position];
     var deviceType = nibbles1[deviceTypeNibble];
     if (deviceType === '1' || deviceType === '3') {
-      result = fromBytesMtx(nibbles.slice(position));
+      result = _objectSpread2(_objectSpread2({}, fromBytesMtx(nibbles.slice(position))), {}, {
+        descriptor: deviceType === '1' ? _objectSpread2({
+          meterType: 'mtx1'
+        }, toObject(mtx1DeviceTypeDescriptorMask, bytes[8])) : _objectSpread2({
+          meterType: 'mtx3'
+        }, toObject(mtx3DeviceTypeDescriptorMask, bytes[8]))
+      });
     } else {
       result = deviceType === 'M' ? fromBytesM(nibbles) : fromBytesMtx2(nibbles);
     }
-    result.meterType = bytes[8];
     return result;
   };
-  var toBytes$17 = function toBytes(_ref, prefix) {
+  var toBytes$18 = function toBytes(_ref, prefix) {
     var type = _ref.type,
       revision = _ref.revision,
-      meterType = _ref.meterType;
+      descriptor = _ref.descriptor;
     if (!type.startsWith('MTX ')) {
       throw new Error('Wrong format');
     }
@@ -765,7 +779,11 @@ var logs = '';
     } else {
       result = deviceTypeSymbol === 'M' ? toBytesM(content) : toBytesMtx2(content);
     }
-    result[8] = meterType;
+    if (descriptor !== null && descriptor !== void 0 && descriptor.meterType) {
+      result[8] = descriptor.meterType === 'mtx1' ? fromObject(mtx1DeviceTypeDescriptorMask, descriptor) : fromObject(mtx3DeviceTypeDescriptorMask, descriptor);
+    } else {
+      result[8] = 0;
+    }
     return result;
   };
 
@@ -877,10 +895,10 @@ var logs = '';
   var POWER_A_ON$1 = 0x59;
   var CMD_RELAY_2_ON$1 = 0x60;
   var CMD_RELAY_2_OFF$1 = 0x61;
-  var CROSSZERO_ENT0 = 0x62;
-  var CROSSZERO_ENT1 = 0x63;
-  var CROSSZERO_ENT2 = 0x64;
-  var CROSSZERO_ENT3 = 0x65;
+  var CROSSZERO_ENT1 = 0x62;
+  var CROSSZERO_ENT2 = 0x63;
+  var CROSSZERO_ENT3 = 0x64;
+  var CROSSZERO_ENT4 = 0x65;
   var CALFLAG_SET = 0x66;
   var CALFLAG_RESET = 0x67;
   var BAD_TEST_EEPROM$1 = 0x68;
@@ -905,10 +923,10 @@ var logs = '';
   var RELAY_HARD_OFF$1 = 0x94;
   var SET_SALDO_PARAM$1 = 0x9C;
   var POWER_OVER_RELAY_OFF$1 = 0x9D;
-  var CROSSZERO_EXP_ENT0 = 0x9E;
-  var CROSSZERO_EXP_ENT1 = 0x9F;
-  var CROSSZERO_EXP_ENT2 = 0xA0;
-  var CROSSZERO_EXP_ENT3 = 0xA1;
+  var CROSSZERO_EXP_ENT1 = 0x9E;
+  var CROSSZERO_EXP_ENT2 = 0x9F;
+  var CROSSZERO_EXP_ENT3 = 0xA0;
+  var CROSSZERO_EXP_ENT4 = 0xA1;
   var TIME_CORRECT_NEW = 0xA2;
   var EM_MAGNETIC_ON$1 = 0xB0;
   var EM_MAGNETIC_OFF$1 = 0xB1;
@@ -966,14 +984,14 @@ var logs = '';
     CMD_RELAY_2_ON: CMD_RELAY_2_ON$1,
     CMD_RELAY_OFF: CMD_RELAY_OFF$1,
     CMD_RELAY_ON: CMD_RELAY_ON$1,
-    CROSSZERO_ENT0: CROSSZERO_ENT0,
     CROSSZERO_ENT1: CROSSZERO_ENT1,
     CROSSZERO_ENT2: CROSSZERO_ENT2,
     CROSSZERO_ENT3: CROSSZERO_ENT3,
-    CROSSZERO_EXP_ENT0: CROSSZERO_EXP_ENT0,
+    CROSSZERO_ENT4: CROSSZERO_ENT4,
     CROSSZERO_EXP_ENT1: CROSSZERO_EXP_ENT1,
     CROSSZERO_EXP_ENT2: CROSSZERO_EXP_ENT2,
     CROSSZERO_EXP_ENT3: CROSSZERO_EXP_ENT3,
+    CROSSZERO_EXP_ENT4: CROSSZERO_EXP_ENT4,
     CURRENT_UNEQUIL_FAULT: CURRENT_UNEQUIL_FAULT,
     CURRENT_UNEQUIL_OK: CURRENT_UNEQUIL_OK,
     EM_MAGNETIC_OFF: EM_MAGNETIC_OFF$1,
@@ -1088,27 +1106,27 @@ var logs = '';
     RELAY_ON_Y: 0x01,
     RELAY_ON_CENTER: 0x02,
     RELAY_ON_PB: 0x04,
-    RELAY_ON_TARIFF_0: 0x08,
-    RELAY_ON_TARIFF_1: 0x10,
-    RELAY_ON_TARIFF_2: 0x20,
-    RELAY_ON_TARIFF_3: 0x40,
+    RELAY_ON_TARIFF_1: 0x08,
+    RELAY_ON_TARIFF_2: 0x10,
+    RELAY_ON_TARIFF_3: 0x20,
+    RELAY_ON_TARIFF_4: 0x40,
     RELAY_ON_V_GOOD: 0x80
   };
   var relaySet2Mask = {
     RELAY_OFF_Y: 0x01,
     RELAY_OFF_CENTER: 0x02,
-    RELAY_OFF_TARIFF_0: 0x04,
-    RELAY_OFF_TARIFF_1: 0x08,
-    RELAY_OFF_TARIFF_2: 0x10,
-    RELAY_OFF_TARIFF_3: 0x20,
+    RELAY_OFF_TARIFF_1: 0x04,
+    RELAY_OFF_TARIFF_2: 0x08,
+    RELAY_OFF_TARIFF_3: 0x10,
+    RELAY_OFF_TARIFF_4: 0x20,
     RELAY_OFF_I_LIMIT: 0x40,
     RELAY_OFF_V_BAD: 0x80
   };
   var relaySet3Mask = {
-    RELAY_OFF_LIM_TARIFF_0: 0x02,
-    RELAY_OFF_LIM_TARIFF_1: 0x04,
-    RELAY_OFF_LIM_TARIFF_2: 0x08,
-    RELAY_OFF_LIM_TARIFF_3: 0x10,
+    RELAY_OFF_LIM_TARIFF_1: 0x02,
+    RELAY_OFF_LIM_TARIFF_2: 0x04,
+    RELAY_OFF_LIM_TARIFF_3: 0x08,
+    RELAY_OFF_LIM_TARIFF_4: 0x10,
     RELAY_OFF_PF_MIN: 0x20
   };
   var relaySet4Mask = {
@@ -1186,10 +1204,10 @@ var logs = '';
     POWER_B_NEGATIVE: Math.pow(2, 7)
   };
   var operatorParametersExtended3RelaySetMask = {
-    RELAY_OFF_LIMIT_P_MINUS_T1: 0x04,
-    RELAY_OFF_LIMIT_P_MINUS_T2: 0x08,
-    RELAY_OFF_LIMIT_P_MINUS_T3: 0x10,
-    RELAY_OFF_LIMIT_P_MINUS_T4: 0x20
+    RELAY_OFF_LIMIT_P_MINUS_T1: 0x08,
+    RELAY_OFF_LIMIT_P_MINUS_T2: 0x10,
+    RELAY_OFF_LIMIT_P_MINUS_T3: 0x20,
+    RELAY_OFF_LIMIT_P_MINUS_T4: 0x40
   };
   function getPackedEnergies$1(buffer, energyType, tariffMapByte) {
     var _byte = tariffMapByte >> TARIFF_NUMBER$1;
@@ -1475,10 +1493,10 @@ var logs = '';
     this.setUint8(+!specialDay.isPeriodic);
   };
   CommandBinaryBuffer$2.prototype.getDeviceType = function () {
-    return fromBytes$16(this.getBytes(9));
+    return fromBytes$17(this.getBytes(9));
   };
   CommandBinaryBuffer$2.prototype.setDeviceType = function (deviceType) {
-    this.setBytes(toBytes$17(deviceType));
+    this.setBytes(toBytes$18(deviceType));
   };
   CommandBinaryBuffer$2.prototype.getOperatorParameters = function () {
     var operatorParameters = {
@@ -1866,7 +1884,7 @@ var logs = '';
   _objectSpread2(_objectSpread2({}, defaultFormatOptions), {}, {
     dlms: false
   });
-  var toBytes$16 = function toBytes(commandId) {
+  var toBytes$17 = function toBytes(commandId) {
     var commandBytes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
     return [commandId, commandBytes.length].concat(_toConsumableArray(commandBytes));
   };
@@ -2008,19 +2026,19 @@ var logs = '';
 
   var commandNames$1 = invertObject(downlinkIds$1);
 
-  var id$15 = activateRatePlan$2;
-  var name$15 = commandNames$1[activateRatePlan$2];
-  var headerSize$15 = 2;
-  var maxSize$15 = 1 + TARIFF_PLAN_SIZE;
-  var accessLevel$15 = READ_WRITE;
-  var isLoraOnly$15 = false;
-  var examples$15 = {
+  var id$16 = activateRatePlan$2;
+  var name$16 = commandNames$1[activateRatePlan$2];
+  var headerSize$16 = 2;
+  var maxSize$16 = 1 + TARIFF_PLAN_SIZE;
+  var accessLevel$16 = READ_WRITE;
+  var isLoraOnly$16 = false;
+  var examples$16 = {
     'set rate plan request': {
-      id: id$15,
-      name: name$15,
-      headerSize: headerSize$15,
-      maxSize: maxSize$15,
-      accessLevel: accessLevel$15,
+      id: id$16,
+      name: name$16,
+      headerSize: headerSize$16,
+      maxSize: maxSize$16,
+      accessLevel: accessLevel$16,
       parameters: {
         tariffTable: 0,
         tariffPlan: {
@@ -2037,21 +2055,61 @@ var logs = '';
       bytes: [0x13, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]
     }
   };
-  var fromBytes$15 = function fromBytes(bytes) {
+  var fromBytes$16 = function fromBytes(bytes) {
     var buffer = new CommandBinaryBuffer$2(bytes);
     return {
       tariffTable: buffer.getUint8(),
       tariffPlan: buffer.getTariffPlan()
     };
   };
-  var toBytes$15 = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$15);
+  var toBytes$16 = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$16);
     buffer.setUint8(parameters.tariffTable);
     buffer.setTariffPlan(parameters.tariffPlan);
-    return toBytes$16(id$15, buffer.data);
+    return toBytes$17(id$16, buffer.data);
   };
 
   var activateRatePlan$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    accessLevel: accessLevel$16,
+    examples: examples$16,
+    fromBytes: fromBytes$16,
+    headerSize: headerSize$16,
+    id: id$16,
+    isLoraOnly: isLoraOnly$16,
+    maxSize: maxSize$16,
+    name: name$16,
+    toBytes: toBytes$16
+  });
+
+  var id$15 = getBuildVersion$2;
+  var name$15 = commandNames$1[getBuildVersion$2];
+  var headerSize$15 = 2;
+  var accessLevel$15 = READ_ONLY;
+  var maxSize$15 = 0;
+  var isLoraOnly$15 = false;
+  var examples$15 = {
+    'simple request': {
+      id: id$15,
+      name: name$15,
+      headerSize: headerSize$15,
+      maxSize: maxSize$15,
+      accessLevel: accessLevel$15,
+      parameters: {},
+      bytes: [0x70, 0x00]
+    }
+  };
+  var fromBytes$15 = function fromBytes(bytes) {
+    if (bytes.length !== maxSize$15) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    return {};
+  };
+  var toBytes$15 = function toBytes() {
+    return toBytes$17(id$15);
+  };
+
+  var getBuildVersion$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$15,
     examples: examples$15,
@@ -2064,11 +2122,11 @@ var logs = '';
     toBytes: toBytes$15
   });
 
-  var id$14 = getBuildVersion$2;
-  var name$14 = commandNames$1[getBuildVersion$2];
+  var id$14 = getCorrectTime$2;
+  var name$14 = commandNames$1[getCorrectTime$2];
   var headerSize$14 = 2;
-  var accessLevel$14 = READ_ONLY;
   var maxSize$14 = 0;
+  var accessLevel$14 = READ_ONLY;
   var isLoraOnly$14 = false;
   var examples$14 = {
     'simple request': {
@@ -2078,7 +2136,7 @@ var logs = '';
       maxSize: maxSize$14,
       accessLevel: accessLevel$14,
       parameters: {},
-      bytes: [0x70, 0x00]
+      bytes: [0x3e, 0x00]
     }
   };
   var fromBytes$14 = function fromBytes(bytes) {
@@ -2088,10 +2146,10 @@ var logs = '';
     return {};
   };
   var toBytes$14 = function toBytes() {
-    return toBytes$16(id$14);
+    return toBytes$17(id$14);
   };
 
-  var getBuildVersion$1 = /*#__PURE__*/Object.freeze({
+  var getCorrectTime$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$14,
     examples: examples$14,
@@ -2104,11 +2162,11 @@ var logs = '';
     toBytes: toBytes$14
   });
 
-  var id$13 = getCorrectTime$2;
-  var name$13 = commandNames$1[getCorrectTime$2];
+  var id$13 = getCurrentStatusMeter$2;
+  var name$13 = commandNames$1[getCurrentStatusMeter$2];
   var headerSize$13 = 2;
-  var maxSize$13 = 0;
   var accessLevel$13 = READ_ONLY;
+  var maxSize$13 = 0;
   var isLoraOnly$13 = false;
   var examples$13 = {
     'simple request': {
@@ -2118,7 +2176,7 @@ var logs = '';
       maxSize: maxSize$13,
       accessLevel: accessLevel$13,
       parameters: {},
-      bytes: [0x3e, 0x00]
+      bytes: [0x39, 0x00]
     }
   };
   var fromBytes$13 = function fromBytes(bytes) {
@@ -2128,10 +2186,10 @@ var logs = '';
     return {};
   };
   var toBytes$13 = function toBytes() {
-    return toBytes$16(id$13);
+    return toBytes$17(id$13);
   };
 
-  var getCorrectTime$1 = /*#__PURE__*/Object.freeze({
+  var getCurrentStatusMeter$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$13,
     examples: examples$13,
@@ -2144,11 +2202,11 @@ var logs = '';
     toBytes: toBytes$13
   });
 
-  var id$12 = getCurrentStatusMeter$2;
-  var name$12 = commandNames$1[getCurrentStatusMeter$2];
+  var id$12 = getCurrentValues$2;
+  var name$12 = commandNames$1[getCurrentValues$2];
   var headerSize$12 = 2;
-  var accessLevel$12 = READ_ONLY;
   var maxSize$12 = 0;
+  var accessLevel$12 = READ_ONLY;
   var isLoraOnly$12 = false;
   var examples$12 = {
     'simple request': {
@@ -2158,7 +2216,7 @@ var logs = '';
       maxSize: maxSize$12,
       accessLevel: accessLevel$12,
       parameters: {},
-      bytes: [0x39, 0x00]
+      bytes: [0x0d, 0x00]
     }
   };
   var fromBytes$12 = function fromBytes(bytes) {
@@ -2168,10 +2226,10 @@ var logs = '';
     return {};
   };
   var toBytes$12 = function toBytes() {
-    return toBytes$16(id$12);
+    return toBytes$17(id$12);
   };
 
-  var getCurrentStatusMeter$1 = /*#__PURE__*/Object.freeze({
+  var getCurrentValues$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$12,
     examples: examples$12,
@@ -2184,8 +2242,8 @@ var logs = '';
     toBytes: toBytes$12
   });
 
-  var id$11 = getCurrentValues$2;
-  var name$11 = commandNames$1[getCurrentValues$2];
+  var id$11 = getDateTime$2;
+  var name$11 = commandNames$1[getDateTime$2];
   var headerSize$11 = 2;
   var maxSize$11 = 0;
   var accessLevel$11 = READ_ONLY;
@@ -2198,7 +2256,7 @@ var logs = '';
       maxSize: maxSize$11,
       accessLevel: accessLevel$11,
       parameters: {},
-      bytes: [0x0d, 0x00]
+      bytes: [0x07, 0x00]
     }
   };
   var fromBytes$11 = function fromBytes(bytes) {
@@ -2208,10 +2266,10 @@ var logs = '';
     return {};
   };
   var toBytes$11 = function toBytes() {
-    return toBytes$16(id$11);
+    return toBytes$17(id$11);
   };
 
-  var getCurrentValues$1 = /*#__PURE__*/Object.freeze({
+  var getDateTime$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$11,
     examples: examples$11,
@@ -2224,34 +2282,42 @@ var logs = '';
     toBytes: toBytes$11
   });
 
-  var id$10 = getDateTime$2;
-  var name$10 = commandNames$1[getDateTime$2];
+  var id$10 = getDayMaxDemand$2;
+  var name$10 = commandNames$1[getDayMaxDemand$2];
   var headerSize$10 = 2;
-  var maxSize$10 = 0;
+  var maxSize$10 = 3;
   var accessLevel$10 = READ_ONLY;
   var isLoraOnly$10 = false;
   var examples$10 = {
-    'simple request': {
+    'request for 2024.03.22': {
       id: id$10,
       name: name$10,
       headerSize: headerSize$10,
       maxSize: maxSize$10,
       accessLevel: accessLevel$10,
-      parameters: {},
-      bytes: [0x07, 0x00]
+      parameters: {
+        date: {
+          year: 24,
+          month: 3,
+          date: 22
+        }
+      },
+      bytes: [0x31, 0x03, 0x18, 0x03, 0x16]
     }
   };
   var fromBytes$10 = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$10) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
-    return {};
+    var buffer = new CommandBinaryBuffer$2(bytes);
+    return {
+      date: buffer.getDate()
+    };
   };
-  var toBytes$10 = function toBytes() {
-    return toBytes$16(id$10);
+  var toBytes$10 = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$10);
+    buffer.setDate(parameters.date);
+    return toBytes$17(id$10, buffer.data);
   };
 
-  var getDateTime$1 = /*#__PURE__*/Object.freeze({
+  var getDayMaxDemand$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$10,
     examples: examples$10,
@@ -2264,8 +2330,8 @@ var logs = '';
     toBytes: toBytes$10
   });
 
-  var id$ = getDayMaxDemand$2;
-  var name$ = commandNames$1[getDayMaxDemand$2];
+  var id$ = getDayMaxDemandExport$2;
+  var name$ = commandNames$1[getDayMaxDemandExport$2];
   var headerSize$ = 2;
   var maxSize$ = 3;
   var accessLevel$ = READ_ONLY;
@@ -2284,7 +2350,7 @@ var logs = '';
           date: 22
         }
       },
-      bytes: [0x31, 0x03, 0x18, 0x03, 0x16]
+      bytes: [0x58, 0x03, 0x18, 0x03, 0x16]
     }
   };
   var fromBytes$ = function fromBytes(bytes) {
@@ -2296,10 +2362,10 @@ var logs = '';
   var toBytes$ = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$);
     buffer.setDate(parameters.date);
-    return toBytes$16(id$, buffer.data);
+    return toBytes$17(id$, buffer.data);
   };
 
-  var getDayMaxDemand$1 = /*#__PURE__*/Object.freeze({
+  var getDayMaxDemandExport$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$,
     examples: examples$,
@@ -2312,42 +2378,47 @@ var logs = '';
     toBytes: toBytes$
   });
 
-  var id$_ = getDayMaxDemandExport$2;
-  var name$_ = commandNames$1[getDayMaxDemandExport$2];
+  var id$_ = getDayProfile$2;
+  var name$_ = commandNames$1[getDayProfile$2];
   var headerSize$_ = 2;
   var maxSize$_ = 3;
   var accessLevel$_ = READ_ONLY;
   var isLoraOnly$_ = false;
   var examples$_ = {
-    'request for 2024.03.22': {
+    'request for active tariff table A+': {
       id: id$_,
       name: name$_,
-      headerSize: headerSize$_,
       maxSize: maxSize$_,
+      headerSize: headerSize$_,
       accessLevel: accessLevel$_,
       parameters: {
-        date: {
-          year: 24,
-          month: 3,
-          date: 22
-        }
+        tariffTable: 0,
+        index: 3,
+        isActive: true
       },
-      bytes: [0x58, 0x03, 0x18, 0x03, 0x16]
+      bytes: [0x3b, 0x03, 0x00, 0x03, 0x00]
     }
   };
-  var fromBytes$_ = function fromBytes(bytes) {
-    var buffer = new CommandBinaryBuffer$2(bytes);
+  var fromBytes$_ = function fromBytes(_ref) {
+    var _ref2 = _slicedToArray(_ref, 3),
+      tariffTable = _ref2[0],
+      index = _ref2[1],
+      isActive = _ref2[2];
     return {
-      date: buffer.getDate()
+      tariffTable: tariffTable,
+      index: index,
+      isActive: isActive === 0
     };
   };
   var toBytes$_ = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$_);
-    buffer.setDate(parameters.date);
-    return toBytes$16(id$_, buffer.data);
+    buffer.setUint8(parameters.tariffTable);
+    buffer.setUint8(parameters.index);
+    buffer.setUint8(parameters.isActive ? 0 : 1);
+    return toBytes$17(id$_, buffer.data);
   };
 
-  var getDayMaxDemandExport$1 = /*#__PURE__*/Object.freeze({
+  var getDayProfile$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$_,
     examples: examples$_,
@@ -2360,47 +2431,34 @@ var logs = '';
     toBytes: toBytes$_
   });
 
-  var id$Z = getDayProfile$2;
-  var name$Z = commandNames$1[getDayProfile$2];
+  var id$Z = getDeviceId$2;
+  var name$Z = commandNames$1[getDeviceId$2];
   var headerSize$Z = 2;
-  var maxSize$Z = 3;
   var accessLevel$Z = READ_ONLY;
+  var maxSize$Z = 0;
   var isLoraOnly$Z = false;
   var examples$Z = {
-    'request for active tariff table A+': {
+    'simple request': {
       id: id$Z,
       name: name$Z,
-      maxSize: maxSize$Z,
       headerSize: headerSize$Z,
       accessLevel: accessLevel$Z,
-      parameters: {
-        tariffTable: 0,
-        index: 3,
-        isActive: true
-      },
-      bytes: [0x3b, 0x03, 0x00, 0x03, 0x00]
+      maxSize: maxSize$Z,
+      parameters: {},
+      bytes: [0x05, 0x00]
     }
   };
-  var fromBytes$Z = function fromBytes(_ref) {
-    var _ref2 = _slicedToArray(_ref, 3),
-      tariffTable = _ref2[0],
-      index = _ref2[1],
-      isActive = _ref2[2];
-    return {
-      tariffTable: tariffTable,
-      index: index,
-      isActive: isActive === 0
-    };
+  var fromBytes$Z = function fromBytes(bytes) {
+    if (bytes.length !== maxSize$Z) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    return {};
   };
-  var toBytes$Z = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$Z);
-    buffer.setUint8(parameters.tariffTable);
-    buffer.setUint8(parameters.index);
-    buffer.setUint8(parameters.isActive ? 0 : 1);
-    return toBytes$16(id$Z, buffer.data);
+  var toBytes$Z = function toBytes() {
+    return toBytes$17(id$Z);
   };
 
-  var getDayProfile$1 = /*#__PURE__*/Object.freeze({
+  var getDeviceId$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$Z,
     examples: examples$Z,
@@ -2413,8 +2471,8 @@ var logs = '';
     toBytes: toBytes$Z
   });
 
-  var id$Y = getDeviceId$2;
-  var name$Y = commandNames$1[getDeviceId$2];
+  var id$Y = getDeviceType$2;
+  var name$Y = commandNames$1[getDeviceType$2];
   var headerSize$Y = 2;
   var accessLevel$Y = READ_ONLY;
   var maxSize$Y = 0;
@@ -2424,23 +2482,23 @@ var logs = '';
       id: id$Y,
       name: name$Y,
       headerSize: headerSize$Y,
-      accessLevel: accessLevel$Y,
       maxSize: maxSize$Y,
+      accessLevel: accessLevel$Y,
       parameters: {},
-      bytes: [0x05, 0x00]
+      bytes: [0x04, 0x00]
     }
   };
-  var fromBytes$Y = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$Y) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+  var fromBytes$Y = function fromBytes(data) {
+    if (data.length !== maxSize$Y) {
+      throw new Error("Wrong buffer size: ".concat(data.length, "."));
     }
     return {};
   };
   var toBytes$Y = function toBytes() {
-    return toBytes$16(id$Y);
+    return toBytes$17(id$Y);
   };
 
-  var getDeviceId$1 = /*#__PURE__*/Object.freeze({
+  var getDeviceType$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$Y,
     examples: examples$Y,
@@ -2453,34 +2511,50 @@ var logs = '';
     toBytes: toBytes$Y
   });
 
-  var id$X = getDeviceType$2;
-  var name$X = commandNames$1[getDeviceType$2];
+  var id$X = getEvents$2;
+  var name$X = commandNames$1[getEvents$2];
   var headerSize$X = 2;
   var accessLevel$X = READ_ONLY;
-  var maxSize$X = 0;
+  var maxSize$X = 4;
   var isLoraOnly$X = false;
   var examples$X = {
     'simple request': {
       id: id$X,
       name: name$X,
       headerSize: headerSize$X,
-      maxSize: maxSize$X,
       accessLevel: accessLevel$X,
-      parameters: {},
-      bytes: [0x04, 0x00]
+      maxSize: maxSize$X,
+      parameters: {
+        date: {
+          year: 24,
+          month: 2,
+          date: 12
+        },
+        offset: 23
+      },
+      bytes: [0x33, 0x04, 0x18, 0x02, 0x0c, 0x17]
     }
   };
-  var fromBytes$X = function fromBytes(data) {
-    if (data.length !== maxSize$X) {
-      throw new Error("Wrong buffer size: ".concat(data.length, "."));
+  var fromBytes$X = function fromBytes(bytes) {
+    if (bytes.length !== maxSize$X) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    return {};
+    var buffer = new CommandBinaryBuffer$2(bytes);
+    var date = buffer.getDate();
+    var offset = buffer.getUint8();
+    return {
+      date: date,
+      offset: offset
+    };
   };
-  var toBytes$X = function toBytes() {
-    return toBytes$16(id$X);
+  var toBytes$X = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$X);
+    buffer.setDate(parameters.date);
+    buffer.setUint8(parameters.offset);
+    return toBytes$17(id$X, buffer.data);
   };
 
-  var getDeviceType$1 = /*#__PURE__*/Object.freeze({
+  var getEvents$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$X,
     examples: examples$X,
@@ -2493,11 +2567,11 @@ var logs = '';
     toBytes: toBytes$X
   });
 
-  var id$W = getEvents$2;
-  var name$W = commandNames$1[getEvents$2];
+  var id$W = getEventsCounters$2;
+  var name$W = commandNames$1[getEventsCounters$2];
   var headerSize$W = 2;
   var accessLevel$W = READ_ONLY;
-  var maxSize$W = 4;
+  var maxSize$W = 0;
   var isLoraOnly$W = false;
   var examples$W = {
     'simple request': {
@@ -2506,37 +2580,21 @@ var logs = '';
       headerSize: headerSize$W,
       accessLevel: accessLevel$W,
       maxSize: maxSize$W,
-      parameters: {
-        date: {
-          year: 24,
-          month: 2,
-          date: 12
-        },
-        offset: 23
-      },
-      bytes: [0x33, 0x04, 0x18, 0x02, 0x0c, 0x17]
+      parameters: {},
+      bytes: [0x34, 0x00]
     }
   };
   var fromBytes$W = function fromBytes(bytes) {
     if (bytes.length !== maxSize$W) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer$2(bytes);
-    var date = buffer.getDate();
-    var offset = buffer.getUint8();
-    return {
-      date: date,
-      offset: offset
-    };
+    return {};
   };
-  var toBytes$W = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$W);
-    buffer.setDate(parameters.date);
-    buffer.setUint8(parameters.offset);
-    return toBytes$16(id$W, buffer.data);
+  var toBytes$W = function toBytes() {
+    return toBytes$17(id$W);
   };
 
-  var getEvents$1 = /*#__PURE__*/Object.freeze({
+  var getEventsCounters$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$W,
     examples: examples$W,
@@ -2549,8 +2607,8 @@ var logs = '';
     toBytes: toBytes$W
   });
 
-  var id$V = getEventsCounters$2;
-  var name$V = commandNames$1[getEventsCounters$2];
+  var id$V = getEventStatus$2;
+  var name$V = commandNames$1[getEventStatus$2];
   var headerSize$V = 2;
   var accessLevel$V = READ_ONLY;
   var maxSize$V = 0;
@@ -2563,7 +2621,7 @@ var logs = '';
       accessLevel: accessLevel$V,
       maxSize: maxSize$V,
       parameters: {},
-      bytes: [0x34, 0x00]
+      bytes: [0x01, 0x00]
     }
   };
   var fromBytes$V = function fromBytes(bytes) {
@@ -2573,10 +2631,10 @@ var logs = '';
     return {};
   };
   var toBytes$V = function toBytes() {
-    return toBytes$16(id$V);
+    return toBytes$17(id$V);
   };
 
-  var getEventsCounters$1 = /*#__PURE__*/Object.freeze({
+  var getEventStatus$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$V,
     examples: examples$V,
@@ -2589,21 +2647,21 @@ var logs = '';
     toBytes: toBytes$V
   });
 
-  var id$U = getEventStatus$2;
-  var name$U = commandNames$1[getEventStatus$2];
+  var id$U = getExtendedCurrentValues$2;
+  var name$U = commandNames$1[getExtendedCurrentValues$2];
   var headerSize$U = 2;
-  var accessLevel$U = READ_ONLY;
   var maxSize$U = 0;
+  var accessLevel$U = READ_ONLY;
   var isLoraOnly$U = false;
   var examples$U = {
     'simple request': {
       id: id$U,
       name: name$U,
       headerSize: headerSize$U,
-      accessLevel: accessLevel$U,
       maxSize: maxSize$U,
+      accessLevel: accessLevel$U,
       parameters: {},
-      bytes: [0x01, 0x00]
+      bytes: [0x3a, 0x00]
     }
   };
   var fromBytes$U = function fromBytes(bytes) {
@@ -2613,10 +2671,10 @@ var logs = '';
     return {};
   };
   var toBytes$U = function toBytes() {
-    return toBytes$16(id$U);
+    return toBytes$17(id$U);
   };
 
-  var getEventStatus$1 = /*#__PURE__*/Object.freeze({
+  var getExtendedCurrentValues$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$U,
     examples: examples$U,
@@ -2629,34 +2687,42 @@ var logs = '';
     toBytes: toBytes$U
   });
 
-  var id$T = getExtendedCurrentValues$2;
-  var name$T = commandNames$1[getExtendedCurrentValues$2];
+  var id$T = getHalfHourDemand$2;
+  var name$T = commandNames$1[getHalfHourDemand$2];
   var headerSize$T = 2;
-  var maxSize$T = 0;
+  var maxSize$T = 3;
   var accessLevel$T = READ_ONLY;
   var isLoraOnly$T = false;
   var examples$T = {
-    'simple request': {
+    'request archive values for 2024.03.22': {
       id: id$T,
       name: name$T,
       headerSize: headerSize$T,
       maxSize: maxSize$T,
       accessLevel: accessLevel$T,
-      parameters: {},
-      bytes: [0x3a, 0x00]
+      parameters: {
+        date: {
+          year: 24,
+          month: 3,
+          date: 22
+        }
+      },
+      bytes: [0x15, 0x03, 0x18, 0x03, 0x16]
     }
   };
   var fromBytes$T = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$T) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
-    return {};
+    var buffer = new CommandBinaryBuffer$2(bytes);
+    return {
+      date: buffer.getDate()
+    };
   };
-  var toBytes$T = function toBytes() {
-    return toBytes$16(id$T);
+  var toBytes$T = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$T);
+    buffer.setDate(parameters.date);
+    return toBytes$17(id$T, buffer.data);
   };
 
-  var getExtendedCurrentValues$1 = /*#__PURE__*/Object.freeze({
+  var getHalfHourDemand$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$T,
     examples: examples$T,
@@ -2669,8 +2735,8 @@ var logs = '';
     toBytes: toBytes$T
   });
 
-  var id$S = getHalfHourDemand$2;
-  var name$S = commandNames$1[getHalfHourDemand$2];
+  var id$S = getHalfHourDemandExport$2;
+  var name$S = commandNames$1[getHalfHourDemandExport$2];
   var headerSize$S = 2;
   var maxSize$S = 3;
   var accessLevel$S = READ_ONLY;
@@ -2689,7 +2755,7 @@ var logs = '';
           date: 22
         }
       },
-      bytes: [0x15, 0x03, 0x18, 0x03, 0x16]
+      bytes: [0x53, 0x03, 0x18, 0x03, 0x16]
     }
   };
   var fromBytes$S = function fromBytes(bytes) {
@@ -2701,10 +2767,10 @@ var logs = '';
   var toBytes$S = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$S);
     buffer.setDate(parameters.date);
-    return toBytes$16(id$S, buffer.data);
+    return toBytes$17(id$S, buffer.data);
   };
 
-  var getHalfHourDemand$1 = /*#__PURE__*/Object.freeze({
+  var getHalfHourDemandExport$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$S,
     examples: examples$S,
@@ -2715,54 +2781,6 @@ var logs = '';
     maxSize: maxSize$S,
     name: name$S,
     toBytes: toBytes$S
-  });
-
-  var id$R = getHalfHourDemandExport$2;
-  var name$R = commandNames$1[getHalfHourDemandExport$2];
-  var headerSize$R = 2;
-  var maxSize$R = 3;
-  var accessLevel$R = READ_ONLY;
-  var isLoraOnly$R = false;
-  var examples$R = {
-    'request archive values for 2024.03.22': {
-      id: id$R,
-      name: name$R,
-      headerSize: headerSize$R,
-      maxSize: maxSize$R,
-      accessLevel: accessLevel$R,
-      parameters: {
-        date: {
-          year: 24,
-          month: 3,
-          date: 22
-        }
-      },
-      bytes: [0x53, 0x03, 0x18, 0x03, 0x16]
-    }
-  };
-  var fromBytes$R = function fromBytes(bytes) {
-    var buffer = new CommandBinaryBuffer$2(bytes);
-    return {
-      date: buffer.getDate()
-    };
-  };
-  var toBytes$R = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$R);
-    buffer.setDate(parameters.date);
-    return toBytes$16(id$R, buffer.data);
-  };
-
-  var getHalfHourDemandExport$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    accessLevel: accessLevel$R,
-    examples: examples$R,
-    fromBytes: fromBytes$R,
-    headerSize: headerSize$R,
-    id: id$R,
-    isLoraOnly: isLoraOnly$R,
-    maxSize: maxSize$R,
-    name: name$R,
-    toBytes: toBytes$R
   });
 
   var TARIFF_NUMBER = 4;
@@ -3084,18 +3102,18 @@ var logs = '';
     });
   };
 
-  var id$Q = getHalfhoursEnergies$2;
-  var name$Q = commandNames$1[getHalfhoursEnergies$2];
-  var headerSize$Q = 2;
-  var maxSize$Q = 5;
-  var accessLevel$Q = UNENCRYPTED;
-  var isLoraOnly$Q = true;
-  var examples$Q = {
+  var id$R = getHalfhoursEnergies$2;
+  var name$R = commandNames$1[getHalfhoursEnergies$2];
+  var headerSize$R = 2;
+  var maxSize$R = 5;
+  var accessLevel$R = UNENCRYPTED;
+  var isLoraOnly$R = true;
+  var examples$R = {
     'request for halfhours energies': {
-      id: id$Q,
-      name: name$Q,
-      headerSize: headerSize$Q,
-      maxSize: maxSize$Q,
+      id: id$R,
+      name: name$R,
+      headerSize: headerSize$R,
+      maxSize: maxSize$R,
       parameters: {
         date: {
           year: 21,
@@ -3116,7 +3134,7 @@ var logs = '';
       bytes: [0x6f, 0x05, 0x2a, 0x43, 0x03, 0x05, 0x03]
     }
   };
-  var fromBytes$Q = function fromBytes(bytes) {
+  var fromBytes$R = function fromBytes(bytes) {
     var buffer = new CommandBinaryBuffer$1(bytes);
     return {
       date: buffer.getDate(),
@@ -3125,16 +3143,56 @@ var logs = '';
       halfhoursNumber: buffer.getUint8()
     };
   };
-  var toBytes$Q = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$1(maxSize$Q);
+  var toBytes$R = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$1(maxSize$R);
     buffer.setDate(parameters.date);
     buffer.setEnergiesFlags(parameters.energies);
     buffer.setUint8(parameters.firstHalfhour);
     buffer.setUint8(parameters.halfhoursNumber);
-    return toBytes$16(id$Q, buffer.data);
+    return toBytes$17(id$R, buffer.data);
   };
 
   var getHalfhoursEnergies$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    accessLevel: accessLevel$R,
+    examples: examples$R,
+    fromBytes: fromBytes$R,
+    headerSize: headerSize$R,
+    id: id$R,
+    isLoraOnly: isLoraOnly$R,
+    maxSize: maxSize$R,
+    name: name$R,
+    toBytes: toBytes$R
+  });
+
+  var id$Q = getMagneticFieldThreshold$2;
+  var name$Q = commandNames$1[getMagneticFieldThreshold$2];
+  var headerSize$Q = 2;
+  var maxSize$Q = 0;
+  var accessLevel$Q = READ_ONLY;
+  var isLoraOnly$Q = false;
+  var examples$Q = {
+    'simple request': {
+      id: id$Q,
+      name: name$Q,
+      headerSize: headerSize$Q,
+      maxSize: maxSize$Q,
+      accessLevel: accessLevel$Q,
+      parameters: {},
+      bytes: [0x6d, 0x00]
+    }
+  };
+  var fromBytes$Q = function fromBytes(bytes) {
+    if (bytes.length !== maxSize$Q) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    return {};
+  };
+  var toBytes$Q = function toBytes() {
+    return toBytes$17(id$Q);
+  };
+
+  var getMagneticFieldThreshold$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$Q,
     examples: examples$Q,
@@ -3147,8 +3205,8 @@ var logs = '';
     toBytes: toBytes$Q
   });
 
-  var id$P = getMagneticFieldThreshold$2;
-  var name$P = commandNames$1[getMagneticFieldThreshold$2];
+  var id$P = getMeterInfo$2;
+  var name$P = commandNames$1[getMeterInfo$2];
   var headerSize$P = 2;
   var maxSize$P = 0;
   var accessLevel$P = READ_ONLY;
@@ -3161,7 +3219,7 @@ var logs = '';
       maxSize: maxSize$P,
       accessLevel: accessLevel$P,
       parameters: {},
-      bytes: [0x6d, 0x00]
+      bytes: [0x7a, 0x00]
     }
   };
   var fromBytes$P = function fromBytes(bytes) {
@@ -3171,10 +3229,10 @@ var logs = '';
     return {};
   };
   var toBytes$P = function toBytes() {
-    return toBytes$16(id$P);
+    return toBytes$17(id$P);
   };
 
-  var getMagneticFieldThreshold$1 = /*#__PURE__*/Object.freeze({
+  var getMeterInfo$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$P,
     examples: examples$P,
@@ -3187,34 +3245,41 @@ var logs = '';
     toBytes: toBytes$P
   });
 
-  var id$O = getMeterInfo$2;
-  var name$O = commandNames$1[getMeterInfo$2];
+  var id$O = getMonthDemand$2;
+  var name$O = commandNames$1[getMonthDemand$2];
   var headerSize$O = 2;
-  var maxSize$O = 0;
+  var maxSize$O = 2;
   var accessLevel$O = READ_ONLY;
   var isLoraOnly$O = false;
   var examples$O = {
-    'simple request': {
+    'request energy for 2024.03': {
       id: id$O,
       name: name$O,
       headerSize: headerSize$O,
       maxSize: maxSize$O,
       accessLevel: accessLevel$O,
-      parameters: {},
-      bytes: [0x7a, 0x00]
+      parameters: {
+        year: 24,
+        month: 3
+      },
+      bytes: [0x17, 0x02, 0x18, 0x03]
     }
   };
   var fromBytes$O = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$O) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
-    return {};
+    var buffer = new CommandBinaryBuffer$2(bytes);
+    return {
+      year: buffer.getUint8(),
+      month: buffer.getUint8()
+    };
   };
-  var toBytes$O = function toBytes() {
-    return toBytes$16(id$O);
+  var toBytes$O = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$O);
+    buffer.setUint8(parameters.year);
+    buffer.setUint8(parameters.month);
+    return toBytes$17(id$O, buffer.data);
   };
 
-  var getMeterInfo$1 = /*#__PURE__*/Object.freeze({
+  var getMonthDemand$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$O,
     examples: examples$O,
@@ -3227,8 +3292,8 @@ var logs = '';
     toBytes: toBytes$O
   });
 
-  var id$N = getMonthDemand$2;
-  var name$N = commandNames$1[getMonthDemand$2];
+  var id$N = getMonthDemandExport$2;
+  var name$N = commandNames$1[getMonthDemandExport$2];
   var headerSize$N = 2;
   var maxSize$N = 2;
   var accessLevel$N = READ_ONLY;
@@ -3244,7 +3309,7 @@ var logs = '';
         year: 24,
         month: 3
       },
-      bytes: [0x17, 0x02, 0x18, 0x03]
+      bytes: [0x52, 0x02, 0x18, 0x03]
     }
   };
   var fromBytes$N = function fromBytes(bytes) {
@@ -3258,10 +3323,10 @@ var logs = '';
     var buffer = new CommandBinaryBuffer$2(maxSize$N);
     buffer.setUint8(parameters.year);
     buffer.setUint8(parameters.month);
-    return toBytes$16(id$N, buffer.data);
+    return toBytes$17(id$N, buffer.data);
   };
 
-  var getMonthDemand$1 = /*#__PURE__*/Object.freeze({
+  var getMonthDemandExport$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$N,
     examples: examples$N,
@@ -3274,14 +3339,14 @@ var logs = '';
     toBytes: toBytes$N
   });
 
-  var id$M = getMonthDemandExport$2;
-  var name$M = commandNames$1[getMonthDemandExport$2];
+  var id$M = getMonthMaxDemand$2;
+  var name$M = commandNames$1[getMonthMaxDemand$2];
   var headerSize$M = 2;
   var maxSize$M = 2;
   var accessLevel$M = READ_ONLY;
   var isLoraOnly$M = false;
   var examples$M = {
-    'request energy for 2024.03': {
+    'request max power for 2024.03': {
       id: id$M,
       name: name$M,
       headerSize: headerSize$M,
@@ -3291,24 +3356,25 @@ var logs = '';
         year: 24,
         month: 3
       },
-      bytes: [0x52, 0x02, 0x18, 0x03]
+      bytes: [0x32, 0x02, 0x18, 0x03]
     }
   };
   var fromBytes$M = function fromBytes(bytes) {
-    var buffer = new CommandBinaryBuffer$2(bytes);
+    var _bytes = _slicedToArray(bytes, 2),
+      year = _bytes[0],
+      month = _bytes[1];
     return {
-      year: buffer.getUint8(),
-      month: buffer.getUint8()
+      year: year,
+      month: month
     };
   };
-  var toBytes$M = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$M);
-    buffer.setUint8(parameters.year);
-    buffer.setUint8(parameters.month);
-    return toBytes$16(id$M, buffer.data);
+  var toBytes$M = function toBytes(_ref) {
+    var year = _ref.year,
+      month = _ref.month;
+    return toBytes$17(id$M, [year, month]);
   };
 
-  var getMonthDemandExport$1 = /*#__PURE__*/Object.freeze({
+  var getMonthMaxDemand$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$M,
     examples: examples$M,
@@ -3321,8 +3387,8 @@ var logs = '';
     toBytes: toBytes$M
   });
 
-  var id$L = getMonthMaxDemand$2;
-  var name$L = commandNames$1[getMonthMaxDemand$2];
+  var id$L = getMonthMaxDemandExport$2;
+  var name$L = commandNames$1[getMonthMaxDemandExport$2];
   var headerSize$L = 2;
   var maxSize$L = 2;
   var accessLevel$L = READ_ONLY;
@@ -3338,7 +3404,7 @@ var logs = '';
         year: 24,
         month: 3
       },
-      bytes: [0x32, 0x02, 0x18, 0x03]
+      bytes: [0x59, 0x02, 0x18, 0x03]
     }
   };
   var fromBytes$L = function fromBytes(bytes) {
@@ -3353,10 +3419,10 @@ var logs = '';
   var toBytes$L = function toBytes(_ref) {
     var year = _ref.year,
       month = _ref.month;
-    return toBytes$16(id$L, [year, month]);
+    return toBytes$17(id$L, [year, month]);
   };
 
-  var getMonthMaxDemand$1 = /*#__PURE__*/Object.freeze({
+  var getMonthMaxDemandExport$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$L,
     examples: examples$L,
@@ -3369,42 +3435,34 @@ var logs = '';
     toBytes: toBytes$L
   });
 
-  var id$K = getMonthMaxDemandExport$2;
-  var name$K = commandNames$1[getMonthMaxDemandExport$2];
+  var id$K = getOperatorParameters$2;
+  var name$K = commandNames$1[getOperatorParameters$2];
   var headerSize$K = 2;
-  var maxSize$K = 2;
+  var maxSize$K = 0;
   var accessLevel$K = READ_ONLY;
   var isLoraOnly$K = false;
   var examples$K = {
-    'request max power for 2024.03': {
+    'simple request': {
       id: id$K,
       name: name$K,
       headerSize: headerSize$K,
       maxSize: maxSize$K,
       accessLevel: accessLevel$K,
-      parameters: {
-        year: 24,
-        month: 3
-      },
-      bytes: [0x59, 0x02, 0x18, 0x03]
+      parameters: {},
+      bytes: [0x1e, 0x00]
     }
   };
   var fromBytes$K = function fromBytes(bytes) {
-    var _bytes = _slicedToArray(bytes, 2),
-      year = _bytes[0],
-      month = _bytes[1];
-    return {
-      year: year,
-      month: month
-    };
+    if (bytes.length !== maxSize$K) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    return {};
   };
-  var toBytes$K = function toBytes(_ref) {
-    var year = _ref.year,
-      month = _ref.month;
-    return toBytes$16(id$K, [year, month]);
+  var toBytes$K = function toBytes() {
+    return toBytes$17(id$K);
   };
 
-  var getMonthMaxDemandExport$1 = /*#__PURE__*/Object.freeze({
+  var getOperatorParameters$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$K,
     examples: examples$K,
@@ -3417,8 +3475,8 @@ var logs = '';
     toBytes: toBytes$K
   });
 
-  var id$J = getOperatorParameters$2;
-  var name$J = commandNames$1[getOperatorParameters$2];
+  var id$J = getOperatorParametersExtended3$2;
+  var name$J = commandNames$1[getOperatorParametersExtended3$2];
   var headerSize$J = 2;
   var maxSize$J = 0;
   var accessLevel$J = READ_ONLY;
@@ -3431,7 +3489,7 @@ var logs = '';
       maxSize: maxSize$J,
       accessLevel: accessLevel$J,
       parameters: {},
-      bytes: [0x1e, 0x00]
+      bytes: [0x71, 0x00]
     }
   };
   var fromBytes$J = function fromBytes(bytes) {
@@ -3441,10 +3499,10 @@ var logs = '';
     return {};
   };
   var toBytes$J = function toBytes() {
-    return toBytes$16(id$J);
+    return toBytes$17(id$J);
   };
 
-  var getOperatorParameters$1 = /*#__PURE__*/Object.freeze({
+  var getOperatorParametersExtended3$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$J,
     examples: examples$J,
@@ -3457,34 +3515,35 @@ var logs = '';
     toBytes: toBytes$J
   });
 
-  var id$I = getOperatorParametersExtended3$2;
-  var name$I = commandNames$1[getOperatorParametersExtended3$2];
+  var id$I = getRatePlanInfo$2;
+  var name$I = commandNames$1[getRatePlanInfo$2];
   var headerSize$I = 2;
-  var maxSize$I = 0;
+  var maxSize$I = 1;
   var accessLevel$I = READ_ONLY;
   var isLoraOnly$I = false;
   var examples$I = {
-    'simple request': {
+    'request for table A-': {
       id: id$I,
       name: name$I,
       headerSize: headerSize$I,
       maxSize: maxSize$I,
       accessLevel: accessLevel$I,
-      parameters: {},
-      bytes: [0x71, 0x00]
+      parameters: {
+        tariffTable: 1
+      },
+      bytes: [0x2c, 0x01, 0x01]
     }
   };
   var fromBytes$I = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$I) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
-    return {};
+    return {
+      tariffTable: bytes[0]
+    };
   };
-  var toBytes$I = function toBytes() {
-    return toBytes$16(id$I);
+  var toBytes$I = function toBytes(parameters) {
+    return toBytes$17(id$I, [parameters.tariffTable]);
   };
 
-  var getOperatorParametersExtended3$1 = /*#__PURE__*/Object.freeze({
+  var getRatePlanInfo$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$I,
     examples: examples$I,
@@ -3497,35 +3556,34 @@ var logs = '';
     toBytes: toBytes$I
   });
 
-  var id$H = getRatePlanInfo$2;
-  var name$H = commandNames$1[getRatePlanInfo$2];
+  var id$H = getSaldo$2;
+  var name$H = commandNames$1[getSaldo$2];
   var headerSize$H = 2;
-  var maxSize$H = 1;
+  var maxSize$H = 0;
   var accessLevel$H = READ_ONLY;
   var isLoraOnly$H = false;
   var examples$H = {
-    'request for table A-': {
+    'simple request': {
       id: id$H,
       name: name$H,
       headerSize: headerSize$H,
       maxSize: maxSize$H,
       accessLevel: accessLevel$H,
-      parameters: {
-        tariffTable: 1
-      },
-      bytes: [0x2c, 0x01, 0x01]
+      parameters: {},
+      bytes: [0x29, 0x00]
     }
   };
   var fromBytes$H = function fromBytes(bytes) {
-    return {
-      tariffTable: bytes[0]
-    };
+    if (bytes.length !== maxSize$H) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    return {};
   };
-  var toBytes$H = function toBytes(parameters) {
-    return toBytes$16(id$H, [parameters.tariffTable]);
+  var toBytes$H = function toBytes() {
+    return toBytes$17(id$H);
   };
 
-  var getRatePlanInfo$1 = /*#__PURE__*/Object.freeze({
+  var getSaldo$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$H,
     examples: examples$H,
@@ -3538,8 +3596,8 @@ var logs = '';
     toBytes: toBytes$H
   });
 
-  var id$G = getSaldo$2;
-  var name$G = commandNames$1[getSaldo$2];
+  var id$G = getSaldoParameters$2;
+  var name$G = commandNames$1[getSaldoParameters$2];
   var headerSize$G = 2;
   var maxSize$G = 0;
   var accessLevel$G = READ_ONLY;
@@ -3552,7 +3610,7 @@ var logs = '';
       maxSize: maxSize$G,
       accessLevel: accessLevel$G,
       parameters: {},
-      bytes: [0x29, 0x00]
+      bytes: [0x2e, 0x00]
     }
   };
   var fromBytes$G = function fromBytes(bytes) {
@@ -3562,10 +3620,10 @@ var logs = '';
     return {};
   };
   var toBytes$G = function toBytes() {
-    return toBytes$16(id$G);
+    return toBytes$17(id$G);
   };
 
-  var getSaldo$1 = /*#__PURE__*/Object.freeze({
+  var getSaldoParameters$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$G,
     examples: examples$G,
@@ -3578,34 +3636,47 @@ var logs = '';
     toBytes: toBytes$G
   });
 
-  var id$F = getSaldoParameters$2;
-  var name$F = commandNames$1[getSaldoParameters$2];
+  var id$F = getSeasonProfile$2;
+  var name$F = commandNames$1[getSeasonProfile$2];
   var headerSize$F = 2;
-  var maxSize$F = 0;
+  var maxSize$F = 3;
   var accessLevel$F = READ_ONLY;
   var isLoraOnly$F = false;
   var examples$F = {
-    'simple request': {
+    'request for passive tariff table A+': {
       id: id$F,
       name: name$F,
       headerSize: headerSize$F,
       maxSize: maxSize$F,
       accessLevel: accessLevel$F,
-      parameters: {},
-      bytes: [0x2e, 0x00]
+      parameters: {
+        tariffTable: 0,
+        index: 5,
+        isActive: false
+      },
+      bytes: [0x3c, 0x03, 0x00, 0x05, 0x01]
     }
   };
-  var fromBytes$F = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$F) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
-    return {};
+  var fromBytes$F = function fromBytes(_ref) {
+    var _ref2 = _slicedToArray(_ref, 3),
+      tariffTable = _ref2[0],
+      index = _ref2[1],
+      isActive = _ref2[2];
+    return {
+      tariffTable: tariffTable,
+      index: index,
+      isActive: isActive === 0
+    };
   };
-  var toBytes$F = function toBytes() {
-    return toBytes$16(id$F);
+  var toBytes$F = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$F);
+    buffer.setUint8(parameters.tariffTable);
+    buffer.setUint8(parameters.index);
+    buffer.setUint8(parameters.isActive ? 0 : 1);
+    return toBytes$17(id$F, buffer.data);
   };
 
-  var getSaldoParameters$1 = /*#__PURE__*/Object.freeze({
+  var getSeasonProfile$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$F,
     examples: examples$F,
@@ -3618,8 +3689,8 @@ var logs = '';
     toBytes: toBytes$F
   });
 
-  var id$E = getSeasonProfile$2;
-  var name$E = commandNames$1[getSeasonProfile$2];
+  var id$E = getSpecialDay$2;
+  var name$E = commandNames$1[getSpecialDay$2];
   var headerSize$E = 2;
   var maxSize$E = 3;
   var accessLevel$E = READ_ONLY;
@@ -3636,7 +3707,7 @@ var logs = '';
         index: 5,
         isActive: false
       },
-      bytes: [0x3c, 0x03, 0x00, 0x05, 0x01]
+      bytes: [0x3d, 0x03, 0x00, 0x05, 0x01]
     }
   };
   var fromBytes$E = function fromBytes(_ref) {
@@ -3655,10 +3726,10 @@ var logs = '';
     buffer.setUint8(parameters.tariffTable);
     buffer.setUint8(parameters.index);
     buffer.setUint8(parameters.isActive ? 0 : 1);
-    return toBytes$16(id$E, buffer.data);
+    return toBytes$17(id$E, buffer.data);
   };
 
-  var getSeasonProfile$1 = /*#__PURE__*/Object.freeze({
+  var getSpecialDay$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$E,
     examples: examples$E,
@@ -3671,47 +3742,34 @@ var logs = '';
     toBytes: toBytes$E
   });
 
-  var id$D = getSpecialDay$2;
-  var name$D = commandNames$1[getSpecialDay$2];
+  var id$D = getVersion$2;
+  var name$D = commandNames$1[getVersion$2];
   var headerSize$D = 2;
-  var maxSize$D = 3;
+  var maxSize$D = 0;
   var accessLevel$D = READ_ONLY;
   var isLoraOnly$D = false;
   var examples$D = {
-    'request for passive tariff table A+': {
+    'simple request': {
       id: id$D,
       name: name$D,
       headerSize: headerSize$D,
       maxSize: maxSize$D,
       accessLevel: accessLevel$D,
-      parameters: {
-        tariffTable: 0,
-        index: 5,
-        isActive: false
-      },
-      bytes: [0x3d, 0x03, 0x00, 0x05, 0x01]
+      parameters: {},
+      bytes: [0x28, 0x00]
     }
   };
-  var fromBytes$D = function fromBytes(_ref) {
-    var _ref2 = _slicedToArray(_ref, 3),
-      tariffTable = _ref2[0],
-      index = _ref2[1],
-      isActive = _ref2[2];
-    return {
-      tariffTable: tariffTable,
-      index: index,
-      isActive: isActive === 0
-    };
+  var fromBytes$D = function fromBytes(bytes) {
+    if (bytes.length !== maxSize$D) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    return {};
   };
-  var toBytes$D = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$D);
-    buffer.setUint8(parameters.tariffTable);
-    buffer.setUint8(parameters.index);
-    buffer.setUint8(parameters.isActive ? 0 : 1);
-    return toBytes$16(id$D, buffer.data);
+  var toBytes$D = function toBytes() {
+    return toBytes$17(id$D);
   };
 
-  var getSpecialDay$1 = /*#__PURE__*/Object.freeze({
+  var getVersion$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$D,
     examples: examples$D,
@@ -3724,34 +3782,41 @@ var logs = '';
     toBytes: toBytes$D
   });
 
-  var id$C = getVersion$2;
-  var name$C = commandNames$1[getVersion$2];
+  var id$C = prepareRatePlan$2;
+  var name$C = commandNames$1[prepareRatePlan$2];
   var headerSize$C = 2;
-  var maxSize$C = 0;
-  var accessLevel$C = READ_ONLY;
+  var maxSize$C = 5;
+  var accessLevel$C = READ_WRITE;
   var isLoraOnly$C = false;
   var examples$C = {
-    'simple request': {
+    'prepare rate plan request': {
       id: id$C,
       name: name$C,
       headerSize: headerSize$C,
       maxSize: maxSize$C,
       accessLevel: accessLevel$C,
-      parameters: {},
-      bytes: [0x28, 0x00]
+      parameters: {
+        tariffTable: 0,
+        id: 987654321
+      },
+      bytes: [0x14, 0x05, 0x00, 0x3a, 0xde, 0x68, 0xb1]
     }
   };
   var fromBytes$C = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$C) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
-    return {};
+    var buffer = new CommandBinaryBuffer$2(bytes);
+    return {
+      tariffTable: buffer.getUint8(),
+      id: buffer.getUint32()
+    };
   };
-  var toBytes$C = function toBytes() {
-    return toBytes$16(id$C);
+  var toBytes$C = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$C);
+    buffer.setUint8(parameters.tariffTable);
+    buffer.setUint32(parameters.id);
+    return toBytes$17(id$C, buffer.data);
   };
 
-  var getVersion$1 = /*#__PURE__*/Object.freeze({
+  var prepareRatePlan$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$C,
     examples: examples$C,
@@ -3764,41 +3829,34 @@ var logs = '';
     toBytes: toBytes$C
   });
 
-  var id$B = prepareRatePlan$2;
-  var name$B = commandNames$1[prepareRatePlan$2];
+  var id$B = resetPowerMaxDay$2;
+  var name$B = commandNames$1[resetPowerMaxDay$2];
   var headerSize$B = 2;
-  var maxSize$B = 5;
+  var maxSize$B = 0;
   var accessLevel$B = READ_WRITE;
   var isLoraOnly$B = false;
   var examples$B = {
-    'prepare rate plan request': {
+    'simple request': {
       id: id$B,
       name: name$B,
       headerSize: headerSize$B,
       maxSize: maxSize$B,
       accessLevel: accessLevel$B,
-      parameters: {
-        tariffTable: 0,
-        id: 987654321
-      },
-      bytes: [0x14, 0x05, 0x00, 0x3a, 0xde, 0x68, 0xb1]
+      parameters: {},
+      bytes: [0x35, 0x00]
     }
   };
   var fromBytes$B = function fromBytes(bytes) {
-    var buffer = new CommandBinaryBuffer$2(bytes);
-    return {
-      tariffTable: buffer.getUint8(),
-      id: buffer.getUint32()
-    };
+    if (bytes.length !== maxSize$B) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    return {};
   };
-  var toBytes$B = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$B);
-    buffer.setUint8(parameters.tariffTable);
-    buffer.setUint32(parameters.id);
-    return toBytes$16(id$B, buffer.data);
+  var toBytes$B = function toBytes() {
+    return toBytes$17(id$B);
   };
 
-  var prepareRatePlan$1 = /*#__PURE__*/Object.freeze({
+  var resetPowerMaxDay$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$B,
     examples: examples$B,
@@ -3811,8 +3869,8 @@ var logs = '';
     toBytes: toBytes$B
   });
 
-  var id$A = resetPowerMaxDay$2;
-  var name$A = commandNames$1[resetPowerMaxDay$2];
+  var id$A = resetPowerMaxMonth$2;
+  var name$A = commandNames$1[resetPowerMaxMonth$2];
   var headerSize$A = 2;
   var maxSize$A = 0;
   var accessLevel$A = READ_WRITE;
@@ -3825,7 +3883,7 @@ var logs = '';
       maxSize: maxSize$A,
       accessLevel: accessLevel$A,
       parameters: {},
-      bytes: [0x35, 0x00]
+      bytes: [0x36, 0x00]
     }
   };
   var fromBytes$A = function fromBytes(bytes) {
@@ -3835,10 +3893,10 @@ var logs = '';
     return {};
   };
   var toBytes$A = function toBytes() {
-    return toBytes$16(id$A);
+    return toBytes$17(id$A);
   };
 
-  var resetPowerMaxDay$1 = /*#__PURE__*/Object.freeze({
+  var resetPowerMaxMonth$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$A,
     examples: examples$A,
@@ -3851,10 +3909,10 @@ var logs = '';
     toBytes: toBytes$A
   });
 
-  var id$z = resetPowerMaxMonth$2;
-  var name$z = commandNames$1[resetPowerMaxMonth$2];
+  var id$z = runTariffPlan$2;
+  var name$z = commandNames$1[runTariffPlan$2];
   var headerSize$z = 2;
-  var maxSize$z = 0;
+  var maxSize$z = 1;
   var accessLevel$z = READ_WRITE;
   var isLoraOnly$z = false;
   var examples$z = {
@@ -3864,21 +3922,22 @@ var logs = '';
       headerSize: headerSize$z,
       maxSize: maxSize$z,
       accessLevel: accessLevel$z,
-      parameters: {},
-      bytes: [0x36, 0x00]
+      parameters: {
+        tariffTable: 5
+      },
+      bytes: [0x46, 0x01, 0x05]
     }
   };
   var fromBytes$z = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$z) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
-    return {};
+    return {
+      tariffTable: bytes[0]
+    };
   };
-  var toBytes$z = function toBytes() {
-    return toBytes$16(id$z);
+  var toBytes$z = function toBytes(parameters) {
+    return toBytes$17(id$z, [parameters.tariffTable]);
   };
 
-  var resetPowerMaxMonth$1 = /*#__PURE__*/Object.freeze({
+  var runTariffPlan$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$z,
     examples: examples$z,
@@ -3891,35 +3950,42 @@ var logs = '';
     toBytes: toBytes$z
   });
 
-  var id$y = runTariffPlan$2;
-  var name$y = commandNames$1[runTariffPlan$2];
+  var KEY_SIZE = 16;
+  var id$y = setAccessKey$2;
+  var name$y = commandNames$1[setAccessKey$2];
   var headerSize$y = 2;
-  var maxSize$y = 1;
+  var maxSize$y = 1 + KEY_SIZE;
   var accessLevel$y = READ_WRITE;
   var isLoraOnly$y = false;
   var examples$y = {
-    'simple request': {
+    'set key for READ_ONLY access level': {
       id: id$y,
       name: name$y,
       headerSize: headerSize$y,
       maxSize: maxSize$y,
       accessLevel: accessLevel$y,
       parameters: {
-        tariffTable: 5
+        accessLevel: READ_ONLY,
+        key: [0, 1, 2, 3, 4, 5, 6, 7, 7, 6, 5, 4, 3, 2, 1, 0]
       },
-      bytes: [0x46, 0x01, 0x05]
+      bytes: [0x09, 0x11, 0x03, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00]
     }
   };
   var fromBytes$y = function fromBytes(bytes) {
+    var buffer = new CommandBinaryBuffer$2(bytes);
     return {
-      tariffTable: bytes[0]
+      accessLevel: buffer.getUint8(),
+      key: buffer.getBytes(KEY_SIZE)
     };
   };
   var toBytes$y = function toBytes(parameters) {
-    return toBytes$16(id$y, [parameters.tariffTable]);
+    var buffer = new CommandBinaryBuffer$2(maxSize$y);
+    buffer.setUint8(parameters.accessLevel);
+    buffer.setBytes(parameters.key);
+    return toBytes$17(id$y, buffer.data);
   };
 
-  var runTariffPlan$1 = /*#__PURE__*/Object.freeze({
+  var setAccessKey$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$y,
     examples: examples$y,
@@ -3932,42 +3998,51 @@ var logs = '';
     toBytes: toBytes$y
   });
 
-  var KEY_SIZE = 16;
-  var id$x = setAccessKey$2;
-  var name$x = commandNames$1[setAccessKey$2];
+  var id$x = setCorrectDateTime$2;
+  var name$x = commandNames$1[setCorrectDateTime$2];
   var headerSize$x = 2;
-  var maxSize$x = 1 + KEY_SIZE;
-  var accessLevel$x = READ_WRITE;
+  var maxSize$x = 2;
+  var accessLevel$x = READ_ONLY;
   var isLoraOnly$x = false;
   var examples$x = {
-    'set key for READ_ONLY access level': {
+    'shift device time 5 seconds forward': {
       id: id$x,
       name: name$x,
       headerSize: headerSize$x,
       maxSize: maxSize$x,
       accessLevel: accessLevel$x,
       parameters: {
-        accessLevel: READ_ONLY,
-        key: [0, 1, 2, 3, 4, 5, 6, 7, 7, 6, 5, 4, 3, 2, 1, 0]
+        seconds: 5
       },
-      bytes: [0x09, 0x11, 0x03, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00]
+      bytes: [0x5c, 0x02, 0x00, 0x05]
+    },
+    'shift device time 5 seconds backward': {
+      id: id$x,
+      name: name$x,
+      headerSize: headerSize$x,
+      maxSize: maxSize$x,
+      parameters: {
+        seconds: -5
+      },
+      bytes: [0x5c, 0x02, 0xff, 0xfb]
     }
   };
   var fromBytes$x = function fromBytes(bytes) {
+    if (bytes.length !== maxSize$x) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
     var buffer = new CommandBinaryBuffer$2(bytes);
     return {
-      accessLevel: buffer.getUint8(),
-      key: buffer.getBytes(KEY_SIZE)
+      seconds: buffer.getInt16()
     };
   };
   var toBytes$x = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$x);
-    buffer.setUint8(parameters.accessLevel);
-    buffer.setBytes(parameters.key);
-    return toBytes$16(id$x, buffer.data);
+    buffer.setInt16(parameters.seconds);
+    return toBytes$17(id$x, buffer.data);
   };
 
-  var setAccessKey$1 = /*#__PURE__*/Object.freeze({
+  var setCorrectDateTime$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$x,
     examples: examples$x,
@@ -3980,76 +4055,19 @@ var logs = '';
     toBytes: toBytes$x
   });
 
-  var id$w = setCorrectDateTime$2;
-  var name$w = commandNames$1[setCorrectDateTime$2];
+  var id$w = setCorrectTime$2;
+  var name$w = commandNames$1[setCorrectTime$2];
   var headerSize$w = 2;
-  var maxSize$w = 2;
-  var accessLevel$w = READ_ONLY;
+  var maxSize$w = 9;
+  var accessLevel$w = READ_WRITE;
   var isLoraOnly$w = false;
   var examples$w = {
-    'shift device time 5 seconds forward': {
+    'default parameters': {
       id: id$w,
       name: name$w,
       headerSize: headerSize$w,
       maxSize: maxSize$w,
       accessLevel: accessLevel$w,
-      parameters: {
-        seconds: 5
-      },
-      bytes: [0x5c, 0x02, 0x00, 0x05]
-    },
-    'shift device time 5 seconds backward': {
-      id: id$w,
-      name: name$w,
-      headerSize: headerSize$w,
-      maxSize: maxSize$w,
-      parameters: {
-        seconds: -5
-      },
-      bytes: [0x5c, 0x02, 0xff, 0xfb]
-    }
-  };
-  var fromBytes$w = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$w) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
-    var buffer = new CommandBinaryBuffer$2(bytes);
-    return {
-      seconds: buffer.getInt16()
-    };
-  };
-  var toBytes$w = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$w);
-    buffer.setInt16(parameters.seconds);
-    return toBytes$16(id$w, buffer.data);
-  };
-
-  var setCorrectDateTime$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    accessLevel: accessLevel$w,
-    examples: examples$w,
-    fromBytes: fromBytes$w,
-    headerSize: headerSize$w,
-    id: id$w,
-    isLoraOnly: isLoraOnly$w,
-    maxSize: maxSize$w,
-    name: name$w,
-    toBytes: toBytes$w
-  });
-
-  var id$v = setCorrectTime$2;
-  var name$v = commandNames$1[setCorrectTime$2];
-  var headerSize$v = 2;
-  var maxSize$v = 9;
-  var accessLevel$v = READ_WRITE;
-  var isLoraOnly$v = false;
-  var examples$v = {
-    'default parameters': {
-      id: id$v,
-      name: name$v,
-      headerSize: headerSize$v,
-      maxSize: maxSize$v,
-      accessLevel: accessLevel$v,
       parameters: {
         monthTransitionSummer: 3,
         dateTransitionSummer: 0,
@@ -4064,45 +4082,45 @@ var logs = '';
       bytes: [0x1c, 0x09, 0x03, 0x00, 0x03, 0x01, 0x0a, 0x00, 0x04, 0x01, 0x01]
     }
   };
-  var fromBytes$v = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$v) {
+  var fromBytes$w = function fromBytes(bytes) {
+    if (bytes.length !== maxSize$w) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
     var buffer = new CommandBinaryBuffer$2(bytes);
     return buffer.getTimeCorrectionParameters();
   };
-  var toBytes$v = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$v);
+  var toBytes$w = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$w);
     buffer.setTimeCorrectionParameters(parameters);
-    return toBytes$16(id$v, buffer.data);
+    return toBytes$17(id$w, buffer.data);
   };
 
   var setCorrectTime$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    accessLevel: accessLevel$v,
-    examples: examples$v,
-    fromBytes: fromBytes$v,
-    headerSize: headerSize$v,
-    id: id$v,
-    isLoraOnly: isLoraOnly$v,
-    maxSize: maxSize$v,
-    name: name$v,
-    toBytes: toBytes$v
+    accessLevel: accessLevel$w,
+    examples: examples$w,
+    fromBytes: fromBytes$w,
+    headerSize: headerSize$w,
+    id: id$w,
+    isLoraOnly: isLoraOnly$w,
+    maxSize: maxSize$w,
+    name: name$w,
+    toBytes: toBytes$w
   });
 
-  var id$u = setDateTime$2;
-  var name$u = commandNames$1[setDateTime$2];
-  var headerSize$u = 2;
-  var maxSize$u = 8;
-  var accessLevel$u = READ_ONLY;
-  var isLoraOnly$u = false;
-  var examples$u = {
+  var id$v = setDateTime$2;
+  var name$v = commandNames$1[setDateTime$2];
+  var headerSize$v = 2;
+  var maxSize$v = 8;
+  var accessLevel$v = READ_ONLY;
+  var isLoraOnly$v = false;
+  var examples$v = {
     'time: 2024.02.19 18:31:55': {
-      id: id$u,
-      name: name$u,
-      headerSize: headerSize$u,
-      maxSize: maxSize$u,
-      accessLevel: accessLevel$u,
+      id: id$v,
+      name: name$v,
+      headerSize: headerSize$v,
+      maxSize: maxSize$v,
+      accessLevel: accessLevel$v,
       parameters: {
         isSummerTime: false,
         seconds: 55,
@@ -4116,44 +4134,44 @@ var logs = '';
       bytes: [0x08, 0x08, 0x00, 0x37, 0x1f, 0x12, 0x02, 0x13, 0x02, 0x18]
     }
   };
-  var fromBytes$u = function fromBytes(bytes) {
+  var fromBytes$v = function fromBytes(bytes) {
     var buffer = new CommandBinaryBuffer$2(bytes);
     return buffer.getDateTime();
   };
-  var toBytes$u = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$u);
+  var toBytes$v = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$v);
     buffer.setDateTime(parameters);
-    return toBytes$16(id$u, buffer.data);
+    return toBytes$17(id$v, buffer.data);
   };
 
   var setDateTime$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    accessLevel: accessLevel$u,
-    examples: examples$u,
-    fromBytes: fromBytes$u,
-    headerSize: headerSize$u,
-    id: id$u,
-    isLoraOnly: isLoraOnly$u,
-    maxSize: maxSize$u,
-    name: name$u,
-    toBytes: toBytes$u
+    accessLevel: accessLevel$v,
+    examples: examples$v,
+    fromBytes: fromBytes$v,
+    headerSize: headerSize$v,
+    id: id$v,
+    isLoraOnly: isLoraOnly$v,
+    maxSize: maxSize$v,
+    name: name$v,
+    toBytes: toBytes$v
   });
 
   var MAX_PERIODS_NUMBER = 8;
   var PERIODS_FINAL_BYTE = 0xff;
-  var id$t = setDayProfile$2;
-  var name$t = commandNames$1[setDayProfile$2];
-  var headerSize$t = 2;
-  var maxSize$t = 2 + MAX_PERIODS_NUMBER;
-  var accessLevel$t = READ_WRITE;
-  var isLoraOnly$t = false;
-  var examples$t = {
+  var id$u = setDayProfile$2;
+  var name$u = commandNames$1[setDayProfile$2];
+  var headerSize$u = 2;
+  var maxSize$u = 2 + MAX_PERIODS_NUMBER;
+  var accessLevel$u = READ_WRITE;
+  var isLoraOnly$u = false;
+  var examples$u = {
     'set day profile with 1 period': {
-      id: id$t,
-      name: name$t,
-      headerSize: headerSize$t,
-      maxSize: maxSize$t,
-      accessLevel: accessLevel$t,
+      id: id$u,
+      name: name$u,
+      headerSize: headerSize$u,
+      maxSize: maxSize$u,
+      accessLevel: accessLevel$u,
       parameters: {
         tariffTable: 0,
         index: 3,
@@ -4166,11 +4184,11 @@ var logs = '';
       bytes: [0x10, 0x04, 0x00, 0x03, 0x10, 0xff]
     },
     'set day profile with 4 periods': {
-      id: id$t,
-      name: name$t,
-      headerSize: headerSize$t,
-      maxSize: maxSize$t,
-      accessLevel: accessLevel$t,
+      id: id$u,
+      name: name$u,
+      headerSize: headerSize$u,
+      maxSize: maxSize$u,
+      accessLevel: accessLevel$u,
       parameters: {
         tariffTable: 0,
         index: 5,
@@ -4195,11 +4213,11 @@ var logs = '';
       bytes: [0x10, 0x07, 0x00, 0x05, 0x10, 0x1d, 0x22, 0x2f, 0xff]
     },
     'set day profile with max periods': {
-      id: id$t,
-      name: name$t,
-      headerSize: headerSize$t,
-      maxSize: maxSize$t,
-      accessLevel: accessLevel$t,
+      id: id$u,
+      name: name$u,
+      headerSize: headerSize$u,
+      maxSize: maxSize$u,
+      accessLevel: accessLevel$u,
       parameters: {
         tariffTable: 0,
         index: 3,
@@ -4240,7 +4258,7 @@ var logs = '';
       bytes: [0x10, 0x0a, 0x00, 0x03, 0x10, 0x1d, 0x22, 0x2f, 0x30, 0x3d, 0x46, 0x4b]
     }
   };
-  var fromBytes$t = function fromBytes(bytes) {
+  var fromBytes$u = function fromBytes(bytes) {
     var finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE);
     var cleanBytes = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
     var buffer = new CommandBinaryBuffer$2(cleanBytes);
@@ -4250,7 +4268,7 @@ var logs = '';
       periods: _toConsumableArray(cleanBytes.slice(buffer.offset)).map(CommandBinaryBuffer$2.getDayProfileFromByte)
     };
   };
-  var toBytes$t = function toBytes(parameters) {
+  var toBytes$u = function toBytes(parameters) {
     var hasPeriodsFinalByte = parameters.periods.length < MAX_PERIODS_NUMBER;
     var size = 2 + parameters.periods.length + +hasPeriodsFinalByte;
     var buffer = new CommandBinaryBuffer$2(size);
@@ -4262,35 +4280,35 @@ var logs = '';
     if (hasPeriodsFinalByte) {
       buffer.setUint8(PERIODS_FINAL_BYTE);
     }
-    return toBytes$16(id$t, buffer.data);
+    return toBytes$17(id$u, buffer.data);
   };
 
   var setDayProfile$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    accessLevel: accessLevel$t,
-    examples: examples$t,
-    fromBytes: fromBytes$t,
-    headerSize: headerSize$t,
-    id: id$t,
-    isLoraOnly: isLoraOnly$t,
-    maxSize: maxSize$t,
-    name: name$t,
-    toBytes: toBytes$t
+    accessLevel: accessLevel$u,
+    examples: examples$u,
+    fromBytes: fromBytes$u,
+    headerSize: headerSize$u,
+    id: id$u,
+    isLoraOnly: isLoraOnly$u,
+    maxSize: maxSize$u,
+    name: name$u,
+    toBytes: toBytes$u
   });
 
-  var id$s = setOperatorParametersExtended3$2;
-  var name$s = commandNames$1[setOperatorParametersExtended3$2];
-  var headerSize$s = 2;
-  var maxSize$s = 17;
-  var accessLevel$s = READ_WRITE;
-  var isLoraOnly$s = false;
-  var examples$s = {
+  var id$t = setOperatorParametersExtended3$2;
+  var name$t = commandNames$1[setOperatorParametersExtended3$2];
+  var headerSize$t = 2;
+  var maxSize$t = 17;
+  var accessLevel$t = READ_WRITE;
+  var isLoraOnly$t = false;
+  var examples$t = {
     'simple request': {
-      id: id$s,
-      name: name$s,
-      headerSize: headerSize$s,
-      maxSize: maxSize$s,
-      accessLevel: accessLevel$s,
+      id: id$t,
+      name: name$t,
+      headerSize: headerSize$t,
+      maxSize: maxSize$t,
+      accessLevel: accessLevel$t,
       parameters: {
         pmaxMinusThreshold0: 100,
         pmaxMinusThreshold1: 200,
@@ -4303,45 +4321,45 @@ var logs = '';
           RELAY_OFF_LIMIT_P_MINUS_T4: false
         }
       },
-      bytes: [0x72, 0x11, 0x00, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00, 0xc8, 0x00, 0x00, 0x01, 0x2c, 0x00, 0x00, 0x01, 0x90, 0x14]
+      bytes: [0x72, 0x11, 0x00, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00, 0xc8, 0x00, 0x00, 0x01, 0x2c, 0x00, 0x00, 0x01, 0x90, 0x28]
     }
   };
-  var fromBytes$s = function fromBytes(bytes) {
+  var fromBytes$t = function fromBytes(bytes) {
     var buffer = new CommandBinaryBuffer$2(bytes);
     return buffer.getOperatorParametersExtended3();
   };
-  var toBytes$s = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$s);
+  var toBytes$t = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$t);
     buffer.setOperatorParametersExtended3(parameters);
-    return toBytes$16(id$s, buffer.data);
+    return toBytes$17(id$t, buffer.data);
   };
 
   var setOperatorParametersExtended3$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    accessLevel: accessLevel$s,
-    examples: examples$s,
-    fromBytes: fromBytes$s,
-    headerSize: headerSize$s,
-    id: id$s,
-    isLoraOnly: isLoraOnly$s,
-    maxSize: maxSize$s,
-    name: name$s,
-    toBytes: toBytes$s
+    accessLevel: accessLevel$t,
+    examples: examples$t,
+    fromBytes: fromBytes$t,
+    headerSize: headerSize$t,
+    id: id$t,
+    isLoraOnly: isLoraOnly$t,
+    maxSize: maxSize$t,
+    name: name$t,
+    toBytes: toBytes$t
   });
 
-  var id$r = setSaldo$2;
-  var name$r = commandNames$1[setSaldo$2];
-  var headerSize$r = 2;
-  var maxSize$r = 12;
-  var accessLevel$r = READ_WRITE;
-  var isLoraOnly$r = false;
-  var examples$r = {
+  var id$s = setSaldo$2;
+  var name$s = commandNames$1[setSaldo$2];
+  var headerSize$s = 2;
+  var maxSize$s = 12;
+  var accessLevel$s = READ_WRITE;
+  var isLoraOnly$s = false;
+  var examples$s = {
     'test request': {
-      id: id$r,
-      name: name$r,
-      headerSize: headerSize$r,
-      maxSize: maxSize$r,
-      accessLevel: accessLevel$r,
+      id: id$s,
+      name: name$s,
+      headerSize: headerSize$s,
+      maxSize: maxSize$s,
+      accessLevel: accessLevel$s,
       parameters: {
         date: {
           month: 9,
@@ -4355,7 +4373,7 @@ var logs = '';
       bytes: [0x2a, 0x0c, 0x09, 0x17, 0x06, 0x23, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x05]
     }
   };
-  var fromBytes$r = function fromBytes(bytes) {
+  var fromBytes$s = function fromBytes(bytes) {
     var buffer = new CommandBinaryBuffer$2(bytes);
     return {
       date: {
@@ -4368,43 +4386,43 @@ var logs = '';
       saldoOld: buffer.getInt32()
     };
   };
-  var toBytes$r = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$r);
+  var toBytes$s = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$s);
     buffer.setUint8(parameters.date.month);
     buffer.setUint8(parameters.date.date);
     buffer.setUint8(parameters.date.hours);
     buffer.setUint8(parameters.date.minutes);
     buffer.setInt32(parameters.saldoNew);
     buffer.setInt32(parameters.saldoOld);
-    return toBytes$16(id$r, buffer.data);
+    return toBytes$17(id$s, buffer.data);
   };
 
   var setSaldo$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    accessLevel: accessLevel$r,
-    examples: examples$r,
-    fromBytes: fromBytes$r,
-    headerSize: headerSize$r,
-    id: id$r,
-    isLoraOnly: isLoraOnly$r,
-    maxSize: maxSize$r,
-    name: name$r,
-    toBytes: toBytes$r
+    accessLevel: accessLevel$s,
+    examples: examples$s,
+    fromBytes: fromBytes$s,
+    headerSize: headerSize$s,
+    id: id$s,
+    isLoraOnly: isLoraOnly$s,
+    maxSize: maxSize$s,
+    name: name$s,
+    toBytes: toBytes$s
   });
 
-  var id$q = setSaldoParameters$2;
-  var name$q = commandNames$1[setSaldoParameters$2];
-  var headerSize$q = 2;
-  var maxSize$q = 37;
-  var accessLevel$q = READ_WRITE;
-  var isLoraOnly$q = false;
-  var examples$q = {
+  var id$r = setSaldoParameters$2;
+  var name$r = commandNames$1[setSaldoParameters$2];
+  var headerSize$r = 2;
+  var maxSize$r = 37;
+  var accessLevel$r = READ_WRITE;
+  var isLoraOnly$r = false;
+  var examples$r = {
     'test parameters': {
-      id: id$q,
-      name: name$q,
-      headerSize: headerSize$q,
-      maxSize: maxSize$q,
-      accessLevel: accessLevel$q,
+      id: id$r,
+      name: name$r,
+      headerSize: headerSize$r,
+      maxSize: maxSize$r,
+      accessLevel: accessLevel$r,
       parameters: {
         coefficients: [2, 3, 4, 5],
         decimalPointTariff: 6,
@@ -4420,17 +4438,83 @@ var logs = '';
       bytes: [0x2f, 0x25, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x05, 0x06, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x00, 0x00, 0x00, 0x0d, 0x00, 0x00, 0x00, 0x0e]
     }
   };
-  var fromBytes$q = function fromBytes(bytes) {
+  var fromBytes$r = function fromBytes(bytes) {
     var buffer = new CommandBinaryBuffer$2(bytes);
     return buffer.getSaldoParameters();
   };
-  var toBytes$q = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$q);
+  var toBytes$r = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$r);
     buffer.setSaldoParameters(parameters);
-    return toBytes$16(id$q, buffer.data);
+    return toBytes$17(id$r, buffer.data);
   };
 
   var setSaldoParameters$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    accessLevel: accessLevel$r,
+    examples: examples$r,
+    fromBytes: fromBytes$r,
+    headerSize: headerSize$r,
+    id: id$r,
+    isLoraOnly: isLoraOnly$r,
+    maxSize: maxSize$r,
+    name: name$r,
+    toBytes: toBytes$r
+  });
+
+  var id$q = setSeasonProfile$2;
+  var name$q = commandNames$1[setSeasonProfile$2];
+  var headerSize$q = 2;
+  var maxSize$q = SEASON_PROFILE_SIZE;
+  var accessLevel$q = READ_WRITE;
+  var isLoraOnly$q = false;
+  var examples$q = {
+    'set default season profile': {
+      id: id$q,
+      name: name$q,
+      headerSize: headerSize$q,
+      maxSize: maxSize$q,
+      accessLevel: accessLevel$q,
+      parameters: {
+        tariffTable: 1,
+        index: 8,
+        month: 1,
+        date: 1,
+        dayIndexes: [0, 0, 0, 0, 0, 0, 0]
+      },
+      bytes: [0x11, 0x0b, 0x01, 0x08, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+    },
+    'set some season profile': {
+      id: id$q,
+      name: name$q,
+      headerSize: headerSize$q,
+      maxSize: maxSize$q,
+      accessLevel: accessLevel$q,
+      parameters: {
+        tariffTable: 0,
+        index: 2,
+        month: 5,
+        date: 9,
+        dayIndexes: [0, 1, 2, 3, 4, 5, 6]
+      },
+      bytes: [0x11, 0x0b, 0x00, 0x02, 0x05, 0x09, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06]
+    }
+  };
+  var fromBytes$q = function fromBytes(bytes) {
+    var buffer = new CommandBinaryBuffer$2(bytes);
+    return _objectSpread2({
+      tariffTable: buffer.getUint8(),
+      index: buffer.getUint8()
+    }, buffer.getSeasonProfile());
+  };
+  var toBytes$q = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$q);
+    buffer.setUint8(parameters.tariffTable);
+    buffer.setUint8(parameters.index);
+    buffer.setSeasonProfile(parameters);
+    return toBytes$17(id$q, buffer.data);
+  };
+
+  var setSeasonProfile$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$q,
     examples: examples$q,
@@ -4443,14 +4527,14 @@ var logs = '';
     toBytes: toBytes$q
   });
 
-  var id$p = setSeasonProfile$2;
-  var name$p = commandNames$1[setSeasonProfile$2];
+  var id$p = setSpecialDay$2;
+  var name$p = commandNames$1[setSpecialDay$2];
   var headerSize$p = 2;
-  var maxSize$p = SEASON_PROFILE_SIZE;
+  var maxSize$p = 6;
   var accessLevel$p = READ_WRITE;
   var isLoraOnly$p = false;
   var examples$p = {
-    'set default season profile': {
+    'set special day': {
       id: id$p,
       name: name$p,
       headerSize: headerSize$p,
@@ -4458,27 +4542,13 @@ var logs = '';
       accessLevel: accessLevel$p,
       parameters: {
         tariffTable: 1,
-        index: 8,
+        index: 5,
         month: 1,
-        date: 1,
-        dayIndexes: [0, 0, 0, 0, 0, 0, 0]
-      },
-      bytes: [0x11, 0x0b, 0x01, 0x08, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-    },
-    'set some season profile': {
-      id: id$p,
-      name: name$p,
-      headerSize: headerSize$p,
-      maxSize: maxSize$p,
-      accessLevel: accessLevel$p,
-      parameters: {
-        tariffTable: 0,
-        index: 2,
-        month: 5,
         date: 9,
-        dayIndexes: [0, 1, 2, 3, 4, 5, 6]
+        dayIndex: 3,
+        isPeriodic: true
       },
-      bytes: [0x11, 0x0b, 0x00, 0x02, 0x05, 0x09, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06]
+      bytes: [0x12, 0x06, 0x01, 0x05, 0x01, 0x09, 0x03, 0x00]
     }
   };
   var fromBytes$p = function fromBytes(bytes) {
@@ -4486,17 +4556,17 @@ var logs = '';
     return _objectSpread2({
       tariffTable: buffer.getUint8(),
       index: buffer.getUint8()
-    }, buffer.getSeasonProfile());
+    }, buffer.getSpecialDay());
   };
   var toBytes$p = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer$2(maxSize$p);
     buffer.setUint8(parameters.tariffTable);
     buffer.setUint8(parameters.index);
-    buffer.setSeasonProfile(parameters);
-    return toBytes$16(id$p, buffer.data);
+    buffer.setSpecialDay(parameters);
+    return toBytes$17(id$p, buffer.data);
   };
 
-  var setSeasonProfile$1 = /*#__PURE__*/Object.freeze({
+  var setSpecialDay$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$p,
     examples: examples$p,
@@ -4509,73 +4579,21 @@ var logs = '';
     toBytes: toBytes$p
   });
 
-  var id$o = setSpecialDay$2;
-  var name$o = commandNames$1[setSpecialDay$2];
+  var RESET_INFLUENCE_SCREENS = 0x55;
+
+  var id$o = setSpecialOperation$2;
+  var name$o = commandNames$1[setSpecialOperation$2];
   var headerSize$o = 2;
-  var maxSize$o = 6;
+  var maxSize$o = 2;
   var accessLevel$o = READ_WRITE;
   var isLoraOnly$o = false;
   var examples$o = {
-    'set special day': {
+    'read screens info': {
       id: id$o,
       name: name$o,
       headerSize: headerSize$o,
       maxSize: maxSize$o,
       accessLevel: accessLevel$o,
-      parameters: {
-        tariffTable: 1,
-        index: 5,
-        month: 1,
-        date: 9,
-        dayIndex: 3,
-        isPeriodic: true
-      },
-      bytes: [0x12, 0x06, 0x01, 0x05, 0x01, 0x09, 0x03, 0x00]
-    }
-  };
-  var fromBytes$o = function fromBytes(bytes) {
-    var buffer = new CommandBinaryBuffer$2(bytes);
-    return _objectSpread2({
-      tariffTable: buffer.getUint8(),
-      index: buffer.getUint8()
-    }, buffer.getSpecialDay());
-  };
-  var toBytes$o = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$o);
-    buffer.setUint8(parameters.tariffTable);
-    buffer.setUint8(parameters.index);
-    buffer.setSpecialDay(parameters);
-    return toBytes$16(id$o, buffer.data);
-  };
-
-  var setSpecialDay$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    accessLevel: accessLevel$o,
-    examples: examples$o,
-    fromBytes: fromBytes$o,
-    headerSize: headerSize$o,
-    id: id$o,
-    isLoraOnly: isLoraOnly$o,
-    maxSize: maxSize$o,
-    name: name$o,
-    toBytes: toBytes$o
-  });
-
-  var RESET_INFLUENCE_SCREENS = 0x55;
-
-  var id$n = setSpecialOperation$2;
-  var name$n = commandNames$1[setSpecialOperation$2];
-  var headerSize$n = 2;
-  var maxSize$n = 2;
-  var accessLevel$n = READ_WRITE;
-  var isLoraOnly$n = false;
-  var examples$n = {
-    'read screens info': {
-      id: id$n,
-      name: name$n,
-      headerSize: headerSize$n,
-      maxSize: maxSize$n,
-      accessLevel: accessLevel$n,
       parameters: {
         type: RESET_INFLUENCE_SCREENS,
         readScreensInfo: true,
@@ -4585,11 +4603,11 @@ var logs = '';
       bytes: [0x64, 0x02, 0x55, 0x80]
     },
     'reset both screens': {
-      id: id$n,
-      name: name$n,
-      headerSize: headerSize$n,
-      maxSize: maxSize$n,
-      accessLevel: accessLevel$n,
+      id: id$o,
+      name: name$o,
+      headerSize: headerSize$o,
+      maxSize: maxSize$o,
+      accessLevel: accessLevel$o,
       parameters: {
         type: RESET_INFLUENCE_SCREENS,
         readScreensInfo: false,
@@ -4599,11 +4617,11 @@ var logs = '';
       bytes: [0x64, 0x02, 0x55, 0x03]
     },
     'reset magnetic screen': {
-      id: id$n,
-      name: name$n,
-      headerSize: headerSize$n,
-      maxSize: maxSize$n,
-      accessLevel: accessLevel$n,
+      id: id$o,
+      name: name$o,
+      headerSize: headerSize$o,
+      maxSize: maxSize$o,
+      accessLevel: accessLevel$o,
       parameters: {
         type: RESET_INFLUENCE_SCREENS,
         readScreensInfo: false,
@@ -4613,7 +4631,7 @@ var logs = '';
       bytes: [0x64, 0x02, 0x55, 0x02]
     }
   };
-  var fromBytes$n = function fromBytes(bytes) {
+  var fromBytes$o = function fromBytes(bytes) {
     var buffer = new CommandBinaryBuffer$2(bytes);
     var type = buffer.getUint8();
     var flags = buffer.getUint8();
@@ -4627,8 +4645,8 @@ var logs = '';
       resetMagneticIndication: resetMagneticIndication
     };
   };
-  var toBytes$n = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer$2(maxSize$n);
+  var toBytes$o = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer$2(maxSize$o);
     var flags = 0;
     if (parameters.readScreensInfo) {
       flags |= 0x80;
@@ -4641,10 +4659,50 @@ var logs = '';
     }
     buffer.setUint8(parameters.type);
     buffer.setUint8(flags);
-    return toBytes$16(id$n, buffer.data);
+    return toBytes$17(id$o, buffer.data);
   };
 
   var setSpecialOperation$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    accessLevel: accessLevel$o,
+    examples: examples$o,
+    fromBytes: fromBytes$o,
+    headerSize: headerSize$o,
+    id: id$o,
+    isLoraOnly: isLoraOnly$o,
+    maxSize: maxSize$o,
+    name: name$o,
+    toBytes: toBytes$o
+  });
+
+  var id$n = turnRelayOff$2;
+  var name$n = commandNames$1[turnRelayOff$2];
+  var headerSize$n = 2;
+  var maxSize$n = 0;
+  var accessLevel$n = READ_WRITE;
+  var isLoraOnly$n = false;
+  var examples$n = {
+    'simple request': {
+      id: id$n,
+      name: name$n,
+      headerSize: headerSize$n,
+      maxSize: maxSize$n,
+      accessLevel: accessLevel$n,
+      parameters: {},
+      bytes: [0x19, 0x00]
+    }
+  };
+  var fromBytes$n = function fromBytes(bytes) {
+    if (bytes.length !== maxSize$n) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    return {};
+  };
+  var toBytes$n = function toBytes() {
+    return toBytes$17(id$n);
+  };
+
+  var turnRelayOff$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$n,
     examples: examples$n,
@@ -4657,8 +4715,8 @@ var logs = '';
     toBytes: toBytes$n
   });
 
-  var id$m = turnRelayOff$2;
-  var name$m = commandNames$1[turnRelayOff$2];
+  var id$m = turnRelayOn$2;
+  var name$m = commandNames$1[turnRelayOn$2];
   var headerSize$m = 2;
   var maxSize$m = 0;
   var accessLevel$m = READ_WRITE;
@@ -4671,7 +4729,7 @@ var logs = '';
       maxSize: maxSize$m,
       accessLevel: accessLevel$m,
       parameters: {},
-      bytes: [0x19, 0x00]
+      bytes: [0x18, 0x00]
     }
   };
   var fromBytes$m = function fromBytes(bytes) {
@@ -4681,10 +4739,10 @@ var logs = '';
     return {};
   };
   var toBytes$m = function toBytes() {
-    return toBytes$16(id$m);
+    return toBytes$17(id$m);
   };
 
-  var turnRelayOff$1 = /*#__PURE__*/Object.freeze({
+  var turnRelayOn$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$m,
     examples: examples$m,
@@ -4695,46 +4753,6 @@ var logs = '';
     maxSize: maxSize$m,
     name: name$m,
     toBytes: toBytes$m
-  });
-
-  var id$l = turnRelayOn$2;
-  var name$l = commandNames$1[turnRelayOn$2];
-  var headerSize$l = 2;
-  var maxSize$l = 0;
-  var accessLevel$l = READ_WRITE;
-  var isLoraOnly$l = false;
-  var examples$l = {
-    'simple request': {
-      id: id$l,
-      name: name$l,
-      headerSize: headerSize$l,
-      maxSize: maxSize$l,
-      accessLevel: accessLevel$l,
-      parameters: {},
-      bytes: [0x18, 0x00]
-    }
-  };
-  var fromBytes$l = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$l) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
-    return {};
-  };
-  var toBytes$l = function toBytes() {
-    return toBytes$16(id$l);
-  };
-
-  var turnRelayOn$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    accessLevel: accessLevel$l,
-    examples: examples$l,
-    fromBytes: fromBytes$l,
-    headerSize: headerSize$l,
-    id: id$l,
-    isLoraOnly: isLoraOnly$l,
-    maxSize: maxSize$l,
-    name: name$l,
-    toBytes: toBytes$l
   });
 
   var CASE_OPEN$1 = 0;
@@ -4772,7 +4790,220 @@ var logs = '';
     TIME_SET: TIME_SET
   });
 
-  invertObject(criticalEvents);
+  var criticalEventNames = invertObject(criticalEvents);
+
+  var getEventStatus = 0x01;
+  var getEnergyDayPrevious$1 = 0x03;
+  var getDeviceType = 0x04;
+  var getDeviceId = 0x05;
+  var getDateTime = 0x07;
+  var setDateTime = 0x08;
+  var setAccessKey = 0x09;
+  var getCurrentValues = 0x0d;
+  var getEnergy$1 = 0x0f;
+  var setDayProfile = 0x10;
+  var setSeasonProfile = 0x11;
+  var setSpecialDay = 0x12;
+  var activateRatePlan = 0x13;
+  var prepareRatePlan = 0x14;
+  var getHalfHourDemand = 0x15;
+  var getDayDemand$1 = 0x16;
+  var getMonthDemand = 0x17;
+  var turnRelayOn = 0x18;
+  var turnRelayOff = 0x19;
+  var setCorrectTime = 0x1c;
+  var getOperatorParameters = 0x1e;
+  var setOperatorParameters$1 = 0x1f;
+  var getVersion = 0x28;
+  var getSaldo = 0x29;
+  var setSaldo = 0x2a;
+  var getRatePlanInfo = 0x2c;
+  var getSaldoParameters = 0x2e;
+  var setSaldoParameters = 0x2f;
+  var getDayMaxDemand = 0x31;
+  var getMonthMaxDemand = 0x32;
+  var getEvents = 0x33;
+  var getEventsCounters = 0x34;
+  var resetPowerMaxDay = 0x35;
+  var resetPowerMaxMonth = 0x36;
+  var getCurrentStatusMeter = 0x39;
+  var getExtendedCurrentValues = 0x3a;
+  var getDayProfile = 0x3b;
+  var getSeasonProfile = 0x3c;
+  var getSpecialDay = 0x3d;
+  var getCorrectTime = 0x3e;
+  var getOperatorParametersExtended$1 = 0x3f;
+  var setOperatorParametersExtended$1 = 0x40;
+  var setOperatorParametersExtended2$1 = 0x45;
+  var runTariffPlan = 0x46;
+  var getOperatorParametersExtended2$1 = 0x47;
+  var getHalfHourDemandVari$1 = 0x48;
+  var getHalfHourDemandVare$1 = 0x49;
+  var getEnergyExport$1 = 0x4e;
+  var getDayDemandExport$1 = 0x4f;
+  var getEnergyExportDayPrevious$1 = 0x50;
+  var getMonthDemandExport = 0x52;
+  var getHalfHourDemandExport = 0x53;
+  var getHalfHourDemandVariExport$1 = 0x54;
+  var getHalfHourDemandVareExport$1 = 0x55;
+  var getCriticalEvent$1 = 0x56;
+  var getDayMaxDemandExport = 0x58;
+  var getMonthMaxDemandExport = 0x59;
+  var getHalfHourDemandChannel$1 = 0x5a;
+  var setCorrectDateTime = 0x5c;
+  var setDisplayParam$1 = 0x5d;
+  var getDisplayParam$1 = 0x5e;
+  var setSpecialOperation = 0x64;
+  var getMagneticFieldThreshold = 0x6d;
+  var getHalfhoursEnergies = 0x6f;
+  var getBuildVersion = 0x70;
+  var getOperatorParametersExtended3 = 0x71;
+  var setOperatorParametersExtended3 = 0x72;
+  var setOperatorParametersExtended4$1 = 0x74;
+  var getOperatorParametersExtended4$1 = 0x75;
+  var getDemand$1 = 0x76;
+  var getMeterInfo = 0x7a;
+
+  var downlinkIds = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    activateRatePlan: activateRatePlan,
+    getBuildVersion: getBuildVersion,
+    getCorrectTime: getCorrectTime,
+    getCriticalEvent: getCriticalEvent$1,
+    getCurrentStatusMeter: getCurrentStatusMeter,
+    getCurrentValues: getCurrentValues,
+    getDateTime: getDateTime,
+    getDayDemand: getDayDemand$1,
+    getDayDemandExport: getDayDemandExport$1,
+    getDayMaxDemand: getDayMaxDemand,
+    getDayMaxDemandExport: getDayMaxDemandExport,
+    getDayProfile: getDayProfile,
+    getDemand: getDemand$1,
+    getDeviceId: getDeviceId,
+    getDeviceType: getDeviceType,
+    getDisplayParam: getDisplayParam$1,
+    getEnergy: getEnergy$1,
+    getEnergyDayPrevious: getEnergyDayPrevious$1,
+    getEnergyExport: getEnergyExport$1,
+    getEnergyExportDayPrevious: getEnergyExportDayPrevious$1,
+    getEventStatus: getEventStatus,
+    getEvents: getEvents,
+    getEventsCounters: getEventsCounters,
+    getExtendedCurrentValues: getExtendedCurrentValues,
+    getHalfHourDemand: getHalfHourDemand,
+    getHalfHourDemandChannel: getHalfHourDemandChannel$1,
+    getHalfHourDemandExport: getHalfHourDemandExport,
+    getHalfHourDemandVare: getHalfHourDemandVare$1,
+    getHalfHourDemandVareExport: getHalfHourDemandVareExport$1,
+    getHalfHourDemandVari: getHalfHourDemandVari$1,
+    getHalfHourDemandVariExport: getHalfHourDemandVariExport$1,
+    getHalfhoursEnergies: getHalfhoursEnergies,
+    getMagneticFieldThreshold: getMagneticFieldThreshold,
+    getMeterInfo: getMeterInfo,
+    getMonthDemand: getMonthDemand,
+    getMonthDemandExport: getMonthDemandExport,
+    getMonthMaxDemand: getMonthMaxDemand,
+    getMonthMaxDemandExport: getMonthMaxDemandExport,
+    getOperatorParameters: getOperatorParameters,
+    getOperatorParametersExtended: getOperatorParametersExtended$1,
+    getOperatorParametersExtended2: getOperatorParametersExtended2$1,
+    getOperatorParametersExtended3: getOperatorParametersExtended3,
+    getOperatorParametersExtended4: getOperatorParametersExtended4$1,
+    getRatePlanInfo: getRatePlanInfo,
+    getSaldo: getSaldo,
+    getSaldoParameters: getSaldoParameters,
+    getSeasonProfile: getSeasonProfile,
+    getSpecialDay: getSpecialDay,
+    getVersion: getVersion,
+    prepareRatePlan: prepareRatePlan,
+    resetPowerMaxDay: resetPowerMaxDay,
+    resetPowerMaxMonth: resetPowerMaxMonth,
+    runTariffPlan: runTariffPlan,
+    setAccessKey: setAccessKey,
+    setCorrectDateTime: setCorrectDateTime,
+    setCorrectTime: setCorrectTime,
+    setDateTime: setDateTime,
+    setDayProfile: setDayProfile,
+    setDisplayParam: setDisplayParam$1,
+    setOperatorParameters: setOperatorParameters$1,
+    setOperatorParametersExtended: setOperatorParametersExtended$1,
+    setOperatorParametersExtended2: setOperatorParametersExtended2$1,
+    setOperatorParametersExtended3: setOperatorParametersExtended3,
+    setOperatorParametersExtended4: setOperatorParametersExtended4$1,
+    setSaldo: setSaldo,
+    setSaldoParameters: setSaldoParameters,
+    setSeasonProfile: setSeasonProfile,
+    setSpecialDay: setSpecialDay,
+    setSpecialOperation: setSpecialOperation,
+    turnRelayOff: turnRelayOff,
+    turnRelayOn: turnRelayOn
+  });
+
+  var commandNames = invertObject(downlinkIds);
+
+  var id$l = getCriticalEvent$1;
+  var name$l = commandNames[getCriticalEvent$1];
+  var headerSize$l = 2;
+  var accessLevel$l = READ_ONLY;
+  var maxSize$l = 2;
+  var isLoraOnly$l = false;
+  var examples$l = {
+    'simple request': {
+      id: id$l,
+      name: name$l,
+      headerSize: headerSize$l,
+      accessLevel: accessLevel$l,
+      maxSize: maxSize$l,
+      parameters: {
+        event: 1,
+        name: 'MAGNETIC_ON',
+        index: 2
+      },
+      bytes: [0x56, 0x02, 0x01, 0x02]
+    },
+    'the last event': {
+      id: id$l,
+      name: name$l,
+      headerSize: headerSize$l,
+      accessLevel: accessLevel$l,
+      maxSize: maxSize$l,
+      parameters: {
+        event: 4,
+        name: 'RESTART',
+        index: 255
+      },
+      bytes: [0x56, 0x02, 0x04, 0xff]
+    }
+  };
+  var fromBytes$l = function fromBytes(bytes) {
+    if (bytes.length !== maxSize$l) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    var _bytes = _slicedToArray(bytes, 2),
+      event = _bytes[0],
+      index = _bytes[1];
+    return {
+      event: event,
+      name: criticalEventNames[event],
+      index: index
+    };
+  };
+  var toBytes$l = function toBytes(parameters) {
+    return toBytes$17(id$l, [parameters.event, parameters.index]);
+  };
+
+  var getCriticalEvent = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    accessLevel: accessLevel$l,
+    examples: examples$l,
+    fromBytes: fromBytes$l,
+    headerSize: headerSize$l,
+    id: id$l,
+    isLoraOnly: isLoraOnly$l,
+    maxSize: maxSize$l,
+    name: name$l,
+    toBytes: toBytes$l
+  });
 
   var OK = 0;
   var UNKNOWN_COMMAND = 0x80;
@@ -4972,159 +5203,10 @@ var logs = '';
 
   invertObject(uplinkIds$1);
 
-  var getEventStatus = 0x01;
-  var getEnergyDayPrevious$1 = 0x03;
-  var getDeviceType = 0x04;
-  var getDeviceId = 0x05;
-  var getDateTime = 0x07;
-  var setDateTime = 0x08;
-  var setAccessKey = 0x09;
-  var getCurrentValues = 0x0d;
-  var getEnergy$1 = 0x0f;
-  var setDayProfile = 0x10;
-  var setSeasonProfile = 0x11;
-  var setSpecialDay = 0x12;
-  var activateRatePlan = 0x13;
-  var prepareRatePlan = 0x14;
-  var getHalfHourDemand = 0x15;
-  var getDayDemand$1 = 0x16;
-  var getMonthDemand = 0x17;
-  var turnRelayOn = 0x18;
-  var turnRelayOff = 0x19;
-  var setCorrectTime = 0x1c;
-  var getOperatorParameters = 0x1e;
-  var setOperatorParameters$1 = 0x1f;
-  var getVersion = 0x28;
-  var getSaldo = 0x29;
-  var setSaldo = 0x2a;
-  var getRatePlanInfo = 0x2c;
-  var getSaldoParameters = 0x2e;
-  var setSaldoParameters = 0x2f;
-  var getDayMaxDemand = 0x31;
-  var getMonthMaxDemand = 0x32;
-  var getEvents = 0x33;
-  var getEventsCounters = 0x34;
-  var resetPowerMaxDay = 0x35;
-  var resetPowerMaxMonth = 0x36;
-  var getCurrentStatusMeter = 0x39;
-  var getExtendedCurrentValues = 0x3a;
-  var getDayProfile = 0x3b;
-  var getSeasonProfile = 0x3c;
-  var getSpecialDay = 0x3d;
-  var getCorrectTime = 0x3e;
-  var getOperatorParametersExtended$1 = 0x3f;
-  var setOperatorParametersExtended$1 = 0x40;
-  var setOperatorParametersExtended2$1 = 0x45;
-  var runTariffPlan = 0x46;
-  var getOperatorParametersExtended2$1 = 0x47;
-  var getHalfHourDemandVari$1 = 0x48;
-  var getHalfHourDemandVare$1 = 0x49;
-  var getEnergyExport$1 = 0x4e;
-  var getDayDemandExport$1 = 0x4f;
-  var getEnergyExportDayPrevious$1 = 0x50;
-  var getMonthDemandExport = 0x52;
-  var getHalfHourDemandExport = 0x53;
-  var getHalfHourDemandVariExport$1 = 0x54;
-  var getHalfHourDemandVareExport$1 = 0x55;
-  var getCriticalEvent$1 = 0x56;
-  var getDayMaxDemandExport = 0x58;
-  var getMonthMaxDemandExport = 0x59;
-  var getHalfHourDemandChannel$1 = 0x5a;
-  var setCorrectDateTime = 0x5c;
-  var setDisplayParam$1 = 0x5d;
-  var getDisplayParam$1 = 0x5e;
-  var setSpecialOperation = 0x64;
-  var getMagneticFieldThreshold = 0x6d;
-  var getHalfhoursEnergies = 0x6f;
-  var getBuildVersion = 0x70;
-  var getOperatorParametersExtended3 = 0x71;
-  var setOperatorParametersExtended3 = 0x72;
-  var setOperatorParametersExtended4$1 = 0x74;
-  var getOperatorParametersExtended4 = 0x75;
-  var getDemand$1 = 0x76;
-  var getMeterInfo = 0x7a;
-
-  var downlinkIds = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    activateRatePlan: activateRatePlan,
-    getBuildVersion: getBuildVersion,
-    getCorrectTime: getCorrectTime,
-    getCriticalEvent: getCriticalEvent$1,
-    getCurrentStatusMeter: getCurrentStatusMeter,
-    getCurrentValues: getCurrentValues,
-    getDateTime: getDateTime,
-    getDayDemand: getDayDemand$1,
-    getDayDemandExport: getDayDemandExport$1,
-    getDayMaxDemand: getDayMaxDemand,
-    getDayMaxDemandExport: getDayMaxDemandExport,
-    getDayProfile: getDayProfile,
-    getDemand: getDemand$1,
-    getDeviceId: getDeviceId,
-    getDeviceType: getDeviceType,
-    getDisplayParam: getDisplayParam$1,
-    getEnergy: getEnergy$1,
-    getEnergyDayPrevious: getEnergyDayPrevious$1,
-    getEnergyExport: getEnergyExport$1,
-    getEnergyExportDayPrevious: getEnergyExportDayPrevious$1,
-    getEventStatus: getEventStatus,
-    getEvents: getEvents,
-    getEventsCounters: getEventsCounters,
-    getExtendedCurrentValues: getExtendedCurrentValues,
-    getHalfHourDemand: getHalfHourDemand,
-    getHalfHourDemandChannel: getHalfHourDemandChannel$1,
-    getHalfHourDemandExport: getHalfHourDemandExport,
-    getHalfHourDemandVare: getHalfHourDemandVare$1,
-    getHalfHourDemandVareExport: getHalfHourDemandVareExport$1,
-    getHalfHourDemandVari: getHalfHourDemandVari$1,
-    getHalfHourDemandVariExport: getHalfHourDemandVariExport$1,
-    getHalfhoursEnergies: getHalfhoursEnergies,
-    getMagneticFieldThreshold: getMagneticFieldThreshold,
-    getMeterInfo: getMeterInfo,
-    getMonthDemand: getMonthDemand,
-    getMonthDemandExport: getMonthDemandExport,
-    getMonthMaxDemand: getMonthMaxDemand,
-    getMonthMaxDemandExport: getMonthMaxDemandExport,
-    getOperatorParameters: getOperatorParameters,
-    getOperatorParametersExtended: getOperatorParametersExtended$1,
-    getOperatorParametersExtended2: getOperatorParametersExtended2$1,
-    getOperatorParametersExtended3: getOperatorParametersExtended3,
-    getOperatorParametersExtended4: getOperatorParametersExtended4,
-    getRatePlanInfo: getRatePlanInfo,
-    getSaldo: getSaldo,
-    getSaldoParameters: getSaldoParameters,
-    getSeasonProfile: getSeasonProfile,
-    getSpecialDay: getSpecialDay,
-    getVersion: getVersion,
-    prepareRatePlan: prepareRatePlan,
-    resetPowerMaxDay: resetPowerMaxDay,
-    resetPowerMaxMonth: resetPowerMaxMonth,
-    runTariffPlan: runTariffPlan,
-    setAccessKey: setAccessKey,
-    setCorrectDateTime: setCorrectDateTime,
-    setCorrectTime: setCorrectTime,
-    setDateTime: setDateTime,
-    setDayProfile: setDayProfile,
-    setDisplayParam: setDisplayParam$1,
-    setOperatorParameters: setOperatorParameters$1,
-    setOperatorParametersExtended: setOperatorParametersExtended$1,
-    setOperatorParametersExtended2: setOperatorParametersExtended2$1,
-    setOperatorParametersExtended3: setOperatorParametersExtended3,
-    setOperatorParametersExtended4: setOperatorParametersExtended4$1,
-    setSaldo: setSaldo,
-    setSaldoParameters: setSaldoParameters,
-    setSeasonProfile: setSeasonProfile,
-    setSpecialDay: setSpecialDay,
-    setSpecialOperation: setSpecialOperation,
-    turnRelayOff: turnRelayOff,
-    turnRelayOn: turnRelayOn
-  });
-
-  var commandNames = invertObject(downlinkIds);
-
-  var ENERGY_T0_FAULT = 0x01;
-  var ENERGY_T1_FAULT = 0x02;
-  var ENERGY_T2_FAULT = 0x03;
-  var ENERGY_T3_FAULT = 0x04;
+  var ENERGY_T1_FAULT = 0x01;
+  var ENERGY_T2_FAULT = 0x02;
+  var ENERGY_T3_FAULT = 0x03;
+  var ENERGY_T4_FAULT = 0x04;
   var ACCESS_LOCKED = 0x11;
   var ACCESS_UNLOCKED = 0x12;
   var ERR_ACCESS = 0x13;
@@ -5201,18 +5283,18 @@ var logs = '';
   var CHANGE_COR_TIME = 0x70;
   var CMD_RELAY_2_ON = 0x71;
   var CMD_RELAY_2_OFF = 0x72;
-  var CROSS_ZERO_ENT0 = 0x73;
-  var CROSS_ZERO_ENT1 = 0x74;
-  var CROSS_ZERO_ENT2 = 0x75;
-  var CROSS_ZERO_ENT3 = 0x76;
-  var CROSS_ZERO_VARI0 = 0x77;
-  var CROSS_ZERO_VARI1 = 0x78;
-  var CROSS_ZERO_VARI2 = 0x79;
-  var CROSS_ZERO_VARI3 = 0x7A;
-  var CROSS_ZERO_VARE0 = 0x7B;
-  var CROSS_ZERO_VARE1 = 0x7C;
-  var CROSS_ZERO_VARE2 = 0x7D;
-  var CROSS_ZERO_VARE3 = 0x7E;
+  var CROSS_ZERO_ENT1 = 0x73;
+  var CROSS_ZERO_ENT2 = 0x74;
+  var CROSS_ZERO_ENT3 = 0x75;
+  var CROSS_ZERO_ENT4 = 0x76;
+  var CROSS_ZERO_VARI1 = 0x77;
+  var CROSS_ZERO_VARI2 = 0x78;
+  var CROSS_ZERO_VARI3 = 0x79;
+  var CROSS_ZERO_VARI4 = 0x7A;
+  var CROSS_ZERO_VARE1 = 0x7B;
+  var CROSS_ZERO_VARE2 = 0x7C;
+  var CROSS_ZERO_VARE3 = 0x7D;
+  var CROSS_ZERO_VARE4 = 0x7E;
   var CALIBRATION_FLAG_SET = 0x7F;
   var CALIBRATION_FLAG_RESET = 0x80;
   var BAD_TEST_EEPROM = 0x81;
@@ -5249,18 +5331,18 @@ var logs = '';
   var CHANGE_PARAM_CHANNEL4 = 0xA1;
   var CHANGE_PARAM_CHANNEL5 = 0xA2;
   var CHANGE_PARAM_CHANNEL6 = 0xA3;
-  var CROSS_ZERO_EXPORT_ENT0 = 0xA4;
-  var CROSS_ZERO_EXPORT_ENT1 = 0xA5;
-  var CROSS_ZERO_EXPORT_ENT2 = 0xA6;
-  var CROSS_ZERO_EXPORT_ENT3 = 0xA7;
-  var CROSS_ZERO_EXPORT_VARI0 = 0xA8;
-  var CROSS_ZERO_EXPORT_VARI1 = 0xA9;
-  var CROSS_ZERO_EXPORT_VARI2 = 0xAA;
-  var CROSS_ZERO_EXPORT_VARI3 = 0xAB;
-  var CROSS_ZERO_EXPORT_VARE0 = 0xAC;
-  var CROSS_ZERO_EXPORT_VARE1 = 0xAD;
-  var CROSS_ZERO_EXPORT_VARE2 = 0xAE;
-  var CROSS_ZERO_EXPORT_VARE3 = 0xAF;
+  var CROSS_ZERO_EXPORT_ENT1 = 0xA4;
+  var CROSS_ZERO_EXPORT_ENT2 = 0xA5;
+  var CROSS_ZERO_EXPORT_ENT3 = 0xA6;
+  var CROSS_ZERO_EXPORT_ENT4 = 0xA7;
+  var CROSS_ZERO_EXPORT_VARI1 = 0xA8;
+  var CROSS_ZERO_EXPORT_VARI2 = 0xA9;
+  var CROSS_ZERO_EXPORT_VARI3 = 0xAA;
+  var CROSS_ZERO_EXPORT_VARI4 = 0xAB;
+  var CROSS_ZERO_EXPORT_VARE1 = 0xAC;
+  var CROSS_ZERO_EXPORT_VARE2 = 0xAD;
+  var CROSS_ZERO_EXPORT_VARE3 = 0xAE;
+  var CROSS_ZERO_EXPORT_VARE4 = 0xAF;
   var EM_MAGNETIC_ON = 0xB0;
   var EM_MAGNETIC_OFF = 0xB1;
   var RESET_EM_FLAG = 0xB2;
@@ -5322,37 +5404,37 @@ var logs = '';
     CMD_RELAY_OFF: CMD_RELAY_OFF,
     CMD_RELAY_ON: CMD_RELAY_ON,
     COEFFICIENT_TRANSFORMATION_CHANGE: COEFFICIENT_TRANSFORMATION_CHANGE,
-    CROSS_ZERO_ENT0: CROSS_ZERO_ENT0,
     CROSS_ZERO_ENT1: CROSS_ZERO_ENT1,
     CROSS_ZERO_ENT2: CROSS_ZERO_ENT2,
     CROSS_ZERO_ENT3: CROSS_ZERO_ENT3,
-    CROSS_ZERO_EXPORT_ENT0: CROSS_ZERO_EXPORT_ENT0,
+    CROSS_ZERO_ENT4: CROSS_ZERO_ENT4,
     CROSS_ZERO_EXPORT_ENT1: CROSS_ZERO_EXPORT_ENT1,
     CROSS_ZERO_EXPORT_ENT2: CROSS_ZERO_EXPORT_ENT2,
     CROSS_ZERO_EXPORT_ENT3: CROSS_ZERO_EXPORT_ENT3,
-    CROSS_ZERO_EXPORT_VARE0: CROSS_ZERO_EXPORT_VARE0,
+    CROSS_ZERO_EXPORT_ENT4: CROSS_ZERO_EXPORT_ENT4,
     CROSS_ZERO_EXPORT_VARE1: CROSS_ZERO_EXPORT_VARE1,
     CROSS_ZERO_EXPORT_VARE2: CROSS_ZERO_EXPORT_VARE2,
     CROSS_ZERO_EXPORT_VARE3: CROSS_ZERO_EXPORT_VARE3,
-    CROSS_ZERO_EXPORT_VARI0: CROSS_ZERO_EXPORT_VARI0,
+    CROSS_ZERO_EXPORT_VARE4: CROSS_ZERO_EXPORT_VARE4,
     CROSS_ZERO_EXPORT_VARI1: CROSS_ZERO_EXPORT_VARI1,
     CROSS_ZERO_EXPORT_VARI2: CROSS_ZERO_EXPORT_VARI2,
     CROSS_ZERO_EXPORT_VARI3: CROSS_ZERO_EXPORT_VARI3,
-    CROSS_ZERO_VARE0: CROSS_ZERO_VARE0,
+    CROSS_ZERO_EXPORT_VARI4: CROSS_ZERO_EXPORT_VARI4,
     CROSS_ZERO_VARE1: CROSS_ZERO_VARE1,
     CROSS_ZERO_VARE2: CROSS_ZERO_VARE2,
     CROSS_ZERO_VARE3: CROSS_ZERO_VARE3,
-    CROSS_ZERO_VARI0: CROSS_ZERO_VARI0,
+    CROSS_ZERO_VARE4: CROSS_ZERO_VARE4,
     CROSS_ZERO_VARI1: CROSS_ZERO_VARI1,
     CROSS_ZERO_VARI2: CROSS_ZERO_VARI2,
     CROSS_ZERO_VARI3: CROSS_ZERO_VARI3,
+    CROSS_ZERO_VARI4: CROSS_ZERO_VARI4,
     EM_MAGNETIC_OFF: EM_MAGNETIC_OFF,
     EM_MAGNETIC_ON: EM_MAGNETIC_ON,
     ENERGY_REGISTER_OVERFLOW: ENERGY_REGISTER_OVERFLOW,
-    ENERGY_T0_FAULT: ENERGY_T0_FAULT,
     ENERGY_T1_FAULT: ENERGY_T1_FAULT,
     ENERGY_T2_FAULT: ENERGY_T2_FAULT,
     ENERGY_T3_FAULT: ENERGY_T3_FAULT,
+    ENERGY_T4_FAULT: ENERGY_T4_FAULT,
     ERR_ACCESS: ERR_ACCESS,
     F_MAX_OK: F_MAX_OK,
     F_MAX_OVER: F_MAX_OVER,
@@ -5474,28 +5556,28 @@ var logs = '';
   var VOLTAGE_IN_PHASE_B = 38;
   var VOLTAGE_IN_PHASE_C = 39;
   var BATTERY_VOLTAGE = 40;
-  var FREQUENCY = 41;
-  var ACTIVE_POWER_SUM = 42;
+  var SUPPLY_FREQUENCY = 41;
+  var TOTAL_ACTIVE_POWER = 42;
   var ACTIVE_POWER_PHASE_A = 43;
   var ACTIVE_POWER_PHASE_B = 44;
   var ACTIVE_POWER_PHASE_C = 45;
-  var REACTIVE_POWER_QPLUS_SUM = 46;
+  var TOTAL_REACTIVE_POWER_QPLUS = 46;
   var REACTIVE_POWER_QPLUS_PHASE_A = 47;
   var REACTIVE_POWER_QPLUS_PHASE_B = 48;
   var REACTIVE_POWER_QPLUS_PHASE_C = 49;
-  var REACTIVE_POWER_QMINUS_SUM = 50;
+  var TOTAL_REACTIVE_POWER_QMINUS = 50;
   var REACTIVE_POWER_QMINUS_PHASE_A = 51;
   var REACTIVE_POWER_QMINUS_PHASE_B = 52;
   var REACTIVE_POWER_QMINUS_PHASE_C = 53;
-  var POWER_COEFFICIENT_SUM = 54;
+  var TOTAL_POWER_FACTOR = 54;
   var POWER_COEFFICIENT_PHASE_A = 55;
   var POWER_COEFFICIENT_PHASE_B = 56;
   var POWER_COEFFICIENT_PHASE_C = 57;
-  var APPARENT_POWER_QPLUS_SUM = 58;
+  var TOTAL_APPARENT_POWER_QPLUS = 58;
   var APPARENT_POWER_QPLUS_PHASE_A = 59;
   var APPARENT_POWER_QPLUS_PHASE_B = 60;
   var APPARENT_POWER_QPLUS_PHASE_C = 61;
-  var APPARENT_POWER_QMINUS_SUM = 62;
+  var TOTAL_APPARENT_POWER_QMINUS = 62;
   var APPARENT_POWER_QMINUS_PHASE_A = 63;
   var APPARENT_POWER_QMINUS_PHASE_B = 64;
   var APPARENT_POWER_QMINUS_PHASE_C = 65;
@@ -5539,14 +5621,14 @@ var logs = '';
   var MAX_EXPORTED_REACTIVE_POWER_MONTH_T2 = 103;
   var MAX_EXPORTED_REACTIVE_POWER_MONTH_T3 = 104;
   var MAX_EXPORTED_REACTIVE_POWER_MONTH_T4 = 105;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1 = 106;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2 = 107;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3 = 108;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4 = 109;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1 = 110;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2 = 111;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3 = 112;
-  var MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4 = 113;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1 = 106;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2 = 107;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3 = 108;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4 = 109;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1 = 110;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2 = 111;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3 = 112;
+  var MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4 = 113;
   var HOUR_MINUTE_SECOND = 114;
   var DATE_MONTH_YEAR = 115;
   var CURRENT_TRANSFORMATION_RATIO = 116;
@@ -5568,15 +5650,12 @@ var logs = '';
     ACTIVE_POWER_PHASE_A: ACTIVE_POWER_PHASE_A,
     ACTIVE_POWER_PHASE_B: ACTIVE_POWER_PHASE_B,
     ACTIVE_POWER_PHASE_C: ACTIVE_POWER_PHASE_C,
-    ACTIVE_POWER_SUM: ACTIVE_POWER_SUM,
     APPARENT_POWER_QMINUS_PHASE_A: APPARENT_POWER_QMINUS_PHASE_A,
     APPARENT_POWER_QMINUS_PHASE_B: APPARENT_POWER_QMINUS_PHASE_B,
     APPARENT_POWER_QMINUS_PHASE_C: APPARENT_POWER_QMINUS_PHASE_C,
-    APPARENT_POWER_QMINUS_SUM: APPARENT_POWER_QMINUS_SUM,
     APPARENT_POWER_QPLUS_PHASE_A: APPARENT_POWER_QPLUS_PHASE_A,
     APPARENT_POWER_QPLUS_PHASE_B: APPARENT_POWER_QPLUS_PHASE_B,
     APPARENT_POWER_QPLUS_PHASE_C: APPARENT_POWER_QPLUS_PHASE_C,
-    APPARENT_POWER_QPLUS_SUM: APPARENT_POWER_QPLUS_SUM,
     BATTERY_VOLTAGE: BATTERY_VOLTAGE,
     CURRENT_BALANCE: CURRENT_BALANCE,
     CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL,
@@ -5597,7 +5676,6 @@ var logs = '';
     EXPORTED_REACTIVE_ENERGY_T2: EXPORTED_REACTIVE_ENERGY_T2,
     EXPORTED_REACTIVE_ENERGY_T3: EXPORTED_REACTIVE_ENERGY_T3,
     EXPORTED_REACTIVE_ENERGY_T4: EXPORTED_REACTIVE_ENERGY_T4,
-    FREQUENCY: FREQUENCY,
     HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND,
     MAGNET_INDUCTION: MAGNET_INDUCTION,
     MAX_ACTIVE_POWER_DAY_T1: MAX_ACTIVE_POWER_DAY_T1,
@@ -5616,6 +5694,14 @@ var logs = '';
     MAX_EXPORTED_ACTIVE_POWER_MONTH_T2: MAX_EXPORTED_ACTIVE_POWER_MONTH_T2,
     MAX_EXPORTED_ACTIVE_POWER_MONTH_T3: MAX_EXPORTED_ACTIVE_POWER_MONTH_T3,
     MAX_EXPORTED_ACTIVE_POWER_MONTH_T4: MAX_EXPORTED_ACTIVE_POWER_MONTH_T4,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4,
     MAX_EXPORTED_REACTIVE_POWER_DAY_T1: MAX_EXPORTED_REACTIVE_POWER_DAY_T1,
     MAX_EXPORTED_REACTIVE_POWER_DAY_T2: MAX_EXPORTED_REACTIVE_POWER_DAY_T2,
     MAX_EXPORTED_REACTIVE_POWER_DAY_T3: MAX_EXPORTED_REACTIVE_POWER_DAY_T3,
@@ -5624,14 +5710,6 @@ var logs = '';
     MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: MAX_EXPORTED_REACTIVE_POWER_MONTH_T2,
     MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: MAX_EXPORTED_REACTIVE_POWER_MONTH_T3,
     MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: MAX_EXPORTED_REACTIVE_POWER_MONTH_T4,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4,
     MAX_NEGATIVE_REACTIVE_POWER_DAY_T1: MAX_NEGATIVE_REACTIVE_POWER_DAY_T1,
     MAX_NEGATIVE_REACTIVE_POWER_DAY_T2: MAX_NEGATIVE_REACTIVE_POWER_DAY_T2,
     MAX_NEGATIVE_REACTIVE_POWER_DAY_T3: MAX_NEGATIVE_REACTIVE_POWER_DAY_T3,
@@ -5656,7 +5734,6 @@ var logs = '';
     POWER_COEFFICIENT_PHASE_A: POWER_COEFFICIENT_PHASE_A,
     POWER_COEFFICIENT_PHASE_B: POWER_COEFFICIENT_PHASE_B,
     POWER_COEFFICIENT_PHASE_C: POWER_COEFFICIENT_PHASE_C,
-    POWER_COEFFICIENT_SUM: POWER_COEFFICIENT_SUM,
     POWER_THRESHOLD_T1: POWER_THRESHOLD_T1,
     POWER_THRESHOLD_T2: POWER_THRESHOLD_T2,
     POWER_THRESHOLD_T3: POWER_THRESHOLD_T3,
@@ -5668,19 +5745,24 @@ var logs = '';
     REACTIVE_POWER_QMINUS_PHASE_A: REACTIVE_POWER_QMINUS_PHASE_A,
     REACTIVE_POWER_QMINUS_PHASE_B: REACTIVE_POWER_QMINUS_PHASE_B,
     REACTIVE_POWER_QMINUS_PHASE_C: REACTIVE_POWER_QMINUS_PHASE_C,
-    REACTIVE_POWER_QMINUS_SUM: REACTIVE_POWER_QMINUS_SUM,
     REACTIVE_POWER_QPLUS_PHASE_A: REACTIVE_POWER_QPLUS_PHASE_A,
     REACTIVE_POWER_QPLUS_PHASE_B: REACTIVE_POWER_QPLUS_PHASE_B,
     REACTIVE_POWER_QPLUS_PHASE_C: REACTIVE_POWER_QPLUS_PHASE_C,
-    REACTIVE_POWER_QPLUS_SUM: REACTIVE_POWER_QPLUS_SUM,
     SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY,
     SOFTWARE_VERSION: SOFTWARE_VERSION,
+    SUPPLY_FREQUENCY: SUPPLY_FREQUENCY,
     TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY,
+    TOTAL_ACTIVE_POWER: TOTAL_ACTIVE_POWER,
+    TOTAL_APPARENT_POWER_QMINUS: TOTAL_APPARENT_POWER_QMINUS,
+    TOTAL_APPARENT_POWER_QPLUS: TOTAL_APPARENT_POWER_QPLUS,
     TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY,
     TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY,
     TOTAL_EXPORTED_REACTIVE_ENERGY: TOTAL_EXPORTED_REACTIVE_ENERGY,
     TOTAL_NEGATIVE_REACTIVE_ENERGY: TOTAL_NEGATIVE_REACTIVE_ENERGY,
+    TOTAL_POWER_FACTOR: TOTAL_POWER_FACTOR,
     TOTAL_REACTIVE_ENERGY: TOTAL_REACTIVE_ENERGY,
+    TOTAL_REACTIVE_POWER_QMINUS: TOTAL_REACTIVE_POWER_QMINUS,
+    TOTAL_REACTIVE_POWER_QPLUS: TOTAL_REACTIVE_POWER_QPLUS,
     VOLTAGE_IN_PHASE_A: VOLTAGE_IN_PHASE_A,
     VOLTAGE_IN_PHASE_B: VOLTAGE_IN_PHASE_B,
     VOLTAGE_IN_PHASE_C: VOLTAGE_IN_PHASE_C,
@@ -5736,7 +5818,7 @@ var logs = '';
     getOperatorParametersExtended: getOperatorParametersExtended$1,
     getOperatorParametersExtended2: getOperatorParametersExtended2$1,
     getOperatorParametersExtended3: getOperatorParametersExtended3,
-    getOperatorParametersExtended4: getOperatorParametersExtended4,
+    getOperatorParametersExtended4: getOperatorParametersExtended4$1,
     getRatePlanInfo: getRatePlanInfo,
     getSaldo: getSaldo,
     getSaldoParameters: getSaldoParameters,
@@ -5794,55 +5876,6 @@ var logs = '';
   var A_PLUS_R_PLUS_R_MINUS = 1;
   var A_MINUS_R_PLUS_R_MINUS = 2;
 
-  var id$k = getCriticalEvent$1;
-  var name$k = commandNames[getCriticalEvent$1];
-  var headerSize$k = 2;
-  var accessLevel$k = READ_ONLY;
-  var maxSize$k = 2;
-  var isLoraOnly$k = false;
-  var examples$k = {
-    'simple request': {
-      id: id$k,
-      name: name$k,
-      headerSize: headerSize$k,
-      accessLevel: accessLevel$k,
-      maxSize: maxSize$k,
-      parameters: {
-        event: 1,
-        index: 22
-      },
-      bytes: [0x56, 0x02, 0x01, 0x16]
-    }
-  };
-  var fromBytes$k = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$k) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
-    var _bytes = _slicedToArray(bytes, 2),
-      event = _bytes[0],
-      index = _bytes[1];
-    return {
-      event: event,
-      index: index
-    };
-  };
-  var toBytes$k = function toBytes(parameters) {
-    return toBytes$16(id$k, [parameters.event, parameters.index]);
-  };
-
-  var getCriticalEvent = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    accessLevel: accessLevel$k,
-    examples: examples$k,
-    fromBytes: fromBytes$k,
-    headerSize: headerSize$k,
-    id: id$k,
-    isLoraOnly: isLoraOnly$k,
-    maxSize: maxSize$k,
-    name: name$k,
-    toBytes: toBytes$k
-  });
-
   var OPERATOR_PARAMETERS_SIZE = 95;
   var OPERATOR_PARAMETERS_EXTENDED_SIZE = 9;
   var OPERATOR_PARAMETERS_EXTENDED2_SIZE = 28;
@@ -5891,28 +5924,28 @@ var logs = '';
     VOLTAGE_IN_PHASE_B: 1 << 5,
     VOLTAGE_IN_PHASE_C: 1 << 6,
     BATTERY_VOLTAGE: 1 << 7,
-    FREQUENCY: 1 << 8,
+    SUPPLY_FREQUENCY: 1 << 8,
     ACTIVE_POWER_SUM: 1 << 9,
     ACTIVE_POWER_PHASE_A: 1 << 10,
     ACTIVE_POWER_PHASE_B: 1 << 11,
     ACTIVE_POWER_PHASE_C: 1 << 12,
-    REACTIVE_POWER_QPLUS_SUM: 1 << 13,
+    TOTAL_REACTIVE_POWER_QPLUS: 1 << 13,
     REACTIVE_POWER_QPLUS_PHASE_A: 1 << 14,
     REACTIVE_POWER_QPLUS_PHASE_B: 1 << 15,
     REACTIVE_POWER_QPLUS_PHASE_C: 1 << 16,
-    REACTIVE_POWER_QMINUS_SUM: 1 << 17,
+    TOTAL_REACTIVE_POWER_QMINUS: 1 << 17,
     REACTIVE_POWER_QMINUS_PHASE_A: 1 << 18,
     REACTIVE_POWER_QMINUS_PHASE_B: 1 << 19,
     REACTIVE_POWER_QMINUS_PHASE_C: 1 << 20,
-    POWER_COEFFICIENT_SUM: 1 << 21,
+    TOTAL_POWER_FACTOR: 1 << 21,
     POWER_COEFFICIENT_PHASE_A: 1 << 22,
     POWER_COEFFICIENT_PHASE_B: 1 << 23,
     POWER_COEFFICIENT_PHASE_C: 1 << 24,
-    APPARENT_POWER_QPLUS_SUM: 1 << 25,
+    TOTAL_APPARENT_POWER_QPLUS: 1 << 25,
     APPARENT_POWER_QPLUS_PHASE_A: 1 << 26,
     APPARENT_POWER_QPLUS_PHASE_B: 1 << 27,
     APPARENT_POWER_QPLUS_PHASE_C: 1 << 28,
-    APPARENT_POWER_QMINUS_SUM: 1 << 29,
+    TOTAL_APPARENT_POWER_QMINUS: 1 << 29,
     APPARENT_POWER_QMINUS_PHASE_A: 1 << 30,
     APPARENT_POWER_QMINUS_PHASE_B: 1 << 31
   };
@@ -5960,14 +5993,14 @@ var logs = '';
     MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: 1 << 6,
     MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: 1 << 7,
     MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: 1 << 8,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: 1 << 9,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: 1 << 10,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: 1 << 11,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: 1 << 12,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: 1 << 13,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: 1 << 14,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: 1 << 15,
-    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: 1 << 16,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: 1 << 9,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: 1 << 10,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: 1 << 11,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: 1 << 12,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: 1 << 13,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: 1 << 14,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: 1 << 15,
+    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: 1 << 16,
     HOUR_MINUTE_SECOND: 1 << 17,
     DATE_MONTH_YEAR: 1 << 18,
     CURRENT_TRANSFORMATION_RATIO: 1 << 19,
@@ -5995,28 +6028,28 @@ var logs = '';
     RELAY_ON_Y: 1 << 0,
     RELAY_ON_CENTER: 1 << 1,
     RELAY_ON_PB: 1 << 2,
-    RELAY_ON_TARIFF_0: 1 << 3,
-    RELAY_ON_TARIFF_1: 1 << 4,
-    RELAY_ON_TARIFF_2: 1 << 5,
-    RELAY_ON_TARIFF_3: 1 << 6,
+    RELAY_ON_TARIFF_1: 1 << 3,
+    RELAY_ON_TARIFF_2: 1 << 4,
+    RELAY_ON_TARIFF_3: 1 << 5,
+    RELAY_ON_TARIFF_4: 1 << 6,
     RELAY_ON_V_GOOD: 1 << 7,
     RELAY_OFF_Y: 1 << 8,
     RELAY_OFF_CENTER: 1 << 9,
-    RELAY_OFF_TARIFF_0: 1 << 10,
-    RELAY_OFF_TARIFF_1: 1 << 11,
-    RELAY_OFF_TARIFF_2: 1 << 12,
-    RELAY_OFF_TARIFF_3: 1 << 13,
+    RELAY_OFF_TARIFF_1: 1 << 10,
+    RELAY_OFF_TARIFF_2: 1 << 11,
+    RELAY_OFF_TARIFF_3: 1 << 12,
+    RELAY_OFF_TARIFF_4: 1 << 13,
     RELAY_OFF_I_LIMIT: 1 << 14,
     RELAY_OFF_V_BAD: 1 << 15,
-    RELAY_OFF_DIFF_BAD: 1 << 16,
-    RELAY_OFF_LIM_TARIFF_0: 1 << 17,
-    RELAY_OFF_LIM_TARIFF_1: 1 << 18,
-    RELAY_OFF_LIM_TARIFF_2: 1 << 19,
-    RELAY_OFF_LIM_TARIFF_3: 1 << 20,
-    RELAY_OFF_LIM_VAR_TARIFF_0: 1 << 21,
-    RELAY_OFF_LIM_VAR_TARIFF_1: 1 << 22,
-    RELAY_OFF_LIM_VAR_TARIFF_2: 1 << 23,
-    RELAY_OFF_LIM_VAR_TARIFF_3: 1 << 24,
+    RELAY_OFF_DIFF_CURRENT_BAD: 1 << 16,
+    RELAY_OFF_LIM_TARIFF_1: 1 << 17,
+    RELAY_OFF_LIM_TARIFF_2: 1 << 18,
+    RELAY_OFF_LIM_TARIFF_3: 1 << 19,
+    RELAY_OFF_LIM_TARIFF_4: 1 << 20,
+    RELAY_OFF_LIM_VAR_TARIFF_1: 1 << 21,
+    RELAY_OFF_LIM_VAR_TARIFF_2: 1 << 22,
+    RELAY_OFF_LIM_VAR_TARIFF_3: 1 << 23,
+    RELAY_OFF_LIM_VAR_TARIFF_4: 1 << 24,
     RELAY_ON_PF_MIN: 1 << 25,
     RELAY_OFF_PF_MIN: 1 << 26,
     RELAY_ON_TIMEOUT: 1 << 27,
@@ -6157,7 +6190,7 @@ var logs = '';
       timeoutMagnetOff: 5,
       relaySetExt: toObject(relaySetExtMask, 0),
       timeoutMagnetOn: 5,
-      phaseDefault: 3,
+      defaultPlcPhase: 3,
       displaySet21: toObject(displaySet1Mask, 4231),
       displaySet22: toObject(displaySet2Mask, 31597303),
       displaySet23: toObject(displaySet3Mask, 0),
@@ -6494,7 +6527,7 @@ var logs = '';
       timeoutMagnetOff: this.getUint8(),
       relaySetExt: toObject(relaySetExtMask, this.getUint8()),
       timeoutMagnetOn: this.getUint8(),
-      phaseDefault: this.getUint8(),
+      defaultPlcPhase: this.getUint8(),
       displaySet21: toObject(displaySet1Mask, this.getUint32()),
       displaySet22: toObject(displaySet2Mask, this.getUint32()),
       displaySet23: toObject(displaySet3Mask, this.getUint32()),
@@ -6519,7 +6552,7 @@ var logs = '';
     this.setUint8(operatorParametersExtended2.timeoutMagnetOff);
     this.setUint8(fromObject(relaySetExtMask, operatorParametersExtended2.relaySetExt));
     this.setUint8(operatorParametersExtended2.timeoutMagnetOn);
-    this.setUint8(operatorParametersExtended2.phaseDefault);
+    this.setUint8(operatorParametersExtended2.defaultPlcPhase);
     this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended2.displaySet21));
     this.setUint32(fromObject(displaySet2Mask, operatorParametersExtended2.displaySet22));
     this.setUint32(fromObject(displaySet3Mask, operatorParametersExtended2.displaySet23));
@@ -6537,9 +6570,9 @@ var logs = '';
       displaySet5: toObject(displaySet5Mask, this.getUint32()),
       displaySet25: toObject(displaySet5Mask, this.getUint32()),
       displaySet31: toObject(displaySet1Mask, this.getUint32()),
-      displaySet32: toObject(displaySet1Mask, this.getUint32()),
-      displaySet33: toObject(displaySet1Mask, this.getUint32()),
-      displaySet34: toObject(displaySet1Mask, this.getUint32()),
+      displaySet32: toObject(displaySet2Mask, this.getUint32()),
+      displaySet33: toObject(displaySet3Mask, this.getUint32()),
+      displaySet34: toObject(displaySet4Mask, this.getUint32()),
       displaySet35: toObject(displaySet5Mask, this.getUint32())
     };
   };
@@ -6547,18 +6580,91 @@ var logs = '';
     this.setUint32(fromObject(displaySet5Mask, operatorParametersExtended.displaySet5));
     this.setUint32(fromObject(displaySet5Mask, operatorParametersExtended.displaySet25));
     this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended.displaySet31));
-    this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended.displaySet32));
-    this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended.displaySet33));
-    this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended.displaySet34));
+    this.setUint32(fromObject(displaySet2Mask, operatorParametersExtended.displaySet32));
+    this.setUint32(fromObject(displaySet3Mask, operatorParametersExtended.displaySet33));
+    this.setUint32(fromObject(displaySet4Mask, operatorParametersExtended.displaySet34));
     this.setUint32(fromObject(displaySet5Mask, operatorParametersExtended.displaySet35));
   };
 
   var MIN_COMMAND_SIZE$1 = 3;
   var MAX_COMMAND_SIZE$1 = 4;
-  var id$j = getDayDemand$1;
-  var name$j = commandNames[getDayDemand$1];
+  var id$k = getDayDemand$1;
+  var name$k = commandNames[getDayDemand$1];
+  var headerSize$k = 2;
+  var maxSize$k = MAX_COMMAND_SIZE$1;
+  var accessLevel$k = READ_ONLY;
+  var isLoraOnly$k = false;
+  var examples$k = {
+    'request day values for 2024.03.22 00:00:00 GMT': {
+      id: id$k,
+      name: name$k,
+      headerSize: headerSize$k,
+      maxSize: maxSize$k,
+      accessLevel: accessLevel$k,
+      parameters: {
+        date: {
+          year: 24,
+          month: 3,
+          date: 22
+        }
+      },
+      bytes: [0x16, 0x03, 0x18, 0x03, 0x16]
+    },
+    'request day values with energy type for 2024.03.22 00:00:00 GMT': {
+      id: id$k,
+      name: name$k,
+      headerSize: headerSize$k,
+      maxSize: maxSize$k,
+      accessLevel: accessLevel$k,
+      parameters: {
+        date: {
+          year: 24,
+          month: 3,
+          date: 22
+        },
+        energyType: A_PLUS_R_PLUS_R_MINUS
+      },
+      bytes: [0x16, 0x04, 0x18, 0x03, 0x16, 0x01]
+    }
+  };
+  var fromBytes$k = function fromBytes(bytes) {
+    var buffer = new CommandBinaryBuffer(bytes);
+    if (bytes.length === MAX_COMMAND_SIZE$1) {
+      return {
+        date: buffer.getDate(),
+        energyType: buffer.getUint8()
+      };
+    }
+    return {
+      date: buffer.getDate()
+    };
+  };
+  var toBytes$k = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer(parameters !== null && parameters !== void 0 && parameters.energyType ? MAX_COMMAND_SIZE$1 : MIN_COMMAND_SIZE$1);
+    buffer.setDate(parameters === null || parameters === void 0 ? void 0 : parameters.date);
+    if (parameters !== null && parameters !== void 0 && parameters.energyType) {
+      buffer.setUint8(parameters.energyType);
+    }
+    return toBytes$17(id$k, buffer.data);
+  };
+
+  var getDayDemand = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    accessLevel: accessLevel$k,
+    examples: examples$k,
+    fromBytes: fromBytes$k,
+    headerSize: headerSize$k,
+    id: id$k,
+    isLoraOnly: isLoraOnly$k,
+    maxSize: maxSize$k,
+    name: name$k,
+    toBytes: toBytes$k
+  });
+
+  var id$j = getDayDemandExport$1;
+  var name$j = commandNames[getDayDemandExport$1];
   var headerSize$j = 2;
-  var maxSize$j = MAX_COMMAND_SIZE$1;
+  var maxSize$j = 3;
   var accessLevel$j = READ_ONLY;
   var isLoraOnly$j = false;
   var examples$j = {
@@ -6575,47 +6681,22 @@ var logs = '';
           date: 22
         }
       },
-      bytes: [0x16, 0x03, 0x18, 0x03, 0x16]
-    },
-    'request day values with energy type for 2024.03.22 00:00:00 GMT': {
-      id: id$j,
-      name: name$j,
-      headerSize: headerSize$j,
-      maxSize: maxSize$j,
-      accessLevel: accessLevel$j,
-      parameters: {
-        date: {
-          year: 24,
-          month: 3,
-          date: 22
-        },
-        energyType: A_PLUS_R_PLUS_R_MINUS
-      },
-      bytes: [0x16, 0x04, 0x18, 0x03, 0x16, 0x01]
+      bytes: [0x4f, 0x03, 0x18, 0x03, 0x16]
     }
   };
   var fromBytes$j = function fromBytes(bytes) {
     var buffer = new CommandBinaryBuffer(bytes);
-    if (bytes.length === MAX_COMMAND_SIZE$1) {
-      return {
-        date: buffer.getDate(),
-        energyType: buffer.getUint8()
-      };
-    }
     return {
       date: buffer.getDate()
     };
   };
   var toBytes$j = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer(parameters !== null && parameters !== void 0 && parameters.energyType ? MAX_COMMAND_SIZE$1 : MIN_COMMAND_SIZE$1);
-    buffer.setDate(parameters === null || parameters === void 0 ? void 0 : parameters.date);
-    if (parameters !== null && parameters !== void 0 && parameters.energyType) {
-      buffer.setUint8(parameters.energyType);
-    }
-    return toBytes$16(id$j, buffer.data);
+    var buffer = new CommandBinaryBuffer(maxSize$j);
+    buffer.setDate(parameters.date);
+    return toBytes$17(id$j, buffer.data);
   };
 
-  var getDayDemand = /*#__PURE__*/Object.freeze({
+  var getDayDemandExport = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$j,
     examples: examples$j,
@@ -6628,66 +6709,18 @@ var logs = '';
     toBytes: toBytes$j
   });
 
-  var id$i = getDayDemandExport$1;
-  var name$i = commandNames[getDayDemandExport$1];
+  var id$i = getDemand$1;
+  var name$i = commandNames[getDemand$1];
   var headerSize$i = 2;
-  var maxSize$i = 3;
+  var maxSize$i = 7;
   var accessLevel$i = READ_ONLY;
   var isLoraOnly$i = false;
   var examples$i = {
-    'request day values for 2024.03.22 00:00:00 GMT': {
+    'request for A+': {
       id: id$i,
       name: name$i,
       headerSize: headerSize$i,
       maxSize: maxSize$i,
-      accessLevel: accessLevel$i,
-      parameters: {
-        date: {
-          year: 24,
-          month: 3,
-          date: 22
-        }
-      },
-      bytes: [0x4f, 0x03, 0x18, 0x03, 0x16]
-    }
-  };
-  var fromBytes$i = function fromBytes(bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
-    return {
-      date: buffer.getDate()
-    };
-  };
-  var toBytes$i = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer(maxSize$i);
-    buffer.setDate(parameters.date);
-    return toBytes$16(id$i, buffer.data);
-  };
-
-  var getDayDemandExport = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    accessLevel: accessLevel$i,
-    examples: examples$i,
-    fromBytes: fromBytes$i,
-    headerSize: headerSize$i,
-    id: id$i,
-    isLoraOnly: isLoraOnly$i,
-    maxSize: maxSize$i,
-    name: name$i,
-    toBytes: toBytes$i
-  });
-
-  var id$h = getDemand$1;
-  var name$h = commandNames[getDemand$1];
-  var headerSize$h = 2;
-  var maxSize$h = 7;
-  var accessLevel$h = READ_ONLY;
-  var isLoraOnly$h = false;
-  var examples$h = {
-    'request for A+': {
-      id: id$h,
-      name: name$h,
-      headerSize: headerSize$h,
-      maxSize: maxSize$h,
       parameters: {
         date: {
           year: 21,
@@ -6702,17 +6735,62 @@ var logs = '';
       bytes: [0x76, 0x07, 0x2a, 0xd2, 0x81, 0x00, 0x00, 0x02, 0x1e]
     }
   };
-  var fromBytes$h = function fromBytes(bytes) {
+  var fromBytes$i = function fromBytes(bytes) {
     var buffer = new CommandBinaryBuffer(bytes);
     return buffer.getDemand();
   };
-  var toBytes$h = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer(maxSize$h);
+  var toBytes$i = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer(maxSize$i);
     buffer.setDemand(parameters);
-    return toBytes$16(id$h, buffer.data);
+    return toBytes$17(id$i, buffer.data);
   };
 
   var getDemand = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    accessLevel: accessLevel$i,
+    examples: examples$i,
+    fromBytes: fromBytes$i,
+    headerSize: headerSize$i,
+    id: id$i,
+    isLoraOnly: isLoraOnly$i,
+    maxSize: maxSize$i,
+    name: name$i,
+    toBytes: toBytes$i
+  });
+
+  var id$h = getDisplayParam$1;
+  var name$h = commandNames[getDisplayParam$1];
+  var headerSize$h = 2;
+  var maxSize$h = 1;
+  var accessLevel$h = READ_ONLY;
+  var isLoraOnly$h = false;
+  var examples$h = {
+    'get additional display parameters': {
+      id: id$h,
+      name: name$h,
+      headerSize: headerSize$h,
+      maxSize: maxSize$h,
+      accessLevel: accessLevel$h,
+      parameters: {
+        displayMode: MAIN_2
+      },
+      bytes: [0x5e, 0x01, 0x01]
+    }
+  };
+  var fromBytes$h = function fromBytes(_ref) {
+    var _ref2 = _slicedToArray(_ref, 1),
+      displayMode = _ref2[0];
+    return {
+      displayMode: displayMode
+    };
+  };
+  var toBytes$h = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer(maxSize$h);
+    buffer.setUint8(parameters.displayMode);
+    return toBytes$17(id$h, buffer.data);
+  };
+
+  var getDisplayParam = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$h,
     examples: examples$h,
@@ -6725,39 +6803,34 @@ var logs = '';
     toBytes: toBytes$h
   });
 
-  var id$g = getDisplayParam$1;
-  var name$g = commandNames[getDisplayParam$1];
+  var id$g = getEnergy$1;
+  var name$g = commandNames[getEnergy$1];
   var headerSize$g = 2;
-  var maxSize$g = 1;
+  var maxSize$g = 0;
   var accessLevel$g = READ_ONLY;
   var isLoraOnly$g = false;
   var examples$g = {
-    'get additional display parameters': {
+    'simple request': {
       id: id$g,
       name: name$g,
       headerSize: headerSize$g,
       maxSize: maxSize$g,
       accessLevel: accessLevel$g,
-      parameters: {
-        displayMode: MAIN_2
-      },
-      bytes: [0x5e, 0x01, 0x01]
+      parameters: {},
+      bytes: [0x0f, 0x00]
     }
   };
-  var fromBytes$g = function fromBytes(_ref) {
-    var _ref2 = _slicedToArray(_ref, 1),
-      displayMode = _ref2[0];
-    return {
-      displayMode: displayMode
-    };
+  var fromBytes$g = function fromBytes(bytes) {
+    if (bytes.length !== maxSize$g) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    return {};
   };
-  var toBytes$g = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer(maxSize$g);
-    buffer.setUint8(parameters.displayMode);
-    return toBytes$16(id$g, buffer.data);
+  var toBytes$g = function toBytes() {
+    return toBytes$17(id$g);
   };
 
-  var getDisplayParam = /*#__PURE__*/Object.freeze({
+  var getEnergy = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$g,
     examples: examples$g,
@@ -6770,10 +6843,12 @@ var logs = '';
     toBytes: toBytes$g
   });
 
-  var id$f = getEnergy$1;
-  var name$f = commandNames[getEnergy$1];
+  var MIN_COMMAND_SIZE = 0;
+  var MAX_COMMAND_SIZE = 1;
+  var id$f = getEnergyDayPrevious$1;
+  var name$f = commandNames[getEnergyDayPrevious$1];
   var headerSize$f = 2;
-  var maxSize$f = 0;
+  var maxSize$f = MAX_COMMAND_SIZE;
   var accessLevel$f = READ_ONLY;
   var isLoraOnly$f = false;
   var examples$f = {
@@ -6784,20 +6859,40 @@ var logs = '';
       maxSize: maxSize$f,
       accessLevel: accessLevel$f,
       parameters: {},
-      bytes: [0x0f, 0x00]
+      bytes: [0x03, 0x00]
+    },
+    'request A-R+R- energy': {
+      id: id$f,
+      name: name$f,
+      headerSize: headerSize$f,
+      maxSize: maxSize$f,
+      accessLevel: accessLevel$f,
+      parameters: {
+        energyType: A_MINUS_R_PLUS_R_MINUS
+      },
+      bytes: [0x03, 0x01, 0x02]
     }
   };
   var fromBytes$f = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$f) {
+    var length = bytes.length;
+    if (length !== MAX_COMMAND_SIZE && length !== MIN_COMMAND_SIZE) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    if (length === MAX_COMMAND_SIZE) {
+      return {
+        energyType: bytes[0]
+      };
     }
     return {};
   };
-  var toBytes$f = function toBytes() {
-    return toBytes$16(id$f);
+  var toBytes$f = function toBytes(parameters) {
+    if (parameters.energyType) {
+      return toBytes$17(id$f, [parameters.energyType]);
+    }
+    return toBytes$17(id$f);
   };
 
-  var getEnergy = /*#__PURE__*/Object.freeze({
+  var getEnergyDayPrevious = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$f,
     examples: examples$f,
@@ -6810,12 +6905,10 @@ var logs = '';
     toBytes: toBytes$f
   });
 
-  var MIN_COMMAND_SIZE = 0;
-  var MAX_COMMAND_SIZE = 1;
-  var id$e = getEnergyDayPrevious$1;
-  var name$e = commandNames[getEnergyDayPrevious$1];
+  var id$e = getEnergyExport$1;
+  var name$e = commandNames[getEnergyExport$1];
   var headerSize$e = 2;
-  var maxSize$e = MAX_COMMAND_SIZE;
+  var maxSize$e = 0;
   var accessLevel$e = READ_ONLY;
   var isLoraOnly$e = false;
   var examples$e = {
@@ -6826,40 +6919,20 @@ var logs = '';
       maxSize: maxSize$e,
       accessLevel: accessLevel$e,
       parameters: {},
-      bytes: [0x03, 0x00]
-    },
-    'request A-R+R- energy': {
-      id: id$e,
-      name: name$e,
-      headerSize: headerSize$e,
-      maxSize: maxSize$e,
-      accessLevel: accessLevel$e,
-      parameters: {
-        energyType: A_MINUS_R_PLUS_R_MINUS
-      },
-      bytes: [0x03, 0x01, 0x02]
+      bytes: [0x4e, 0x00]
     }
   };
   var fromBytes$e = function fromBytes(bytes) {
-    var length = bytes.length;
-    if (length !== MAX_COMMAND_SIZE && length !== MIN_COMMAND_SIZE) {
+    if (bytes.length !== maxSize$e) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
-    if (length === MAX_COMMAND_SIZE) {
-      return {
-        energyType: bytes[0]
-      };
     }
     return {};
   };
-  var toBytes$e = function toBytes(parameters) {
-    if (parameters.energyType) {
-      return toBytes$16(id$e, [parameters.energyType]);
-    }
-    return toBytes$16(id$e);
+  var toBytes$e = function toBytes() {
+    return toBytes$17(id$e);
   };
 
-  var getEnergyDayPrevious = /*#__PURE__*/Object.freeze({
+  var getEnergyExport = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$e,
     examples: examples$e,
@@ -6872,8 +6945,8 @@ var logs = '';
     toBytes: toBytes$e
   });
 
-  var id$d = getEnergyExport$1;
-  var name$d = commandNames[getEnergyExport$1];
+  var id$d = getEnergyExportDayPrevious$1;
+  var name$d = commandNames[getEnergyExportDayPrevious$1];
   var headerSize$d = 2;
   var maxSize$d = 0;
   var accessLevel$d = READ_ONLY;
@@ -6886,7 +6959,7 @@ var logs = '';
       maxSize: maxSize$d,
       accessLevel: accessLevel$d,
       parameters: {},
-      bytes: [0x4e, 0x00]
+      bytes: [0x50, 0x00]
     }
   };
   var fromBytes$d = function fromBytes(bytes) {
@@ -6896,10 +6969,10 @@ var logs = '';
     return {};
   };
   var toBytes$d = function toBytes() {
-    return toBytes$16(id$d);
+    return toBytes$17(id$d);
   };
 
-  var getEnergyExport = /*#__PURE__*/Object.freeze({
+  var getEnergyExportDayPrevious = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$d,
     examples: examples$d,
@@ -6912,34 +6985,48 @@ var logs = '';
     toBytes: toBytes$d
   });
 
-  var id$c = getEnergyExportDayPrevious$1;
-  var name$c = commandNames[getEnergyExportDayPrevious$1];
+  var id$c = getHalfHourDemandChannel$1;
+  var name$c = commandNames[getHalfHourDemandChannel$1];
   var headerSize$c = 2;
-  var maxSize$c = 0;
+  var maxSize$c = 5;
   var accessLevel$c = READ_ONLY;
   var isLoraOnly$c = false;
   var examples$c = {
-    'simple request': {
+    'request A-R- energy for phase A on 2024.03.22': {
       id: id$c,
       name: name$c,
       headerSize: headerSize$c,
       maxSize: maxSize$c,
       accessLevel: accessLevel$c,
-      parameters: {},
-      bytes: [0x50, 0x00]
+      parameters: {
+        channel: 1,
+        loadProfile: 16,
+        date: {
+          year: 24,
+          month: 3,
+          date: 22
+        }
+      },
+      bytes: [0x5a, 0x05, 0x01, 0x10, 0x18, 0x03, 0x16]
     }
   };
   var fromBytes$c = function fromBytes(bytes) {
-    if (bytes.length !== maxSize$c) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
-    return {};
+    var buffer = new CommandBinaryBuffer(bytes);
+    return {
+      channel: buffer.getUint8(),
+      loadProfile: buffer.getUint8(),
+      date: buffer.getDate()
+    };
   };
-  var toBytes$c = function toBytes() {
-    return toBytes$16(id$c);
+  var toBytes$c = function toBytes(parameters) {
+    var buffer = new CommandBinaryBuffer(maxSize$c);
+    buffer.setUint8(parameters.channel);
+    buffer.setUint8(parameters.loadProfile);
+    buffer.setDate(parameters.date);
+    return toBytes$17(id$c, buffer.data);
   };
 
-  var getEnergyExportDayPrevious = /*#__PURE__*/Object.freeze({
+  var getHalfHourDemandChannel = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$c,
     examples: examples$c,
@@ -6952,48 +7039,42 @@ var logs = '';
     toBytes: toBytes$c
   });
 
-  var id$b = getHalfHourDemandChannel$1;
-  var name$b = commandNames[getHalfHourDemandChannel$1];
+  var id$b = getHalfHourDemandVare$1;
+  var name$b = commandNames[getHalfHourDemandVare$1];
   var headerSize$b = 2;
-  var maxSize$b = 5;
+  var maxSize$b = 3;
   var accessLevel$b = READ_ONLY;
   var isLoraOnly$b = false;
   var examples$b = {
-    'request A-R- energy for phase A on 2024.03.22': {
+    'request archive values for 2024.03.22': {
       id: id$b,
       name: name$b,
       headerSize: headerSize$b,
       maxSize: maxSize$b,
       accessLevel: accessLevel$b,
       parameters: {
-        channel: 1,
-        channelParameter: 16,
         date: {
           year: 24,
           month: 3,
           date: 22
         }
       },
-      bytes: [0x5a, 0x05, 0x01, 0x10, 0x18, 0x03, 0x16]
+      bytes: [0x49, 0x03, 0x18, 0x03, 0x16]
     }
   };
   var fromBytes$b = function fromBytes(bytes) {
     var buffer = new CommandBinaryBuffer(bytes);
     return {
-      channel: buffer.getUint8(),
-      channelParameter: buffer.getUint8(),
       date: buffer.getDate()
     };
   };
   var toBytes$b = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$b);
-    buffer.setUint8(parameters.channel);
-    buffer.setUint8(parameters.channelParameter);
     buffer.setDate(parameters.date);
-    return toBytes$16(id$b, buffer.data);
+    return toBytes$17(id$b, buffer.data);
   };
 
-  var getHalfHourDemandChannel = /*#__PURE__*/Object.freeze({
+  var getHalfHourDemandVare = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$b,
     examples: examples$b,
@@ -7006,8 +7087,8 @@ var logs = '';
     toBytes: toBytes$b
   });
 
-  var id$a = getHalfHourDemandVare$1;
-  var name$a = commandNames[getHalfHourDemandVare$1];
+  var id$a = getHalfHourDemandVareExport$1;
+  var name$a = commandNames[getHalfHourDemandVareExport$1];
   var headerSize$a = 2;
   var maxSize$a = 3;
   var accessLevel$a = READ_ONLY;
@@ -7026,7 +7107,7 @@ var logs = '';
           date: 22
         }
       },
-      bytes: [0x49, 0x03, 0x18, 0x03, 0x16]
+      bytes: [0x55, 0x03, 0x18, 0x03, 0x16]
     }
   };
   var fromBytes$a = function fromBytes(bytes) {
@@ -7038,10 +7119,10 @@ var logs = '';
   var toBytes$a = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$a);
     buffer.setDate(parameters.date);
-    return toBytes$16(id$a, buffer.data);
+    return toBytes$17(id$a, buffer.data);
   };
 
-  var getHalfHourDemandVare = /*#__PURE__*/Object.freeze({
+  var getHalfHourDemandVareExport = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$a,
     examples: examples$a,
@@ -7054,8 +7135,8 @@ var logs = '';
     toBytes: toBytes$a
   });
 
-  var id$9 = getHalfHourDemandVareExport$1;
-  var name$9 = commandNames[getHalfHourDemandVareExport$1];
+  var id$9 = getHalfHourDemandVari$1;
+  var name$9 = commandNames[getHalfHourDemandVari$1];
   var headerSize$9 = 2;
   var maxSize$9 = 3;
   var accessLevel$9 = READ_ONLY;
@@ -7074,7 +7155,7 @@ var logs = '';
           date: 22
         }
       },
-      bytes: [0x55, 0x03, 0x18, 0x03, 0x16]
+      bytes: [0x48, 0x03, 0x18, 0x03, 0x16]
     }
   };
   var fromBytes$9 = function fromBytes(bytes) {
@@ -7086,10 +7167,10 @@ var logs = '';
   var toBytes$9 = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$9);
     buffer.setDate(parameters.date);
-    return toBytes$16(id$9, buffer.data);
+    return toBytes$17(id$9, buffer.data);
   };
 
-  var getHalfHourDemandVareExport = /*#__PURE__*/Object.freeze({
+  var getHalfHourDemandVari = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$9,
     examples: examples$9,
@@ -7102,8 +7183,8 @@ var logs = '';
     toBytes: toBytes$9
   });
 
-  var id$8 = getHalfHourDemandVari$1;
-  var name$8 = commandNames[getHalfHourDemandVari$1];
+  var id$8 = getHalfHourDemandVariExport$1;
+  var name$8 = commandNames[getHalfHourDemandVariExport$1];
   var headerSize$8 = 2;
   var maxSize$8 = 3;
   var accessLevel$8 = READ_ONLY;
@@ -7122,7 +7203,7 @@ var logs = '';
           date: 22
         }
       },
-      bytes: [0x48, 0x03, 0x18, 0x03, 0x16]
+      bytes: [0x54, 0x03, 0x18, 0x03, 0x16]
     }
   };
   var fromBytes$8 = function fromBytes(bytes) {
@@ -7134,10 +7215,10 @@ var logs = '';
   var toBytes$8 = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$8);
     buffer.setDate(parameters.date);
-    return toBytes$16(id$8, buffer.data);
+    return toBytes$17(id$8, buffer.data);
   };
 
-  var getHalfHourDemandVari = /*#__PURE__*/Object.freeze({
+  var getHalfHourDemandVariExport = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$8,
     examples: examples$8,
@@ -7150,42 +7231,34 @@ var logs = '';
     toBytes: toBytes$8
   });
 
-  var id$7 = getHalfHourDemandVariExport$1;
-  var name$7 = commandNames[getHalfHourDemandVariExport$1];
+  var id$7 = getOperatorParametersExtended$1;
+  var name$7 = commandNames[getOperatorParametersExtended$1];
   var headerSize$7 = 2;
-  var maxSize$7 = 3;
+  var maxSize$7 = 0;
   var accessLevel$7 = READ_ONLY;
   var isLoraOnly$7 = false;
   var examples$7 = {
-    'request archive values for 2024.03.22': {
+    'simple request': {
       id: id$7,
       name: name$7,
       headerSize: headerSize$7,
       maxSize: maxSize$7,
       accessLevel: accessLevel$7,
-      parameters: {
-        date: {
-          year: 24,
-          month: 3,
-          date: 22
-        }
-      },
-      bytes: [0x54, 0x03, 0x18, 0x03, 0x16]
+      parameters: {},
+      bytes: [0x3f, 0x00]
     }
   };
   var fromBytes$7 = function fromBytes(bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
-    return {
-      date: buffer.getDate()
-    };
+    if (bytes.length !== maxSize$7) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    return {};
   };
-  var toBytes$7 = function toBytes(parameters) {
-    var buffer = new CommandBinaryBuffer(maxSize$7);
-    buffer.setDate(parameters.date);
-    return toBytes$16(id$7, buffer.data);
+  var toBytes$7 = function toBytes() {
+    return toBytes$17(id$7);
   };
 
-  var getHalfHourDemandVariExport = /*#__PURE__*/Object.freeze({
+  var getOperatorParametersExtended = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$7,
     examples: examples$7,
@@ -7198,8 +7271,8 @@ var logs = '';
     toBytes: toBytes$7
   });
 
-  var id$6 = getOperatorParametersExtended$1;
-  var name$6 = commandNames[getOperatorParametersExtended$1];
+  var id$6 = getOperatorParametersExtended2$1;
+  var name$6 = commandNames[getOperatorParametersExtended2$1];
   var headerSize$6 = 2;
   var maxSize$6 = 0;
   var accessLevel$6 = READ_ONLY;
@@ -7212,7 +7285,7 @@ var logs = '';
       maxSize: maxSize$6,
       accessLevel: accessLevel$6,
       parameters: {},
-      bytes: [0x3f, 0x00]
+      bytes: [0x47, 0x00]
     }
   };
   var fromBytes$6 = function fromBytes(bytes) {
@@ -7222,10 +7295,10 @@ var logs = '';
     return {};
   };
   var toBytes$6 = function toBytes() {
-    return toBytes$16(id$6);
+    return toBytes$17(id$6);
   };
 
-  var getOperatorParametersExtended = /*#__PURE__*/Object.freeze({
+  var getOperatorParametersExtended2 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$6,
     examples: examples$6,
@@ -7238,8 +7311,8 @@ var logs = '';
     toBytes: toBytes$6
   });
 
-  var id$5 = getOperatorParametersExtended2$1;
-  var name$5 = commandNames[getOperatorParametersExtended2$1];
+  var id$5 = getOperatorParametersExtended4$1;
+  var name$5 = commandNames[getOperatorParametersExtended4$1];
   var headerSize$5 = 2;
   var maxSize$5 = 0;
   var accessLevel$5 = READ_ONLY;
@@ -7252,7 +7325,7 @@ var logs = '';
       maxSize: maxSize$5,
       accessLevel: accessLevel$5,
       parameters: {},
-      bytes: [0x47, 0x00]
+      bytes: [0x75, 0x00]
     }
   };
   var fromBytes$5 = function fromBytes(bytes) {
@@ -7262,10 +7335,10 @@ var logs = '';
     return {};
   };
   var toBytes$5 = function toBytes() {
-    return toBytes$16(id$5);
+    return toBytes$17(id$5);
   };
 
-  var getOperatorParametersExtended2 = /*#__PURE__*/Object.freeze({
+  var getOperatorParametersExtended4 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$5,
     examples: examples$5,
@@ -7323,7 +7396,7 @@ var logs = '';
     };
   };
   var toBytes$4 = function toBytes(parameters) {
-    return toBytes$16(id$4, [parameters.displayMode].concat(_toConsumableArray(parameters.order)));
+    return toBytes$17(id$4, [parameters.displayMode].concat(_toConsumableArray(parameters.order)));
   };
 
   var setDisplayParam = /*#__PURE__*/Object.freeze({
@@ -7411,28 +7484,28 @@ var logs = '';
           VOLTAGE_IN_PHASE_B: false,
           VOLTAGE_IN_PHASE_C: false,
           BATTERY_VOLTAGE: false,
-          FREQUENCY: false,
+          SUPPLY_FREQUENCY: false,
           ACTIVE_POWER_SUM: true,
           ACTIVE_POWER_PHASE_A: false,
           ACTIVE_POWER_PHASE_B: false,
           ACTIVE_POWER_PHASE_C: false,
-          REACTIVE_POWER_QPLUS_SUM: true,
+          TOTAL_REACTIVE_POWER_QPLUS: true,
           REACTIVE_POWER_QPLUS_PHASE_A: false,
           REACTIVE_POWER_QPLUS_PHASE_B: false,
           REACTIVE_POWER_QPLUS_PHASE_C: false,
-          REACTIVE_POWER_QMINUS_SUM: true,
+          TOTAL_REACTIVE_POWER_QMINUS: true,
           REACTIVE_POWER_QMINUS_PHASE_A: false,
           REACTIVE_POWER_QMINUS_PHASE_B: false,
           REACTIVE_POWER_QMINUS_PHASE_C: false,
-          POWER_COEFFICIENT_SUM: false,
+          TOTAL_POWER_FACTOR: false,
           POWER_COEFFICIENT_PHASE_A: false,
           POWER_COEFFICIENT_PHASE_B: false,
           POWER_COEFFICIENT_PHASE_C: false,
-          APPARENT_POWER_QPLUS_SUM: false,
+          TOTAL_APPARENT_POWER_QPLUS: false,
           APPARENT_POWER_QPLUS_PHASE_A: false,
           APPARENT_POWER_QPLUS_PHASE_B: false,
           APPARENT_POWER_QPLUS_PHASE_C: false,
-          APPARENT_POWER_QMINUS_SUM: false,
+          TOTAL_APPARENT_POWER_QMINUS: false,
           APPARENT_POWER_QMINUS_PHASE_A: false,
           APPARENT_POWER_QMINUS_PHASE_B: false
         },
@@ -7474,28 +7547,28 @@ var logs = '';
           RELAY_ON_Y: true,
           RELAY_ON_CENTER: true,
           RELAY_ON_PB: false,
-          RELAY_ON_TARIFF_0: false,
           RELAY_ON_TARIFF_1: false,
           RELAY_ON_TARIFF_2: false,
           RELAY_ON_TARIFF_3: false,
+          RELAY_ON_TARIFF_4: false,
           RELAY_ON_V_GOOD: false,
           RELAY_OFF_Y: true,
           RELAY_OFF_CENTER: true,
-          RELAY_OFF_TARIFF_0: false,
           RELAY_OFF_TARIFF_1: false,
           RELAY_OFF_TARIFF_2: false,
           RELAY_OFF_TARIFF_3: false,
+          RELAY_OFF_TARIFF_4: false,
           RELAY_OFF_I_LIMIT: false,
           RELAY_OFF_V_BAD: false,
-          RELAY_OFF_DIFF_BAD: false,
-          RELAY_OFF_LIM_TARIFF_0: false,
+          RELAY_OFF_DIFF_CURRENT_BAD: false,
           RELAY_OFF_LIM_TARIFF_1: false,
           RELAY_OFF_LIM_TARIFF_2: false,
           RELAY_OFF_LIM_TARIFF_3: false,
-          RELAY_OFF_LIM_VAR_TARIFF_0: false,
+          RELAY_OFF_LIM_TARIFF_4: false,
           RELAY_OFF_LIM_VAR_TARIFF_1: false,
           RELAY_OFF_LIM_VAR_TARIFF_2: false,
           RELAY_OFF_LIM_VAR_TARIFF_3: false,
+          RELAY_OFF_LIM_VAR_TARIFF_4: false,
           RELAY_ON_PF_MIN: false,
           RELAY_OFF_PF_MIN: false,
           RELAY_ON_TIMEOUT: false,
@@ -7542,14 +7615,14 @@ var logs = '';
           MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
           MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
           MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
           HOUR_MINUTE_SECOND: true,
           DATE_MONTH_YEAR: true,
           CURRENT_TRANSFORMATION_RATIO: false,
@@ -7576,7 +7649,7 @@ var logs = '';
   var toBytes$3 = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$3);
     buffer.setOperatorParameters(parameters);
-    return toBytes$16(id$3, buffer.data);
+    return toBytes$17(id$3, buffer.data);
   };
 
   var setOperatorParameters = /*#__PURE__*/Object.freeze({
@@ -7630,7 +7703,7 @@ var logs = '';
   var toBytes$2 = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$2);
     buffer.setOperatorParametersExtended(parameters);
-    return toBytes$16(id$2, buffer.data);
+    return toBytes$17(id$2, buffer.data);
   };
 
   var setOperatorParametersExtended = /*#__PURE__*/Object.freeze({
@@ -7668,7 +7741,7 @@ var logs = '';
           RELAY_ON_MAGNET_AUTO: true
         },
         timeoutMagnetOn: 5,
-        phaseDefault: 1,
+        defaultPlcPhase: 1,
         displaySet21: {
           SET_ALL_SEGMENT_DISPLAY: false,
           SOFTWARE_VERSION: false,
@@ -7712,28 +7785,28 @@ var logs = '';
           VOLTAGE_IN_PHASE_B: false,
           VOLTAGE_IN_PHASE_C: false,
           BATTERY_VOLTAGE: false,
-          FREQUENCY: false,
+          SUPPLY_FREQUENCY: false,
           ACTIVE_POWER_SUM: false,
           ACTIVE_POWER_PHASE_A: false,
           ACTIVE_POWER_PHASE_B: false,
           ACTIVE_POWER_PHASE_C: false,
-          REACTIVE_POWER_QPLUS_SUM: false,
+          TOTAL_REACTIVE_POWER_QPLUS: false,
           REACTIVE_POWER_QPLUS_PHASE_A: false,
           REACTIVE_POWER_QPLUS_PHASE_B: false,
           REACTIVE_POWER_QPLUS_PHASE_C: false,
-          REACTIVE_POWER_QMINUS_SUM: false,
+          TOTAL_REACTIVE_POWER_QMINUS: false,
           REACTIVE_POWER_QMINUS_PHASE_A: false,
           REACTIVE_POWER_QMINUS_PHASE_B: false,
           REACTIVE_POWER_QMINUS_PHASE_C: false,
-          POWER_COEFFICIENT_SUM: false,
+          TOTAL_POWER_FACTOR: false,
           POWER_COEFFICIENT_PHASE_A: false,
           POWER_COEFFICIENT_PHASE_B: false,
           POWER_COEFFICIENT_PHASE_C: false,
-          APPARENT_POWER_QPLUS_SUM: false,
+          TOTAL_APPARENT_POWER_QPLUS: false,
           APPARENT_POWER_QPLUS_PHASE_A: false,
           APPARENT_POWER_QPLUS_PHASE_B: false,
           APPARENT_POWER_QPLUS_PHASE_C: false,
-          APPARENT_POWER_QMINUS_SUM: false,
+          TOTAL_APPARENT_POWER_QMINUS: false,
           APPARENT_POWER_QMINUS_PHASE_A: false,
           APPARENT_POWER_QMINUS_PHASE_B: false
         },
@@ -7781,14 +7854,14 @@ var logs = '';
           MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
           MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
           MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
-          MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
           HOUR_MINUTE_SECOND: false,
           DATE_MONTH_YEAR: false,
           CURRENT_TRANSFORMATION_RATIO: false,
@@ -7823,7 +7896,7 @@ var logs = '';
   var toBytes$1 = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer(maxSize$1);
     buffer.setOperatorParametersExtended2(parameters);
-    return toBytes$16(id$1, buffer.data);
+    return toBytes$17(id$1, buffer.data);
   };
 
   var setOperatorParametersExtended2 = /*#__PURE__*/Object.freeze({
@@ -7872,82 +7945,14 @@ var logs = '';
           PROFILE_P06: true
         },
         displaySet31: {
-          SET_ALL_SEGMENT_DISPLAY: false,
+          SET_ALL_SEGMENT_DISPLAY: true,
           SOFTWARE_VERSION: false,
-          TOTAL_ACTIVE_ENERGY: false,
+          TOTAL_ACTIVE_ENERGY: true,
           ACTIVE_ENERGY_T1: false,
           ACTIVE_ENERGY_T2: false,
-          ACTIVE_ENERGY_T3: true,
-          ACTIVE_ENERGY_T4: false,
-          TOTAL_REACTIVE_ENERGY: false,
-          REACTIVE_ENERGY_T1: false,
-          REACTIVE_ENERGY_T2: true,
-          REACTIVE_ENERGY_T3: false,
-          REACTIVE_ENERGY_T4: false,
-          TOTAL_NEGATIVE_REACTIVE_ENERGY: false,
-          NEGATIVE_REACTIVE_ENERGY_T1: false,
-          NEGATIVE_REACTIVE_ENERGY_T2: false,
-          NEGATIVE_REACTIVE_ENERGY_T3: false,
-          NEGATIVE_REACTIVE_ENERGY_T4: false,
-          TOTAL_EXPORTED_ACTIVE_ENERGY: false,
-          EXPORTED_ACTIVE_ENERGY_T1: true,
-          EXPORTED_ACTIVE_ENERGY_T2: false,
-          EXPORTED_ACTIVE_ENERGY_T3: false,
-          EXPORTED_ACTIVE_ENERGY_T4: false,
-          TOTAL_EXPORTED_REACTIVE_ENERGY: false,
-          EXPORTED_REACTIVE_ENERGY_T1: false,
-          EXPORTED_REACTIVE_ENERGY_T2: false,
-          EXPORTED_REACTIVE_ENERGY_T3: false,
-          EXPORTED_REACTIVE_ENERGY_T4: false,
-          TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: false,
-          EXPORTED_NEGATIVE_REACTIVE_ENERGY_T1: false,
-          EXPORTED_NEGATIVE_REACTIVE_ENERGY_T2: false,
-          EXPORTED_NEGATIVE_REACTIVE_ENERGY_T3: true,
-          EXPORTED_NEGATIVE_REACTIVE_ENERGY_T4: false
-        },
-        displaySet32: {
-          SET_ALL_SEGMENT_DISPLAY: false,
-          SOFTWARE_VERSION: true,
-          TOTAL_ACTIVE_ENERGY: false,
-          ACTIVE_ENERGY_T1: false,
-          ACTIVE_ENERGY_T2: false,
-          ACTIVE_ENERGY_T3: true,
-          ACTIVE_ENERGY_T4: false,
-          TOTAL_REACTIVE_ENERGY: false,
-          REACTIVE_ENERGY_T1: false,
-          REACTIVE_ENERGY_T2: false,
-          REACTIVE_ENERGY_T3: false,
-          REACTIVE_ENERGY_T4: true,
-          TOTAL_NEGATIVE_REACTIVE_ENERGY: false,
-          NEGATIVE_REACTIVE_ENERGY_T1: false,
-          NEGATIVE_REACTIVE_ENERGY_T2: false,
-          NEGATIVE_REACTIVE_ENERGY_T3: false,
-          NEGATIVE_REACTIVE_ENERGY_T4: false,
-          TOTAL_EXPORTED_ACTIVE_ENERGY: false,
-          EXPORTED_ACTIVE_ENERGY_T1: false,
-          EXPORTED_ACTIVE_ENERGY_T2: false,
-          EXPORTED_ACTIVE_ENERGY_T3: false,
-          EXPORTED_ACTIVE_ENERGY_T4: false,
-          TOTAL_EXPORTED_REACTIVE_ENERGY: false,
-          EXPORTED_REACTIVE_ENERGY_T1: false,
-          EXPORTED_REACTIVE_ENERGY_T2: true,
-          EXPORTED_REACTIVE_ENERGY_T3: false,
-          EXPORTED_REACTIVE_ENERGY_T4: false,
-          TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: false,
-          EXPORTED_NEGATIVE_REACTIVE_ENERGY_T1: false,
-          EXPORTED_NEGATIVE_REACTIVE_ENERGY_T2: false,
-          EXPORTED_NEGATIVE_REACTIVE_ENERGY_T3: false,
-          EXPORTED_NEGATIVE_REACTIVE_ENERGY_T4: false
-        },
-        displaySet33: {
-          SET_ALL_SEGMENT_DISPLAY: false,
-          SOFTWARE_VERSION: false,
-          TOTAL_ACTIVE_ENERGY: false,
-          ACTIVE_ENERGY_T1: true,
-          ACTIVE_ENERGY_T2: true,
           ACTIVE_ENERGY_T3: false,
           ACTIVE_ENERGY_T4: false,
-          TOTAL_REACTIVE_ENERGY: false,
+          TOTAL_REACTIVE_ENERGY: true,
           REACTIVE_ENERGY_T1: false,
           REACTIVE_ENERGY_T2: false,
           REACTIVE_ENERGY_T3: false,
@@ -7966,46 +7971,110 @@ var logs = '';
           EXPORTED_REACTIVE_ENERGY_T1: false,
           EXPORTED_REACTIVE_ENERGY_T2: false,
           EXPORTED_REACTIVE_ENERGY_T3: false,
-          EXPORTED_REACTIVE_ENERGY_T4: true,
-          TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: true,
+          EXPORTED_REACTIVE_ENERGY_T4: false,
+          TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: false,
           EXPORTED_NEGATIVE_REACTIVE_ENERGY_T1: false,
           EXPORTED_NEGATIVE_REACTIVE_ENERGY_T2: false,
           EXPORTED_NEGATIVE_REACTIVE_ENERGY_T3: false,
           EXPORTED_NEGATIVE_REACTIVE_ENERGY_T4: false
         },
+        displaySet32: {
+          CURRENT_IN_PHASE_A: false,
+          CURRENT_IN_PHASE_B: false,
+          CURRENT_IN_PHASE_C: false,
+          CURRENT_IN_NEUTRAL: false,
+          VOLTAGE_IN_PHASE_A: false,
+          VOLTAGE_IN_PHASE_B: false,
+          VOLTAGE_IN_PHASE_C: false,
+          BATTERY_VOLTAGE: false,
+          SUPPLY_FREQUENCY: false,
+          ACTIVE_POWER_SUM: true,
+          ACTIVE_POWER_PHASE_A: false,
+          ACTIVE_POWER_PHASE_B: false,
+          ACTIVE_POWER_PHASE_C: false,
+          TOTAL_REACTIVE_POWER_QPLUS: true,
+          REACTIVE_POWER_QPLUS_PHASE_A: false,
+          REACTIVE_POWER_QPLUS_PHASE_B: false,
+          REACTIVE_POWER_QPLUS_PHASE_C: false,
+          TOTAL_REACTIVE_POWER_QMINUS: true,
+          REACTIVE_POWER_QMINUS_PHASE_A: false,
+          REACTIVE_POWER_QMINUS_PHASE_B: false,
+          REACTIVE_POWER_QMINUS_PHASE_C: false,
+          TOTAL_POWER_FACTOR: false,
+          POWER_COEFFICIENT_PHASE_A: false,
+          POWER_COEFFICIENT_PHASE_B: false,
+          POWER_COEFFICIENT_PHASE_C: false,
+          TOTAL_APPARENT_POWER_QPLUS: false,
+          APPARENT_POWER_QPLUS_PHASE_A: false,
+          APPARENT_POWER_QPLUS_PHASE_B: false,
+          APPARENT_POWER_QPLUS_PHASE_C: false,
+          TOTAL_APPARENT_POWER_QMINUS: false,
+          APPARENT_POWER_QMINUS_PHASE_A: false,
+          APPARENT_POWER_QMINUS_PHASE_B: false
+        },
+        displaySet33: {
+          APPARENT_POWER_QMINUS_PHASE_C: false,
+          MAX_ACTIVE_POWER_DAY_T1: false,
+          MAX_ACTIVE_POWER_DAY_T2: false,
+          MAX_ACTIVE_POWER_DAY_T3: false,
+          MAX_ACTIVE_POWER_DAY_T4: false,
+          MAX_ACTIVE_POWER_MONTH_T1: false,
+          MAX_ACTIVE_POWER_MONTH_T2: false,
+          MAX_ACTIVE_POWER_MONTH_T3: false,
+          MAX_ACTIVE_POWER_MONTH_T4: false,
+          MAX_REACTIVE_POWER_DAY_T1: false,
+          MAX_REACTIVE_POWER_DAY_T2: false,
+          MAX_REACTIVE_POWER_DAY_T3: false,
+          MAX_REACTIVE_POWER_DAY_T4: false,
+          MAX_REACTIVE_POWER_MONTH_T1: false,
+          MAX_REACTIVE_POWER_MONTH_T2: false,
+          MAX_REACTIVE_POWER_MONTH_T3: false,
+          MAX_REACTIVE_POWER_MONTH_T4: false,
+          MAX_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+          MAX_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+          MAX_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+          MAX_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+          MAX_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+          MAX_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+          MAX_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+          MAX_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
+          MAX_EXPORTED_ACTIVE_POWER_DAY_T1: false,
+          MAX_EXPORTED_ACTIVE_POWER_DAY_T2: false,
+          MAX_EXPORTED_ACTIVE_POWER_DAY_T3: false,
+          MAX_EXPORTED_ACTIVE_POWER_DAY_T4: false,
+          MAX_EXPORTED_ACTIVE_POWER_MONTH_T1: false,
+          MAX_EXPORTED_ACTIVE_POWER_MONTH_T2: false,
+          MAX_EXPORTED_ACTIVE_POWER_MONTH_T3: false
+        },
         displaySet34: {
-          SET_ALL_SEGMENT_DISPLAY: false,
-          SOFTWARE_VERSION: false,
-          TOTAL_ACTIVE_ENERGY: false,
-          ACTIVE_ENERGY_T1: true,
-          ACTIVE_ENERGY_T2: true,
-          ACTIVE_ENERGY_T3: false,
-          ACTIVE_ENERGY_T4: false,
-          TOTAL_REACTIVE_ENERGY: false,
-          REACTIVE_ENERGY_T1: false,
-          REACTIVE_ENERGY_T2: false,
-          REACTIVE_ENERGY_T3: false,
-          REACTIVE_ENERGY_T4: false,
-          TOTAL_NEGATIVE_REACTIVE_ENERGY: false,
-          NEGATIVE_REACTIVE_ENERGY_T1: false,
-          NEGATIVE_REACTIVE_ENERGY_T2: false,
-          NEGATIVE_REACTIVE_ENERGY_T3: false,
-          NEGATIVE_REACTIVE_ENERGY_T4: false,
-          TOTAL_EXPORTED_ACTIVE_ENERGY: false,
-          EXPORTED_ACTIVE_ENERGY_T1: false,
-          EXPORTED_ACTIVE_ENERGY_T2: true,
-          EXPORTED_ACTIVE_ENERGY_T3: true,
-          EXPORTED_ACTIVE_ENERGY_T4: false,
-          TOTAL_EXPORTED_REACTIVE_ENERGY: false,
-          EXPORTED_REACTIVE_ENERGY_T1: false,
-          EXPORTED_REACTIVE_ENERGY_T2: false,
-          EXPORTED_REACTIVE_ENERGY_T3: false,
-          EXPORTED_REACTIVE_ENERGY_T4: false,
-          TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: false,
-          EXPORTED_NEGATIVE_REACTIVE_ENERGY_T1: false,
-          EXPORTED_NEGATIVE_REACTIVE_ENERGY_T2: false,
-          EXPORTED_NEGATIVE_REACTIVE_ENERGY_T3: true,
-          EXPORTED_NEGATIVE_REACTIVE_ENERGY_T4: false
+          MAX_EXPORTED_ACTIVE_POWER_MONTH_T4: false,
+          MAX_EXPORTED_REACTIVE_POWER_DAY_T1: false,
+          MAX_EXPORTED_REACTIVE_POWER_DAY_T2: false,
+          MAX_EXPORTED_REACTIVE_POWER_DAY_T3: false,
+          MAX_EXPORTED_REACTIVE_POWER_DAY_T4: false,
+          MAX_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
+          MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
+          MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
+          MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+          MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
+          HOUR_MINUTE_SECOND: true,
+          DATE_MONTH_YEAR: true,
+          CURRENT_TRANSFORMATION_RATIO: false,
+          VOLTAGE_TRANSFORMATION_RATIO: false,
+          CURRENT_BALANCE: false,
+          POWER_THRESHOLD_T1: false,
+          POWER_THRESHOLD_T2: false,
+          POWER_THRESHOLD_T3: false,
+          POWER_THRESHOLD_T4: false,
+          SORT_DISPLAY_SCREENS: false,
+          AUTO_SCREEN_SCROLLING: true
         },
         displaySet35: {
           EVENT: false,
@@ -8017,7 +8086,7 @@ var logs = '';
           PROFILE_P06: false
         }
       },
-      bytes: [0x74, 0x1c, 0x00, 0x00, 0x00, 0x5b, 0x00, 0x00, 0x00, 0x55, 0x40, 0x04, 0x02, 0x20, 0x01, 0x00, 0x08, 0x22, 0x0c, 0x00, 0x10, 0x18, 0x40, 0x18, 0x00, 0x18, 0x00, 0x00, 0x00, 0x1c]
+      bytes: [0x74, 0x1c, 0x00, 0x00, 0x00, 0x5b, 0x00, 0x00, 0x00, 0x55, 0x00, 0x00, 0x10, 0x85, 0x00, 0x02, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1c]
     }
   };
   var fromBytes = function fromBytes(bytes) {
@@ -8030,7 +8099,7 @@ var logs = '';
   var toBytes = function toBytes(parameters) {
     var buffer = new CommandBinaryBuffer(maxSize);
     buffer.setOperatorParametersExtended4(parameters);
-    return toBytes$16(id, buffer.data);
+    return toBytes$17(id, buffer.data);
   };
 
   var setOperatorParametersExtended4 = /*#__PURE__*/Object.freeze({
@@ -8090,6 +8159,7 @@ var logs = '';
     getOperatorParametersExtended: getOperatorParametersExtended,
     getOperatorParametersExtended2: getOperatorParametersExtended2,
     getOperatorParametersExtended3: getOperatorParametersExtended3$1,
+    getOperatorParametersExtended4: getOperatorParametersExtended4,
     getRatePlanInfo: getRatePlanInfo$1,
     getSaldo: getSaldo$1,
     getSaldoParameters: getSaldoParameters$1,

@@ -572,6 +572,8 @@
     const EXTRA_PAYLOAD_ENABLE = 57;
     const TIME_SYNCHRONIZATION_PERIOD_VIA_MAC = 58;
     const KEEP_LORA_CONNECTION_ON_REMOVAL = 59;
+    const NBIOT_NTP_SERVER = 60;
+    const ACTIVATE_MODULE = 61;
 
     var deviceParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -579,6 +581,7 @@
         ABSOLUTE_DATA_ENABLE: ABSOLUTE_DATA_ENABLE,
         ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL: ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL,
         ABSOLUTE_DATA_MULTI_CHANNEL: ABSOLUTE_DATA_MULTI_CHANNEL,
+        ACTIVATE_MODULE: ACTIVATE_MODULE,
         ACTIVATION_METHOD: ACTIVATION_METHOD,
         BATTERY_DEPASSIVATION_CONFIG: BATTERY_DEPASSIVATION_CONFIG,
         BATTERY_DEPASSIVATION_INFO: BATTERY_DEPASSIVATION_INFO,
@@ -603,6 +606,7 @@
         NBIOT_LED_INDICATION: NBIOT_LED_INDICATION,
         NBIOT_MODULE_FIRMWARE_UPDATE: NBIOT_MODULE_FIRMWARE_UPDATE,
         NBIOT_MODULE_INFO: NBIOT_MODULE_INFO,
+        NBIOT_NTP_SERVER: NBIOT_NTP_SERVER,
         NBIOT_SIM: NBIOT_SIM,
         NBIOT_SSL_CACERT_SET: NBIOT_SSL_CACERT_SET,
         NBIOT_SSL_CACERT_WRITE: NBIOT_SSL_CACERT_WRITE,
@@ -793,7 +797,8 @@
         [NBIOT_SIM]: 1 + 3,
         [EXTRA_PAYLOAD_ENABLE]: 1 + 1,
         [TIME_SYNCHRONIZATION_PERIOD_VIA_MAC]: 1 + 4,
-        [KEEP_LORA_CONNECTION_ON_REMOVAL]: 1 + 1
+        [KEEP_LORA_CONNECTION_ON_REMOVAL]: 1 + 1,
+        [ACTIVATE_MODULE]: 1 + 1
     };
     const fourChannelsBitMask = {
         channel1: Math.pow(2, 0),
@@ -1244,6 +1249,24 @@
             set: (buffer, parameter) => {
                 buffer.setUint8(parameter.value ? 1 : 0);
             }
+        },
+        [NBIOT_NTP_SERVER]: {
+            get: (buffer) => ({
+                server: buffer.getString(),
+                port: buffer.getUint16()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setString(parameter.server);
+                buffer.setUint16(parameter.port);
+            }
+        },
+        [ACTIVATE_MODULE]: {
+            get: (buffer) => ({
+                enable: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.enable);
+            }
         }
     };
     const getEventStatusSize = (hardwareType) => (TWO_BYTES_HARDWARE_TYPES.indexOf(hardwareType) !== -1 ? 2 : 1);
@@ -1302,6 +1325,10 @@
                 data = parameter.data;
                 size = 1 + getChannelTypeSize(data);
                 break;
+            case NBIOT_NTP_SERVER:
+                data = parameter.data;
+                size = 1 + 1 + data.server.length + 2;
+                break;
             default:
                 size = parametersSizeMap[parameter.id];
         }
@@ -1346,6 +1373,7 @@
             case NBIOT_BANDS:
             case NBIOT_APN:
             case CHANNEL_TYPE:
+            case NBIOT_NTP_SERVER:
                 size = getParameterSize(parameter);
                 break;
             default:
@@ -2864,13 +2892,13 @@
     const name$H = commandNames$1[setParameter$3];
     const headerSize$H = 2;
     const examples$H = {
-        'set minimal reporting data interval to 1 hour': {
+        '01_LoRa: set minimal reporting data interval to 1 hour': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 1,
-                name: 'REPORTING_DATA_INTERVAL',
+                id: REPORTING_DATA_INTERVAL,
+                name: deviceParameterNames[REPORTING_DATA_INTERVAL],
                 data: {
                     specialSchedulePeriod: 0,
                     firstDaysSpecialSchedule: 0,
@@ -2883,13 +2911,13 @@
                 0x01, 0x00, 0x00, 0x00, 0x06
             ]
         },
-        'set day checkout hour to 12:00': {
+        '04_LoRa: set day checkout hour to 12:00': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 4,
-                name: 'DAY_CHECKOUT_HOUR',
+                id: DAY_CHECKOUT_HOUR,
+                name: deviceParameterNames[DAY_CHECKOUT_HOUR],
                 data: { value: 12 }
             },
             bytes: [
@@ -2897,13 +2925,13 @@
                 0x04, 0x0c
             ]
         },
-        'set reporting data type to "day"': {
+        '05_LoRa: set reporting data type to "day"': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 5,
-                name: 'REPORTING_DATA_TYPE',
+                id: REPORTING_DATA_TYPE,
+                name: deviceParameterNames[REPORTING_DATA_TYPE],
                 data: { type: 1 }
             },
             bytes: [
@@ -2911,13 +2939,13 @@
                 0x05, 0x01
             ]
         },
-        'set "with confirmation" for delivery of priority data': {
+        '08_LoRa: set "with confirmation" for delivery of priority data': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 8,
-                name: 'PRIORITY_DATA_DELIVERY_TYPE',
+                id: PRIORITY_DATA_DELIVERY_TYPE,
+                name: deviceParameterNames[PRIORITY_DATA_DELIVERY_TYPE],
                 data: { value: 0 }
             },
             bytes: [
@@ -2925,13 +2953,13 @@
                 0x08, 0x00
             ]
         },
-        'set activation method to "ABP"': {
+        '09_LoRa: set activation method to "ABP"': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 9,
-                name: 'ACTIVATION_METHOD',
+                id: ACTIVATION_METHOD,
+                name: deviceParameterNames[ACTIVATION_METHOD],
                 data: { type: 1 }
             },
             bytes: [
@@ -2939,13 +2967,13 @@
                 0x09, 0x01
             ]
         },
-        'set battery depassivation info': {
+        '10_LoRa: set battery depassivation info': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 10,
-                name: 'BATTERY_DEPASSIVATION_INFO',
+                id: BATTERY_DEPASSIVATION_INFO,
+                name: deviceParameterNames[BATTERY_DEPASSIVATION_INFO],
                 data: {
                     loadTime: 100,
                     internalResistance: 3222,
@@ -2957,13 +2985,13 @@
                 0x0a, 0x00, 0x64, 0x0c, 0x96, 0x00, 0xe9
             ]
         },
-        'set battery minimal load time to "100"': {
+        '11_LoRa: set battery minimal load time to "100"': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 11,
-                name: 'BATTERY_MINIMAL_LOAD_TIME',
+                id: BATTERY_MINIMAL_LOAD_TIME,
+                name: deviceParameterNames[BATTERY_MINIMAL_LOAD_TIME],
                 data: { value: 100 }
             },
             bytes: [
@@ -2971,13 +2999,13 @@
                 0x0b, 0x00, 0x00, 0x00, 0x64
             ]
         },
-        'enable 1-4 channels, and disable serial channel for device': {
+        '13_LoRa: enable 1-4 channels, and disable serial channel for device': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 13,
-                name: 'CHANNELS_CONFIG',
+                id: CHANNELS_CONFIG,
+                name: deviceParameterNames[CHANNELS_CONFIG],
                 data: { value: 0 }
             },
             bytes: [
@@ -2985,13 +3013,13 @@
                 0x0d, 0x00
             ]
         },
-        'set spread factor and frequency for RX2 window': {
+        '18_LoRa: set spread factor and frequency for RX2 window': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 18,
-                name: 'RX2_CONFIG',
+                id: RX2_CONFIG,
+                name: deviceParameterNames[RX2_CONFIG],
                 data: {
                     spreadFactor: 5,
                     spreadFactorName: 'SF7B125',
@@ -3003,13 +3031,13 @@
                 0x12, 0x05, 0x00, 0x00, 0xc8
             ]
         },
-        'set absolute data (not multichannel device)': {
+        '23_Common_Gas: set absolute data (not multichannel device': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 23,
-                name: 'ABSOLUTE_DATA',
+                id: ABSOLUTE_DATA,
+                name: deviceParameterNames[ABSOLUTE_DATA],
                 data: {
                     meterValue: 204,
                     pulseCoefficient: 100,
@@ -3021,13 +3049,13 @@
                 0x17, 0x00, 0x00, 0x00, 0xcc, 0x83, 0x00, 0x00, 0x07, 0xe7
             ]
         },
-        'enable absolute data (not multichannel device)': {
+        '24_Common_Gas: enable absolute data (not multichannel device': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 24,
-                name: 'ABSOLUTE_DATA_ENABLE',
+                id: ABSOLUTE_DATA_ENABLE,
+                name: deviceParameterNames[ABSOLUTE_DATA_ENABLE],
                 data: { state: 1 }
             },
             bytes: [
@@ -3035,13 +3063,13 @@
                 0x18, 0x01
             ]
         },
-        'set device serial number': {
+        '25_LoRa: set device serial number': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 25,
-                name: 'SERIAL_NUMBER',
+                id: SERIAL_NUMBER,
+                name: deviceParameterNames[SERIAL_NUMBER],
                 data: { value: '1b 0a 3e dc 3e 22' }
             },
             bytes: [
@@ -3049,13 +3077,13 @@
                 0x19, 0x1b, 0x0a, 0x3e, 0xdc, 0x3e, 0x22
             ]
         },
-        'set device geolocation': {
+        '26_LoRa: set device geolocation': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 26,
-                name: 'GEOLOCATION',
+                id: GEOLOCATION,
+                name: deviceParameterNames[GEOLOCATION],
                 data: {
                     latitude: 34.43,
                     longitude: 43.43,
@@ -3067,13 +3095,13 @@
                 0x1a, 0x42, 0x09, 0xb8, 0x52, 0x42, 0x2d, 0xb8, 0x52, 0x00, 0x17
             ]
         },
-        'set interval to send EXTRA FRAME': {
+        '28_LoRa: set interval to send EXTRA FRAME': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 28,
-                name: 'EXTRA_FRAME_INTERVAL',
+                id: EXTRA_FRAME_INTERVAL,
+                name: deviceParameterNames[EXTRA_FRAME_INTERVAL],
                 data: { value: 3600 }
             },
             bytes: [
@@ -3081,13 +3109,13 @@
                 0x1c, 0x0e, 0x10
             ]
         },
-        'set absolute data for multichannel device (1 channel)': {
+        '29_Common_4PU: set absolute data for multichannel device (1 channel': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 29,
-                name: 'ABSOLUTE_DATA_MULTI_CHANNEL',
+                id: ABSOLUTE_DATA_MULTI_CHANNEL,
+                name: deviceParameterNames[ABSOLUTE_DATA_MULTI_CHANNEL],
                 data: {
                     channel: 1,
                     meterValue: 402,
@@ -3100,13 +3128,13 @@
                 0x1d, 0x00, 0x00, 0x00, 0x01, 0x92, 0x84, 0x00, 0x00, 0x07, 0xf0
             ]
         },
-        'enable absolute data for multichannel device (2 channel)': {
+        '30_Common_4PU: enable absolute data for multichannel device (2 channel': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 30,
-                name: 'ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL',
+                id: ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL,
+                name: deviceParameterNames[ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL],
                 data: {
                     channel: 2,
                     state: 1
@@ -3117,13 +3145,13 @@
                 0x1e, 0x01, 0x01
             ]
         },
-        'set pulse channels config': {
+        '31_LoRa_4PU: set pulse channels config': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 31,
-                name: 'PULSE_CHANNELS_SCAN_CONFIG',
+                id: PULSE_CHANNELS_SCAN_CONFIG,
+                name: deviceParameterNames[PULSE_CHANNELS_SCAN_CONFIG],
                 data: {
                     channelList: [1, 4],
                     pullUpTime: 18,
@@ -3135,13 +3163,13 @@
                 0x1f, 0x09, 0x12, 0x17
             ]
         },
-        'enable channels: 1, 2, disable channels: 3, 4, for pulse device': {
+        '32_LoRa_4PU: enable channels: 1, 2, disable channels: 3, 4, for pulse device': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 32,
-                name: 'PULSE_CHANNELS_SET_CONFIG',
+                id: PULSE_CHANNELS_SET_CONFIG,
+                name: deviceParameterNames[PULSE_CHANNELS_SET_CONFIG],
                 data: {
                     channel1: true,
                     channel2: true,
@@ -3154,13 +3182,13 @@
                 0x20, 0x03
             ]
         },
-        'set depassivation config for device': {
+        '33_LoRa: set depassivation config for device': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 33,
-                name: 'BATTERY_DEPASSIVATION_CONFIG',
+                id: BATTERY_DEPASSIVATION_CONFIG,
+                name: deviceParameterNames[BATTERY_DEPASSIVATION_CONFIG],
                 data: {
                     resistanceStartThreshold: 36000,
                     resistanceStopThreshold: 26000
@@ -3171,13 +3199,203 @@
                 0x21, 0x8c, 0xa0, 0x65, 0x90
             ]
         },
-        'set nbiot bands': {
+        '34_NB-IoT: set configuration for session': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 52,
-                name: 'NBIOT_BANDS',
+                id: MQTT_SESSION_CONFIG,
+                name: deviceParameterNames[MQTT_SESSION_CONFIG],
+                data: {
+                    clientId: 'id',
+                    username: 'login',
+                    password: 'pass',
+                    cleanSession: 1
+                }
+            },
+            bytes: [
+                0x03, 0x10,
+                0x22, 0x02, 0x69, 0x64, 0x05, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x04, 0x70, 0x61, 0x73, 0x73, 0x01
+            ]
+        },
+        '35_NB-IoT: set broker address': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: MQTT_BROKER_ADDRESS,
+                name: deviceParameterNames[MQTT_BROKER_ADDRESS],
+                data: {
+                    hostName: '127.0.0.1',
+                    port: 1883
+                }
+            },
+            bytes: [
+                0x03, 0x0d,
+                0x23, 0x09, 0x31, 0x32, 0x37, 0x2e, 0x30, 0x2e, 0x30, 0x2e, 0x31, 0x07, 0x5b
+            ]
+        },
+        '36_NB-IoT: disable ssl': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: MQTT_SSL_ENABLE,
+                name: deviceParameterNames[MQTT_SSL_ENABLE],
+                data: {
+                    enable: 0
+                }
+            },
+            bytes: [
+                0x03, 0x02,
+                0x24, 0x00
+            ]
+        },
+        '37_NB-IoT: set topic prefix': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: MQTT_TOPIC_PREFIX,
+                name: deviceParameterNames[MQTT_TOPIC_PREFIX],
+                data: {
+                    topicPrefix: 'mqtt'
+                }
+            },
+            bytes: [
+                0x03, 0x06,
+                0x25, 0x04, 0x6d, 0x71, 0x74, 0x74
+            ]
+        },
+        '38_NB-IoT: set configuration for data receive': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: MQTT_DATA_RECEIVE_CONFIG,
+                name: deviceParameterNames[MQTT_DATA_RECEIVE_CONFIG],
+                data: {
+                    qos: 1,
+                    count: 255,
+                    timeout: 20
+                }
+            },
+            bytes: [
+                0x03, 0x04,
+                0x26, 0x01, 0xff, 0x14
+            ]
+        },
+        '39_NB-IoT: set configuration for data send': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: MQTT_DATA_SEND_CONFIG,
+                name: deviceParameterNames[MQTT_DATA_SEND_CONFIG],
+                data: {
+                    qos: 1,
+                    retain: 0,
+                    newestSendFirst: 1
+                }
+            },
+            bytes: [
+                0x03, 0x04,
+                0x27, 0x01, 0x00, 0x01
+            ]
+        },
+        '40_NB-IoT: set configuration for ssl': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: NBIOT_SSL_CONFIG,
+                name: deviceParameterNames[NBIOT_SSL_CONFIG],
+                data: {
+                    securityLevel: 0,
+                    version: 3
+                }
+            },
+            bytes: [
+                0x03, 0x03,
+                0x28, 0x00, 0x03
+            ]
+        },
+        '47_NB-IoT: update software': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: NBIOT_DEVICE_SOFTWARE_UPDATE,
+                name: deviceParameterNames[NBIOT_DEVICE_SOFTWARE_UPDATE],
+                data: {
+                    softwareImageUrl: 'http://url.com/image.bin'
+                }
+            },
+            bytes: [
+                0x03, 0x1a,
+                0x2f, 0x18, 0x68, 0x74, 0x74, 0x70, 0x3a, 0x2f, 0x2f, 0x75, 0x72, 0x6c, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x69, 0x6d, 0x61, 0x67, 0x65, 0x2e, 0x62, 0x69, 0x6e
+            ]
+        },
+        '48_NB-IoT: update NB-IoT module firmware': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: NBIOT_MODULE_FIRMWARE_UPDATE,
+                name: deviceParameterNames[NBIOT_MODULE_FIRMWARE_UPDATE],
+                data: {
+                    moduleFirmwareImageUrl: 'http://url.com/nbiot.bin'
+                }
+            },
+            bytes: [
+                0x03, 0x1a,
+                0x30, 0x18, 0x68, 0x74, 0x74, 0x70, 0x3a, 0x2f, 0x2f, 0x75, 0x72, 0x6c, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6e, 0x62, 0x69, 0x6f, 0x74, 0x2e, 0x62, 0x69, 0x6e
+            ]
+        },
+        '49_NB-IoT: set configuration for reporting data': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: REPORTING_DATA_CONFIG,
+                name: deviceParameterNames[REPORTING_DATA_CONFIG],
+                data: {
+                    dataType: 0,
+                    hour: 4,
+                    minutes: 0,
+                    countToSend: 24
+                }
+            },
+            bytes: [
+                0x03, 0x05,
+                0x31, 0x00, 0x04, 0x00, 0x18
+            ]
+        },
+        '50_NB-IoT: set configuration for events': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: EVENTS_CONFIG,
+                name: deviceParameterNames[EVENTS_CONFIG],
+                data: {
+                    eventId: 3,
+                    sendEvent: 1,
+                    saveEvent: 1
+                }
+            },
+            bytes: [
+                0x03, 0x04,
+                0x32, 0x03, 0x01, 0x01
+            ]
+        },
+        '52_NB-IoT: set nbiot bands': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: NBIOT_BANDS,
+                name: deviceParameterNames[NBIOT_BANDS],
                 data: { bands: [3, 8, 20] }
             },
             bytes: [
@@ -3185,13 +3403,13 @@
                 0x34, 0x03, 0x03, 0x08, 0x14
             ]
         },
-        'set nbiot apn': {
+        '53_NB-IoT: set nbiot apn': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 53,
-                name: 'NBIOT_APN',
+                id: NBIOT_APN,
+                name: deviceParameterNames[NBIOT_APN],
                 data: { apn: 'nbiot' }
             },
             bytes: [
@@ -3199,13 +3417,13 @@
                 0x35, 0x05, 0x6e, 0x62, 0x69, 0x6f, 0x74
             ]
         },
-        'set nbiot led indication': {
+        '54_NB-IoT: set nbiot led indication': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 54,
-                name: 'NBIOT_LED_INDICATION',
+                id: NBIOT_LED_INDICATION,
+                name: deviceParameterNames[NBIOT_LED_INDICATION],
                 data: {
                     enableLed: 1,
                     enableNbiotNetworkLed: 1
@@ -3216,13 +3434,13 @@
                 0x36, 0x01, 0x01
             ]
         },
-        'set nbiot sim pin code': {
+        '55_NB-IoT: set nbiot sim pin code': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 55,
-                name: 'NBIOT_SIM',
+                id: NBIOT_SIM,
+                name: deviceParameterNames[NBIOT_SIM],
                 data: {
                     enable: 1,
                     pin: 9999
@@ -3233,13 +3451,13 @@
                 0x37, 0x01, 0x27, 0x0f
             ]
         },
-        'set channel type. Channel index: 1, type: power channel': {
+        '56_4PU: set channel type. Channel index: 1, type: power channel': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 56,
-                name: 'CHANNEL_TYPE',
+                id: CHANNEL_TYPE,
+                name: deviceParameterNames[CHANNEL_TYPE],
                 data: {
                     channel: 1,
                     type: POWER_CHANNEL,
@@ -3251,13 +3469,13 @@
                 0x38, 0x00, 0x02
             ]
         },
-        'set channel type. Channel index: 2, type: binary sensor': {
+        '56_4PU: set channel type. Channel index: 2, type: binary sensor': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 56,
-                name: 'CHANNEL_TYPE',
+                id: CHANNEL_TYPE,
+                name: deviceParameterNames[CHANNEL_TYPE],
                 data: {
                     channel: 2,
                     type: BINARY_SENSOR,
@@ -3271,13 +3489,13 @@
                 0x38, 0x01, 0x03, 0x13, 0x88
             ]
         },
-        'set channel type. Channel index: 3, type: temperature sensor': {
+        '56_4PU: set channel type. Channel index: 3, type: temperature sensor': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 56,
-                name: 'CHANNEL_TYPE',
+                id: CHANNEL_TYPE,
+                name: deviceParameterNames[CHANNEL_TYPE],
                 data: {
                     channel: 3,
                     type: TEMPERATURE_SENSOR,
@@ -3294,13 +3512,13 @@
                 0x38, 0x02, 0x04, 0x0e, 0x10, 0x02, 0x28, 0x05
             ]
         },
-        'set channel type. Channel index: 4, type: idle': {
+        '56_4PU: set channel type. Channel index: 4, type: idle': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 56,
-                name: 'CHANNEL_TYPE',
+                id: CHANNEL_TYPE,
+                name: deviceParameterNames[CHANNEL_TYPE],
                 data: {
                     channel: 4,
                     type: IDLE,
@@ -3312,13 +3530,13 @@
                 0x38, 0x03, 0x00
             ]
         },
-        'enable extra payload with signal quality on every uplink command': {
+        '57_NB-IoT: enable extra payload with signal quality on every uplink command': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 57,
-                name: 'EXTRA_PAYLOAD_ENABLE',
+                id: EXTRA_PAYLOAD_ENABLE,
+                name: deviceParameterNames[EXTRA_PAYLOAD_ENABLE],
                 data: { enable: 1 }
             },
             bytes: [
@@ -3326,13 +3544,13 @@
                 0x39, 0x01
             ]
         },
-        'time synchronization period in seconds via MAC commands': {
+        '58_Common: time synchronization period in seconds via MAC commands': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 58,
-                name: 'TIME_SYNCHRONIZATION_PERIOD_VIA_MAC',
+                id: TIME_SYNCHRONIZATION_PERIOD_VIA_MAC,
+                name: deviceParameterNames[TIME_SYNCHRONIZATION_PERIOD_VIA_MAC],
                 data: {
                     period: 1440
                 }
@@ -3342,13 +3560,13 @@
                 0x3a, 0x00, 0x00, 0x05, 0xa0
             ]
         },
-        'keep its lora connection even after being removed': {
+        '59_LoRa: keep its lora connection even after being removed': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
             parameters: {
-                id: 59,
-                name: 'KEEP_LORA_CONNECTION_ON_REMOVAL',
+                id: KEEP_LORA_CONNECTION_ON_REMOVAL,
+                name: deviceParameterNames[KEEP_LORA_CONNECTION_ON_REMOVAL],
                 data: {
                     value: true
                 }
@@ -3356,6 +3574,37 @@
             bytes: [
                 0x03, 0x02,
                 0x3b, 0x01
+            ]
+        },
+        '60_NB-IoT: set nbiot ntp server': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: NBIOT_NTP_SERVER,
+                name: deviceParameterNames[NBIOT_NTP_SERVER],
+                data: {
+                    server: '162.159.200.1',
+                    port: 123
+                }
+            },
+            bytes: [
+                0x03, 0x11,
+                0x3c, 0x0d, 0x31, 0x36, 0x32, 0x2e, 0x31, 0x35, 0x39, 0x2e, 0x32, 0x30, 0x30, 0x2e, 0x31, 0x00, 0x7b
+            ]
+        },
+        '61_LoRa_4PU: activate module': {
+            id: id$H,
+            name: name$H,
+            headerSize: headerSize$H,
+            parameters: {
+                id: ACTIVATE_MODULE,
+                name: deviceParameterNames[ACTIVATE_MODULE],
+                data: { enable: 1 }
+            },
+            bytes: [
+                0x03, 0x02,
+                0x3d, 0x01
             ]
         }
     };

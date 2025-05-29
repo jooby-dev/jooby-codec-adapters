@@ -828,6 +828,18 @@ var logs = '';
   var nibbles10 = ['.', '0', '1', '2', '3', '4', '5', '6', 'P', 'R', 'L', 'E', 'G', '-', '/'];
   var nibbles11 = ['.', 'H', 'A', 'T', '0', '0', '0', '0', '0', '1', '2', '3', '4', '0', '0', '0'];
   var nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
+  var mtx1DeviceTypeDescriptorMask = {
+    typeMeterG: 1 << 0,
+    downgradedToA: 1 << 4,
+    supportMeterInfo: 1 << 6
+  };
+  var mtx3DeviceTypeDescriptorMask = {
+    typeMeterTransformer: 1 << 0,
+    downgradedToR: 1 << 3,
+    typeMeterG: 1 << 4,
+    supportMeterInfo: 1 << 6,
+    reactiveRPlusRMinus: 1 << 7
+  };
   var splitByte = function splitByte(_byte) {
     return [_byte >> 4, _byte & 0x0F];
   };
@@ -896,8 +908,7 @@ var logs = '';
     }
     return {
       type: type.join(''),
-      revision: revision,
-      meterType: 0
+      revision: revision
     };
   };
   var toBytesMtx = function toBytesMtx(type, prefix, revision) {
@@ -956,8 +967,7 @@ var logs = '';
       }
     }
     return {
-      type: type.join(''),
-      meterType: 0
+      type: type.join('')
     };
   };
   var toBytesMtx2 = function toBytesMtx2(type) {
@@ -997,8 +1007,7 @@ var logs = '';
       }
     }
     return {
-      type: type.join(''),
-      meterType: 0
+      type: type.join('')
     };
   };
   var toBytesM = function toBytesM(type) {
@@ -1028,17 +1037,22 @@ var logs = '';
     var deviceTypeNibble = nibbles[position];
     var deviceType = nibbles1[deviceTypeNibble];
     if (deviceType === '1' || deviceType === '3') {
-      result = fromBytesMtx(nibbles.slice(position));
+      result = _objectSpread2(_objectSpread2({}, fromBytesMtx(nibbles.slice(position))), {}, {
+        descriptor: deviceType === '1' ? _objectSpread2({
+          meterType: 'mtx1'
+        }, toObject(mtx1DeviceTypeDescriptorMask, bytes[8])) : _objectSpread2({
+          meterType: 'mtx3'
+        }, toObject(mtx3DeviceTypeDescriptorMask, bytes[8]))
+      });
     } else {
       result = deviceType === 'M' ? fromBytesM(nibbles) : fromBytesMtx2(nibbles);
     }
-    result.meterType = bytes[8];
     return result;
   };
   var toBytes$11 = function toBytes(_ref, prefix) {
     var type = _ref.type,
       revision = _ref.revision,
-      meterType = _ref.meterType;
+      descriptor = _ref.descriptor;
     if (!type.startsWith('MTX ')) {
       throw new Error('Wrong format');
     }
@@ -1050,7 +1064,11 @@ var logs = '';
     } else {
       result = deviceTypeSymbol === 'M' ? toBytesM(content) : toBytesMtx2(content);
     }
-    result[8] = meterType;
+    if (descriptor !== null && descriptor !== void 0 && descriptor.meterType) {
+      result[8] = descriptor.meterType === 'mtx1' ? fromObject(mtx1DeviceTypeDescriptorMask, descriptor) : fromObject(mtx3DeviceTypeDescriptorMask, descriptor);
+    } else {
+      result[8] = 0;
+    }
     return result;
   };
 
@@ -1143,10 +1161,10 @@ var logs = '';
   var POWER_A_ON = 0x59;
   var CMD_RELAY_2_ON = 0x60;
   var CMD_RELAY_2_OFF = 0x61;
-  var CROSSZERO_ENT0 = 0x62;
-  var CROSSZERO_ENT1 = 0x63;
-  var CROSSZERO_ENT2 = 0x64;
-  var CROSSZERO_ENT3 = 0x65;
+  var CROSSZERO_ENT1 = 0x62;
+  var CROSSZERO_ENT2 = 0x63;
+  var CROSSZERO_ENT3 = 0x64;
+  var CROSSZERO_ENT4 = 0x65;
   var CALFLAG_SET = 0x66;
   var CALFLAG_RESET = 0x67;
   var BAD_TEST_EEPROM = 0x68;
@@ -1171,10 +1189,10 @@ var logs = '';
   var RELAY_HARD_OFF = 0x94;
   var SET_SALDO_PARAM = 0x9C;
   var POWER_OVER_RELAY_OFF = 0x9D;
-  var CROSSZERO_EXP_ENT0 = 0x9E;
-  var CROSSZERO_EXP_ENT1 = 0x9F;
-  var CROSSZERO_EXP_ENT2 = 0xA0;
-  var CROSSZERO_EXP_ENT3 = 0xA1;
+  var CROSSZERO_EXP_ENT1 = 0x9E;
+  var CROSSZERO_EXP_ENT2 = 0x9F;
+  var CROSSZERO_EXP_ENT3 = 0xA0;
+  var CROSSZERO_EXP_ENT4 = 0xA1;
   var TIME_CORRECT_NEW = 0xA2;
   var EM_MAGNETIC_ON = 0xB0;
   var EM_MAGNETIC_OFF = 0xB1;
@@ -1232,14 +1250,14 @@ var logs = '';
     CMD_RELAY_2_ON: CMD_RELAY_2_ON,
     CMD_RELAY_OFF: CMD_RELAY_OFF,
     CMD_RELAY_ON: CMD_RELAY_ON,
-    CROSSZERO_ENT0: CROSSZERO_ENT0,
     CROSSZERO_ENT1: CROSSZERO_ENT1,
     CROSSZERO_ENT2: CROSSZERO_ENT2,
     CROSSZERO_ENT3: CROSSZERO_ENT3,
-    CROSSZERO_EXP_ENT0: CROSSZERO_EXP_ENT0,
+    CROSSZERO_ENT4: CROSSZERO_ENT4,
     CROSSZERO_EXP_ENT1: CROSSZERO_EXP_ENT1,
     CROSSZERO_EXP_ENT2: CROSSZERO_EXP_ENT2,
     CROSSZERO_EXP_ENT3: CROSSZERO_EXP_ENT3,
+    CROSSZERO_EXP_ENT4: CROSSZERO_EXP_ENT4,
     CURRENT_UNEQUIL_FAULT: CURRENT_UNEQUIL_FAULT,
     CURRENT_UNEQUIL_OK: CURRENT_UNEQUIL_OK,
     EM_MAGNETIC_OFF: EM_MAGNETIC_OFF,
@@ -1361,27 +1379,27 @@ var logs = '';
     RELAY_ON_Y: 0x01,
     RELAY_ON_CENTER: 0x02,
     RELAY_ON_PB: 0x04,
-    RELAY_ON_TARIFF_0: 0x08,
-    RELAY_ON_TARIFF_1: 0x10,
-    RELAY_ON_TARIFF_2: 0x20,
-    RELAY_ON_TARIFF_3: 0x40,
+    RELAY_ON_TARIFF_1: 0x08,
+    RELAY_ON_TARIFF_2: 0x10,
+    RELAY_ON_TARIFF_3: 0x20,
+    RELAY_ON_TARIFF_4: 0x40,
     RELAY_ON_V_GOOD: 0x80
   };
   var relaySet2Mask = {
     RELAY_OFF_Y: 0x01,
     RELAY_OFF_CENTER: 0x02,
-    RELAY_OFF_TARIFF_0: 0x04,
-    RELAY_OFF_TARIFF_1: 0x08,
-    RELAY_OFF_TARIFF_2: 0x10,
-    RELAY_OFF_TARIFF_3: 0x20,
+    RELAY_OFF_TARIFF_1: 0x04,
+    RELAY_OFF_TARIFF_2: 0x08,
+    RELAY_OFF_TARIFF_3: 0x10,
+    RELAY_OFF_TARIFF_4: 0x20,
     RELAY_OFF_I_LIMIT: 0x40,
     RELAY_OFF_V_BAD: 0x80
   };
   var relaySet3Mask = {
-    RELAY_OFF_LIM_TARIFF_0: 0x02,
-    RELAY_OFF_LIM_TARIFF_1: 0x04,
-    RELAY_OFF_LIM_TARIFF_2: 0x08,
-    RELAY_OFF_LIM_TARIFF_3: 0x10,
+    RELAY_OFF_LIM_TARIFF_1: 0x02,
+    RELAY_OFF_LIM_TARIFF_2: 0x04,
+    RELAY_OFF_LIM_TARIFF_3: 0x08,
+    RELAY_OFF_LIM_TARIFF_4: 0x10,
     RELAY_OFF_PF_MIN: 0x20
   };
   var relaySet4Mask = {
@@ -1459,10 +1477,10 @@ var logs = '';
     POWER_B_NEGATIVE: Math.pow(2, 7)
   };
   var operatorParametersExtended3RelaySetMask = {
-    RELAY_OFF_LIMIT_P_MINUS_T1: 0x04,
-    RELAY_OFF_LIMIT_P_MINUS_T2: 0x08,
-    RELAY_OFF_LIMIT_P_MINUS_T3: 0x10,
-    RELAY_OFF_LIMIT_P_MINUS_T4: 0x20
+    RELAY_OFF_LIMIT_P_MINUS_T1: 0x08,
+    RELAY_OFF_LIMIT_P_MINUS_T2: 0x10,
+    RELAY_OFF_LIMIT_P_MINUS_T3: 0x20,
+    RELAY_OFF_LIMIT_P_MINUS_T4: 0x40
   };
   function getPackedEnergies(buffer, energyType, tariffMapByte) {
     var _byte = tariffMapByte >> TARIFF_NUMBER$1;
@@ -4173,9 +4191,6 @@ var logs = '';
     toBytes: toBytes$M
   });
 
-  var A = 0;
-  var G_FULL = 17;
-
   var id$L = getDeviceType$1;
   var name$L = commandNames$1[getDeviceType$1];
   var headerSize$L = 2;
@@ -4192,7 +4207,12 @@ var logs = '';
       parameters: {
         type: 'MTX 1A10.DG.2L5-LD4',
         revision: 0x0b,
-        meterType: A
+        descriptor: {
+          meterType: 'mtx1',
+          typeMeterG: false,
+          downgradedToA: false,
+          supportMeterInfo: false
+        }
       },
       bytes: [0x04, 0x09, 0x00, 0x11, 0x21, 0x49, 0x21, 0xB6, 0x81, 0xC0, 0x00]
     },
@@ -4205,7 +4225,12 @@ var logs = '';
       parameters: {
         type: 'MTX 1G05.DH.2L2-DOB4',
         revision: 0x0b,
-        meterType: G_FULL
+        descriptor: {
+          meterType: 'mtx1',
+          typeMeterG: true,
+          downgradedToA: true,
+          supportMeterInfo: false
+        }
       },
       bytes: [0x04, 0x09, 0x00, 0x12, 0x16, 0x47, 0x21, 0xb3, 0x17, 0x2c, 0x11]
     }
@@ -7209,7 +7234,7 @@ var logs = '';
           RELAY_OFF_LIMIT_P_MINUS_T4: false
         }
       },
-      bytes: [0x71, 0x11, 0x00, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00, 0xc8, 0x00, 0x00, 0x01, 0x2c, 0x00, 0x00, 0x01, 0x90, 0x14]
+      bytes: [0x71, 0x11, 0x00, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00, 0xc8, 0x00, 0x00, 0x01, 0x2c, 0x00, 0x00, 0x01, 0x90, 0x28]
     }
   };
   var fromBytes$q = function fromBytes(bytes) {
@@ -7301,19 +7326,19 @@ var logs = '';
           RELAY_ON_MAGNET_AUTO: false
         },
         relaySet3: {
-          RELAY_OFF_LIM_TARIFF_0: false,
           RELAY_OFF_LIM_TARIFF_1: false,
           RELAY_OFF_LIM_TARIFF_2: false,
           RELAY_OFF_LIM_TARIFF_3: false,
+          RELAY_OFF_LIM_TARIFF_4: false,
           RELAY_OFF_PF_MIN: false
         },
         relaySet2: {
           RELAY_OFF_Y: true,
           RELAY_OFF_CENTER: true,
-          RELAY_OFF_TARIFF_0: false,
           RELAY_OFF_TARIFF_1: false,
           RELAY_OFF_TARIFF_2: false,
           RELAY_OFF_TARIFF_3: false,
+          RELAY_OFF_TARIFF_4: false,
           RELAY_OFF_I_LIMIT: false,
           RELAY_OFF_V_BAD: false
         },
@@ -7321,10 +7346,10 @@ var logs = '';
           RELAY_ON_Y: true,
           RELAY_ON_CENTER: true,
           RELAY_ON_PB: false,
-          RELAY_ON_TARIFF_0: false,
           RELAY_ON_TARIFF_1: false,
           RELAY_ON_TARIFF_2: false,
           RELAY_ON_TARIFF_3: false,
+          RELAY_ON_TARIFF_4: false,
           RELAY_ON_V_GOOD: false
         },
         displayType: 0,

@@ -350,6 +350,18 @@
     const nibbles10 = ['.', '0', '1', '2', '3', '4', '5', '6', 'P', 'R', 'L', 'E', 'G', '-', '/'];
     const nibbles11 = ['.', 'H', 'A', 'T', '0', '0', '0', '0', '0', '1', '2', '3', '4', '0', '0', '0'];
     const nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
+    const mtx1DeviceTypeDescriptorMask = {
+        typeMeterG: 1 << 0,
+        downgradedToA: 1 << 4,
+        supportMeterInfo: 1 << 6
+    };
+    const mtx3DeviceTypeDescriptorMask = {
+        typeMeterTransformer: 1 << 0,
+        downgradedToR: 1 << 3,
+        typeMeterG: 1 << 4,
+        supportMeterInfo: 1 << 6,
+        reactiveRPlusRMinus: 1 << 7
+    };
     const splitByte = (byte) => [
         byte >> 4,
         byte & 0x0F
@@ -411,8 +423,7 @@
         }
         return {
             type: type.join(''),
-            revision,
-            meterType: 0
+            revision
         };
     };
     const toBytesMtx = (type, prefix, revision) => {
@@ -468,10 +479,7 @@
                 type.push(nibbles10[nibbles[index]] ?? DEVICE_TYPE_INVALID_CHAR);
             }
         }
-        return {
-            type: type.join(''),
-            meterType: 0
-        };
+        return { type: type.join('') };
     };
     const toBytesMtx2 = (type) => {
         if (type.length < 3) {
@@ -507,10 +515,7 @@
                 type.push(nibbles12[nibbles[index]] ?? DEVICE_TYPE_INVALID_CHAR);
             }
         }
-        return {
-            type: type.join(''),
-            meterType: 0
-        };
+        return { type: type.join('') };
     };
     const toBytesM = (type) => {
         if (type.length < 1) {
@@ -528,7 +533,7 @@
         }
         return result;
     };
-    const fromBytes$2f = (bytes) => {
+    const fromBytes$2h = (bytes) => {
         if (bytes.length !== 9) {
             throw new Error('The buffer is too small');
         }
@@ -539,17 +544,27 @@
         const deviceTypeNibble = nibbles[position];
         const deviceType = nibbles1[deviceTypeNibble];
         if (deviceType === '1' || deviceType === '3') {
-            result = fromBytesMtx(nibbles.slice(position));
+            result = {
+                ...fromBytesMtx(nibbles.slice(position)),
+                descriptor: deviceType === '1'
+                    ? {
+                        meterType: 'mtx1',
+                        ...toObject(mtx1DeviceTypeDescriptorMask, bytes[8])
+                    }
+                    : {
+                        meterType: 'mtx3',
+                        ...toObject(mtx3DeviceTypeDescriptorMask, bytes[8])
+                    }
+            };
         }
         else {
             result = deviceType === 'M'
                 ? fromBytesM(nibbles)
                 : fromBytesMtx2(nibbles);
         }
-        result.meterType = bytes[8];
         return result;
     };
-    const toBytes$2g = ({ type, revision, meterType }, prefix) => {
+    const toBytes$2i = ({ type, revision, descriptor }, prefix) => {
         if (!type.startsWith('MTX ')) {
             throw new Error('Wrong format');
         }
@@ -564,7 +579,14 @@
                 ? toBytesM(content)
                 : toBytesMtx2(content);
         }
-        result[8] = meterType;
+        if (descriptor?.meterType) {
+            result[8] = descriptor.meterType === 'mtx1'
+                ? fromObject(mtx1DeviceTypeDescriptorMask, descriptor)
+                : fromObject(mtx3DeviceTypeDescriptorMask, descriptor);
+        }
+        else {
+            result[8] = 0;
+        }
         return result;
     };
 
@@ -673,10 +695,10 @@
     const POWER_A_ON$1 = 0x59;
     const CMD_RELAY_2_ON$1 = 0x60;
     const CMD_RELAY_2_OFF$1 = 0x61;
-    const CROSSZERO_ENT0 = 0x62;
-    const CROSSZERO_ENT1 = 0x63;
-    const CROSSZERO_ENT2 = 0x64;
-    const CROSSZERO_ENT3 = 0x65;
+    const CROSSZERO_ENT1 = 0x62;
+    const CROSSZERO_ENT2 = 0x63;
+    const CROSSZERO_ENT3 = 0x64;
+    const CROSSZERO_ENT4 = 0x65;
     const CALFLAG_SET = 0x66;
     const CALFLAG_RESET = 0x67;
     const BAD_TEST_EEPROM$1 = 0x68;
@@ -701,10 +723,10 @@
     const RELAY_HARD_OFF$1 = 0x94;
     const SET_SALDO_PARAM$1 = 0x9C;
     const POWER_OVER_RELAY_OFF$1 = 0x9D;
-    const CROSSZERO_EXP_ENT0 = 0x9E;
-    const CROSSZERO_EXP_ENT1 = 0x9F;
-    const CROSSZERO_EXP_ENT2 = 0xA0;
-    const CROSSZERO_EXP_ENT3 = 0xA1;
+    const CROSSZERO_EXP_ENT1 = 0x9E;
+    const CROSSZERO_EXP_ENT2 = 0x9F;
+    const CROSSZERO_EXP_ENT3 = 0xA0;
+    const CROSSZERO_EXP_ENT4 = 0xA1;
     const TIME_CORRECT_NEW = 0xA2;
     const EM_MAGNETIC_ON$1 = 0xB0;
     const EM_MAGNETIC_OFF$1 = 0xB1;
@@ -762,14 +784,14 @@
         CMD_RELAY_2_ON: CMD_RELAY_2_ON$1,
         CMD_RELAY_OFF: CMD_RELAY_OFF$1,
         CMD_RELAY_ON: CMD_RELAY_ON$1,
-        CROSSZERO_ENT0: CROSSZERO_ENT0,
         CROSSZERO_ENT1: CROSSZERO_ENT1,
         CROSSZERO_ENT2: CROSSZERO_ENT2,
         CROSSZERO_ENT3: CROSSZERO_ENT3,
-        CROSSZERO_EXP_ENT0: CROSSZERO_EXP_ENT0,
+        CROSSZERO_ENT4: CROSSZERO_ENT4,
         CROSSZERO_EXP_ENT1: CROSSZERO_EXP_ENT1,
         CROSSZERO_EXP_ENT2: CROSSZERO_EXP_ENT2,
         CROSSZERO_EXP_ENT3: CROSSZERO_EXP_ENT3,
+        CROSSZERO_EXP_ENT4: CROSSZERO_EXP_ENT4,
         CURRENT_UNEQUIL_FAULT: CURRENT_UNEQUIL_FAULT,
         CURRENT_UNEQUIL_OK: CURRENT_UNEQUIL_OK,
         EM_MAGNETIC_OFF: EM_MAGNETIC_OFF$1,
@@ -892,27 +914,27 @@
         RELAY_ON_Y: 0x01,
         RELAY_ON_CENTER: 0x02,
         RELAY_ON_PB: 0x04,
-        RELAY_ON_TARIFF_0: 0x08,
-        RELAY_ON_TARIFF_1: 0x10,
-        RELAY_ON_TARIFF_2: 0x20,
-        RELAY_ON_TARIFF_3: 0x40,
+        RELAY_ON_TARIFF_1: 0x08,
+        RELAY_ON_TARIFF_2: 0x10,
+        RELAY_ON_TARIFF_3: 0x20,
+        RELAY_ON_TARIFF_4: 0x40,
         RELAY_ON_V_GOOD: 0x80
     };
     const relaySet2Mask = {
         RELAY_OFF_Y: 0x01,
         RELAY_OFF_CENTER: 0x02,
-        RELAY_OFF_TARIFF_0: 0x04,
-        RELAY_OFF_TARIFF_1: 0x08,
-        RELAY_OFF_TARIFF_2: 0x10,
-        RELAY_OFF_TARIFF_3: 0x20,
+        RELAY_OFF_TARIFF_1: 0x04,
+        RELAY_OFF_TARIFF_2: 0x08,
+        RELAY_OFF_TARIFF_3: 0x10,
+        RELAY_OFF_TARIFF_4: 0x20,
         RELAY_OFF_I_LIMIT: 0x40,
         RELAY_OFF_V_BAD: 0x80
     };
     const relaySet3Mask = {
-        RELAY_OFF_LIM_TARIFF_0: 0x02,
-        RELAY_OFF_LIM_TARIFF_1: 0x04,
-        RELAY_OFF_LIM_TARIFF_2: 0x08,
-        RELAY_OFF_LIM_TARIFF_3: 0x10,
+        RELAY_OFF_LIM_TARIFF_1: 0x02,
+        RELAY_OFF_LIM_TARIFF_2: 0x04,
+        RELAY_OFF_LIM_TARIFF_3: 0x08,
+        RELAY_OFF_LIM_TARIFF_4: 0x10,
         RELAY_OFF_PF_MIN: 0x20
     };
     const relaySet4Mask = {
@@ -990,10 +1012,10 @@
         POWER_B_NEGATIVE: 2 ** 7
     };
     const operatorParametersExtended3RelaySetMask = {
-        RELAY_OFF_LIMIT_P_MINUS_T1: 0x04,
-        RELAY_OFF_LIMIT_P_MINUS_T2: 0x08,
-        RELAY_OFF_LIMIT_P_MINUS_T3: 0x10,
-        RELAY_OFF_LIMIT_P_MINUS_T4: 0x20
+        RELAY_OFF_LIMIT_P_MINUS_T1: 0x08,
+        RELAY_OFF_LIMIT_P_MINUS_T2: 0x10,
+        RELAY_OFF_LIMIT_P_MINUS_T3: 0x20,
+        RELAY_OFF_LIMIT_P_MINUS_T4: 0x40
     };
     function getPackedEnergies$1(buffer, energyType, tariffMapByte) {
         const byte = tariffMapByte >> TARIFF_NUMBER$1;
@@ -1245,10 +1267,10 @@
         this.setUint8(+!specialDay.isPeriodic);
     };
     CommandBinaryBuffer$2.prototype.getDeviceType = function () {
-        return fromBytes$2f(this.getBytes(9));
+        return fromBytes$2h(this.getBytes(9));
     };
     CommandBinaryBuffer$2.prototype.setDeviceType = function (deviceType) {
-        this.setBytes(toBytes$2g(deviceType));
+        this.setBytes(toBytes$2i(deviceType));
     };
     CommandBinaryBuffer$2.prototype.getOperatorParameters = function () {
         const operatorParameters = {
@@ -1586,7 +1608,7 @@
         ...defaultFormatOptions,
         dlms: false
     };
-    const toBytes$2f = (commandId, commandBytes = []) => [commandId, commandBytes.length, ...commandBytes];
+    const toBytes$2h = (commandId, commandBytes = []) => [commandId, commandBytes.length, ...commandBytes];
 
     const UNENCRYPTED = 0x00;
     const READ_WRITE = 0x02;
@@ -1725,19 +1747,19 @@
 
     var commandNames$3 = invertObject(downlinkIds$1);
 
-    const id$2e = activateRatePlan$3;
-    const name$2e = commandNames$3[activateRatePlan$3];
-    const headerSize$2e = 2;
-    const maxSize$2e = 1 + TARIFF_PLAN_SIZE;
-    const accessLevel$2e = READ_WRITE;
-    const isLoraOnly$2e = false;
-    const examples$2e = {
+    const id$2g = activateRatePlan$3;
+    const name$2g = commandNames$3[activateRatePlan$3];
+    const headerSize$2g = 2;
+    const maxSize$2g = 1 + TARIFF_PLAN_SIZE;
+    const accessLevel$2g = READ_WRITE;
+    const isLoraOnly$2g = false;
+    const examples$2g = {
         'set rate plan request': {
-            id: id$2e,
-            name: name$2e,
-            headerSize: headerSize$2e,
-            maxSize: maxSize$2e,
-            accessLevel: accessLevel$2e,
+            id: id$2g,
+            name: name$2g,
+            headerSize: headerSize$2g,
+            maxSize: maxSize$2g,
+            accessLevel: accessLevel$2g,
             parameters: {
                 tariffTable: 0,
                 tariffPlan: {
@@ -1757,21 +1779,101 @@
             ]
         }
     };
-    const fromBytes$2e = (bytes) => {
+    const fromBytes$2g = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return {
             tariffTable: buffer.getUint8(),
             tariffPlan: buffer.getTariffPlan()
         };
     };
-    const toBytes$2e = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$2e);
+    const toBytes$2g = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$2g);
         buffer.setUint8(parameters.tariffTable);
         buffer.setTariffPlan(parameters.tariffPlan);
-        return toBytes$2f(id$2e, buffer.data);
+        return toBytes$2h(id$2g, buffer.data);
     };
 
     var activateRatePlan$2 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$2g,
+        examples: examples$2g,
+        fromBytes: fromBytes$2g,
+        headerSize: headerSize$2g,
+        id: id$2g,
+        isLoraOnly: isLoraOnly$2g,
+        maxSize: maxSize$2g,
+        name: name$2g,
+        toBytes: toBytes$2g
+    });
+
+    const id$2f = getBuildVersion$3;
+    const name$2f = commandNames$3[getBuildVersion$3];
+    const headerSize$2f = 2;
+    const accessLevel$2f = READ_ONLY;
+    const maxSize$2f = 0;
+    const isLoraOnly$2f = false;
+    const examples$2f = {
+        'simple request': {
+            id: id$2f,
+            name: name$2f,
+            headerSize: headerSize$2f,
+            maxSize: maxSize$2f,
+            accessLevel: accessLevel$2f,
+            parameters: {},
+            bytes: [
+                0x70, 0x00
+            ]
+        }
+    };
+    const fromBytes$2f = (bytes) => {
+        if (bytes.length !== maxSize$2f) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
+    };
+    const toBytes$2f = () => toBytes$2h(id$2f);
+
+    var getBuildVersion$2 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$2f,
+        examples: examples$2f,
+        fromBytes: fromBytes$2f,
+        headerSize: headerSize$2f,
+        id: id$2f,
+        isLoraOnly: isLoraOnly$2f,
+        maxSize: maxSize$2f,
+        name: name$2f,
+        toBytes: toBytes$2f
+    });
+
+    const id$2e = getCorrectTime$3;
+    const name$2e = commandNames$3[getCorrectTime$3];
+    const headerSize$2e = 2;
+    const maxSize$2e = 0;
+    const accessLevel$2e = READ_ONLY;
+    const isLoraOnly$2e = false;
+    const examples$2e = {
+        'simple request': {
+            id: id$2e,
+            name: name$2e,
+            headerSize: headerSize$2e,
+            maxSize: maxSize$2e,
+            accessLevel: accessLevel$2e,
+            parameters: {},
+            bytes: [
+                0x3e, 0x00
+            ]
+        }
+    };
+    const fromBytes$2e = (bytes) => {
+        if (bytes.length !== maxSize$2e) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
+    };
+    const toBytes$2e = () => toBytes$2h(id$2e);
+
+    var getCorrectTime$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$2e,
         examples: examples$2e,
@@ -1784,8 +1886,8 @@
         toBytes: toBytes$2e
     });
 
-    const id$2d = getBuildVersion$3;
-    const name$2d = commandNames$3[getBuildVersion$3];
+    const id$2d = getCurrentStatusMeter$3;
+    const name$2d = commandNames$3[getCurrentStatusMeter$3];
     const headerSize$2d = 2;
     const accessLevel$2d = READ_ONLY;
     const maxSize$2d = 0;
@@ -1799,7 +1901,7 @@
             accessLevel: accessLevel$2d,
             parameters: {},
             bytes: [
-                0x70, 0x00
+                0x39, 0x00
             ]
         }
     };
@@ -1809,9 +1911,9 @@
         }
         return {};
     };
-    const toBytes$2d = () => toBytes$2f(id$2d);
+    const toBytes$2d = () => toBytes$2h(id$2d);
 
-    var getBuildVersion$2 = /*#__PURE__*/Object.freeze({
+    var getCurrentStatusMeter$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$2d,
         examples: examples$2d,
@@ -1824,8 +1926,8 @@
         toBytes: toBytes$2d
     });
 
-    const id$2c = getCorrectTime$3;
-    const name$2c = commandNames$3[getCorrectTime$3];
+    const id$2c = getCurrentValues$3;
+    const name$2c = commandNames$3[getCurrentValues$3];
     const headerSize$2c = 2;
     const maxSize$2c = 0;
     const accessLevel$2c = READ_ONLY;
@@ -1839,7 +1941,7 @@
             accessLevel: accessLevel$2c,
             parameters: {},
             bytes: [
-                0x3e, 0x00
+                0x0d, 0x00
             ]
         }
     };
@@ -1849,9 +1951,9 @@
         }
         return {};
     };
-    const toBytes$2c = () => toBytes$2f(id$2c);
+    const toBytes$2c = () => toBytes$2h(id$2c);
 
-    var getCorrectTime$2 = /*#__PURE__*/Object.freeze({
+    var getCurrentValues$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$2c,
         examples: examples$2c,
@@ -1864,11 +1966,11 @@
         toBytes: toBytes$2c
     });
 
-    const id$2b = getCurrentStatusMeter$3;
-    const name$2b = commandNames$3[getCurrentStatusMeter$3];
+    const id$2b = getDateTime$3;
+    const name$2b = commandNames$3[getDateTime$3];
     const headerSize$2b = 2;
-    const accessLevel$2b = READ_ONLY;
     const maxSize$2b = 0;
+    const accessLevel$2b = READ_ONLY;
     const isLoraOnly$2b = false;
     const examples$2b = {
         'simple request': {
@@ -1879,7 +1981,7 @@
             accessLevel: accessLevel$2b,
             parameters: {},
             bytes: [
-                0x39, 0x00
+                0x07, 0x00
             ]
         }
     };
@@ -1889,9 +1991,9 @@
         }
         return {};
     };
-    const toBytes$2b = () => toBytes$2f(id$2b);
+    const toBytes$2b = () => toBytes$2h(id$2b);
 
-    var getCurrentStatusMeter$2 = /*#__PURE__*/Object.freeze({
+    var getDateTime$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$2b,
         examples: examples$2b,
@@ -1904,99 +2006,19 @@
         toBytes: toBytes$2b
     });
 
-    const id$2a = getCurrentValues$3;
-    const name$2a = commandNames$3[getCurrentValues$3];
+    const id$2a = getDayMaxDemand$3;
+    const name$2a = commandNames$3[getDayMaxDemand$3];
     const headerSize$2a = 2;
-    const maxSize$2a = 0;
+    const maxSize$2a = 3;
     const accessLevel$2a = READ_ONLY;
     const isLoraOnly$2a = false;
     const examples$2a = {
-        'simple request': {
+        'request for 2024.03.22': {
             id: id$2a,
             name: name$2a,
             headerSize: headerSize$2a,
             maxSize: maxSize$2a,
             accessLevel: accessLevel$2a,
-            parameters: {},
-            bytes: [
-                0x0d, 0x00
-            ]
-        }
-    };
-    const fromBytes$2a = (bytes) => {
-        if (bytes.length !== maxSize$2a) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$2a = () => toBytes$2f(id$2a);
-
-    var getCurrentValues$2 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$2a,
-        examples: examples$2a,
-        fromBytes: fromBytes$2a,
-        headerSize: headerSize$2a,
-        id: id$2a,
-        isLoraOnly: isLoraOnly$2a,
-        maxSize: maxSize$2a,
-        name: name$2a,
-        toBytes: toBytes$2a
-    });
-
-    const id$29 = getDateTime$3;
-    const name$29 = commandNames$3[getDateTime$3];
-    const headerSize$29 = 2;
-    const maxSize$29 = 0;
-    const accessLevel$29 = READ_ONLY;
-    const isLoraOnly$29 = false;
-    const examples$29 = {
-        'simple request': {
-            id: id$29,
-            name: name$29,
-            headerSize: headerSize$29,
-            maxSize: maxSize$29,
-            accessLevel: accessLevel$29,
-            parameters: {},
-            bytes: [
-                0x07, 0x00
-            ]
-        }
-    };
-    const fromBytes$29 = (bytes) => {
-        if (bytes.length !== maxSize$29) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$29 = () => toBytes$2f(id$29);
-
-    var getDateTime$2 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$29,
-        examples: examples$29,
-        fromBytes: fromBytes$29,
-        headerSize: headerSize$29,
-        id: id$29,
-        isLoraOnly: isLoraOnly$29,
-        maxSize: maxSize$29,
-        name: name$29,
-        toBytes: toBytes$29
-    });
-
-    const id$28 = getDayMaxDemand$3;
-    const name$28 = commandNames$3[getDayMaxDemand$3];
-    const headerSize$28 = 2;
-    const maxSize$28 = 3;
-    const accessLevel$28 = READ_ONLY;
-    const isLoraOnly$28 = false;
-    const examples$28 = {
-        'request for 2024.03.22': {
-            id: id$28,
-            name: name$28,
-            headerSize: headerSize$28,
-            maxSize: maxSize$28,
-            accessLevel: accessLevel$28,
             parameters: {
                 date: {
                     year: 24,
@@ -2010,42 +2032,42 @@
             ]
         }
     };
-    const fromBytes$28 = (bytes) => {
+    const fromBytes$2a = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return { date: buffer.getDate() };
     };
-    const toBytes$28 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$28);
+    const toBytes$2a = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$2a);
         buffer.setDate(parameters.date);
-        return toBytes$2f(id$28, buffer.data);
+        return toBytes$2h(id$2a, buffer.data);
     };
 
     var getDayMaxDemand$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$28,
-        examples: examples$28,
-        fromBytes: fromBytes$28,
-        headerSize: headerSize$28,
-        id: id$28,
-        isLoraOnly: isLoraOnly$28,
-        maxSize: maxSize$28,
-        name: name$28,
-        toBytes: toBytes$28
+        accessLevel: accessLevel$2a,
+        examples: examples$2a,
+        fromBytes: fromBytes$2a,
+        headerSize: headerSize$2a,
+        id: id$2a,
+        isLoraOnly: isLoraOnly$2a,
+        maxSize: maxSize$2a,
+        name: name$2a,
+        toBytes: toBytes$2a
     });
 
-    const id$27 = getDayMaxDemandExport$3;
-    const name$27 = commandNames$3[getDayMaxDemandExport$3];
-    const headerSize$27 = 2;
-    const maxSize$27 = 3;
-    const accessLevel$27 = READ_ONLY;
-    const isLoraOnly$27 = false;
-    const examples$27 = {
+    const id$29 = getDayMaxDemandExport$3;
+    const name$29 = commandNames$3[getDayMaxDemandExport$3];
+    const headerSize$29 = 2;
+    const maxSize$29 = 3;
+    const accessLevel$29 = READ_ONLY;
+    const isLoraOnly$29 = false;
+    const examples$29 = {
         'request for 2024.03.22': {
-            id: id$27,
-            name: name$27,
-            headerSize: headerSize$27,
-            maxSize: maxSize$27,
-            accessLevel: accessLevel$27,
+            id: id$29,
+            name: name$29,
+            headerSize: headerSize$29,
+            maxSize: maxSize$29,
+            accessLevel: accessLevel$29,
             parameters: {
                 date: {
                     year: 24,
@@ -2059,17 +2081,103 @@
             ]
         }
     };
-    const fromBytes$27 = (bytes) => {
+    const fromBytes$29 = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return { date: buffer.getDate() };
     };
-    const toBytes$27 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$27);
+    const toBytes$29 = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$29);
         buffer.setDate(parameters.date);
-        return toBytes$2f(id$27, buffer.data);
+        return toBytes$2h(id$29, buffer.data);
     };
 
     var getDayMaxDemandExport$2 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$29,
+        examples: examples$29,
+        fromBytes: fromBytes$29,
+        headerSize: headerSize$29,
+        id: id$29,
+        isLoraOnly: isLoraOnly$29,
+        maxSize: maxSize$29,
+        name: name$29,
+        toBytes: toBytes$29
+    });
+
+    const id$28 = getDayProfile$3;
+    const name$28 = commandNames$3[getDayProfile$3];
+    const headerSize$28 = 2;
+    const maxSize$28 = 3;
+    const accessLevel$28 = READ_ONLY;
+    const isLoraOnly$28 = false;
+    const examples$28 = {
+        'request for active tariff table A+': {
+            id: id$28,
+            name: name$28,
+            maxSize: maxSize$28,
+            headerSize: headerSize$28,
+            accessLevel: accessLevel$28,
+            parameters: {
+                tariffTable: 0,
+                index: 3,
+                isActive: true
+            },
+            bytes: [
+                0x3b, 0x03,
+                0x00, 0x03, 0x00
+            ]
+        }
+    };
+    const fromBytes$28 = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
+    const toBytes$28 = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$28);
+        buffer.setUint8(parameters.tariffTable);
+        buffer.setUint8(parameters.index);
+        buffer.setUint8(parameters.isActive ? 0 : 1);
+        return toBytes$2h(id$28, buffer.data);
+    };
+
+    var getDayProfile$2 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$28,
+        examples: examples$28,
+        fromBytes: fromBytes$28,
+        headerSize: headerSize$28,
+        id: id$28,
+        isLoraOnly: isLoraOnly$28,
+        maxSize: maxSize$28,
+        name: name$28,
+        toBytes: toBytes$28
+    });
+
+    const id$27 = getDeviceId$3;
+    const name$27 = commandNames$3[getDeviceId$3];
+    const headerSize$27 = 2;
+    const accessLevel$27 = READ_ONLY;
+    const maxSize$27 = 0;
+    const isLoraOnly$27 = false;
+    const examples$27 = {
+        'simple request': {
+            id: id$27,
+            name: name$27,
+            headerSize: headerSize$27,
+            accessLevel: accessLevel$27,
+            maxSize: maxSize$27,
+            parameters: {},
+            bytes: [
+                0x05, 0x00
+            ]
+        }
+    };
+    const fromBytes$27 = (bytes) => {
+        if (bytes.length !== maxSize$27) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
+    };
+    const toBytes$27 = () => toBytes$2h(id$27);
+
+    var getDeviceId$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$27,
         examples: examples$27,
@@ -2082,40 +2190,34 @@
         toBytes: toBytes$27
     });
 
-    const id$26 = getDayProfile$3;
-    const name$26 = commandNames$3[getDayProfile$3];
+    const id$26 = getDeviceType$3;
+    const name$26 = commandNames$3[getDeviceType$3];
     const headerSize$26 = 2;
-    const maxSize$26 = 3;
     const accessLevel$26 = READ_ONLY;
+    const maxSize$26 = 0;
     const isLoraOnly$26 = false;
     const examples$26 = {
-        'request for active tariff table A+': {
+        'simple request': {
             id: id$26,
             name: name$26,
-            maxSize: maxSize$26,
             headerSize: headerSize$26,
+            maxSize: maxSize$26,
             accessLevel: accessLevel$26,
-            parameters: {
-                tariffTable: 0,
-                index: 3,
-                isActive: true
-            },
+            parameters: {},
             bytes: [
-                0x3b, 0x03,
-                0x00, 0x03, 0x00
+                0x04, 0x00
             ]
         }
     };
-    const fromBytes$26 = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
-    const toBytes$26 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$26);
-        buffer.setUint8(parameters.tariffTable);
-        buffer.setUint8(parameters.index);
-        buffer.setUint8(parameters.isActive ? 0 : 1);
-        return toBytes$2f(id$26, buffer.data);
+    const fromBytes$26 = (data) => {
+        if (data.length !== maxSize$26) {
+            throw new Error(`Wrong buffer size: ${data.length}.`);
+        }
+        return {};
     };
+    const toBytes$26 = () => toBytes$2h(id$26);
 
-    var getDayProfile$2 = /*#__PURE__*/Object.freeze({
+    var getDeviceType$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$26,
         examples: examples$26,
@@ -2128,11 +2230,11 @@
         toBytes: toBytes$26
     });
 
-    const id$25 = getDeviceId$3;
-    const name$25 = commandNames$3[getDeviceId$3];
+    const id$25 = getEvents$3;
+    const name$25 = commandNames$3[getEvents$3];
     const headerSize$25 = 2;
     const accessLevel$25 = READ_ONLY;
-    const maxSize$25 = 0;
+    const maxSize$25 = 4;
     const isLoraOnly$25 = false;
     const examples$25 = {
         'simple request': {
@@ -2141,86 +2243,6 @@
             headerSize: headerSize$25,
             accessLevel: accessLevel$25,
             maxSize: maxSize$25,
-            parameters: {},
-            bytes: [
-                0x05, 0x00
-            ]
-        }
-    };
-    const fromBytes$25 = (bytes) => {
-        if (bytes.length !== maxSize$25) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$25 = () => toBytes$2f(id$25);
-
-    var getDeviceId$2 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$25,
-        examples: examples$25,
-        fromBytes: fromBytes$25,
-        headerSize: headerSize$25,
-        id: id$25,
-        isLoraOnly: isLoraOnly$25,
-        maxSize: maxSize$25,
-        name: name$25,
-        toBytes: toBytes$25
-    });
-
-    const id$24 = getDeviceType$3;
-    const name$24 = commandNames$3[getDeviceType$3];
-    const headerSize$24 = 2;
-    const accessLevel$24 = READ_ONLY;
-    const maxSize$24 = 0;
-    const isLoraOnly$24 = false;
-    const examples$24 = {
-        'simple request': {
-            id: id$24,
-            name: name$24,
-            headerSize: headerSize$24,
-            maxSize: maxSize$24,
-            accessLevel: accessLevel$24,
-            parameters: {},
-            bytes: [
-                0x04, 0x00
-            ]
-        }
-    };
-    const fromBytes$24 = (data) => {
-        if (data.length !== maxSize$24) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
-        }
-        return {};
-    };
-    const toBytes$24 = () => toBytes$2f(id$24);
-
-    var getDeviceType$2 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$24,
-        examples: examples$24,
-        fromBytes: fromBytes$24,
-        headerSize: headerSize$24,
-        id: id$24,
-        isLoraOnly: isLoraOnly$24,
-        maxSize: maxSize$24,
-        name: name$24,
-        toBytes: toBytes$24
-    });
-
-    const id$23 = getEvents$3;
-    const name$23 = commandNames$3[getEvents$3];
-    const headerSize$23 = 2;
-    const accessLevel$23 = READ_ONLY;
-    const maxSize$23 = 4;
-    const isLoraOnly$23 = false;
-    const examples$23 = {
-        'simple request': {
-            id: id$23,
-            name: name$23,
-            headerSize: headerSize$23,
-            accessLevel: accessLevel$23,
-            maxSize: maxSize$23,
             parameters: {
                 date: {
                     year: 24,
@@ -2235,8 +2257,8 @@
             ]
         }
     };
-    const fromBytes$23 = (bytes) => {
-        if (bytes.length !== maxSize$23) {
+    const fromBytes$25 = (bytes) => {
+        if (bytes.length !== maxSize$25) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         const buffer = new CommandBinaryBuffer$2(bytes);
@@ -2244,14 +2266,94 @@
         const offset = buffer.getUint8();
         return { date, offset };
     };
-    const toBytes$23 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$23);
+    const toBytes$25 = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$25);
         buffer.setDate(parameters.date);
         buffer.setUint8(parameters.offset);
-        return toBytes$2f(id$23, buffer.data);
+        return toBytes$2h(id$25, buffer.data);
     };
 
     var getEvents$2 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$25,
+        examples: examples$25,
+        fromBytes: fromBytes$25,
+        headerSize: headerSize$25,
+        id: id$25,
+        isLoraOnly: isLoraOnly$25,
+        maxSize: maxSize$25,
+        name: name$25,
+        toBytes: toBytes$25
+    });
+
+    const id$24 = getEventsCounters$3;
+    const name$24 = commandNames$3[getEventsCounters$3];
+    const headerSize$24 = 2;
+    const accessLevel$24 = READ_ONLY;
+    const maxSize$24 = 0;
+    const isLoraOnly$24 = false;
+    const examples$24 = {
+        'simple request': {
+            id: id$24,
+            name: name$24,
+            headerSize: headerSize$24,
+            accessLevel: accessLevel$24,
+            maxSize: maxSize$24,
+            parameters: {},
+            bytes: [
+                0x34, 0x00
+            ]
+        }
+    };
+    const fromBytes$24 = (bytes) => {
+        if (bytes.length !== maxSize$24) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
+    };
+    const toBytes$24 = () => toBytes$2h(id$24);
+
+    var getEventsCounters$2 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$24,
+        examples: examples$24,
+        fromBytes: fromBytes$24,
+        headerSize: headerSize$24,
+        id: id$24,
+        isLoraOnly: isLoraOnly$24,
+        maxSize: maxSize$24,
+        name: name$24,
+        toBytes: toBytes$24
+    });
+
+    const id$23 = getEventStatus$3;
+    const name$23 = commandNames$3[getEventStatus$3];
+    const headerSize$23 = 2;
+    const accessLevel$23 = READ_ONLY;
+    const maxSize$23 = 0;
+    const isLoraOnly$23 = false;
+    const examples$23 = {
+        'simple request': {
+            id: id$23,
+            name: name$23,
+            headerSize: headerSize$23,
+            accessLevel: accessLevel$23,
+            maxSize: maxSize$23,
+            parameters: {},
+            bytes: [
+                0x01, 0x00
+            ]
+        }
+    };
+    const fromBytes$23 = (bytes) => {
+        if (bytes.length !== maxSize$23) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
+    };
+    const toBytes$23 = () => toBytes$2h(id$23);
+
+    var getEventStatus$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$23,
         examples: examples$23,
@@ -2264,22 +2366,22 @@
         toBytes: toBytes$23
     });
 
-    const id$22 = getEventsCounters$3;
-    const name$22 = commandNames$3[getEventsCounters$3];
+    const id$22 = getExtendedCurrentValues$3;
+    const name$22 = commandNames$3[getExtendedCurrentValues$3];
     const headerSize$22 = 2;
-    const accessLevel$22 = READ_ONLY;
     const maxSize$22 = 0;
+    const accessLevel$22 = READ_ONLY;
     const isLoraOnly$22 = false;
     const examples$22 = {
         'simple request': {
             id: id$22,
             name: name$22,
             headerSize: headerSize$22,
-            accessLevel: accessLevel$22,
             maxSize: maxSize$22,
+            accessLevel: accessLevel$22,
             parameters: {},
             bytes: [
-                0x34, 0x00
+                0x3a, 0x00
             ]
         }
     };
@@ -2289,9 +2391,9 @@
         }
         return {};
     };
-    const toBytes$22 = () => toBytes$2f(id$22);
+    const toBytes$22 = () => toBytes$2h(id$22);
 
-    var getEventsCounters$2 = /*#__PURE__*/Object.freeze({
+    var getExtendedCurrentValues$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$22,
         examples: examples$22,
@@ -2304,99 +2406,19 @@
         toBytes: toBytes$22
     });
 
-    const id$21 = getEventStatus$3;
-    const name$21 = commandNames$3[getEventStatus$3];
+    const id$21 = getHalfHourDemand$3;
+    const name$21 = commandNames$3[getHalfHourDemand$3];
     const headerSize$21 = 2;
+    const maxSize$21 = 3;
     const accessLevel$21 = READ_ONLY;
-    const maxSize$21 = 0;
     const isLoraOnly$21 = false;
     const examples$21 = {
-        'simple request': {
+        'request archive values for 2024.03.22': {
             id: id$21,
             name: name$21,
             headerSize: headerSize$21,
-            accessLevel: accessLevel$21,
             maxSize: maxSize$21,
-            parameters: {},
-            bytes: [
-                0x01, 0x00
-            ]
-        }
-    };
-    const fromBytes$21 = (bytes) => {
-        if (bytes.length !== maxSize$21) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$21 = () => toBytes$2f(id$21);
-
-    var getEventStatus$2 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$21,
-        examples: examples$21,
-        fromBytes: fromBytes$21,
-        headerSize: headerSize$21,
-        id: id$21,
-        isLoraOnly: isLoraOnly$21,
-        maxSize: maxSize$21,
-        name: name$21,
-        toBytes: toBytes$21
-    });
-
-    const id$20 = getExtendedCurrentValues$3;
-    const name$20 = commandNames$3[getExtendedCurrentValues$3];
-    const headerSize$20 = 2;
-    const maxSize$20 = 0;
-    const accessLevel$20 = READ_ONLY;
-    const isLoraOnly$20 = false;
-    const examples$20 = {
-        'simple request': {
-            id: id$20,
-            name: name$20,
-            headerSize: headerSize$20,
-            maxSize: maxSize$20,
-            accessLevel: accessLevel$20,
-            parameters: {},
-            bytes: [
-                0x3a, 0x00
-            ]
-        }
-    };
-    const fromBytes$20 = (bytes) => {
-        if (bytes.length !== maxSize$20) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$20 = () => toBytes$2f(id$20);
-
-    var getExtendedCurrentValues$2 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$20,
-        examples: examples$20,
-        fromBytes: fromBytes$20,
-        headerSize: headerSize$20,
-        id: id$20,
-        isLoraOnly: isLoraOnly$20,
-        maxSize: maxSize$20,
-        name: name$20,
-        toBytes: toBytes$20
-    });
-
-    const id$1$ = getHalfHourDemand$3;
-    const name$1$ = commandNames$3[getHalfHourDemand$3];
-    const headerSize$1$ = 2;
-    const maxSize$1$ = 3;
-    const accessLevel$1$ = READ_ONLY;
-    const isLoraOnly$1$ = false;
-    const examples$1$ = {
-        'request archive values for 2024.03.22': {
-            id: id$1$,
-            name: name$1$,
-            headerSize: headerSize$1$,
-            maxSize: maxSize$1$,
-            accessLevel: accessLevel$1$,
+            accessLevel: accessLevel$21,
             parameters: {
                 date: {
                     year: 24,
@@ -2410,42 +2432,42 @@
             ]
         }
     };
-    const fromBytes$1$ = (bytes) => {
+    const fromBytes$21 = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return { date: buffer.getDate() };
     };
-    const toBytes$1$ = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1$);
+    const toBytes$21 = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$21);
         buffer.setDate(parameters.date);
-        return toBytes$2f(id$1$, buffer.data);
+        return toBytes$2h(id$21, buffer.data);
     };
 
     var getHalfHourDemand$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1$,
-        examples: examples$1$,
-        fromBytes: fromBytes$1$,
-        headerSize: headerSize$1$,
-        id: id$1$,
-        isLoraOnly: isLoraOnly$1$,
-        maxSize: maxSize$1$,
-        name: name$1$,
-        toBytes: toBytes$1$
+        accessLevel: accessLevel$21,
+        examples: examples$21,
+        fromBytes: fromBytes$21,
+        headerSize: headerSize$21,
+        id: id$21,
+        isLoraOnly: isLoraOnly$21,
+        maxSize: maxSize$21,
+        name: name$21,
+        toBytes: toBytes$21
     });
 
-    const id$1_ = getHalfHourDemandExport$3;
-    const name$1_ = commandNames$3[getHalfHourDemandExport$3];
-    const headerSize$1_ = 2;
-    const maxSize$1_ = 3;
-    const accessLevel$1_ = READ_ONLY;
-    const isLoraOnly$1_ = false;
-    const examples$1_ = {
+    const id$20 = getHalfHourDemandExport$3;
+    const name$20 = commandNames$3[getHalfHourDemandExport$3];
+    const headerSize$20 = 2;
+    const maxSize$20 = 3;
+    const accessLevel$20 = READ_ONLY;
+    const isLoraOnly$20 = false;
+    const examples$20 = {
         'request archive values for 2024.03.22': {
-            id: id$1_,
-            name: name$1_,
-            headerSize: headerSize$1_,
-            maxSize: maxSize$1_,
-            accessLevel: accessLevel$1_,
+            id: id$20,
+            name: name$20,
+            headerSize: headerSize$20,
+            maxSize: maxSize$20,
+            accessLevel: accessLevel$20,
             parameters: {
                 date: {
                     year: 24,
@@ -2459,27 +2481,27 @@
             ]
         }
     };
-    const fromBytes$1_ = (bytes) => {
+    const fromBytes$20 = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return { date: buffer.getDate() };
     };
-    const toBytes$1_ = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1_);
+    const toBytes$20 = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$20);
         buffer.setDate(parameters.date);
-        return toBytes$2f(id$1_, buffer.data);
+        return toBytes$2h(id$20, buffer.data);
     };
 
     var getHalfHourDemandExport$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1_,
-        examples: examples$1_,
-        fromBytes: fromBytes$1_,
-        headerSize: headerSize$1_,
-        id: id$1_,
-        isLoraOnly: isLoraOnly$1_,
-        maxSize: maxSize$1_,
-        name: name$1_,
-        toBytes: toBytes$1_
+        accessLevel: accessLevel$20,
+        examples: examples$20,
+        fromBytes: fromBytes$20,
+        headerSize: headerSize$20,
+        id: id$20,
+        isLoraOnly: isLoraOnly$20,
+        maxSize: maxSize$20,
+        name: name$20,
+        toBytes: toBytes$20
     });
 
     const TARIFF_NUMBER = 4;
@@ -2772,18 +2794,18 @@
         tariffs.forEach(tariff => this.setAMinusTariffPowerMax(tariff));
     };
 
-    const id$1Z = getHalfhoursEnergies$3;
-    const name$1Z = commandNames$3[getHalfhoursEnergies$3];
-    const headerSize$1Z = 2;
-    const maxSize$1Z = 5;
-    const accessLevel$1Z = UNENCRYPTED;
-    const isLoraOnly$1Z = true;
-    const examples$1Z = {
+    const id$1$ = getHalfhoursEnergies$3;
+    const name$1$ = commandNames$3[getHalfhoursEnergies$3];
+    const headerSize$1$ = 2;
+    const maxSize$1$ = 5;
+    const accessLevel$1$ = UNENCRYPTED;
+    const isLoraOnly$1$ = true;
+    const examples$1$ = {
         'request for halfhours energies': {
-            id: id$1Z,
-            name: name$1Z,
-            headerSize: headerSize$1Z,
-            maxSize: maxSize$1Z,
+            id: id$1$,
+            name: name$1$,
+            headerSize: headerSize$1$,
+            maxSize: maxSize$1$,
             parameters: {
                 date: {
                     year: 21,
@@ -2807,7 +2829,7 @@
             ]
         }
     };
-    const fromBytes$1Z = (bytes) => {
+    const fromBytes$1$ = (bytes) => {
         const buffer = new CommandBinaryBuffer$1(bytes);
         return {
             date: buffer.getDate(),
@@ -2816,16 +2838,96 @@
             halfhoursNumber: buffer.getUint8()
         };
     };
-    const toBytes$1Z = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1Z);
+    const toBytes$1$ = (parameters) => {
+        const buffer = new CommandBinaryBuffer$1(maxSize$1$);
         buffer.setDate(parameters.date);
         buffer.setEnergiesFlags(parameters.energies);
         buffer.setUint8(parameters.firstHalfhour);
         buffer.setUint8(parameters.halfhoursNumber);
-        return toBytes$2f(id$1Z, buffer.data);
+        return toBytes$2h(id$1$, buffer.data);
     };
 
     var getHalfhoursEnergies$2 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$1$,
+        examples: examples$1$,
+        fromBytes: fromBytes$1$,
+        headerSize: headerSize$1$,
+        id: id$1$,
+        isLoraOnly: isLoraOnly$1$,
+        maxSize: maxSize$1$,
+        name: name$1$,
+        toBytes: toBytes$1$
+    });
+
+    const id$1_ = getMagneticFieldThreshold$3;
+    const name$1_ = commandNames$3[getMagneticFieldThreshold$3];
+    const headerSize$1_ = 2;
+    const maxSize$1_ = 0;
+    const accessLevel$1_ = READ_ONLY;
+    const isLoraOnly$1_ = false;
+    const examples$1_ = {
+        'simple request': {
+            id: id$1_,
+            name: name$1_,
+            headerSize: headerSize$1_,
+            maxSize: maxSize$1_,
+            accessLevel: accessLevel$1_,
+            parameters: {},
+            bytes: [
+                0x6d, 0x00
+            ]
+        }
+    };
+    const fromBytes$1_ = (bytes) => {
+        if (bytes.length !== maxSize$1_) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
+    };
+    const toBytes$1_ = () => toBytes$2h(id$1_);
+
+    var getMagneticFieldThreshold$2 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$1_,
+        examples: examples$1_,
+        fromBytes: fromBytes$1_,
+        headerSize: headerSize$1_,
+        id: id$1_,
+        isLoraOnly: isLoraOnly$1_,
+        maxSize: maxSize$1_,
+        name: name$1_,
+        toBytes: toBytes$1_
+    });
+
+    const id$1Z = getMeterInfo$3;
+    const name$1Z = commandNames$3[getMeterInfo$3];
+    const headerSize$1Z = 2;
+    const maxSize$1Z = 0;
+    const accessLevel$1Z = READ_ONLY;
+    const isLoraOnly$1Z = false;
+    const examples$1Z = {
+        'simple request': {
+            id: id$1Z,
+            name: name$1Z,
+            headerSize: headerSize$1Z,
+            maxSize: maxSize$1Z,
+            accessLevel: accessLevel$1Z,
+            parameters: {},
+            bytes: [
+                0x7a, 0x00
+            ]
+        }
+    };
+    const fromBytes$1Z = (bytes) => {
+        if (bytes.length !== maxSize$1Z) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
+    };
+    const toBytes$1Z = () => toBytes$2h(id$1Z);
+
+    var getMeterInfo$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1Z,
         examples: examples$1Z,
@@ -2838,34 +2940,44 @@
         toBytes: toBytes$1Z
     });
 
-    const id$1Y = getMagneticFieldThreshold$3;
-    const name$1Y = commandNames$3[getMagneticFieldThreshold$3];
+    const id$1Y = getMonthDemand$3;
+    const name$1Y = commandNames$3[getMonthDemand$3];
     const headerSize$1Y = 2;
-    const maxSize$1Y = 0;
+    const maxSize$1Y = 2;
     const accessLevel$1Y = READ_ONLY;
     const isLoraOnly$1Y = false;
     const examples$1Y = {
-        'simple request': {
+        'request energy for 2024.03': {
             id: id$1Y,
             name: name$1Y,
             headerSize: headerSize$1Y,
             maxSize: maxSize$1Y,
             accessLevel: accessLevel$1Y,
-            parameters: {},
+            parameters: {
+                year: 24,
+                month: 3
+            },
             bytes: [
-                0x6d, 0x00
+                0x17, 0x02,
+                0x18, 0x03
             ]
         }
     };
     const fromBytes$1Y = (bytes) => {
-        if (bytes.length !== maxSize$1Y) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
+        const buffer = new CommandBinaryBuffer$2(bytes);
+        return {
+            year: buffer.getUint8(),
+            month: buffer.getUint8()
+        };
     };
-    const toBytes$1Y = () => toBytes$2f(id$1Y);
+    const toBytes$1Y = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1Y);
+        buffer.setUint8(parameters.year);
+        buffer.setUint8(parameters.month);
+        return toBytes$2h(id$1Y, buffer.data);
+    };
 
-    var getMagneticFieldThreshold$2 = /*#__PURE__*/Object.freeze({
+    var getMonthDemand$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1Y,
         examples: examples$1Y,
@@ -2878,34 +2990,44 @@
         toBytes: toBytes$1Y
     });
 
-    const id$1X = getMeterInfo$3;
-    const name$1X = commandNames$3[getMeterInfo$3];
+    const id$1X = getMonthDemandExport$3;
+    const name$1X = commandNames$3[getMonthDemandExport$3];
     const headerSize$1X = 2;
-    const maxSize$1X = 0;
+    const maxSize$1X = 2;
     const accessLevel$1X = READ_ONLY;
     const isLoraOnly$1X = false;
     const examples$1X = {
-        'simple request': {
+        'request energy for 2024.03': {
             id: id$1X,
             name: name$1X,
             headerSize: headerSize$1X,
             maxSize: maxSize$1X,
             accessLevel: accessLevel$1X,
-            parameters: {},
+            parameters: {
+                year: 24,
+                month: 3
+            },
             bytes: [
-                0x7a, 0x00
+                0x52, 0x02,
+                0x18, 0x03
             ]
         }
     };
     const fromBytes$1X = (bytes) => {
-        if (bytes.length !== maxSize$1X) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
+        const buffer = new CommandBinaryBuffer$2(bytes);
+        return {
+            year: buffer.getUint8(),
+            month: buffer.getUint8()
+        };
     };
-    const toBytes$1X = () => toBytes$2f(id$1X);
+    const toBytes$1X = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1X);
+        buffer.setUint8(parameters.year);
+        buffer.setUint8(parameters.month);
+        return toBytes$2h(id$1X, buffer.data);
+    };
 
-    var getMeterInfo$2 = /*#__PURE__*/Object.freeze({
+    var getMonthDemandExport$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1X,
         examples: examples$1X,
@@ -2918,14 +3040,14 @@
         toBytes: toBytes$1X
     });
 
-    const id$1W = getMonthDemand$3;
-    const name$1W = commandNames$3[getMonthDemand$3];
+    const id$1W = getMonthMaxDemand$3;
+    const name$1W = commandNames$3[getMonthMaxDemand$3];
     const headerSize$1W = 2;
     const maxSize$1W = 2;
     const accessLevel$1W = READ_ONLY;
     const isLoraOnly$1W = false;
     const examples$1W = {
-        'request energy for 2024.03': {
+        'request max power for 2024.03': {
             id: id$1W,
             name: name$1W,
             headerSize: headerSize$1W,
@@ -2936,26 +3058,18 @@
                 month: 3
             },
             bytes: [
-                0x17, 0x02,
+                0x32, 0x02,
                 0x18, 0x03
             ]
         }
     };
     const fromBytes$1W = (bytes) => {
-        const buffer = new CommandBinaryBuffer$2(bytes);
-        return {
-            year: buffer.getUint8(),
-            month: buffer.getUint8()
-        };
+        const [year, month] = bytes;
+        return { year, month };
     };
-    const toBytes$1W = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1W);
-        buffer.setUint8(parameters.year);
-        buffer.setUint8(parameters.month);
-        return toBytes$2f(id$1W, buffer.data);
-    };
+    const toBytes$1W = ({ year, month }) => (toBytes$2h(id$1W, [year, month]));
 
-    var getMonthDemand$2 = /*#__PURE__*/Object.freeze({
+    var getMonthMaxDemand$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1W,
         examples: examples$1W,
@@ -2968,14 +3082,14 @@
         toBytes: toBytes$1W
     });
 
-    const id$1V = getMonthDemandExport$3;
-    const name$1V = commandNames$3[getMonthDemandExport$3];
+    const id$1V = getMonthMaxDemandExport$3;
+    const name$1V = commandNames$3[getMonthMaxDemandExport$3];
     const headerSize$1V = 2;
     const maxSize$1V = 2;
     const accessLevel$1V = READ_ONLY;
     const isLoraOnly$1V = false;
     const examples$1V = {
-        'request energy for 2024.03': {
+        'request max power for 2024.03': {
             id: id$1V,
             name: name$1V,
             headerSize: headerSize$1V,
@@ -2986,26 +3100,18 @@
                 month: 3
             },
             bytes: [
-                0x52, 0x02,
+                0x59, 0x02,
                 0x18, 0x03
             ]
         }
     };
     const fromBytes$1V = (bytes) => {
-        const buffer = new CommandBinaryBuffer$2(bytes);
-        return {
-            year: buffer.getUint8(),
-            month: buffer.getUint8()
-        };
+        const [year, month] = bytes;
+        return { year, month };
     };
-    const toBytes$1V = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1V);
-        buffer.setUint8(parameters.year);
-        buffer.setUint8(parameters.month);
-        return toBytes$2f(id$1V, buffer.data);
-    };
+    const toBytes$1V = ({ year, month }) => (toBytes$2h(id$1V, [year, month]));
 
-    var getMonthDemandExport$2 = /*#__PURE__*/Object.freeze({
+    var getMonthMaxDemandExport$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1V,
         examples: examples$1V,
@@ -3018,36 +3124,34 @@
         toBytes: toBytes$1V
     });
 
-    const id$1U = getMonthMaxDemand$3;
-    const name$1U = commandNames$3[getMonthMaxDemand$3];
+    const id$1U = getOperatorParameters$3;
+    const name$1U = commandNames$3[getOperatorParameters$3];
     const headerSize$1U = 2;
-    const maxSize$1U = 2;
+    const maxSize$1U = 0;
     const accessLevel$1U = READ_ONLY;
     const isLoraOnly$1U = false;
     const examples$1U = {
-        'request max power for 2024.03': {
+        'simple request': {
             id: id$1U,
             name: name$1U,
             headerSize: headerSize$1U,
             maxSize: maxSize$1U,
             accessLevel: accessLevel$1U,
-            parameters: {
-                year: 24,
-                month: 3
-            },
+            parameters: {},
             bytes: [
-                0x32, 0x02,
-                0x18, 0x03
+                0x1e, 0x00
             ]
         }
     };
     const fromBytes$1U = (bytes) => {
-        const [year, month] = bytes;
-        return { year, month };
+        if (bytes.length !== maxSize$1U) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
     };
-    const toBytes$1U = ({ year, month }) => (toBytes$2f(id$1U, [year, month]));
+    const toBytes$1U = () => toBytes$2h(id$1U);
 
-    var getMonthMaxDemand$2 = /*#__PURE__*/Object.freeze({
+    var getOperatorParameters$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1U,
         examples: examples$1U,
@@ -3060,36 +3164,34 @@
         toBytes: toBytes$1U
     });
 
-    const id$1T = getMonthMaxDemandExport$3;
-    const name$1T = commandNames$3[getMonthMaxDemandExport$3];
+    const id$1T = getOperatorParametersExtended3$3;
+    const name$1T = commandNames$3[getOperatorParametersExtended3$3];
     const headerSize$1T = 2;
-    const maxSize$1T = 2;
+    const maxSize$1T = 0;
     const accessLevel$1T = READ_ONLY;
     const isLoraOnly$1T = false;
     const examples$1T = {
-        'request max power for 2024.03': {
+        'simple request': {
             id: id$1T,
             name: name$1T,
             headerSize: headerSize$1T,
             maxSize: maxSize$1T,
             accessLevel: accessLevel$1T,
-            parameters: {
-                year: 24,
-                month: 3
-            },
+            parameters: {},
             bytes: [
-                0x59, 0x02,
-                0x18, 0x03
+                0x71, 0x00
             ]
         }
     };
     const fromBytes$1T = (bytes) => {
-        const [year, month] = bytes;
-        return { year, month };
+        if (bytes.length !== maxSize$1T) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
     };
-    const toBytes$1T = ({ year, month }) => (toBytes$2f(id$1T, [year, month]));
+    const toBytes$1T = () => toBytes$2h(id$1T);
 
-    var getMonthMaxDemandExport$2 = /*#__PURE__*/Object.freeze({
+    var getOperatorParametersExtended3$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1T,
         examples: examples$1T,
@@ -3102,34 +3204,32 @@
         toBytes: toBytes$1T
     });
 
-    const id$1S = getOperatorParameters$3;
-    const name$1S = commandNames$3[getOperatorParameters$3];
+    const id$1S = getRatePlanInfo$3;
+    const name$1S = commandNames$3[getRatePlanInfo$3];
     const headerSize$1S = 2;
-    const maxSize$1S = 0;
+    const maxSize$1S = 1;
     const accessLevel$1S = READ_ONLY;
     const isLoraOnly$1S = false;
     const examples$1S = {
-        'simple request': {
+        'request for table A-': {
             id: id$1S,
             name: name$1S,
             headerSize: headerSize$1S,
             maxSize: maxSize$1S,
             accessLevel: accessLevel$1S,
-            parameters: {},
+            parameters: {
+                tariffTable: 1
+            },
             bytes: [
-                0x1e, 0x00
+                0x2c, 0x01,
+                0x01
             ]
         }
     };
-    const fromBytes$1S = (bytes) => {
-        if (bytes.length !== maxSize$1S) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$1S = () => toBytes$2f(id$1S);
+    const fromBytes$1S = (bytes) => ({ tariffTable: bytes[0] });
+    const toBytes$1S = (parameters) => (toBytes$2h(id$1S, [parameters.tariffTable]));
 
-    var getOperatorParameters$2 = /*#__PURE__*/Object.freeze({
+    var getRatePlanInfo$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1S,
         examples: examples$1S,
@@ -3142,8 +3242,8 @@
         toBytes: toBytes$1S
     });
 
-    const id$1R = getOperatorParametersExtended3$3;
-    const name$1R = commandNames$3[getOperatorParametersExtended3$3];
+    const id$1R = getSaldo$3;
+    const name$1R = commandNames$3[getSaldo$3];
     const headerSize$1R = 2;
     const maxSize$1R = 0;
     const accessLevel$1R = READ_ONLY;
@@ -3157,7 +3257,7 @@
             accessLevel: accessLevel$1R,
             parameters: {},
             bytes: [
-                0x71, 0x00
+                0x29, 0x00
             ]
         }
     };
@@ -3167,9 +3267,9 @@
         }
         return {};
     };
-    const toBytes$1R = () => toBytes$2f(id$1R);
+    const toBytes$1R = () => toBytes$2h(id$1R);
 
-    var getOperatorParametersExtended3$2 = /*#__PURE__*/Object.freeze({
+    var getSaldo$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1R,
         examples: examples$1R,
@@ -3182,32 +3282,32 @@
         toBytes: toBytes$1R
     });
 
-    const id$1Q = getRatePlanInfo$3;
-    const name$1Q = commandNames$3[getRatePlanInfo$3];
+    const id$1Q = getSaldoParameters$3;
+    const name$1Q = commandNames$3[getSaldoParameters$3];
     const headerSize$1Q = 2;
-    const maxSize$1Q = 1;
+    const maxSize$1Q = 0;
     const accessLevel$1Q = READ_ONLY;
     const isLoraOnly$1Q = false;
     const examples$1Q = {
-        'request for table A-': {
+        'simple request': {
             id: id$1Q,
             name: name$1Q,
             headerSize: headerSize$1Q,
             maxSize: maxSize$1Q,
             accessLevel: accessLevel$1Q,
-            parameters: {
-                tariffTable: 1
-            },
-            bytes: [
-                0x2c, 0x01,
-                0x01
-            ]
+            parameters: {},
+            bytes: [0x2e, 0x00]
         }
     };
-    const fromBytes$1Q = (bytes) => ({ tariffTable: bytes[0] });
-    const toBytes$1Q = (parameters) => (toBytes$2f(id$1Q, [parameters.tariffTable]));
+    const fromBytes$1Q = (bytes) => {
+        if (bytes.length !== maxSize$1Q) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
+    };
+    const toBytes$1Q = () => toBytes$2h(id$1Q);
 
-    var getRatePlanInfo$2 = /*#__PURE__*/Object.freeze({
+    var getSaldoParameters$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1Q,
         examples: examples$1Q,
@@ -3220,34 +3320,40 @@
         toBytes: toBytes$1Q
     });
 
-    const id$1P = getSaldo$3;
-    const name$1P = commandNames$3[getSaldo$3];
+    const id$1P = getSeasonProfile$3;
+    const name$1P = commandNames$3[getSeasonProfile$3];
     const headerSize$1P = 2;
-    const maxSize$1P = 0;
+    const maxSize$1P = 3;
     const accessLevel$1P = READ_ONLY;
     const isLoraOnly$1P = false;
     const examples$1P = {
-        'simple request': {
+        'request for passive tariff table A+': {
             id: id$1P,
             name: name$1P,
             headerSize: headerSize$1P,
             maxSize: maxSize$1P,
             accessLevel: accessLevel$1P,
-            parameters: {},
+            parameters: {
+                tariffTable: 0,
+                index: 5,
+                isActive: false
+            },
             bytes: [
-                0x29, 0x00
+                0x3c, 0x03,
+                0x00, 0x05, 0x01
             ]
         }
     };
-    const fromBytes$1P = (bytes) => {
-        if (bytes.length !== maxSize$1P) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
+    const fromBytes$1P = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
+    const toBytes$1P = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1P);
+        buffer.setUint8(parameters.tariffTable);
+        buffer.setUint8(parameters.index);
+        buffer.setUint8(parameters.isActive ? 0 : 1);
+        return toBytes$2h(id$1P, buffer.data);
     };
-    const toBytes$1P = () => toBytes$2f(id$1P);
 
-    var getSaldo$2 = /*#__PURE__*/Object.freeze({
+    var getSeasonProfile$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1P,
         examples: examples$1P,
@@ -3260,32 +3366,40 @@
         toBytes: toBytes$1P
     });
 
-    const id$1O = getSaldoParameters$3;
-    const name$1O = commandNames$3[getSaldoParameters$3];
+    const id$1O = getSpecialDay$3;
+    const name$1O = commandNames$3[getSpecialDay$3];
     const headerSize$1O = 2;
-    const maxSize$1O = 0;
+    const maxSize$1O = 3;
     const accessLevel$1O = READ_ONLY;
     const isLoraOnly$1O = false;
     const examples$1O = {
-        'simple request': {
+        'request for passive tariff table A+': {
             id: id$1O,
             name: name$1O,
             headerSize: headerSize$1O,
             maxSize: maxSize$1O,
             accessLevel: accessLevel$1O,
-            parameters: {},
-            bytes: [0x2e, 0x00]
+            parameters: {
+                tariffTable: 0,
+                index: 5,
+                isActive: false
+            },
+            bytes: [
+                0x3d, 0x03,
+                0x00, 0x05, 0x01
+            ]
         }
     };
-    const fromBytes$1O = (bytes) => {
-        if (bytes.length !== maxSize$1O) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
+    const fromBytes$1O = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
+    const toBytes$1O = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1O);
+        buffer.setUint8(parameters.tariffTable);
+        buffer.setUint8(parameters.index);
+        buffer.setUint8(parameters.isActive ? 0 : 1);
+        return toBytes$2h(id$1O, buffer.data);
     };
-    const toBytes$1O = () => toBytes$2f(id$1O);
 
-    var getSaldoParameters$2 = /*#__PURE__*/Object.freeze({
+    var getSpecialDay$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1O,
         examples: examples$1O,
@@ -3298,40 +3412,34 @@
         toBytes: toBytes$1O
     });
 
-    const id$1N = getSeasonProfile$3;
-    const name$1N = commandNames$3[getSeasonProfile$3];
+    const id$1N = getVersion$3;
+    const name$1N = commandNames$3[getVersion$3];
     const headerSize$1N = 2;
-    const maxSize$1N = 3;
+    const maxSize$1N = 0;
     const accessLevel$1N = READ_ONLY;
     const isLoraOnly$1N = false;
     const examples$1N = {
-        'request for passive tariff table A+': {
+        'simple request': {
             id: id$1N,
             name: name$1N,
             headerSize: headerSize$1N,
             maxSize: maxSize$1N,
             accessLevel: accessLevel$1N,
-            parameters: {
-                tariffTable: 0,
-                index: 5,
-                isActive: false
-            },
+            parameters: {},
             bytes: [
-                0x3c, 0x03,
-                0x00, 0x05, 0x01
+                0x28, 0x00
             ]
         }
     };
-    const fromBytes$1N = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
-    const toBytes$1N = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1N);
-        buffer.setUint8(parameters.tariffTable);
-        buffer.setUint8(parameters.index);
-        buffer.setUint8(parameters.isActive ? 0 : 1);
-        return toBytes$2f(id$1N, buffer.data);
+    const fromBytes$1N = (bytes) => {
+        if (bytes.length !== maxSize$1N) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
     };
+    const toBytes$1N = () => toBytes$2h(id$1N);
 
-    var getSeasonProfile$2 = /*#__PURE__*/Object.freeze({
+    var getVersion$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1N,
         examples: examples$1N,
@@ -3344,14 +3452,14 @@
         toBytes: toBytes$1N
     });
 
-    const id$1M = getSpecialDay$3;
-    const name$1M = commandNames$3[getSpecialDay$3];
+    const id$1M = prepareRatePlan$3;
+    const name$1M = commandNames$3[prepareRatePlan$3];
     const headerSize$1M = 2;
-    const maxSize$1M = 3;
-    const accessLevel$1M = READ_ONLY;
+    const maxSize$1M = 5;
+    const accessLevel$1M = READ_WRITE;
     const isLoraOnly$1M = false;
     const examples$1M = {
-        'request for passive tariff table A+': {
+        'prepare rate plan request': {
             id: id$1M,
             name: name$1M,
             headerSize: headerSize$1M,
@@ -3359,25 +3467,29 @@
             accessLevel: accessLevel$1M,
             parameters: {
                 tariffTable: 0,
-                index: 5,
-                isActive: false
+                id: 987654321
             },
             bytes: [
-                0x3d, 0x03,
-                0x00, 0x05, 0x01
+                0x14, 0x05,
+                0x00, 0x3a, 0xde, 0x68, 0xb1
             ]
         }
     };
-    const fromBytes$1M = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
+    const fromBytes$1M = (bytes) => {
+        const buffer = new CommandBinaryBuffer$2(bytes);
+        return {
+            tariffTable: buffer.getUint8(),
+            id: buffer.getUint32()
+        };
+    };
     const toBytes$1M = (parameters) => {
         const buffer = new CommandBinaryBuffer$2(maxSize$1M);
         buffer.setUint8(parameters.tariffTable);
-        buffer.setUint8(parameters.index);
-        buffer.setUint8(parameters.isActive ? 0 : 1);
-        return toBytes$2f(id$1M, buffer.data);
+        buffer.setUint32(parameters.id);
+        return toBytes$2h(id$1M, buffer.data);
     };
 
-    var getSpecialDay$2 = /*#__PURE__*/Object.freeze({
+    var prepareRatePlan$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1M,
         examples: examples$1M,
@@ -3390,11 +3502,11 @@
         toBytes: toBytes$1M
     });
 
-    const id$1L = getVersion$3;
-    const name$1L = commandNames$3[getVersion$3];
+    const id$1L = resetPowerMaxDay$3;
+    const name$1L = commandNames$3[resetPowerMaxDay$3];
     const headerSize$1L = 2;
     const maxSize$1L = 0;
-    const accessLevel$1L = READ_ONLY;
+    const accessLevel$1L = READ_WRITE;
     const isLoraOnly$1L = false;
     const examples$1L = {
         'simple request': {
@@ -3405,7 +3517,7 @@
             accessLevel: accessLevel$1L,
             parameters: {},
             bytes: [
-                0x28, 0x00
+                0x35, 0x00
             ]
         }
     };
@@ -3415,9 +3527,9 @@
         }
         return {};
     };
-    const toBytes$1L = () => toBytes$2f(id$1L);
+    const toBytes$1L = () => toBytes$2h(id$1L);
 
-    var getVersion$2 = /*#__PURE__*/Object.freeze({
+    var resetPowerMaxDay$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1L,
         examples: examples$1L,
@@ -3430,44 +3542,34 @@
         toBytes: toBytes$1L
     });
 
-    const id$1K = prepareRatePlan$3;
-    const name$1K = commandNames$3[prepareRatePlan$3];
+    const id$1K = resetPowerMaxMonth$3;
+    const name$1K = commandNames$3[resetPowerMaxMonth$3];
     const headerSize$1K = 2;
-    const maxSize$1K = 5;
+    const maxSize$1K = 0;
     const accessLevel$1K = READ_WRITE;
     const isLoraOnly$1K = false;
     const examples$1K = {
-        'prepare rate plan request': {
+        'simple request': {
             id: id$1K,
             name: name$1K,
             headerSize: headerSize$1K,
             maxSize: maxSize$1K,
             accessLevel: accessLevel$1K,
-            parameters: {
-                tariffTable: 0,
-                id: 987654321
-            },
+            parameters: {},
             bytes: [
-                0x14, 0x05,
-                0x00, 0x3a, 0xde, 0x68, 0xb1
+                0x36, 0x00
             ]
         }
     };
     const fromBytes$1K = (bytes) => {
-        const buffer = new CommandBinaryBuffer$2(bytes);
-        return {
-            tariffTable: buffer.getUint8(),
-            id: buffer.getUint32()
-        };
+        if (bytes.length !== maxSize$1K) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
     };
-    const toBytes$1K = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1K);
-        buffer.setUint8(parameters.tariffTable);
-        buffer.setUint32(parameters.id);
-        return toBytes$2f(id$1K, buffer.data);
-    };
+    const toBytes$1K = () => toBytes$2h(id$1K);
 
-    var prepareRatePlan$2 = /*#__PURE__*/Object.freeze({
+    var resetPowerMaxMonth$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1K,
         examples: examples$1K,
@@ -3480,10 +3582,10 @@
         toBytes: toBytes$1K
     });
 
-    const id$1J = resetPowerMaxDay$3;
-    const name$1J = commandNames$3[resetPowerMaxDay$3];
+    const id$1J = runTariffPlan$3;
+    const name$1J = commandNames$3[runTariffPlan$3];
     const headerSize$1J = 2;
-    const maxSize$1J = 0;
+    const maxSize$1J = 1;
     const accessLevel$1J = READ_WRITE;
     const isLoraOnly$1J = false;
     const examples$1J = {
@@ -3493,21 +3595,17 @@
             headerSize: headerSize$1J,
             maxSize: maxSize$1J,
             accessLevel: accessLevel$1J,
-            parameters: {},
+            parameters: { tariffTable: 5 },
             bytes: [
-                0x35, 0x00
+                0x46, 0x01,
+                0x05
             ]
         }
     };
-    const fromBytes$1J = (bytes) => {
-        if (bytes.length !== maxSize$1J) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$1J = () => toBytes$2f(id$1J);
+    const fromBytes$1J = (bytes) => ({ tariffTable: bytes[0] });
+    const toBytes$1J = (parameters) => (toBytes$2h(id$1J, [parameters.tariffTable]));
 
-    var resetPowerMaxDay$2 = /*#__PURE__*/Object.freeze({
+    var runTariffPlan$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1J,
         examples: examples$1J,
@@ -3520,96 +3618,20 @@
         toBytes: toBytes$1J
     });
 
-    const id$1I = resetPowerMaxMonth$3;
-    const name$1I = commandNames$3[resetPowerMaxMonth$3];
+    const KEY_SIZE = 16;
+    const id$1I = setAccessKey$3;
+    const name$1I = commandNames$3[setAccessKey$3];
     const headerSize$1I = 2;
-    const maxSize$1I = 0;
+    const maxSize$1I = 1 + KEY_SIZE;
     const accessLevel$1I = READ_WRITE;
     const isLoraOnly$1I = false;
     const examples$1I = {
-        'simple request': {
+        'set key for READ_ONLY access level': {
             id: id$1I,
             name: name$1I,
             headerSize: headerSize$1I,
             maxSize: maxSize$1I,
             accessLevel: accessLevel$1I,
-            parameters: {},
-            bytes: [
-                0x36, 0x00
-            ]
-        }
-    };
-    const fromBytes$1I = (bytes) => {
-        if (bytes.length !== maxSize$1I) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$1I = () => toBytes$2f(id$1I);
-
-    var resetPowerMaxMonth$2 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$1I,
-        examples: examples$1I,
-        fromBytes: fromBytes$1I,
-        headerSize: headerSize$1I,
-        id: id$1I,
-        isLoraOnly: isLoraOnly$1I,
-        maxSize: maxSize$1I,
-        name: name$1I,
-        toBytes: toBytes$1I
-    });
-
-    const id$1H = runTariffPlan$3;
-    const name$1H = commandNames$3[runTariffPlan$3];
-    const headerSize$1H = 2;
-    const maxSize$1H = 1;
-    const accessLevel$1H = READ_WRITE;
-    const isLoraOnly$1H = false;
-    const examples$1H = {
-        'simple request': {
-            id: id$1H,
-            name: name$1H,
-            headerSize: headerSize$1H,
-            maxSize: maxSize$1H,
-            accessLevel: accessLevel$1H,
-            parameters: { tariffTable: 5 },
-            bytes: [
-                0x46, 0x01,
-                0x05
-            ]
-        }
-    };
-    const fromBytes$1H = (bytes) => ({ tariffTable: bytes[0] });
-    const toBytes$1H = (parameters) => (toBytes$2f(id$1H, [parameters.tariffTable]));
-
-    var runTariffPlan$2 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$1H,
-        examples: examples$1H,
-        fromBytes: fromBytes$1H,
-        headerSize: headerSize$1H,
-        id: id$1H,
-        isLoraOnly: isLoraOnly$1H,
-        maxSize: maxSize$1H,
-        name: name$1H,
-        toBytes: toBytes$1H
-    });
-
-    const KEY_SIZE = 16;
-    const id$1G = setAccessKey$3;
-    const name$1G = commandNames$3[setAccessKey$3];
-    const headerSize$1G = 2;
-    const maxSize$1G = 1 + KEY_SIZE;
-    const accessLevel$1G = READ_WRITE;
-    const isLoraOnly$1G = false;
-    const examples$1G = {
-        'set key for READ_ONLY access level': {
-            id: id$1G,
-            name: name$1G,
-            headerSize: headerSize$1G,
-            maxSize: maxSize$1G,
-            accessLevel: accessLevel$1G,
             parameters: {
                 accessLevel: READ_ONLY,
                 key: [
@@ -3623,46 +3645,46 @@
             ]
         }
     };
-    const fromBytes$1G = (bytes) => {
+    const fromBytes$1I = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return {
             accessLevel: buffer.getUint8(),
             key: buffer.getBytes(KEY_SIZE)
         };
     };
-    const toBytes$1G = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1G);
+    const toBytes$1I = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1I);
         buffer.setUint8(parameters.accessLevel);
         buffer.setBytes(parameters.key);
-        return toBytes$2f(id$1G, buffer.data);
+        return toBytes$2h(id$1I, buffer.data);
     };
 
     var setAccessKey$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1G,
-        examples: examples$1G,
-        fromBytes: fromBytes$1G,
-        headerSize: headerSize$1G,
-        id: id$1G,
-        isLoraOnly: isLoraOnly$1G,
-        maxSize: maxSize$1G,
-        name: name$1G,
-        toBytes: toBytes$1G
+        accessLevel: accessLevel$1I,
+        examples: examples$1I,
+        fromBytes: fromBytes$1I,
+        headerSize: headerSize$1I,
+        id: id$1I,
+        isLoraOnly: isLoraOnly$1I,
+        maxSize: maxSize$1I,
+        name: name$1I,
+        toBytes: toBytes$1I
     });
 
-    const id$1F = setCorrectDateTime$3;
-    const name$1F = commandNames$3[setCorrectDateTime$3];
-    const headerSize$1F = 2;
-    const maxSize$1F = 2;
-    const accessLevel$1F = READ_ONLY;
-    const isLoraOnly$1F = false;
-    const examples$1F = {
+    const id$1H = setCorrectDateTime$3;
+    const name$1H = commandNames$3[setCorrectDateTime$3];
+    const headerSize$1H = 2;
+    const maxSize$1H = 2;
+    const accessLevel$1H = READ_ONLY;
+    const isLoraOnly$1H = false;
+    const examples$1H = {
         'shift device time 5 seconds forward': {
-            id: id$1F,
-            name: name$1F,
-            headerSize: headerSize$1F,
-            maxSize: maxSize$1F,
-            accessLevel: accessLevel$1F,
+            id: id$1H,
+            name: name$1H,
+            headerSize: headerSize$1H,
+            maxSize: maxSize$1H,
+            accessLevel: accessLevel$1H,
             parameters: { seconds: 5 },
             bytes: [
                 0x5c, 0x02,
@@ -3670,10 +3692,10 @@
             ]
         },
         'shift device time 5 seconds backward': {
-            id: id$1F,
-            name: name$1F,
-            headerSize: headerSize$1F,
-            maxSize: maxSize$1F,
+            id: id$1H,
+            name: name$1H,
+            headerSize: headerSize$1H,
+            maxSize: maxSize$1H,
             parameters: { seconds: -5 },
             bytes: [
                 0x5c, 0x02,
@@ -3681,45 +3703,45 @@
             ]
         }
     };
-    const fromBytes$1F = (bytes) => {
-        if (bytes.length !== maxSize$1F) {
+    const fromBytes$1H = (bytes) => {
+        if (bytes.length !== maxSize$1H) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         const buffer = new CommandBinaryBuffer$2(bytes);
         return { seconds: buffer.getInt16() };
     };
-    const toBytes$1F = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1F);
+    const toBytes$1H = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1H);
         buffer.setInt16(parameters.seconds);
-        return toBytes$2f(id$1F, buffer.data);
+        return toBytes$2h(id$1H, buffer.data);
     };
 
     var setCorrectDateTime$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1F,
-        examples: examples$1F,
-        fromBytes: fromBytes$1F,
-        headerSize: headerSize$1F,
-        id: id$1F,
-        isLoraOnly: isLoraOnly$1F,
-        maxSize: maxSize$1F,
-        name: name$1F,
-        toBytes: toBytes$1F
+        accessLevel: accessLevel$1H,
+        examples: examples$1H,
+        fromBytes: fromBytes$1H,
+        headerSize: headerSize$1H,
+        id: id$1H,
+        isLoraOnly: isLoraOnly$1H,
+        maxSize: maxSize$1H,
+        name: name$1H,
+        toBytes: toBytes$1H
     });
 
-    const id$1E = setCorrectTime$3;
-    const name$1E = commandNames$3[setCorrectTime$3];
-    const headerSize$1E = 2;
-    const maxSize$1E = 9;
-    const accessLevel$1E = READ_WRITE;
-    const isLoraOnly$1E = false;
-    const examples$1E = {
+    const id$1G = setCorrectTime$3;
+    const name$1G = commandNames$3[setCorrectTime$3];
+    const headerSize$1G = 2;
+    const maxSize$1G = 9;
+    const accessLevel$1G = READ_WRITE;
+    const isLoraOnly$1G = false;
+    const examples$1G = {
         'default parameters': {
-            id: id$1E,
-            name: name$1E,
-            headerSize: headerSize$1E,
-            maxSize: maxSize$1E,
-            accessLevel: accessLevel$1E,
+            id: id$1G,
+            name: name$1G,
+            headerSize: headerSize$1G,
+            maxSize: maxSize$1G,
+            accessLevel: accessLevel$1G,
             parameters: {
                 monthTransitionSummer: 3,
                 dateTransitionSummer: 0,
@@ -3737,45 +3759,45 @@
             ]
         }
     };
-    const fromBytes$1E = (bytes) => {
-        if (bytes.length !== maxSize$1E) {
+    const fromBytes$1G = (bytes) => {
+        if (bytes.length !== maxSize$1G) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         const buffer = new CommandBinaryBuffer$2(bytes);
         return buffer.getTimeCorrectionParameters();
     };
-    const toBytes$1E = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1E);
+    const toBytes$1G = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1G);
         buffer.setTimeCorrectionParameters(parameters);
-        return toBytes$2f(id$1E, buffer.data);
+        return toBytes$2h(id$1G, buffer.data);
     };
 
     var setCorrectTime$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1E,
-        examples: examples$1E,
-        fromBytes: fromBytes$1E,
-        headerSize: headerSize$1E,
-        id: id$1E,
-        isLoraOnly: isLoraOnly$1E,
-        maxSize: maxSize$1E,
-        name: name$1E,
-        toBytes: toBytes$1E
+        accessLevel: accessLevel$1G,
+        examples: examples$1G,
+        fromBytes: fromBytes$1G,
+        headerSize: headerSize$1G,
+        id: id$1G,
+        isLoraOnly: isLoraOnly$1G,
+        maxSize: maxSize$1G,
+        name: name$1G,
+        toBytes: toBytes$1G
     });
 
-    const id$1D = setDateTime$3;
-    const name$1D = commandNames$3[setDateTime$3];
-    const headerSize$1D = 2;
-    const maxSize$1D = 8;
-    const accessLevel$1D = READ_ONLY;
-    const isLoraOnly$1D = false;
-    const examples$1D = {
+    const id$1F = setDateTime$3;
+    const name$1F = commandNames$3[setDateTime$3];
+    const headerSize$1F = 2;
+    const maxSize$1F = 8;
+    const accessLevel$1F = READ_ONLY;
+    const isLoraOnly$1F = false;
+    const examples$1F = {
         'time: 2024.02.19 18:31:55': {
-            id: id$1D,
-            name: name$1D,
-            headerSize: headerSize$1D,
-            maxSize: maxSize$1D,
-            accessLevel: accessLevel$1D,
+            id: id$1F,
+            name: name$1F,
+            headerSize: headerSize$1F,
+            maxSize: maxSize$1F,
+            accessLevel: accessLevel$1F,
             parameters: {
                 isSummerTime: false,
                 seconds: 55,
@@ -3792,44 +3814,44 @@
             ]
         }
     };
-    const fromBytes$1D = (bytes) => {
+    const fromBytes$1F = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return buffer.getDateTime();
     };
-    const toBytes$1D = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1D);
+    const toBytes$1F = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1F);
         buffer.setDateTime(parameters);
-        return toBytes$2f(id$1D, buffer.data);
+        return toBytes$2h(id$1F, buffer.data);
     };
 
     var setDateTime$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1D,
-        examples: examples$1D,
-        fromBytes: fromBytes$1D,
-        headerSize: headerSize$1D,
-        id: id$1D,
-        isLoraOnly: isLoraOnly$1D,
-        maxSize: maxSize$1D,
-        name: name$1D,
-        toBytes: toBytes$1D
+        accessLevel: accessLevel$1F,
+        examples: examples$1F,
+        fromBytes: fromBytes$1F,
+        headerSize: headerSize$1F,
+        id: id$1F,
+        isLoraOnly: isLoraOnly$1F,
+        maxSize: maxSize$1F,
+        name: name$1F,
+        toBytes: toBytes$1F
     });
 
     const MAX_PERIODS_NUMBER$1 = 8;
     const PERIODS_FINAL_BYTE$1 = 0xff;
-    const id$1C = setDayProfile$3;
-    const name$1C = commandNames$3[setDayProfile$3];
-    const headerSize$1C = 2;
-    const maxSize$1C = 2 + MAX_PERIODS_NUMBER$1;
-    const accessLevel$1C = READ_WRITE;
-    const isLoraOnly$1C = false;
-    const examples$1C = {
+    const id$1E = setDayProfile$3;
+    const name$1E = commandNames$3[setDayProfile$3];
+    const headerSize$1E = 2;
+    const maxSize$1E = 2 + MAX_PERIODS_NUMBER$1;
+    const accessLevel$1E = READ_WRITE;
+    const isLoraOnly$1E = false;
+    const examples$1E = {
         'set day profile with 1 period': {
-            id: id$1C,
-            name: name$1C,
-            headerSize: headerSize$1C,
-            maxSize: maxSize$1C,
-            accessLevel: accessLevel$1C,
+            id: id$1E,
+            name: name$1E,
+            headerSize: headerSize$1E,
+            maxSize: maxSize$1E,
+            accessLevel: accessLevel$1E,
             parameters: {
                 tariffTable: 0,
                 index: 3,
@@ -3843,11 +3865,11 @@
             ]
         },
         'set day profile with 4 periods': {
-            id: id$1C,
-            name: name$1C,
-            headerSize: headerSize$1C,
-            maxSize: maxSize$1C,
-            accessLevel: accessLevel$1C,
+            id: id$1E,
+            name: name$1E,
+            headerSize: headerSize$1E,
+            maxSize: maxSize$1E,
+            accessLevel: accessLevel$1E,
             parameters: {
                 tariffTable: 0,
                 index: 5,
@@ -3864,11 +3886,11 @@
             ]
         },
         'set day profile with max periods': {
-            id: id$1C,
-            name: name$1C,
-            headerSize: headerSize$1C,
-            maxSize: maxSize$1C,
-            accessLevel: accessLevel$1C,
+            id: id$1E,
+            name: name$1E,
+            headerSize: headerSize$1E,
+            maxSize: maxSize$1E,
+            accessLevel: accessLevel$1E,
             parameters: {
                 tariffTable: 0,
                 index: 3,
@@ -3889,7 +3911,7 @@
             ]
         }
     };
-    const fromBytes$1C = (bytes) => {
+    const fromBytes$1E = (bytes) => {
         const finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE$1);
         const cleanBytes = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
         const buffer = new CommandBinaryBuffer$2(cleanBytes);
@@ -3899,7 +3921,7 @@
             periods: [...cleanBytes.slice(buffer.offset)].map(CommandBinaryBuffer$2.getDayProfileFromByte)
         };
     };
-    const toBytes$1C = (parameters) => {
+    const toBytes$1E = (parameters) => {
         const hasPeriodsFinalByte = parameters.periods.length < MAX_PERIODS_NUMBER$1;
         const size = 2 + parameters.periods.length + +hasPeriodsFinalByte;
         const buffer = new CommandBinaryBuffer$2(size);
@@ -3911,35 +3933,35 @@
         if (hasPeriodsFinalByte) {
             buffer.setUint8(PERIODS_FINAL_BYTE$1);
         }
-        return toBytes$2f(id$1C, buffer.data);
+        return toBytes$2h(id$1E, buffer.data);
     };
 
     var setDayProfile$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1C,
-        examples: examples$1C,
-        fromBytes: fromBytes$1C,
-        headerSize: headerSize$1C,
-        id: id$1C,
-        isLoraOnly: isLoraOnly$1C,
-        maxSize: maxSize$1C,
-        name: name$1C,
-        toBytes: toBytes$1C
+        accessLevel: accessLevel$1E,
+        examples: examples$1E,
+        fromBytes: fromBytes$1E,
+        headerSize: headerSize$1E,
+        id: id$1E,
+        isLoraOnly: isLoraOnly$1E,
+        maxSize: maxSize$1E,
+        name: name$1E,
+        toBytes: toBytes$1E
     });
 
-    const id$1B = setOperatorParametersExtended3$3;
-    const name$1B = commandNames$3[setOperatorParametersExtended3$3];
-    const headerSize$1B = 2;
-    const maxSize$1B = 17;
-    const accessLevel$1B = READ_WRITE;
-    const isLoraOnly$1B = false;
-    const examples$1B = {
+    const id$1D = setOperatorParametersExtended3$3;
+    const name$1D = commandNames$3[setOperatorParametersExtended3$3];
+    const headerSize$1D = 2;
+    const maxSize$1D = 17;
+    const accessLevel$1D = READ_WRITE;
+    const isLoraOnly$1D = false;
+    const examples$1D = {
         'simple request': {
-            id: id$1B,
-            name: name$1B,
-            headerSize: headerSize$1B,
-            maxSize: maxSize$1B,
-            accessLevel: accessLevel$1B,
+            id: id$1D,
+            name: name$1D,
+            headerSize: headerSize$1D,
+            maxSize: maxSize$1D,
+            accessLevel: accessLevel$1D,
             parameters: {
                 pmaxMinusThreshold0: 100,
                 pmaxMinusThreshold1: 200,
@@ -3958,46 +3980,46 @@
                 0x00, 0x00, 0x00, 0xc8,
                 0x00, 0x00, 0x01, 0x2c,
                 0x00, 0x00, 0x01, 0x90,
-                0x14
+                0x28
             ]
         }
     };
-    const fromBytes$1B = (bytes) => {
+    const fromBytes$1D = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return buffer.getOperatorParametersExtended3();
     };
-    const toBytes$1B = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1B);
+    const toBytes$1D = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1D);
         buffer.setOperatorParametersExtended3(parameters);
-        return toBytes$2f(id$1B, buffer.data);
+        return toBytes$2h(id$1D, buffer.data);
     };
 
     var setOperatorParametersExtended3$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1B,
-        examples: examples$1B,
-        fromBytes: fromBytes$1B,
-        headerSize: headerSize$1B,
-        id: id$1B,
-        isLoraOnly: isLoraOnly$1B,
-        maxSize: maxSize$1B,
-        name: name$1B,
-        toBytes: toBytes$1B
+        accessLevel: accessLevel$1D,
+        examples: examples$1D,
+        fromBytes: fromBytes$1D,
+        headerSize: headerSize$1D,
+        id: id$1D,
+        isLoraOnly: isLoraOnly$1D,
+        maxSize: maxSize$1D,
+        name: name$1D,
+        toBytes: toBytes$1D
     });
 
-    const id$1A = setSaldo$3;
-    const name$1A = commandNames$3[setSaldo$3];
-    const headerSize$1A = 2;
-    const maxSize$1A = 12;
-    const accessLevel$1A = READ_WRITE;
-    const isLoraOnly$1A = false;
-    const examples$1A = {
+    const id$1C = setSaldo$3;
+    const name$1C = commandNames$3[setSaldo$3];
+    const headerSize$1C = 2;
+    const maxSize$1C = 12;
+    const accessLevel$1C = READ_WRITE;
+    const isLoraOnly$1C = false;
+    const examples$1C = {
         'test request': {
-            id: id$1A,
-            name: name$1A,
-            headerSize: headerSize$1A,
-            maxSize: maxSize$1A,
-            accessLevel: accessLevel$1A,
+            id: id$1C,
+            name: name$1C,
+            headerSize: headerSize$1C,
+            maxSize: maxSize$1C,
+            accessLevel: accessLevel$1C,
             parameters: {
                 date: {
                     month: 9,
@@ -4014,7 +4036,7 @@
             ]
         }
     };
-    const fromBytes$1A = (bytes) => {
+    const fromBytes$1C = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return {
             date: {
@@ -4027,43 +4049,43 @@
             saldoOld: buffer.getInt32()
         };
     };
-    const toBytes$1A = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1A);
+    const toBytes$1C = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1C);
         buffer.setUint8(parameters.date.month);
         buffer.setUint8(parameters.date.date);
         buffer.setUint8(parameters.date.hours);
         buffer.setUint8(parameters.date.minutes);
         buffer.setInt32(parameters.saldoNew);
         buffer.setInt32(parameters.saldoOld);
-        return toBytes$2f(id$1A, buffer.data);
+        return toBytes$2h(id$1C, buffer.data);
     };
 
     var setSaldo$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1A,
-        examples: examples$1A,
-        fromBytes: fromBytes$1A,
-        headerSize: headerSize$1A,
-        id: id$1A,
-        isLoraOnly: isLoraOnly$1A,
-        maxSize: maxSize$1A,
-        name: name$1A,
-        toBytes: toBytes$1A
+        accessLevel: accessLevel$1C,
+        examples: examples$1C,
+        fromBytes: fromBytes$1C,
+        headerSize: headerSize$1C,
+        id: id$1C,
+        isLoraOnly: isLoraOnly$1C,
+        maxSize: maxSize$1C,
+        name: name$1C,
+        toBytes: toBytes$1C
     });
 
-    const id$1z = setSaldoParameters$3;
-    const name$1z = commandNames$3[setSaldoParameters$3];
-    const headerSize$1z = 2;
-    const maxSize$1z = 37;
-    const accessLevel$1z = READ_WRITE;
-    const isLoraOnly$1z = false;
-    const examples$1z = {
+    const id$1B = setSaldoParameters$3;
+    const name$1B = commandNames$3[setSaldoParameters$3];
+    const headerSize$1B = 2;
+    const maxSize$1B = 37;
+    const accessLevel$1B = READ_WRITE;
+    const isLoraOnly$1B = false;
+    const examples$1B = {
         'test parameters': {
-            id: id$1z,
-            name: name$1z,
-            headerSize: headerSize$1z,
-            maxSize: maxSize$1z,
-            accessLevel: accessLevel$1z,
+            id: id$1B,
+            name: name$1B,
+            headerSize: headerSize$1B,
+            maxSize: maxSize$1B,
+            accessLevel: accessLevel$1B,
             parameters: {
                 coefficients: [2, 3, 4, 5],
                 decimalPointTariff: 6,
@@ -4085,42 +4107,42 @@
             ]
         }
     };
-    const fromBytes$1z = (bytes) => {
+    const fromBytes$1B = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return buffer.getSaldoParameters();
     };
-    const toBytes$1z = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1z);
+    const toBytes$1B = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1B);
         buffer.setSaldoParameters(parameters);
-        return toBytes$2f(id$1z, buffer.data);
+        return toBytes$2h(id$1B, buffer.data);
     };
 
     var setSaldoParameters$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1z,
-        examples: examples$1z,
-        fromBytes: fromBytes$1z,
-        headerSize: headerSize$1z,
-        id: id$1z,
-        isLoraOnly: isLoraOnly$1z,
-        maxSize: maxSize$1z,
-        name: name$1z,
-        toBytes: toBytes$1z
+        accessLevel: accessLevel$1B,
+        examples: examples$1B,
+        fromBytes: fromBytes$1B,
+        headerSize: headerSize$1B,
+        id: id$1B,
+        isLoraOnly: isLoraOnly$1B,
+        maxSize: maxSize$1B,
+        name: name$1B,
+        toBytes: toBytes$1B
     });
 
-    const id$1y = setSeasonProfile$3;
-    const name$1y = commandNames$3[setSeasonProfile$3];
-    const headerSize$1y = 2;
-    const maxSize$1y = SEASON_PROFILE_SIZE;
-    const accessLevel$1y = READ_WRITE;
-    const isLoraOnly$1y = false;
-    const examples$1y = {
+    const id$1A = setSeasonProfile$3;
+    const name$1A = commandNames$3[setSeasonProfile$3];
+    const headerSize$1A = 2;
+    const maxSize$1A = SEASON_PROFILE_SIZE;
+    const accessLevel$1A = READ_WRITE;
+    const isLoraOnly$1A = false;
+    const examples$1A = {
         'set default season profile': {
-            id: id$1y,
-            name: name$1y,
-            headerSize: headerSize$1y,
-            maxSize: maxSize$1y,
-            accessLevel: accessLevel$1y,
+            id: id$1A,
+            name: name$1A,
+            headerSize: headerSize$1A,
+            maxSize: maxSize$1A,
+            accessLevel: accessLevel$1A,
             parameters: {
                 tariffTable: 1,
                 index: 8,
@@ -4134,11 +4156,11 @@
             ]
         },
         'set some season profile': {
-            id: id$1y,
-            name: name$1y,
-            headerSize: headerSize$1y,
-            maxSize: maxSize$1y,
-            accessLevel: accessLevel$1y,
+            id: id$1A,
+            name: name$1A,
+            headerSize: headerSize$1A,
+            maxSize: maxSize$1A,
+            accessLevel: accessLevel$1A,
             parameters: {
                 tariffTable: 0,
                 index: 2,
@@ -4152,7 +4174,7 @@
             ]
         }
     };
-    const fromBytes$1y = (bytes) => {
+    const fromBytes$1A = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return {
             tariffTable: buffer.getUint8(),
@@ -4160,40 +4182,40 @@
             ...buffer.getSeasonProfile()
         };
     };
-    const toBytes$1y = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1y);
+    const toBytes$1A = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1A);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
         buffer.setSeasonProfile(parameters);
-        return toBytes$2f(id$1y, buffer.data);
+        return toBytes$2h(id$1A, buffer.data);
     };
 
     var setSeasonProfile$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1y,
-        examples: examples$1y,
-        fromBytes: fromBytes$1y,
-        headerSize: headerSize$1y,
-        id: id$1y,
-        isLoraOnly: isLoraOnly$1y,
-        maxSize: maxSize$1y,
-        name: name$1y,
-        toBytes: toBytes$1y
+        accessLevel: accessLevel$1A,
+        examples: examples$1A,
+        fromBytes: fromBytes$1A,
+        headerSize: headerSize$1A,
+        id: id$1A,
+        isLoraOnly: isLoraOnly$1A,
+        maxSize: maxSize$1A,
+        name: name$1A,
+        toBytes: toBytes$1A
     });
 
-    const id$1x = setSpecialDay$3;
-    const name$1x = commandNames$3[setSpecialDay$3];
-    const headerSize$1x = 2;
-    const maxSize$1x = 6;
-    const accessLevel$1x = READ_WRITE;
-    const isLoraOnly$1x = false;
-    const examples$1x = {
+    const id$1z = setSpecialDay$3;
+    const name$1z = commandNames$3[setSpecialDay$3];
+    const headerSize$1z = 2;
+    const maxSize$1z = 6;
+    const accessLevel$1z = READ_WRITE;
+    const isLoraOnly$1z = false;
+    const examples$1z = {
         'set special day': {
-            id: id$1x,
-            name: name$1x,
-            headerSize: headerSize$1x,
-            maxSize: maxSize$1x,
-            accessLevel: accessLevel$1x,
+            id: id$1z,
+            name: name$1z,
+            headerSize: headerSize$1z,
+            maxSize: maxSize$1z,
+            accessLevel: accessLevel$1z,
             parameters: {
                 tariffTable: 1,
                 index: 5,
@@ -4208,7 +4230,7 @@
             ]
         }
     };
-    const fromBytes$1x = (bytes) => {
+    const fromBytes$1z = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return {
             tariffTable: buffer.getUint8(),
@@ -4216,42 +4238,42 @@
             ...buffer.getSpecialDay()
         };
     };
-    const toBytes$1x = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1x);
+    const toBytes$1z = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1z);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
         buffer.setSpecialDay(parameters);
-        return toBytes$2f(id$1x, buffer.data);
+        return toBytes$2h(id$1z, buffer.data);
     };
 
     var setSpecialDay$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1x,
-        examples: examples$1x,
-        fromBytes: fromBytes$1x,
-        headerSize: headerSize$1x,
-        id: id$1x,
-        isLoraOnly: isLoraOnly$1x,
-        maxSize: maxSize$1x,
-        name: name$1x,
-        toBytes: toBytes$1x
+        accessLevel: accessLevel$1z,
+        examples: examples$1z,
+        fromBytes: fromBytes$1z,
+        headerSize: headerSize$1z,
+        id: id$1z,
+        isLoraOnly: isLoraOnly$1z,
+        maxSize: maxSize$1z,
+        name: name$1z,
+        toBytes: toBytes$1z
     });
 
     const RESET_INFLUENCE_SCREENS = 0x55;
 
-    const id$1w = setSpecialOperation$3;
-    const name$1w = commandNames$3[setSpecialOperation$3];
-    const headerSize$1w = 2;
-    const maxSize$1w = 2;
-    const accessLevel$1w = READ_WRITE;
-    const isLoraOnly$1w = false;
-    const examples$1w = {
+    const id$1y = setSpecialOperation$3;
+    const name$1y = commandNames$3[setSpecialOperation$3];
+    const headerSize$1y = 2;
+    const maxSize$1y = 2;
+    const accessLevel$1y = READ_WRITE;
+    const isLoraOnly$1y = false;
+    const examples$1y = {
         'read screens info': {
-            id: id$1w,
-            name: name$1w,
-            headerSize: headerSize$1w,
-            maxSize: maxSize$1w,
-            accessLevel: accessLevel$1w,
+            id: id$1y,
+            name: name$1y,
+            headerSize: headerSize$1y,
+            maxSize: maxSize$1y,
+            accessLevel: accessLevel$1y,
             parameters: {
                 type: RESET_INFLUENCE_SCREENS,
                 readScreensInfo: true,
@@ -4264,11 +4286,11 @@
             ]
         },
         'reset both screens': {
-            id: id$1w,
-            name: name$1w,
-            headerSize: headerSize$1w,
-            maxSize: maxSize$1w,
-            accessLevel: accessLevel$1w,
+            id: id$1y,
+            name: name$1y,
+            headerSize: headerSize$1y,
+            maxSize: maxSize$1y,
+            accessLevel: accessLevel$1y,
             parameters: {
                 type: RESET_INFLUENCE_SCREENS,
                 readScreensInfo: false,
@@ -4281,11 +4303,11 @@
             ]
         },
         'reset magnetic screen': {
-            id: id$1w,
-            name: name$1w,
-            headerSize: headerSize$1w,
-            maxSize: maxSize$1w,
-            accessLevel: accessLevel$1w,
+            id: id$1y,
+            name: name$1y,
+            headerSize: headerSize$1y,
+            maxSize: maxSize$1y,
+            accessLevel: accessLevel$1y,
             parameters: {
                 type: RESET_INFLUENCE_SCREENS,
                 readScreensInfo: false,
@@ -4298,7 +4320,7 @@
             ]
         }
     };
-    const fromBytes$1w = (bytes) => {
+    const fromBytes$1y = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         const type = buffer.getUint8();
         const flags = buffer.getUint8();
@@ -4312,8 +4334,8 @@
             resetMagneticIndication
         };
     };
-    const toBytes$1w = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$1w);
+    const toBytes$1y = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$1y);
         let flags = 0;
         if (parameters.readScreensInfo) {
             flags |= 0x80;
@@ -4326,10 +4348,90 @@
         }
         buffer.setUint8(parameters.type);
         buffer.setUint8(flags);
-        return toBytes$2f(id$1w, buffer.data);
+        return toBytes$2h(id$1y, buffer.data);
     };
 
     var setSpecialOperation$2 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$1y,
+        examples: examples$1y,
+        fromBytes: fromBytes$1y,
+        headerSize: headerSize$1y,
+        id: id$1y,
+        isLoraOnly: isLoraOnly$1y,
+        maxSize: maxSize$1y,
+        name: name$1y,
+        toBytes: toBytes$1y
+    });
+
+    const id$1x = turnRelayOff$3;
+    const name$1x = commandNames$3[turnRelayOff$3];
+    const headerSize$1x = 2;
+    const maxSize$1x = 0;
+    const accessLevel$1x = READ_WRITE;
+    const isLoraOnly$1x = false;
+    const examples$1x = {
+        'simple request': {
+            id: id$1x,
+            name: name$1x,
+            headerSize: headerSize$1x,
+            maxSize: maxSize$1x,
+            accessLevel: accessLevel$1x,
+            parameters: {},
+            bytes: [
+                0x19, 0x00
+            ]
+        }
+    };
+    const fromBytes$1x = (bytes) => {
+        if (bytes.length !== maxSize$1x) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
+    };
+    const toBytes$1x = () => toBytes$2h(id$1x);
+
+    var turnRelayOff$2 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$1x,
+        examples: examples$1x,
+        fromBytes: fromBytes$1x,
+        headerSize: headerSize$1x,
+        id: id$1x,
+        isLoraOnly: isLoraOnly$1x,
+        maxSize: maxSize$1x,
+        name: name$1x,
+        toBytes: toBytes$1x
+    });
+
+    const id$1w = turnRelayOn$3;
+    const name$1w = commandNames$3[turnRelayOn$3];
+    const headerSize$1w = 2;
+    const maxSize$1w = 0;
+    const accessLevel$1w = READ_WRITE;
+    const isLoraOnly$1w = false;
+    const examples$1w = {
+        'simple request': {
+            id: id$1w,
+            name: name$1w,
+            headerSize: headerSize$1w,
+            maxSize: maxSize$1w,
+            accessLevel: accessLevel$1w,
+            parameters: {},
+            bytes: [
+                0x18, 0x00
+            ]
+        }
+    };
+    const fromBytes$1w = (bytes) => {
+        if (bytes.length !== maxSize$1w) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
+    };
+    const toBytes$1w = () => toBytes$2h(id$1w);
+
+    var turnRelayOn$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1w,
         examples: examples$1w,
@@ -4340,86 +4442,6 @@
         maxSize: maxSize$1w,
         name: name$1w,
         toBytes: toBytes$1w
-    });
-
-    const id$1v = turnRelayOff$3;
-    const name$1v = commandNames$3[turnRelayOff$3];
-    const headerSize$1v = 2;
-    const maxSize$1v = 0;
-    const accessLevel$1v = READ_WRITE;
-    const isLoraOnly$1v = false;
-    const examples$1v = {
-        'simple request': {
-            id: id$1v,
-            name: name$1v,
-            headerSize: headerSize$1v,
-            maxSize: maxSize$1v,
-            accessLevel: accessLevel$1v,
-            parameters: {},
-            bytes: [
-                0x19, 0x00
-            ]
-        }
-    };
-    const fromBytes$1v = (bytes) => {
-        if (bytes.length !== maxSize$1v) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$1v = () => toBytes$2f(id$1v);
-
-    var turnRelayOff$2 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$1v,
-        examples: examples$1v,
-        fromBytes: fromBytes$1v,
-        headerSize: headerSize$1v,
-        id: id$1v,
-        isLoraOnly: isLoraOnly$1v,
-        maxSize: maxSize$1v,
-        name: name$1v,
-        toBytes: toBytes$1v
-    });
-
-    const id$1u = turnRelayOn$3;
-    const name$1u = commandNames$3[turnRelayOn$3];
-    const headerSize$1u = 2;
-    const maxSize$1u = 0;
-    const accessLevel$1u = READ_WRITE;
-    const isLoraOnly$1u = false;
-    const examples$1u = {
-        'simple request': {
-            id: id$1u,
-            name: name$1u,
-            headerSize: headerSize$1u,
-            maxSize: maxSize$1u,
-            accessLevel: accessLevel$1u,
-            parameters: {},
-            bytes: [
-                0x18, 0x00
-            ]
-        }
-    };
-    const fromBytes$1u = (bytes) => {
-        if (bytes.length !== maxSize$1u) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$1u = () => toBytes$2f(id$1u);
-
-    var turnRelayOn$2 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$1u,
-        examples: examples$1u,
-        fromBytes: fromBytes$1u,
-        headerSize: headerSize$1u,
-        id: id$1u,
-        isLoraOnly: isLoraOnly$1u,
-        maxSize: maxSize$1u,
-        name: name$1u,
-        toBytes: toBytes$1u
     });
 
     const CASE_OPEN$1 = 0;
@@ -4457,7 +4479,222 @@
         TIME_SET: TIME_SET
     });
 
-    invertObject(criticalEvents);
+    var criticalEventNames = invertObject(criticalEvents);
+
+    const getEventStatus$1 = 0x01;
+    const getEnergyDayPrevious$2 = 0x03;
+    const getDeviceType$1 = 0x04;
+    const getDeviceId$1 = 0x05;
+    const getDateTime$1 = 0x07;
+    const setDateTime$1 = 0x08;
+    const setAccessKey$1 = 0x09;
+    const getCurrentValues$1 = 0x0d;
+    const getEnergy$2 = 0x0f;
+    const setDayProfile$1 = 0x10;
+    const setSeasonProfile$1 = 0x11;
+    const setSpecialDay$1 = 0x12;
+    const activateRatePlan$1 = 0x13;
+    const prepareRatePlan$1 = 0x14;
+    const getHalfHourDemand$1 = 0x15;
+    const getDayDemand$2 = 0x16;
+    const getMonthDemand$1 = 0x17;
+    const turnRelayOn$1 = 0x18;
+    const turnRelayOff$1 = 0x19;
+    const setCorrectTime$1 = 0x1c;
+    const getOperatorParameters$1 = 0x1e;
+    const setOperatorParameters$2 = 0x1f;
+    const getVersion$1 = 0x28;
+    const getSaldo$1 = 0x29;
+    const setSaldo$1 = 0x2a;
+    const getRatePlanInfo$1 = 0x2c;
+    const getSaldoParameters$1 = 0x2e;
+    const setSaldoParameters$1 = 0x2f;
+    const getDayMaxDemand$1 = 0x31;
+    const getMonthMaxDemand$1 = 0x32;
+    const getEvents$1 = 0x33;
+    const getEventsCounters$1 = 0x34;
+    const resetPowerMaxDay$1 = 0x35;
+    const resetPowerMaxMonth$1 = 0x36;
+    const getCurrentStatusMeter$1 = 0x39;
+    const getExtendedCurrentValues$1 = 0x3a;
+    const getDayProfile$1 = 0x3b;
+    const getSeasonProfile$1 = 0x3c;
+    const getSpecialDay$1 = 0x3d;
+    const getCorrectTime$1 = 0x3e;
+    const getOperatorParametersExtended$2 = 0x3f;
+    const setOperatorParametersExtended$2 = 0x40;
+    const setOperatorParametersExtended2$2 = 0x45;
+    const runTariffPlan$1 = 0x46;
+    const getOperatorParametersExtended2$2 = 0x47;
+    const getHalfHourDemandVari$2 = 0x48;
+    const getHalfHourDemandVare$2 = 0x49;
+    const getEnergyExport$2 = 0x4e;
+    const getDayDemandExport$2 = 0x4f;
+    const getEnergyExportDayPrevious$2 = 0x50;
+    const getMonthDemandExport$1 = 0x52;
+    const getHalfHourDemandExport$1 = 0x53;
+    const getHalfHourDemandVariExport$2 = 0x54;
+    const getHalfHourDemandVareExport$2 = 0x55;
+    const getCriticalEvent$2 = 0x56;
+    const getDayMaxDemandExport$1 = 0x58;
+    const getMonthMaxDemandExport$1 = 0x59;
+    const getHalfHourDemandChannel$2 = 0x5a;
+    const setCorrectDateTime$1 = 0x5c;
+    const setDisplayParam$2 = 0x5d;
+    const getDisplayParam$2 = 0x5e;
+    const setSpecialOperation$1 = 0x64;
+    const getMagneticFieldThreshold$1 = 0x6d;
+    const getHalfhoursEnergies$1 = 0x6f;
+    const getBuildVersion$1 = 0x70;
+    const getOperatorParametersExtended3$1 = 0x71;
+    const setOperatorParametersExtended3$1 = 0x72;
+    const setOperatorParametersExtended4$2 = 0x74;
+    const getOperatorParametersExtended4$2 = 0x75;
+    const getDemand$2 = 0x76;
+    const getMeterInfo$1 = 0x7a;
+
+    var downlinkIds = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        activateRatePlan: activateRatePlan$1,
+        getBuildVersion: getBuildVersion$1,
+        getCorrectTime: getCorrectTime$1,
+        getCriticalEvent: getCriticalEvent$2,
+        getCurrentStatusMeter: getCurrentStatusMeter$1,
+        getCurrentValues: getCurrentValues$1,
+        getDateTime: getDateTime$1,
+        getDayDemand: getDayDemand$2,
+        getDayDemandExport: getDayDemandExport$2,
+        getDayMaxDemand: getDayMaxDemand$1,
+        getDayMaxDemandExport: getDayMaxDemandExport$1,
+        getDayProfile: getDayProfile$1,
+        getDemand: getDemand$2,
+        getDeviceId: getDeviceId$1,
+        getDeviceType: getDeviceType$1,
+        getDisplayParam: getDisplayParam$2,
+        getEnergy: getEnergy$2,
+        getEnergyDayPrevious: getEnergyDayPrevious$2,
+        getEnergyExport: getEnergyExport$2,
+        getEnergyExportDayPrevious: getEnergyExportDayPrevious$2,
+        getEventStatus: getEventStatus$1,
+        getEvents: getEvents$1,
+        getEventsCounters: getEventsCounters$1,
+        getExtendedCurrentValues: getExtendedCurrentValues$1,
+        getHalfHourDemand: getHalfHourDemand$1,
+        getHalfHourDemandChannel: getHalfHourDemandChannel$2,
+        getHalfHourDemandExport: getHalfHourDemandExport$1,
+        getHalfHourDemandVare: getHalfHourDemandVare$2,
+        getHalfHourDemandVareExport: getHalfHourDemandVareExport$2,
+        getHalfHourDemandVari: getHalfHourDemandVari$2,
+        getHalfHourDemandVariExport: getHalfHourDemandVariExport$2,
+        getHalfhoursEnergies: getHalfhoursEnergies$1,
+        getMagneticFieldThreshold: getMagneticFieldThreshold$1,
+        getMeterInfo: getMeterInfo$1,
+        getMonthDemand: getMonthDemand$1,
+        getMonthDemandExport: getMonthDemandExport$1,
+        getMonthMaxDemand: getMonthMaxDemand$1,
+        getMonthMaxDemandExport: getMonthMaxDemandExport$1,
+        getOperatorParameters: getOperatorParameters$1,
+        getOperatorParametersExtended: getOperatorParametersExtended$2,
+        getOperatorParametersExtended2: getOperatorParametersExtended2$2,
+        getOperatorParametersExtended3: getOperatorParametersExtended3$1,
+        getOperatorParametersExtended4: getOperatorParametersExtended4$2,
+        getRatePlanInfo: getRatePlanInfo$1,
+        getSaldo: getSaldo$1,
+        getSaldoParameters: getSaldoParameters$1,
+        getSeasonProfile: getSeasonProfile$1,
+        getSpecialDay: getSpecialDay$1,
+        getVersion: getVersion$1,
+        prepareRatePlan: prepareRatePlan$1,
+        resetPowerMaxDay: resetPowerMaxDay$1,
+        resetPowerMaxMonth: resetPowerMaxMonth$1,
+        runTariffPlan: runTariffPlan$1,
+        setAccessKey: setAccessKey$1,
+        setCorrectDateTime: setCorrectDateTime$1,
+        setCorrectTime: setCorrectTime$1,
+        setDateTime: setDateTime$1,
+        setDayProfile: setDayProfile$1,
+        setDisplayParam: setDisplayParam$2,
+        setOperatorParameters: setOperatorParameters$2,
+        setOperatorParametersExtended: setOperatorParametersExtended$2,
+        setOperatorParametersExtended2: setOperatorParametersExtended2$2,
+        setOperatorParametersExtended3: setOperatorParametersExtended3$1,
+        setOperatorParametersExtended4: setOperatorParametersExtended4$2,
+        setSaldo: setSaldo$1,
+        setSaldoParameters: setSaldoParameters$1,
+        setSeasonProfile: setSeasonProfile$1,
+        setSpecialDay: setSpecialDay$1,
+        setSpecialOperation: setSpecialOperation$1,
+        turnRelayOff: turnRelayOff$1,
+        turnRelayOn: turnRelayOn$1
+    });
+
+    var commandNames$2 = invertObject(downlinkIds);
+
+    const id$1v = getCriticalEvent$2;
+    const name$1v = commandNames$2[getCriticalEvent$2];
+    const headerSize$1v = 2;
+    const accessLevel$1v = READ_ONLY;
+    const maxSize$1v = 2;
+    const isLoraOnly$1v = false;
+    const examples$1v = {
+        'simple request': {
+            id: id$1v,
+            name: name$1v,
+            headerSize: headerSize$1v,
+            accessLevel: accessLevel$1v,
+            maxSize: maxSize$1v,
+            parameters: {
+                event: 1,
+                name: 'MAGNETIC_ON',
+                index: 2
+            },
+            bytes: [
+                0x56, 0x02,
+                0x01, 0x02
+            ]
+        },
+        'the last event': {
+            id: id$1v,
+            name: name$1v,
+            headerSize: headerSize$1v,
+            accessLevel: accessLevel$1v,
+            maxSize: maxSize$1v,
+            parameters: {
+                event: 4,
+                name: 'RESTART',
+                index: 255
+            },
+            bytes: [
+                0x56, 0x02,
+                0x04, 0xff
+            ]
+        }
+    };
+    const fromBytes$1v = (bytes) => {
+        if (bytes.length !== maxSize$1v) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        const [event, index] = bytes;
+        return {
+            event,
+            name: criticalEventNames[event],
+            index
+        };
+    };
+    const toBytes$1v = (parameters) => (toBytes$2h(id$1v, [parameters.event, parameters.index]));
+
+    var getCriticalEvent$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$1v,
+        examples: examples$1v,
+        fromBytes: fromBytes$1v,
+        headerSize: headerSize$1v,
+        id: id$1v,
+        isLoraOnly: isLoraOnly$1v,
+        maxSize: maxSize$1v,
+        name: name$1v,
+        toBytes: toBytes$1v
+    });
 
     const OK = 0;
     const UNKNOWN_COMMAND = 0x80;
@@ -4655,164 +4892,12 @@
         turnRelayOn: turnRelayOn$3
     });
 
-    var commandNames$2 = invertObject(uplinkIds$1);
+    var commandNames$1 = invertObject(uplinkIds$1);
 
-    const A = 0b00000000;
-    const G_FULL = 0b00010001;
-
-    const getEventStatus$1 = 0x01;
-    const getEnergyDayPrevious$2 = 0x03;
-    const getDeviceType$1 = 0x04;
-    const getDeviceId$1 = 0x05;
-    const getDateTime$1 = 0x07;
-    const setDateTime$1 = 0x08;
-    const setAccessKey$1 = 0x09;
-    const getCurrentValues$1 = 0x0d;
-    const getEnergy$2 = 0x0f;
-    const setDayProfile$1 = 0x10;
-    const setSeasonProfile$1 = 0x11;
-    const setSpecialDay$1 = 0x12;
-    const activateRatePlan$1 = 0x13;
-    const prepareRatePlan$1 = 0x14;
-    const getHalfHourDemand$1 = 0x15;
-    const getDayDemand$2 = 0x16;
-    const getMonthDemand$1 = 0x17;
-    const turnRelayOn$1 = 0x18;
-    const turnRelayOff$1 = 0x19;
-    const setCorrectTime$1 = 0x1c;
-    const getOperatorParameters$1 = 0x1e;
-    const setOperatorParameters$2 = 0x1f;
-    const getVersion$1 = 0x28;
-    const getSaldo$1 = 0x29;
-    const setSaldo$1 = 0x2a;
-    const getRatePlanInfo$1 = 0x2c;
-    const getSaldoParameters$1 = 0x2e;
-    const setSaldoParameters$1 = 0x2f;
-    const getDayMaxDemand$1 = 0x31;
-    const getMonthMaxDemand$1 = 0x32;
-    const getEvents$1 = 0x33;
-    const getEventsCounters$1 = 0x34;
-    const resetPowerMaxDay$1 = 0x35;
-    const resetPowerMaxMonth$1 = 0x36;
-    const getCurrentStatusMeter$1 = 0x39;
-    const getExtendedCurrentValues$1 = 0x3a;
-    const getDayProfile$1 = 0x3b;
-    const getSeasonProfile$1 = 0x3c;
-    const getSpecialDay$1 = 0x3d;
-    const getCorrectTime$1 = 0x3e;
-    const getOperatorParametersExtended$2 = 0x3f;
-    const setOperatorParametersExtended$2 = 0x40;
-    const setOperatorParametersExtended2$2 = 0x45;
-    const runTariffPlan$1 = 0x46;
-    const getOperatorParametersExtended2$2 = 0x47;
-    const getHalfHourDemandVari$2 = 0x48;
-    const getHalfHourDemandVare$2 = 0x49;
-    const getEnergyExport$2 = 0x4e;
-    const getDayDemandExport$2 = 0x4f;
-    const getEnergyExportDayPrevious$2 = 0x50;
-    const getMonthDemandExport$1 = 0x52;
-    const getHalfHourDemandExport$1 = 0x53;
-    const getHalfHourDemandVariExport$2 = 0x54;
-    const getHalfHourDemandVareExport$2 = 0x55;
-    const getCriticalEvent$2 = 0x56;
-    const getDayMaxDemandExport$1 = 0x58;
-    const getMonthMaxDemandExport$1 = 0x59;
-    const getHalfHourDemandChannel$2 = 0x5a;
-    const setCorrectDateTime$1 = 0x5c;
-    const setDisplayParam$2 = 0x5d;
-    const getDisplayParam$2 = 0x5e;
-    const setSpecialOperation$1 = 0x64;
-    const getMagneticFieldThreshold$1 = 0x6d;
-    const getHalfhoursEnergies$1 = 0x6f;
-    const getBuildVersion$1 = 0x70;
-    const getOperatorParametersExtended3$1 = 0x71;
-    const setOperatorParametersExtended3$1 = 0x72;
-    const setOperatorParametersExtended4$2 = 0x74;
-    const getOperatorParametersExtended4 = 0x75;
-    const getDemand$2 = 0x76;
-    const getMeterInfo$1 = 0x7a;
-
-    var downlinkIds = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        activateRatePlan: activateRatePlan$1,
-        getBuildVersion: getBuildVersion$1,
-        getCorrectTime: getCorrectTime$1,
-        getCriticalEvent: getCriticalEvent$2,
-        getCurrentStatusMeter: getCurrentStatusMeter$1,
-        getCurrentValues: getCurrentValues$1,
-        getDateTime: getDateTime$1,
-        getDayDemand: getDayDemand$2,
-        getDayDemandExport: getDayDemandExport$2,
-        getDayMaxDemand: getDayMaxDemand$1,
-        getDayMaxDemandExport: getDayMaxDemandExport$1,
-        getDayProfile: getDayProfile$1,
-        getDemand: getDemand$2,
-        getDeviceId: getDeviceId$1,
-        getDeviceType: getDeviceType$1,
-        getDisplayParam: getDisplayParam$2,
-        getEnergy: getEnergy$2,
-        getEnergyDayPrevious: getEnergyDayPrevious$2,
-        getEnergyExport: getEnergyExport$2,
-        getEnergyExportDayPrevious: getEnergyExportDayPrevious$2,
-        getEventStatus: getEventStatus$1,
-        getEvents: getEvents$1,
-        getEventsCounters: getEventsCounters$1,
-        getExtendedCurrentValues: getExtendedCurrentValues$1,
-        getHalfHourDemand: getHalfHourDemand$1,
-        getHalfHourDemandChannel: getHalfHourDemandChannel$2,
-        getHalfHourDemandExport: getHalfHourDemandExport$1,
-        getHalfHourDemandVare: getHalfHourDemandVare$2,
-        getHalfHourDemandVareExport: getHalfHourDemandVareExport$2,
-        getHalfHourDemandVari: getHalfHourDemandVari$2,
-        getHalfHourDemandVariExport: getHalfHourDemandVariExport$2,
-        getHalfhoursEnergies: getHalfhoursEnergies$1,
-        getMagneticFieldThreshold: getMagneticFieldThreshold$1,
-        getMeterInfo: getMeterInfo$1,
-        getMonthDemand: getMonthDemand$1,
-        getMonthDemandExport: getMonthDemandExport$1,
-        getMonthMaxDemand: getMonthMaxDemand$1,
-        getMonthMaxDemandExport: getMonthMaxDemandExport$1,
-        getOperatorParameters: getOperatorParameters$1,
-        getOperatorParametersExtended: getOperatorParametersExtended$2,
-        getOperatorParametersExtended2: getOperatorParametersExtended2$2,
-        getOperatorParametersExtended3: getOperatorParametersExtended3$1,
-        getOperatorParametersExtended4: getOperatorParametersExtended4,
-        getRatePlanInfo: getRatePlanInfo$1,
-        getSaldo: getSaldo$1,
-        getSaldoParameters: getSaldoParameters$1,
-        getSeasonProfile: getSeasonProfile$1,
-        getSpecialDay: getSpecialDay$1,
-        getVersion: getVersion$1,
-        prepareRatePlan: prepareRatePlan$1,
-        resetPowerMaxDay: resetPowerMaxDay$1,
-        resetPowerMaxMonth: resetPowerMaxMonth$1,
-        runTariffPlan: runTariffPlan$1,
-        setAccessKey: setAccessKey$1,
-        setCorrectDateTime: setCorrectDateTime$1,
-        setCorrectTime: setCorrectTime$1,
-        setDateTime: setDateTime$1,
-        setDayProfile: setDayProfile$1,
-        setDisplayParam: setDisplayParam$2,
-        setOperatorParameters: setOperatorParameters$2,
-        setOperatorParametersExtended: setOperatorParametersExtended$2,
-        setOperatorParametersExtended2: setOperatorParametersExtended2$2,
-        setOperatorParametersExtended3: setOperatorParametersExtended3$1,
-        setOperatorParametersExtended4: setOperatorParametersExtended4$2,
-        setSaldo: setSaldo$1,
-        setSaldoParameters: setSaldoParameters$1,
-        setSeasonProfile: setSeasonProfile$1,
-        setSpecialDay: setSpecialDay$1,
-        setSpecialOperation: setSpecialOperation$1,
-        turnRelayOff: turnRelayOff$1,
-        turnRelayOn: turnRelayOn$1
-    });
-
-    var commandNames$1 = invertObject(downlinkIds);
-
-    const ENERGY_T0_FAULT = 0x01;
-    const ENERGY_T1_FAULT = 0x02;
-    const ENERGY_T2_FAULT = 0x03;
-    const ENERGY_T3_FAULT = 0x04;
+    const ENERGY_T1_FAULT = 0x01;
+    const ENERGY_T2_FAULT = 0x02;
+    const ENERGY_T3_FAULT = 0x03;
+    const ENERGY_T4_FAULT = 0x04;
     const ACCESS_LOCKED = 0x11;
     const ACCESS_UNLOCKED = 0x12;
     const ERR_ACCESS = 0x13;
@@ -4889,18 +4974,18 @@
     const CHANGE_COR_TIME = 0x70;
     const CMD_RELAY_2_ON = 0x71;
     const CMD_RELAY_2_OFF = 0x72;
-    const CROSS_ZERO_ENT0 = 0x73;
-    const CROSS_ZERO_ENT1 = 0x74;
-    const CROSS_ZERO_ENT2 = 0x75;
-    const CROSS_ZERO_ENT3 = 0x76;
-    const CROSS_ZERO_VARI0 = 0x77;
-    const CROSS_ZERO_VARI1 = 0x78;
-    const CROSS_ZERO_VARI2 = 0x79;
-    const CROSS_ZERO_VARI3 = 0x7A;
-    const CROSS_ZERO_VARE0 = 0x7B;
-    const CROSS_ZERO_VARE1 = 0x7C;
-    const CROSS_ZERO_VARE2 = 0x7D;
-    const CROSS_ZERO_VARE3 = 0x7E;
+    const CROSS_ZERO_ENT1 = 0x73;
+    const CROSS_ZERO_ENT2 = 0x74;
+    const CROSS_ZERO_ENT3 = 0x75;
+    const CROSS_ZERO_ENT4 = 0x76;
+    const CROSS_ZERO_VARI1 = 0x77;
+    const CROSS_ZERO_VARI2 = 0x78;
+    const CROSS_ZERO_VARI3 = 0x79;
+    const CROSS_ZERO_VARI4 = 0x7A;
+    const CROSS_ZERO_VARE1 = 0x7B;
+    const CROSS_ZERO_VARE2 = 0x7C;
+    const CROSS_ZERO_VARE3 = 0x7D;
+    const CROSS_ZERO_VARE4 = 0x7E;
     const CALIBRATION_FLAG_SET = 0x7F;
     const CALIBRATION_FLAG_RESET = 0x80;
     const BAD_TEST_EEPROM = 0x81;
@@ -4937,18 +5022,18 @@
     const CHANGE_PARAM_CHANNEL4 = 0xA1;
     const CHANGE_PARAM_CHANNEL5 = 0xA2;
     const CHANGE_PARAM_CHANNEL6 = 0xA3;
-    const CROSS_ZERO_EXPORT_ENT0 = 0xA4;
-    const CROSS_ZERO_EXPORT_ENT1 = 0xA5;
-    const CROSS_ZERO_EXPORT_ENT2 = 0xA6;
-    const CROSS_ZERO_EXPORT_ENT3 = 0xA7;
-    const CROSS_ZERO_EXPORT_VARI0 = 0xA8;
-    const CROSS_ZERO_EXPORT_VARI1 = 0xA9;
-    const CROSS_ZERO_EXPORT_VARI2 = 0xAA;
-    const CROSS_ZERO_EXPORT_VARI3 = 0xAB;
-    const CROSS_ZERO_EXPORT_VARE0 = 0xAC;
-    const CROSS_ZERO_EXPORT_VARE1 = 0xAD;
-    const CROSS_ZERO_EXPORT_VARE2 = 0xAE;
-    const CROSS_ZERO_EXPORT_VARE3 = 0xAF;
+    const CROSS_ZERO_EXPORT_ENT1 = 0xA4;
+    const CROSS_ZERO_EXPORT_ENT2 = 0xA5;
+    const CROSS_ZERO_EXPORT_ENT3 = 0xA6;
+    const CROSS_ZERO_EXPORT_ENT4 = 0xA7;
+    const CROSS_ZERO_EXPORT_VARI1 = 0xA8;
+    const CROSS_ZERO_EXPORT_VARI2 = 0xA9;
+    const CROSS_ZERO_EXPORT_VARI3 = 0xAA;
+    const CROSS_ZERO_EXPORT_VARI4 = 0xAB;
+    const CROSS_ZERO_EXPORT_VARE1 = 0xAC;
+    const CROSS_ZERO_EXPORT_VARE2 = 0xAD;
+    const CROSS_ZERO_EXPORT_VARE3 = 0xAE;
+    const CROSS_ZERO_EXPORT_VARE4 = 0xAF;
     const EM_MAGNETIC_ON = 0xB0;
     const EM_MAGNETIC_OFF = 0xB1;
     const RESET_EM_FLAG = 0xB2;
@@ -5010,37 +5095,37 @@
         CMD_RELAY_OFF: CMD_RELAY_OFF,
         CMD_RELAY_ON: CMD_RELAY_ON,
         COEFFICIENT_TRANSFORMATION_CHANGE: COEFFICIENT_TRANSFORMATION_CHANGE,
-        CROSS_ZERO_ENT0: CROSS_ZERO_ENT0,
         CROSS_ZERO_ENT1: CROSS_ZERO_ENT1,
         CROSS_ZERO_ENT2: CROSS_ZERO_ENT2,
         CROSS_ZERO_ENT3: CROSS_ZERO_ENT3,
-        CROSS_ZERO_EXPORT_ENT0: CROSS_ZERO_EXPORT_ENT0,
+        CROSS_ZERO_ENT4: CROSS_ZERO_ENT4,
         CROSS_ZERO_EXPORT_ENT1: CROSS_ZERO_EXPORT_ENT1,
         CROSS_ZERO_EXPORT_ENT2: CROSS_ZERO_EXPORT_ENT2,
         CROSS_ZERO_EXPORT_ENT3: CROSS_ZERO_EXPORT_ENT3,
-        CROSS_ZERO_EXPORT_VARE0: CROSS_ZERO_EXPORT_VARE0,
+        CROSS_ZERO_EXPORT_ENT4: CROSS_ZERO_EXPORT_ENT4,
         CROSS_ZERO_EXPORT_VARE1: CROSS_ZERO_EXPORT_VARE1,
         CROSS_ZERO_EXPORT_VARE2: CROSS_ZERO_EXPORT_VARE2,
         CROSS_ZERO_EXPORT_VARE3: CROSS_ZERO_EXPORT_VARE3,
-        CROSS_ZERO_EXPORT_VARI0: CROSS_ZERO_EXPORT_VARI0,
+        CROSS_ZERO_EXPORT_VARE4: CROSS_ZERO_EXPORT_VARE4,
         CROSS_ZERO_EXPORT_VARI1: CROSS_ZERO_EXPORT_VARI1,
         CROSS_ZERO_EXPORT_VARI2: CROSS_ZERO_EXPORT_VARI2,
         CROSS_ZERO_EXPORT_VARI3: CROSS_ZERO_EXPORT_VARI3,
-        CROSS_ZERO_VARE0: CROSS_ZERO_VARE0,
+        CROSS_ZERO_EXPORT_VARI4: CROSS_ZERO_EXPORT_VARI4,
         CROSS_ZERO_VARE1: CROSS_ZERO_VARE1,
         CROSS_ZERO_VARE2: CROSS_ZERO_VARE2,
         CROSS_ZERO_VARE3: CROSS_ZERO_VARE3,
-        CROSS_ZERO_VARI0: CROSS_ZERO_VARI0,
+        CROSS_ZERO_VARE4: CROSS_ZERO_VARE4,
         CROSS_ZERO_VARI1: CROSS_ZERO_VARI1,
         CROSS_ZERO_VARI2: CROSS_ZERO_VARI2,
         CROSS_ZERO_VARI3: CROSS_ZERO_VARI3,
+        CROSS_ZERO_VARI4: CROSS_ZERO_VARI4,
         EM_MAGNETIC_OFF: EM_MAGNETIC_OFF,
         EM_MAGNETIC_ON: EM_MAGNETIC_ON,
         ENERGY_REGISTER_OVERFLOW: ENERGY_REGISTER_OVERFLOW,
-        ENERGY_T0_FAULT: ENERGY_T0_FAULT,
         ENERGY_T1_FAULT: ENERGY_T1_FAULT,
         ENERGY_T2_FAULT: ENERGY_T2_FAULT,
         ENERGY_T3_FAULT: ENERGY_T3_FAULT,
+        ENERGY_T4_FAULT: ENERGY_T4_FAULT,
         ERR_ACCESS: ERR_ACCESS,
         F_MAX_OK: F_MAX_OK,
         F_MAX_OVER: F_MAX_OVER,
@@ -5162,28 +5247,28 @@
     const VOLTAGE_IN_PHASE_B = 38;
     const VOLTAGE_IN_PHASE_C = 39;
     const BATTERY_VOLTAGE = 40;
-    const FREQUENCY = 41;
-    const ACTIVE_POWER_SUM = 42;
+    const SUPPLY_FREQUENCY = 41;
+    const TOTAL_ACTIVE_POWER = 42;
     const ACTIVE_POWER_PHASE_A = 43;
     const ACTIVE_POWER_PHASE_B = 44;
     const ACTIVE_POWER_PHASE_C = 45;
-    const REACTIVE_POWER_QPLUS_SUM = 46;
+    const TOTAL_REACTIVE_POWER_QPLUS = 46;
     const REACTIVE_POWER_QPLUS_PHASE_A = 47;
     const REACTIVE_POWER_QPLUS_PHASE_B = 48;
     const REACTIVE_POWER_QPLUS_PHASE_C = 49;
-    const REACTIVE_POWER_QMINUS_SUM = 50;
+    const TOTAL_REACTIVE_POWER_QMINUS = 50;
     const REACTIVE_POWER_QMINUS_PHASE_A = 51;
     const REACTIVE_POWER_QMINUS_PHASE_B = 52;
     const REACTIVE_POWER_QMINUS_PHASE_C = 53;
-    const POWER_COEFFICIENT_SUM = 54;
+    const TOTAL_POWER_FACTOR = 54;
     const POWER_COEFFICIENT_PHASE_A = 55;
     const POWER_COEFFICIENT_PHASE_B = 56;
     const POWER_COEFFICIENT_PHASE_C = 57;
-    const APPARENT_POWER_QPLUS_SUM = 58;
+    const TOTAL_APPARENT_POWER_QPLUS = 58;
     const APPARENT_POWER_QPLUS_PHASE_A = 59;
     const APPARENT_POWER_QPLUS_PHASE_B = 60;
     const APPARENT_POWER_QPLUS_PHASE_C = 61;
-    const APPARENT_POWER_QMINUS_SUM = 62;
+    const TOTAL_APPARENT_POWER_QMINUS = 62;
     const APPARENT_POWER_QMINUS_PHASE_A = 63;
     const APPARENT_POWER_QMINUS_PHASE_B = 64;
     const APPARENT_POWER_QMINUS_PHASE_C = 65;
@@ -5227,14 +5312,14 @@
     const MAX_EXPORTED_REACTIVE_POWER_MONTH_T2 = 103;
     const MAX_EXPORTED_REACTIVE_POWER_MONTH_T3 = 104;
     const MAX_EXPORTED_REACTIVE_POWER_MONTH_T4 = 105;
-    const MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1 = 106;
-    const MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2 = 107;
-    const MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3 = 108;
-    const MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4 = 109;
-    const MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1 = 110;
-    const MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2 = 111;
-    const MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3 = 112;
-    const MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4 = 113;
+    const MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1 = 106;
+    const MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2 = 107;
+    const MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3 = 108;
+    const MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4 = 109;
+    const MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1 = 110;
+    const MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2 = 111;
+    const MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3 = 112;
+    const MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4 = 113;
     const HOUR_MINUTE_SECOND = 114;
     const DATE_MONTH_YEAR = 115;
     const CURRENT_TRANSFORMATION_RATIO = 116;
@@ -5256,15 +5341,12 @@
         ACTIVE_POWER_PHASE_A: ACTIVE_POWER_PHASE_A,
         ACTIVE_POWER_PHASE_B: ACTIVE_POWER_PHASE_B,
         ACTIVE_POWER_PHASE_C: ACTIVE_POWER_PHASE_C,
-        ACTIVE_POWER_SUM: ACTIVE_POWER_SUM,
         APPARENT_POWER_QMINUS_PHASE_A: APPARENT_POWER_QMINUS_PHASE_A,
         APPARENT_POWER_QMINUS_PHASE_B: APPARENT_POWER_QMINUS_PHASE_B,
         APPARENT_POWER_QMINUS_PHASE_C: APPARENT_POWER_QMINUS_PHASE_C,
-        APPARENT_POWER_QMINUS_SUM: APPARENT_POWER_QMINUS_SUM,
         APPARENT_POWER_QPLUS_PHASE_A: APPARENT_POWER_QPLUS_PHASE_A,
         APPARENT_POWER_QPLUS_PHASE_B: APPARENT_POWER_QPLUS_PHASE_B,
         APPARENT_POWER_QPLUS_PHASE_C: APPARENT_POWER_QPLUS_PHASE_C,
-        APPARENT_POWER_QPLUS_SUM: APPARENT_POWER_QPLUS_SUM,
         BATTERY_VOLTAGE: BATTERY_VOLTAGE,
         CURRENT_BALANCE: CURRENT_BALANCE,
         CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL,
@@ -5285,7 +5367,6 @@
         EXPORTED_REACTIVE_ENERGY_T2: EXPORTED_REACTIVE_ENERGY_T2,
         EXPORTED_REACTIVE_ENERGY_T3: EXPORTED_REACTIVE_ENERGY_T3,
         EXPORTED_REACTIVE_ENERGY_T4: EXPORTED_REACTIVE_ENERGY_T4,
-        FREQUENCY: FREQUENCY,
         HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND,
         MAGNET_INDUCTION: MAGNET_INDUCTION,
         MAX_ACTIVE_POWER_DAY_T1: MAX_ACTIVE_POWER_DAY_T1,
@@ -5304,6 +5385,14 @@
         MAX_EXPORTED_ACTIVE_POWER_MONTH_T2: MAX_EXPORTED_ACTIVE_POWER_MONTH_T2,
         MAX_EXPORTED_ACTIVE_POWER_MONTH_T3: MAX_EXPORTED_ACTIVE_POWER_MONTH_T3,
         MAX_EXPORTED_ACTIVE_POWER_MONTH_T4: MAX_EXPORTED_ACTIVE_POWER_MONTH_T4,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4,
         MAX_EXPORTED_REACTIVE_POWER_DAY_T1: MAX_EXPORTED_REACTIVE_POWER_DAY_T1,
         MAX_EXPORTED_REACTIVE_POWER_DAY_T2: MAX_EXPORTED_REACTIVE_POWER_DAY_T2,
         MAX_EXPORTED_REACTIVE_POWER_DAY_T3: MAX_EXPORTED_REACTIVE_POWER_DAY_T3,
@@ -5312,14 +5401,6 @@
         MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: MAX_EXPORTED_REACTIVE_POWER_MONTH_T2,
         MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: MAX_EXPORTED_REACTIVE_POWER_MONTH_T3,
         MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: MAX_EXPORTED_REACTIVE_POWER_MONTH_T4,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4,
         MAX_NEGATIVE_REACTIVE_POWER_DAY_T1: MAX_NEGATIVE_REACTIVE_POWER_DAY_T1,
         MAX_NEGATIVE_REACTIVE_POWER_DAY_T2: MAX_NEGATIVE_REACTIVE_POWER_DAY_T2,
         MAX_NEGATIVE_REACTIVE_POWER_DAY_T3: MAX_NEGATIVE_REACTIVE_POWER_DAY_T3,
@@ -5344,7 +5425,6 @@
         POWER_COEFFICIENT_PHASE_A: POWER_COEFFICIENT_PHASE_A,
         POWER_COEFFICIENT_PHASE_B: POWER_COEFFICIENT_PHASE_B,
         POWER_COEFFICIENT_PHASE_C: POWER_COEFFICIENT_PHASE_C,
-        POWER_COEFFICIENT_SUM: POWER_COEFFICIENT_SUM,
         POWER_THRESHOLD_T1: POWER_THRESHOLD_T1,
         POWER_THRESHOLD_T2: POWER_THRESHOLD_T2,
         POWER_THRESHOLD_T3: POWER_THRESHOLD_T3,
@@ -5356,19 +5436,24 @@
         REACTIVE_POWER_QMINUS_PHASE_A: REACTIVE_POWER_QMINUS_PHASE_A,
         REACTIVE_POWER_QMINUS_PHASE_B: REACTIVE_POWER_QMINUS_PHASE_B,
         REACTIVE_POWER_QMINUS_PHASE_C: REACTIVE_POWER_QMINUS_PHASE_C,
-        REACTIVE_POWER_QMINUS_SUM: REACTIVE_POWER_QMINUS_SUM,
         REACTIVE_POWER_QPLUS_PHASE_A: REACTIVE_POWER_QPLUS_PHASE_A,
         REACTIVE_POWER_QPLUS_PHASE_B: REACTIVE_POWER_QPLUS_PHASE_B,
         REACTIVE_POWER_QPLUS_PHASE_C: REACTIVE_POWER_QPLUS_PHASE_C,
-        REACTIVE_POWER_QPLUS_SUM: REACTIVE_POWER_QPLUS_SUM,
         SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY,
         SOFTWARE_VERSION: SOFTWARE_VERSION,
+        SUPPLY_FREQUENCY: SUPPLY_FREQUENCY,
         TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY,
+        TOTAL_ACTIVE_POWER: TOTAL_ACTIVE_POWER,
+        TOTAL_APPARENT_POWER_QMINUS: TOTAL_APPARENT_POWER_QMINUS,
+        TOTAL_APPARENT_POWER_QPLUS: TOTAL_APPARENT_POWER_QPLUS,
         TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY,
         TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY,
         TOTAL_EXPORTED_REACTIVE_ENERGY: TOTAL_EXPORTED_REACTIVE_ENERGY,
         TOTAL_NEGATIVE_REACTIVE_ENERGY: TOTAL_NEGATIVE_REACTIVE_ENERGY,
+        TOTAL_POWER_FACTOR: TOTAL_POWER_FACTOR,
         TOTAL_REACTIVE_ENERGY: TOTAL_REACTIVE_ENERGY,
+        TOTAL_REACTIVE_POWER_QMINUS: TOTAL_REACTIVE_POWER_QMINUS,
+        TOTAL_REACTIVE_POWER_QPLUS: TOTAL_REACTIVE_POWER_QPLUS,
         VOLTAGE_IN_PHASE_A: VOLTAGE_IN_PHASE_A,
         VOLTAGE_IN_PHASE_B: VOLTAGE_IN_PHASE_B,
         VOLTAGE_IN_PHASE_C: VOLTAGE_IN_PHASE_C,
@@ -5424,7 +5509,7 @@
         getOperatorParametersExtended: getOperatorParametersExtended$2,
         getOperatorParametersExtended2: getOperatorParametersExtended2$2,
         getOperatorParametersExtended3: getOperatorParametersExtended3$1,
-        getOperatorParametersExtended4: getOperatorParametersExtended4,
+        getOperatorParametersExtended4: getOperatorParametersExtended4$2,
         getRatePlanInfo: getRatePlanInfo$1,
         getSaldo: getSaldo$1,
         getSaldoParameters: getSaldoParameters$1,
@@ -5482,51 +5567,6 @@
     const A_PLUS_R_PLUS_R_MINUS = 1;
     const A_MINUS_R_PLUS_R_MINUS = 2;
 
-    const id$1t = getCriticalEvent$2;
-    const name$1t = commandNames$1[getCriticalEvent$2];
-    const headerSize$1t = 2;
-    const accessLevel$1t = READ_ONLY;
-    const maxSize$1t = 2;
-    const isLoraOnly$1t = false;
-    const examples$1t = {
-        'simple request': {
-            id: id$1t,
-            name: name$1t,
-            headerSize: headerSize$1t,
-            accessLevel: accessLevel$1t,
-            maxSize: maxSize$1t,
-            parameters: {
-                event: 1,
-                index: 22
-            },
-            bytes: [
-                0x56, 0x02,
-                0x01, 0x16
-            ]
-        }
-    };
-    const fromBytes$1t = (bytes) => {
-        if (bytes.length !== maxSize$1t) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        const [event, index] = bytes;
-        return { event, index };
-    };
-    const toBytes$1t = (parameters) => (toBytes$2f(id$1t, [parameters.event, parameters.index]));
-
-    var getCriticalEvent$1 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$1t,
-        examples: examples$1t,
-        fromBytes: fromBytes$1t,
-        headerSize: headerSize$1t,
-        id: id$1t,
-        isLoraOnly: isLoraOnly$1t,
-        maxSize: maxSize$1t,
-        name: name$1t,
-        toBytes: toBytes$1t
-    });
-
     const OPERATOR_PARAMETERS_SIZE = 95;
     const OPERATOR_PARAMETERS_EXTENDED_SIZE = 9;
     const OPERATOR_PARAMETERS_EXTENDED2_SIZE = 28;
@@ -5576,28 +5616,28 @@
         VOLTAGE_IN_PHASE_B: 1 << 5,
         VOLTAGE_IN_PHASE_C: 1 << 6,
         BATTERY_VOLTAGE: 1 << 7,
-        FREQUENCY: 1 << 8,
+        SUPPLY_FREQUENCY: 1 << 8,
         ACTIVE_POWER_SUM: 1 << 9,
         ACTIVE_POWER_PHASE_A: 1 << 10,
         ACTIVE_POWER_PHASE_B: 1 << 11,
         ACTIVE_POWER_PHASE_C: 1 << 12,
-        REACTIVE_POWER_QPLUS_SUM: 1 << 13,
+        TOTAL_REACTIVE_POWER_QPLUS: 1 << 13,
         REACTIVE_POWER_QPLUS_PHASE_A: 1 << 14,
         REACTIVE_POWER_QPLUS_PHASE_B: 1 << 15,
         REACTIVE_POWER_QPLUS_PHASE_C: 1 << 16,
-        REACTIVE_POWER_QMINUS_SUM: 1 << 17,
+        TOTAL_REACTIVE_POWER_QMINUS: 1 << 17,
         REACTIVE_POWER_QMINUS_PHASE_A: 1 << 18,
         REACTIVE_POWER_QMINUS_PHASE_B: 1 << 19,
         REACTIVE_POWER_QMINUS_PHASE_C: 1 << 20,
-        POWER_COEFFICIENT_SUM: 1 << 21,
+        TOTAL_POWER_FACTOR: 1 << 21,
         POWER_COEFFICIENT_PHASE_A: 1 << 22,
         POWER_COEFFICIENT_PHASE_B: 1 << 23,
         POWER_COEFFICIENT_PHASE_C: 1 << 24,
-        APPARENT_POWER_QPLUS_SUM: 1 << 25,
+        TOTAL_APPARENT_POWER_QPLUS: 1 << 25,
         APPARENT_POWER_QPLUS_PHASE_A: 1 << 26,
         APPARENT_POWER_QPLUS_PHASE_B: 1 << 27,
         APPARENT_POWER_QPLUS_PHASE_C: 1 << 28,
-        APPARENT_POWER_QMINUS_SUM: 1 << 29,
+        TOTAL_APPARENT_POWER_QMINUS: 1 << 29,
         APPARENT_POWER_QMINUS_PHASE_A: 1 << 30,
         APPARENT_POWER_QMINUS_PHASE_B: 1 << 31
     };
@@ -5645,14 +5685,14 @@
         MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: 1 << 6,
         MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: 1 << 7,
         MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: 1 << 8,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: 1 << 9,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: 1 << 10,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: 1 << 11,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: 1 << 12,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: 1 << 13,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: 1 << 14,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: 1 << 15,
-        MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: 1 << 16,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: 1 << 9,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: 1 << 10,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: 1 << 11,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: 1 << 12,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: 1 << 13,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: 1 << 14,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: 1 << 15,
+        MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: 1 << 16,
         HOUR_MINUTE_SECOND: 1 << 17,
         DATE_MONTH_YEAR: 1 << 18,
         CURRENT_TRANSFORMATION_RATIO: 1 << 19,
@@ -5681,28 +5721,28 @@
         RELAY_ON_Y: 1 << 0,
         RELAY_ON_CENTER: 1 << 1,
         RELAY_ON_PB: 1 << 2,
-        RELAY_ON_TARIFF_0: 1 << 3,
-        RELAY_ON_TARIFF_1: 1 << 4,
-        RELAY_ON_TARIFF_2: 1 << 5,
-        RELAY_ON_TARIFF_3: 1 << 6,
+        RELAY_ON_TARIFF_1: 1 << 3,
+        RELAY_ON_TARIFF_2: 1 << 4,
+        RELAY_ON_TARIFF_3: 1 << 5,
+        RELAY_ON_TARIFF_4: 1 << 6,
         RELAY_ON_V_GOOD: 1 << 7,
         RELAY_OFF_Y: 1 << 8,
         RELAY_OFF_CENTER: 1 << 9,
-        RELAY_OFF_TARIFF_0: 1 << 10,
-        RELAY_OFF_TARIFF_1: 1 << 11,
-        RELAY_OFF_TARIFF_2: 1 << 12,
-        RELAY_OFF_TARIFF_3: 1 << 13,
+        RELAY_OFF_TARIFF_1: 1 << 10,
+        RELAY_OFF_TARIFF_2: 1 << 11,
+        RELAY_OFF_TARIFF_3: 1 << 12,
+        RELAY_OFF_TARIFF_4: 1 << 13,
         RELAY_OFF_I_LIMIT: 1 << 14,
         RELAY_OFF_V_BAD: 1 << 15,
-        RELAY_OFF_DIFF_BAD: 1 << 16,
-        RELAY_OFF_LIM_TARIFF_0: 1 << 17,
-        RELAY_OFF_LIM_TARIFF_1: 1 << 18,
-        RELAY_OFF_LIM_TARIFF_2: 1 << 19,
-        RELAY_OFF_LIM_TARIFF_3: 1 << 20,
-        RELAY_OFF_LIM_VAR_TARIFF_0: 1 << 21,
-        RELAY_OFF_LIM_VAR_TARIFF_1: 1 << 22,
-        RELAY_OFF_LIM_VAR_TARIFF_2: 1 << 23,
-        RELAY_OFF_LIM_VAR_TARIFF_3: 1 << 24,
+        RELAY_OFF_DIFF_CURRENT_BAD: 1 << 16,
+        RELAY_OFF_LIM_TARIFF_1: 1 << 17,
+        RELAY_OFF_LIM_TARIFF_2: 1 << 18,
+        RELAY_OFF_LIM_TARIFF_3: 1 << 19,
+        RELAY_OFF_LIM_TARIFF_4: 1 << 20,
+        RELAY_OFF_LIM_VAR_TARIFF_1: 1 << 21,
+        RELAY_OFF_LIM_VAR_TARIFF_2: 1 << 22,
+        RELAY_OFF_LIM_VAR_TARIFF_3: 1 << 23,
+        RELAY_OFF_LIM_VAR_TARIFF_4: 1 << 24,
         RELAY_ON_PF_MIN: 1 << 25,
         RELAY_OFF_PF_MIN: 1 << 26,
         RELAY_ON_TIMEOUT: 1 << 27,
@@ -5831,7 +5871,7 @@
         timeoutMagnetOff: 5,
         relaySetExt: toObject(relaySetExtMask, 0),
         timeoutMagnetOn: 5,
-        phaseDefault: 3,
+        defaultPlcPhase: 3,
         displaySet21: toObject(displaySet1Mask, 4231),
         displaySet22: toObject(displaySet2Mask, 31597303),
         displaySet23: toObject(displaySet3Mask, 0),
@@ -6130,7 +6170,7 @@
             timeoutMagnetOff: this.getUint8(),
             relaySetExt: toObject(relaySetExtMask, this.getUint8()),
             timeoutMagnetOn: this.getUint8(),
-            phaseDefault: this.getUint8(),
+            defaultPlcPhase: this.getUint8(),
             displaySet21: toObject(displaySet1Mask, this.getUint32()),
             displaySet22: toObject(displaySet2Mask, this.getUint32()),
             displaySet23: toObject(displaySet3Mask, this.getUint32()),
@@ -6156,7 +6196,7 @@
         this.setUint8(operatorParametersExtended2.timeoutMagnetOff);
         this.setUint8(fromObject(relaySetExtMask, operatorParametersExtended2.relaySetExt));
         this.setUint8(operatorParametersExtended2.timeoutMagnetOn);
-        this.setUint8(operatorParametersExtended2.phaseDefault);
+        this.setUint8(operatorParametersExtended2.defaultPlcPhase);
         this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended2.displaySet21));
         this.setUint32(fromObject(displaySet2Mask, operatorParametersExtended2.displaySet22));
         this.setUint32(fromObject(displaySet3Mask, operatorParametersExtended2.displaySet23));
@@ -6174,9 +6214,9 @@
             displaySet5: toObject(displaySet5Mask, this.getUint32()),
             displaySet25: toObject(displaySet5Mask, this.getUint32()),
             displaySet31: toObject(displaySet1Mask, this.getUint32()),
-            displaySet32: toObject(displaySet1Mask, this.getUint32()),
-            displaySet33: toObject(displaySet1Mask, this.getUint32()),
-            displaySet34: toObject(displaySet1Mask, this.getUint32()),
+            displaySet32: toObject(displaySet2Mask, this.getUint32()),
+            displaySet33: toObject(displaySet3Mask, this.getUint32()),
+            displaySet34: toObject(displaySet4Mask, this.getUint32()),
             displaySet35: toObject(displaySet5Mask, this.getUint32())
         };
     };
@@ -6184,9 +6224,9 @@
         this.setUint32(fromObject(displaySet5Mask, operatorParametersExtended.displaySet5));
         this.setUint32(fromObject(displaySet5Mask, operatorParametersExtended.displaySet25));
         this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended.displaySet31));
-        this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended.displaySet32));
-        this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended.displaySet33));
-        this.setUint32(fromObject(displaySet1Mask, operatorParametersExtended.displaySet34));
+        this.setUint32(fromObject(displaySet2Mask, operatorParametersExtended.displaySet32));
+        this.setUint32(fromObject(displaySet3Mask, operatorParametersExtended.displaySet33));
+        this.setUint32(fromObject(displaySet4Mask, operatorParametersExtended.displaySet34));
         this.setUint32(fromObject(displaySet5Mask, operatorParametersExtended.displaySet35));
     };
     const getPackedEnergiesWithDateSize = (parameters) => {
@@ -6200,19 +6240,19 @@
 
     const MIN_COMMAND_SIZE$2 = 3;
     const MAX_COMMAND_SIZE$4 = 4;
-    const id$1s = getDayDemand$2;
-    const name$1s = commandNames$1[getDayDemand$2];
-    const headerSize$1s = 2;
-    const maxSize$1s = MAX_COMMAND_SIZE$4;
-    const accessLevel$1s = READ_ONLY;
-    const isLoraOnly$1s = false;
-    const examples$1s = {
+    const id$1u = getDayDemand$2;
+    const name$1u = commandNames$2[getDayDemand$2];
+    const headerSize$1u = 2;
+    const maxSize$1u = MAX_COMMAND_SIZE$4;
+    const accessLevel$1u = READ_ONLY;
+    const isLoraOnly$1u = false;
+    const examples$1u = {
         'request day values for 2024.03.22 00:00:00 GMT': {
-            id: id$1s,
-            name: name$1s,
-            headerSize: headerSize$1s,
-            maxSize: maxSize$1s,
-            accessLevel: accessLevel$1s,
+            id: id$1u,
+            name: name$1u,
+            headerSize: headerSize$1u,
+            maxSize: maxSize$1u,
+            accessLevel: accessLevel$1u,
             parameters: {
                 date: {
                     year: 24,
@@ -6226,11 +6266,11 @@
             ]
         },
         'request day values with energy type for 2024.03.22 00:00:00 GMT': {
-            id: id$1s,
-            name: name$1s,
-            headerSize: headerSize$1s,
-            maxSize: maxSize$1s,
-            accessLevel: accessLevel$1s,
+            id: id$1u,
+            name: name$1u,
+            headerSize: headerSize$1u,
+            maxSize: maxSize$1u,
+            accessLevel: accessLevel$1u,
             parameters: {
                 date: {
                     year: 24,
@@ -6245,7 +6285,7 @@
             ]
         }
     };
-    const fromBytes$1s = (bytes) => {
+    const fromBytes$1u = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
         if (bytes.length === MAX_COMMAND_SIZE$4) {
             return {
@@ -6255,41 +6295,41 @@
         }
         return { date: buffer.getDate() };
     };
-    const toBytes$1s = (parameters) => {
+    const toBytes$1u = (parameters) => {
         const buffer = new CommandBinaryBuffer(parameters?.energyType ? MAX_COMMAND_SIZE$4 : MIN_COMMAND_SIZE$2);
         buffer.setDate(parameters?.date);
         if (parameters?.energyType) {
             buffer.setUint8(parameters.energyType);
         }
-        return toBytes$2f(id$1s, buffer.data);
+        return toBytes$2h(id$1u, buffer.data);
     };
 
     var getDayDemand$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1s,
-        examples: examples$1s,
-        fromBytes: fromBytes$1s,
-        headerSize: headerSize$1s,
-        id: id$1s,
-        isLoraOnly: isLoraOnly$1s,
-        maxSize: maxSize$1s,
-        name: name$1s,
-        toBytes: toBytes$1s
+        accessLevel: accessLevel$1u,
+        examples: examples$1u,
+        fromBytes: fromBytes$1u,
+        headerSize: headerSize$1u,
+        id: id$1u,
+        isLoraOnly: isLoraOnly$1u,
+        maxSize: maxSize$1u,
+        name: name$1u,
+        toBytes: toBytes$1u
     });
 
-    const id$1r = getDayDemandExport$2;
-    const name$1r = commandNames$1[getDayDemandExport$2];
-    const headerSize$1r = 2;
-    const maxSize$1r = 3;
-    const accessLevel$1r = READ_ONLY;
-    const isLoraOnly$1r = false;
-    const examples$1r = {
+    const id$1t = getDayDemandExport$2;
+    const name$1t = commandNames$2[getDayDemandExport$2];
+    const headerSize$1t = 2;
+    const maxSize$1t = 3;
+    const accessLevel$1t = READ_ONLY;
+    const isLoraOnly$1t = false;
+    const examples$1t = {
         'request day values for 2024.03.22 00:00:00 GMT': {
-            id: id$1r,
-            name: name$1r,
-            headerSize: headerSize$1r,
-            maxSize: maxSize$1r,
-            accessLevel: accessLevel$1r,
+            id: id$1t,
+            name: name$1t,
+            headerSize: headerSize$1t,
+            maxSize: maxSize$1t,
+            accessLevel: accessLevel$1t,
             parameters: {
                 date: {
                     year: 24,
@@ -6303,41 +6343,41 @@
             ]
         }
     };
-    const fromBytes$1r = (bytes) => {
+    const fromBytes$1t = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
         return { date: buffer.getDate() };
     };
-    const toBytes$1r = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$1r);
+    const toBytes$1t = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$1t);
         buffer.setDate(parameters.date);
-        return toBytes$2f(id$1r, buffer.data);
+        return toBytes$2h(id$1t, buffer.data);
     };
 
     var getDayDemandExport$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1r,
-        examples: examples$1r,
-        fromBytes: fromBytes$1r,
-        headerSize: headerSize$1r,
-        id: id$1r,
-        isLoraOnly: isLoraOnly$1r,
-        maxSize: maxSize$1r,
-        name: name$1r,
-        toBytes: toBytes$1r
+        accessLevel: accessLevel$1t,
+        examples: examples$1t,
+        fromBytes: fromBytes$1t,
+        headerSize: headerSize$1t,
+        id: id$1t,
+        isLoraOnly: isLoraOnly$1t,
+        maxSize: maxSize$1t,
+        name: name$1t,
+        toBytes: toBytes$1t
     });
 
-    const id$1q = getDemand$2;
-    const name$1q = commandNames$1[getDemand$2];
-    const headerSize$1q = 2;
-    const maxSize$1q = 7;
-    const accessLevel$1q = READ_ONLY;
-    const isLoraOnly$1q = false;
-    const examples$1q = {
+    const id$1s = getDemand$2;
+    const name$1s = commandNames$2[getDemand$2];
+    const headerSize$1s = 2;
+    const maxSize$1s = 7;
+    const accessLevel$1s = READ_ONLY;
+    const isLoraOnly$1s = false;
+    const examples$1s = {
         'request for A+': {
-            id: id$1q,
-            name: name$1q,
-            headerSize: headerSize$1q,
-            maxSize: maxSize$1q,
+            id: id$1s,
+            name: name$1s,
+            headerSize: headerSize$1s,
+            maxSize: maxSize$1s,
             parameters: {
                 date: {
                     year: 21,
@@ -6359,17 +6399,99 @@
             ]
         }
     };
-    const fromBytes$1q = (bytes) => {
+    const fromBytes$1s = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getDemand();
     };
-    const toBytes$1q = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$1q);
+    const toBytes$1s = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$1s);
         buffer.setDemand(parameters);
-        return toBytes$2f(id$1q, buffer.data);
+        return toBytes$2h(id$1s, buffer.data);
     };
 
     var getDemand$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$1s,
+        examples: examples$1s,
+        fromBytes: fromBytes$1s,
+        headerSize: headerSize$1s,
+        id: id$1s,
+        isLoraOnly: isLoraOnly$1s,
+        maxSize: maxSize$1s,
+        name: name$1s,
+        toBytes: toBytes$1s
+    });
+
+    const id$1r = getDisplayParam$2;
+    const name$1r = commandNames$2[getDisplayParam$2];
+    const headerSize$1r = 2;
+    const maxSize$1r = 1;
+    const accessLevel$1r = READ_ONLY;
+    const isLoraOnly$1r = false;
+    const examples$1r = {
+        'get additional display parameters': {
+            id: id$1r,
+            name: name$1r,
+            headerSize: headerSize$1r,
+            maxSize: maxSize$1r,
+            accessLevel: accessLevel$1r,
+            parameters: {
+                displayMode: MAIN_2
+            },
+            bytes: [
+                0x5e, 0x01,
+                0x01
+            ]
+        }
+    };
+    const fromBytes$1r = ([displayMode]) => ({ displayMode });
+    const toBytes$1r = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$1r);
+        buffer.setUint8(parameters.displayMode);
+        return toBytes$2h(id$1r, buffer.data);
+    };
+
+    var getDisplayParam$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$1r,
+        examples: examples$1r,
+        fromBytes: fromBytes$1r,
+        headerSize: headerSize$1r,
+        id: id$1r,
+        isLoraOnly: isLoraOnly$1r,
+        maxSize: maxSize$1r,
+        name: name$1r,
+        toBytes: toBytes$1r
+    });
+
+    const id$1q = getEnergy$2;
+    const name$1q = commandNames$2[getEnergy$2];
+    const headerSize$1q = 2;
+    const maxSize$1q = 0;
+    const accessLevel$1q = READ_ONLY;
+    const isLoraOnly$1q = false;
+    const examples$1q = {
+        'simple request': {
+            id: id$1q,
+            name: name$1q,
+            headerSize: headerSize$1q,
+            maxSize: maxSize$1q,
+            accessLevel: accessLevel$1q,
+            parameters: {},
+            bytes: [
+                0x0f, 0x00
+            ]
+        }
+    };
+    const fromBytes$1q = (bytes) => {
+        if (bytes.length !== maxSize$1q) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
+    };
+    const toBytes$1q = () => toBytes$2h(id$1q);
+
+    var getEnergy$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1q,
         examples: examples$1q,
@@ -6382,36 +6504,59 @@
         toBytes: toBytes$1q
     });
 
-    const id$1p = getDisplayParam$2;
-    const name$1p = commandNames$1[getDisplayParam$2];
+    const MIN_COMMAND_SIZE$1 = 0;
+    const MAX_COMMAND_SIZE$3 = 1;
+    const id$1p = getEnergyDayPrevious$2;
+    const name$1p = commandNames$2[getEnergyDayPrevious$2];
     const headerSize$1p = 2;
-    const maxSize$1p = 1;
+    const maxSize$1p = MAX_COMMAND_SIZE$3;
     const accessLevel$1p = READ_ONLY;
     const isLoraOnly$1p = false;
     const examples$1p = {
-        'get additional display parameters': {
+        'simple request': {
+            id: id$1p,
+            name: name$1p,
+            headerSize: headerSize$1p,
+            maxSize: maxSize$1p,
+            accessLevel: accessLevel$1p,
+            parameters: {},
+            bytes: [
+                0x03, 0x00
+            ]
+        },
+        'request A-R+R- energy': {
             id: id$1p,
             name: name$1p,
             headerSize: headerSize$1p,
             maxSize: maxSize$1p,
             accessLevel: accessLevel$1p,
             parameters: {
-                displayMode: MAIN_2
+                energyType: A_MINUS_R_PLUS_R_MINUS
             },
             bytes: [
-                0x5e, 0x01,
-                0x01
+                0x03, 0x01,
+                0x02
             ]
         }
     };
-    const fromBytes$1p = ([displayMode]) => ({ displayMode });
+    const fromBytes$1p = (bytes) => {
+        const { length } = bytes;
+        if (length !== MAX_COMMAND_SIZE$3 && length !== MIN_COMMAND_SIZE$1) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        if (length === MAX_COMMAND_SIZE$3) {
+            return { energyType: bytes[0] };
+        }
+        return {};
+    };
     const toBytes$1p = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$1p);
-        buffer.setUint8(parameters.displayMode);
-        return toBytes$2f(id$1p, buffer.data);
+        if (parameters.energyType) {
+            return toBytes$2h(id$1p, [parameters.energyType]);
+        }
+        return toBytes$2h(id$1p);
     };
 
-    var getDisplayParam$1 = /*#__PURE__*/Object.freeze({
+    var getEnergyDayPrevious$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1p,
         examples: examples$1p,
@@ -6424,8 +6569,8 @@
         toBytes: toBytes$1p
     });
 
-    const id$1o = getEnergy$2;
-    const name$1o = commandNames$1[getEnergy$2];
+    const id$1o = getEnergyExport$2;
+    const name$1o = commandNames$2[getEnergyExport$2];
     const headerSize$1o = 2;
     const maxSize$1o = 0;
     const accessLevel$1o = READ_ONLY;
@@ -6439,7 +6584,7 @@
             accessLevel: accessLevel$1o,
             parameters: {},
             bytes: [
-                0x0f, 0x00
+                0x4e, 0x00
             ]
         }
     };
@@ -6449,9 +6594,9 @@
         }
         return {};
     };
-    const toBytes$1o = () => toBytes$2f(id$1o);
+    const toBytes$1o = () => toBytes$2h(id$1o);
 
-    var getEnergy$1 = /*#__PURE__*/Object.freeze({
+    var getEnergyExport$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1o,
         examples: examples$1o,
@@ -6464,12 +6609,10 @@
         toBytes: toBytes$1o
     });
 
-    const MIN_COMMAND_SIZE$1 = 0;
-    const MAX_COMMAND_SIZE$3 = 1;
-    const id$1n = getEnergyDayPrevious$2;
-    const name$1n = commandNames$1[getEnergyDayPrevious$2];
+    const id$1n = getEnergyExportDayPrevious$2;
+    const name$1n = commandNames$2[getEnergyExportDayPrevious$2];
     const headerSize$1n = 2;
-    const maxSize$1n = MAX_COMMAND_SIZE$3;
+    const maxSize$1n = 0;
     const accessLevel$1n = READ_ONLY;
     const isLoraOnly$1n = false;
     const examples$1n = {
@@ -6481,42 +6624,19 @@
             accessLevel: accessLevel$1n,
             parameters: {},
             bytes: [
-                0x03, 0x00
-            ]
-        },
-        'request A-R+R- energy': {
-            id: id$1n,
-            name: name$1n,
-            headerSize: headerSize$1n,
-            maxSize: maxSize$1n,
-            accessLevel: accessLevel$1n,
-            parameters: {
-                energyType: A_MINUS_R_PLUS_R_MINUS
-            },
-            bytes: [
-                0x03, 0x01,
-                0x02
+                0x50, 0x00
             ]
         }
     };
     const fromBytes$1n = (bytes) => {
-        const { length } = bytes;
-        if (length !== MAX_COMMAND_SIZE$3 && length !== MIN_COMMAND_SIZE$1) {
+        if (bytes.length !== maxSize$1n) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        if (length === MAX_COMMAND_SIZE$3) {
-            return { energyType: bytes[0] };
         }
         return {};
     };
-    const toBytes$1n = (parameters) => {
-        if (parameters.energyType) {
-            return toBytes$2f(id$1n, [parameters.energyType]);
-        }
-        return toBytes$2f(id$1n);
-    };
+    const toBytes$1n = () => toBytes$2h(id$1n);
 
-    var getEnergyDayPrevious$1 = /*#__PURE__*/Object.freeze({
+    var getEnergyExportDayPrevious$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1n,
         examples: examples$1n,
@@ -6529,102 +6649,22 @@
         toBytes: toBytes$1n
     });
 
-    const id$1m = getEnergyExport$2;
-    const name$1m = commandNames$1[getEnergyExport$2];
+    const id$1m = getHalfHourDemandChannel$2;
+    const name$1m = commandNames$2[getHalfHourDemandChannel$2];
     const headerSize$1m = 2;
-    const maxSize$1m = 0;
+    const maxSize$1m = 5;
     const accessLevel$1m = READ_ONLY;
     const isLoraOnly$1m = false;
     const examples$1m = {
-        'simple request': {
+        'request A-R- energy for phase A on 2024.03.22': {
             id: id$1m,
             name: name$1m,
             headerSize: headerSize$1m,
             maxSize: maxSize$1m,
             accessLevel: accessLevel$1m,
-            parameters: {},
-            bytes: [
-                0x4e, 0x00
-            ]
-        }
-    };
-    const fromBytes$1m = (bytes) => {
-        if (bytes.length !== maxSize$1m) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$1m = () => toBytes$2f(id$1m);
-
-    var getEnergyExport$1 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$1m,
-        examples: examples$1m,
-        fromBytes: fromBytes$1m,
-        headerSize: headerSize$1m,
-        id: id$1m,
-        isLoraOnly: isLoraOnly$1m,
-        maxSize: maxSize$1m,
-        name: name$1m,
-        toBytes: toBytes$1m
-    });
-
-    const id$1l = getEnergyExportDayPrevious$2;
-    const name$1l = commandNames$1[getEnergyExportDayPrevious$2];
-    const headerSize$1l = 2;
-    const maxSize$1l = 0;
-    const accessLevel$1l = READ_ONLY;
-    const isLoraOnly$1l = false;
-    const examples$1l = {
-        'simple request': {
-            id: id$1l,
-            name: name$1l,
-            headerSize: headerSize$1l,
-            maxSize: maxSize$1l,
-            accessLevel: accessLevel$1l,
-            parameters: {},
-            bytes: [
-                0x50, 0x00
-            ]
-        }
-    };
-    const fromBytes$1l = (bytes) => {
-        if (bytes.length !== maxSize$1l) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$1l = () => toBytes$2f(id$1l);
-
-    var getEnergyExportDayPrevious$1 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$1l,
-        examples: examples$1l,
-        fromBytes: fromBytes$1l,
-        headerSize: headerSize$1l,
-        id: id$1l,
-        isLoraOnly: isLoraOnly$1l,
-        maxSize: maxSize$1l,
-        name: name$1l,
-        toBytes: toBytes$1l
-    });
-
-    const id$1k = getHalfHourDemandChannel$2;
-    const name$1k = commandNames$1[getHalfHourDemandChannel$2];
-    const headerSize$1k = 2;
-    const maxSize$1k = 5;
-    const accessLevel$1k = READ_ONLY;
-    const isLoraOnly$1k = false;
-    const examples$1k = {
-        'request A-R- energy for phase A on 2024.03.22': {
-            id: id$1k,
-            name: name$1k,
-            headerSize: headerSize$1k,
-            maxSize: maxSize$1k,
-            accessLevel: accessLevel$1k,
             parameters: {
                 channel: 1,
-                channelParameter: 16,
+                loadProfile: 16,
                 date: {
                     year: 24,
                     month: 3,
@@ -6639,23 +6679,121 @@
             ]
         }
     };
-    const fromBytes$1k = (bytes) => {
+    const fromBytes$1m = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
         return {
             channel: buffer.getUint8(),
-            channelParameter: buffer.getUint8(),
+            loadProfile: buffer.getUint8(),
             date: buffer.getDate()
         };
     };
-    const toBytes$1k = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$1k);
+    const toBytes$1m = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$1m);
         buffer.setUint8(parameters.channel);
-        buffer.setUint8(parameters.channelParameter);
+        buffer.setUint8(parameters.loadProfile);
         buffer.setDate(parameters.date);
-        return toBytes$2f(id$1k, buffer.data);
+        return toBytes$2h(id$1m, buffer.data);
     };
 
     var getHalfHourDemandChannel$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$1m,
+        examples: examples$1m,
+        fromBytes: fromBytes$1m,
+        headerSize: headerSize$1m,
+        id: id$1m,
+        isLoraOnly: isLoraOnly$1m,
+        maxSize: maxSize$1m,
+        name: name$1m,
+        toBytes: toBytes$1m
+    });
+
+    const id$1l = getHalfHourDemandVare$2;
+    const name$1l = commandNames$2[getHalfHourDemandVare$2];
+    const headerSize$1l = 2;
+    const maxSize$1l = 3;
+    const accessLevel$1l = READ_ONLY;
+    const isLoraOnly$1l = false;
+    const examples$1l = {
+        'request archive values for 2024.03.22': {
+            id: id$1l,
+            name: name$1l,
+            headerSize: headerSize$1l,
+            maxSize: maxSize$1l,
+            accessLevel: accessLevel$1l,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 3,
+                    date: 22
+                }
+            },
+            bytes: [
+                0x49, 0x03,
+                0x18, 0x03, 0x16
+            ]
+        }
+    };
+    const fromBytes$1l = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        return { date: buffer.getDate() };
+    };
+    const toBytes$1l = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$1l);
+        buffer.setDate(parameters.date);
+        return toBytes$2h(id$1l, buffer.data);
+    };
+
+    var getHalfHourDemandVare$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$1l,
+        examples: examples$1l,
+        fromBytes: fromBytes$1l,
+        headerSize: headerSize$1l,
+        id: id$1l,
+        isLoraOnly: isLoraOnly$1l,
+        maxSize: maxSize$1l,
+        name: name$1l,
+        toBytes: toBytes$1l
+    });
+
+    const id$1k = getHalfHourDemandVareExport$2;
+    const name$1k = commandNames$2[getHalfHourDemandVareExport$2];
+    const headerSize$1k = 2;
+    const maxSize$1k = 3;
+    const accessLevel$1k = READ_ONLY;
+    const isLoraOnly$1k = false;
+    const examples$1k = {
+        'request archive values for 2024.03.22': {
+            id: id$1k,
+            name: name$1k,
+            headerSize: headerSize$1k,
+            maxSize: maxSize$1k,
+            accessLevel: accessLevel$1k,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 3,
+                    date: 22
+                }
+            },
+            bytes: [
+                0x55, 0x03,
+                0x18, 0x03, 0x16
+            ]
+        }
+    };
+    const fromBytes$1k = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        return { date: buffer.getDate() };
+    };
+    const toBytes$1k = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$1k);
+        buffer.setDate(parameters.date);
+        return toBytes$2h(id$1k, buffer.data);
+    };
+
+    var getHalfHourDemandVareExport$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1k,
         examples: examples$1k,
@@ -6668,8 +6806,8 @@
         toBytes: toBytes$1k
     });
 
-    const id$1j = getHalfHourDemandVare$2;
-    const name$1j = commandNames$1[getHalfHourDemandVare$2];
+    const id$1j = getHalfHourDemandVari$2;
+    const name$1j = commandNames$2[getHalfHourDemandVari$2];
     const headerSize$1j = 2;
     const maxSize$1j = 3;
     const accessLevel$1j = READ_ONLY;
@@ -6689,7 +6827,7 @@
                 }
             },
             bytes: [
-                0x49, 0x03,
+                0x48, 0x03,
                 0x18, 0x03, 0x16
             ]
         }
@@ -6701,10 +6839,10 @@
     const toBytes$1j = (parameters) => {
         const buffer = new CommandBinaryBuffer(maxSize$1j);
         buffer.setDate(parameters.date);
-        return toBytes$2f(id$1j, buffer.data);
+        return toBytes$2h(id$1j, buffer.data);
     };
 
-    var getHalfHourDemandVare$1 = /*#__PURE__*/Object.freeze({
+    var getHalfHourDemandVari$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1j,
         examples: examples$1j,
@@ -6717,8 +6855,8 @@
         toBytes: toBytes$1j
     });
 
-    const id$1i = getHalfHourDemandVareExport$2;
-    const name$1i = commandNames$1[getHalfHourDemandVareExport$2];
+    const id$1i = getHalfHourDemandVariExport$2;
+    const name$1i = commandNames$2[getHalfHourDemandVariExport$2];
     const headerSize$1i = 2;
     const maxSize$1i = 3;
     const accessLevel$1i = READ_ONLY;
@@ -6738,7 +6876,7 @@
                 }
             },
             bytes: [
-                0x55, 0x03,
+                0x54, 0x03,
                 0x18, 0x03, 0x16
             ]
         }
@@ -6750,10 +6888,10 @@
     const toBytes$1i = (parameters) => {
         const buffer = new CommandBinaryBuffer(maxSize$1i);
         buffer.setDate(parameters.date);
-        return toBytes$2f(id$1i, buffer.data);
+        return toBytes$2h(id$1i, buffer.data);
     };
 
-    var getHalfHourDemandVareExport$1 = /*#__PURE__*/Object.freeze({
+    var getHalfHourDemandVariExport$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1i,
         examples: examples$1i,
@@ -6766,43 +6904,34 @@
         toBytes: toBytes$1i
     });
 
-    const id$1h = getHalfHourDemandVari$2;
-    const name$1h = commandNames$1[getHalfHourDemandVari$2];
+    const id$1h = getOperatorParametersExtended$2;
+    const name$1h = commandNames$2[getOperatorParametersExtended$2];
     const headerSize$1h = 2;
-    const maxSize$1h = 3;
+    const maxSize$1h = 0;
     const accessLevel$1h = READ_ONLY;
     const isLoraOnly$1h = false;
     const examples$1h = {
-        'request archive values for 2024.03.22': {
+        'simple request': {
             id: id$1h,
             name: name$1h,
             headerSize: headerSize$1h,
             maxSize: maxSize$1h,
             accessLevel: accessLevel$1h,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 3,
-                    date: 22
-                }
-            },
+            parameters: {},
             bytes: [
-                0x48, 0x03,
-                0x18, 0x03, 0x16
+                0x3f, 0x00
             ]
         }
     };
     const fromBytes$1h = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        return { date: buffer.getDate() };
+        if (bytes.length !== maxSize$1h) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
     };
-    const toBytes$1h = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$1h);
-        buffer.setDate(parameters.date);
-        return toBytes$2f(id$1h, buffer.data);
-    };
+    const toBytes$1h = () => toBytes$2h(id$1h);
 
-    var getHalfHourDemandVari$1 = /*#__PURE__*/Object.freeze({
+    var getOperatorParametersExtended$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1h,
         examples: examples$1h,
@@ -6815,43 +6944,34 @@
         toBytes: toBytes$1h
     });
 
-    const id$1g = getHalfHourDemandVariExport$2;
-    const name$1g = commandNames$1[getHalfHourDemandVariExport$2];
+    const id$1g = getOperatorParametersExtended2$2;
+    const name$1g = commandNames$2[getOperatorParametersExtended2$2];
     const headerSize$1g = 2;
-    const maxSize$1g = 3;
+    const maxSize$1g = 0;
     const accessLevel$1g = READ_ONLY;
     const isLoraOnly$1g = false;
     const examples$1g = {
-        'request archive values for 2024.03.22': {
+        'simple request': {
             id: id$1g,
             name: name$1g,
             headerSize: headerSize$1g,
             maxSize: maxSize$1g,
             accessLevel: accessLevel$1g,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 3,
-                    date: 22
-                }
-            },
+            parameters: {},
             bytes: [
-                0x54, 0x03,
-                0x18, 0x03, 0x16
+                0x47, 0x00
             ]
         }
     };
     const fromBytes$1g = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        return { date: buffer.getDate() };
+        if (bytes.length !== maxSize$1g) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
     };
-    const toBytes$1g = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$1g);
-        buffer.setDate(parameters.date);
-        return toBytes$2f(id$1g, buffer.data);
-    };
+    const toBytes$1g = () => toBytes$2h(id$1g);
 
-    var getHalfHourDemandVariExport$1 = /*#__PURE__*/Object.freeze({
+    var getOperatorParametersExtended2$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1g,
         examples: examples$1g,
@@ -6864,8 +6984,8 @@
         toBytes: toBytes$1g
     });
 
-    const id$1f = getOperatorParametersExtended$2;
-    const name$1f = commandNames$1[getOperatorParametersExtended$2];
+    const id$1f = getOperatorParametersExtended4$2;
+    const name$1f = commandNames$2[getOperatorParametersExtended4$2];
     const headerSize$1f = 2;
     const maxSize$1f = 0;
     const accessLevel$1f = READ_ONLY;
@@ -6879,7 +6999,7 @@
             accessLevel: accessLevel$1f,
             parameters: {},
             bytes: [
-                0x3f, 0x00
+                0x75, 0x00
             ]
         }
     };
@@ -6889,9 +7009,9 @@
         }
         return {};
     };
-    const toBytes$1f = () => toBytes$2f(id$1f);
+    const toBytes$1f = () => toBytes$2h(id$1f);
 
-    var getOperatorParametersExtended$1 = /*#__PURE__*/Object.freeze({
+    var getOperatorParametersExtended4$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1f,
         examples: examples$1f,
@@ -6904,34 +7024,58 @@
         toBytes: toBytes$1f
     });
 
-    const id$1e = getOperatorParametersExtended2$2;
-    const name$1e = commandNames$1[getOperatorParametersExtended2$2];
+    const id$1e = setDisplayParam$2;
+    const name$1e = commandNames$2[setDisplayParam$2];
     const headerSize$1e = 2;
-    const maxSize$1e = 0;
-    const accessLevel$1e = READ_ONLY;
+    const maxSize$1e = 65;
+    const accessLevel$1e = READ_WRITE;
     const isLoraOnly$1e = false;
     const examples$1e = {
-        'simple request': {
+        'set params with order': {
             id: id$1e,
             name: name$1e,
             headerSize: headerSize$1e,
             maxSize: maxSize$1e,
             accessLevel: accessLevel$1e,
-            parameters: {},
+            parameters: {
+                displayMode: MAIN_1,
+                order: [4, 5, 6, 7]
+            },
             bytes: [
-                0x47, 0x00
+                0x5d, 0x05,
+                0x00,
+                0x04, 0x05, 0x06, 0x07
+            ]
+        },
+        'set params without order': {
+            id: id$1e,
+            name: name$1e,
+            headerSize: headerSize$1e,
+            maxSize: maxSize$1e,
+            accessLevel: accessLevel$1e,
+            parameters: {
+                displayMode: MAIN_2,
+                order: []
+            },
+            bytes: [
+                0x5d, 0x01,
+                0x01
             ]
         }
     };
     const fromBytes$1e = (bytes) => {
-        if (bytes.length !== maxSize$1e) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        if (bytes.length < 1 || bytes.length > maxSize$1e) {
+            throw new Error('Invalid SetDisplayParam data size.');
         }
-        return {};
+        const [displayMode, ...order] = bytes;
+        return { displayMode, order };
     };
-    const toBytes$1e = () => toBytes$2f(id$1e);
+    const toBytes$1e = (parameters) => (toBytes$2h(id$1e, [
+        parameters.displayMode,
+        ...parameters.order
+    ]));
 
-    var getOperatorParametersExtended2$1 = /*#__PURE__*/Object.freeze({
+    var setDisplayParam$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1e,
         examples: examples$1e,
@@ -6944,83 +7088,19 @@
         toBytes: toBytes$1e
     });
 
-    const id$1d = setDisplayParam$2;
-    const name$1d = commandNames$1[setDisplayParam$2];
+    const id$1d = setOperatorParameters$2;
+    const name$1d = commandNames$2[setOperatorParameters$2];
     const headerSize$1d = 2;
-    const maxSize$1d = 65;
+    const maxSize$1d = OPERATOR_PARAMETERS_SIZE;
     const accessLevel$1d = READ_WRITE;
     const isLoraOnly$1d = false;
     const examples$1d = {
-        'set params with order': {
-            id: id$1d,
-            name: name$1d,
-            headerSize: headerSize$1d,
-            maxSize: maxSize$1d,
-            accessLevel: accessLevel$1d,
-            parameters: {
-                displayMode: MAIN_1,
-                order: [4, 5, 6, 7]
-            },
-            bytes: [
-                0x5d, 0x05,
-                0x00,
-                0x04, 0x05, 0x06, 0x07
-            ]
-        },
-        'set params without order': {
-            id: id$1d,
-            name: name$1d,
-            headerSize: headerSize$1d,
-            maxSize: maxSize$1d,
-            accessLevel: accessLevel$1d,
-            parameters: {
-                displayMode: MAIN_2,
-                order: []
-            },
-            bytes: [
-                0x5d, 0x01,
-                0x01
-            ]
-        }
-    };
-    const fromBytes$1d = (bytes) => {
-        if (bytes.length < 1 || bytes.length > maxSize$1d) {
-            throw new Error('Invalid SetDisplayParam data size.');
-        }
-        const [displayMode, ...order] = bytes;
-        return { displayMode, order };
-    };
-    const toBytes$1d = (parameters) => (toBytes$2f(id$1d, [
-        parameters.displayMode,
-        ...parameters.order
-    ]));
-
-    var setDisplayParam$1 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$1d,
-        examples: examples$1d,
-        fromBytes: fromBytes$1d,
-        headerSize: headerSize$1d,
-        id: id$1d,
-        isLoraOnly: isLoraOnly$1d,
-        maxSize: maxSize$1d,
-        name: name$1d,
-        toBytes: toBytes$1d
-    });
-
-    const id$1c = setOperatorParameters$2;
-    const name$1c = commandNames$1[setOperatorParameters$2];
-    const headerSize$1c = 2;
-    const maxSize$1c = OPERATOR_PARAMETERS_SIZE;
-    const accessLevel$1c = READ_WRITE;
-    const isLoraOnly$1c = false;
-    const examples$1c = {
         'set default operator parameters request': {
-            id: id$1c,
-            name: name$1c,
-            headerSize: headerSize$1c,
-            maxSize: maxSize$1c,
-            accessLevel: accessLevel$1c,
+            id: id$1d,
+            name: name$1d,
+            headerSize: headerSize$1d,
+            maxSize: maxSize$1d,
+            accessLevel: accessLevel$1d,
             parameters: {
                 vpThreshold: 265000,
                 vThreshold: 156000,
@@ -7080,28 +7160,28 @@
                     VOLTAGE_IN_PHASE_B: false,
                     VOLTAGE_IN_PHASE_C: false,
                     BATTERY_VOLTAGE: false,
-                    FREQUENCY: false,
+                    SUPPLY_FREQUENCY: false,
                     ACTIVE_POWER_SUM: true,
                     ACTIVE_POWER_PHASE_A: false,
                     ACTIVE_POWER_PHASE_B: false,
                     ACTIVE_POWER_PHASE_C: false,
-                    REACTIVE_POWER_QPLUS_SUM: true,
+                    TOTAL_REACTIVE_POWER_QPLUS: true,
                     REACTIVE_POWER_QPLUS_PHASE_A: false,
                     REACTIVE_POWER_QPLUS_PHASE_B: false,
                     REACTIVE_POWER_QPLUS_PHASE_C: false,
-                    REACTIVE_POWER_QMINUS_SUM: true,
+                    TOTAL_REACTIVE_POWER_QMINUS: true,
                     REACTIVE_POWER_QMINUS_PHASE_A: false,
                     REACTIVE_POWER_QMINUS_PHASE_B: false,
                     REACTIVE_POWER_QMINUS_PHASE_C: false,
-                    POWER_COEFFICIENT_SUM: false,
+                    TOTAL_POWER_FACTOR: false,
                     POWER_COEFFICIENT_PHASE_A: false,
                     POWER_COEFFICIENT_PHASE_B: false,
                     POWER_COEFFICIENT_PHASE_C: false,
-                    APPARENT_POWER_QPLUS_SUM: false,
+                    TOTAL_APPARENT_POWER_QPLUS: false,
                     APPARENT_POWER_QPLUS_PHASE_A: false,
                     APPARENT_POWER_QPLUS_PHASE_B: false,
                     APPARENT_POWER_QPLUS_PHASE_C: false,
-                    APPARENT_POWER_QMINUS_SUM: false,
+                    TOTAL_APPARENT_POWER_QMINUS: false,
                     APPARENT_POWER_QMINUS_PHASE_A: false,
                     APPARENT_POWER_QMINUS_PHASE_B: false
                 },
@@ -7143,28 +7223,28 @@
                     RELAY_ON_Y: true,
                     RELAY_ON_CENTER: true,
                     RELAY_ON_PB: false,
-                    RELAY_ON_TARIFF_0: false,
                     RELAY_ON_TARIFF_1: false,
                     RELAY_ON_TARIFF_2: false,
                     RELAY_ON_TARIFF_3: false,
+                    RELAY_ON_TARIFF_4: false,
                     RELAY_ON_V_GOOD: false,
                     RELAY_OFF_Y: true,
                     RELAY_OFF_CENTER: true,
-                    RELAY_OFF_TARIFF_0: false,
                     RELAY_OFF_TARIFF_1: false,
                     RELAY_OFF_TARIFF_2: false,
                     RELAY_OFF_TARIFF_3: false,
+                    RELAY_OFF_TARIFF_4: false,
                     RELAY_OFF_I_LIMIT: false,
                     RELAY_OFF_V_BAD: false,
-                    RELAY_OFF_DIFF_BAD: false,
-                    RELAY_OFF_LIM_TARIFF_0: false,
+                    RELAY_OFF_DIFF_CURRENT_BAD: false,
                     RELAY_OFF_LIM_TARIFF_1: false,
                     RELAY_OFF_LIM_TARIFF_2: false,
                     RELAY_OFF_LIM_TARIFF_3: false,
-                    RELAY_OFF_LIM_VAR_TARIFF_0: false,
+                    RELAY_OFF_LIM_TARIFF_4: false,
                     RELAY_OFF_LIM_VAR_TARIFF_1: false,
                     RELAY_OFF_LIM_VAR_TARIFF_2: false,
                     RELAY_OFF_LIM_VAR_TARIFF_3: false,
+                    RELAY_OFF_LIM_VAR_TARIFF_4: false,
                     RELAY_ON_PF_MIN: false,
                     RELAY_OFF_PF_MIN: false,
                     RELAY_ON_TIMEOUT: false,
@@ -7208,14 +7288,14 @@
                     MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
                     MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
                     MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
                     HOUR_MINUTE_SECOND: true,
                     DATE_MONTH_YEAR: true,
                     CURRENT_TRANSFORMATION_RATIO: false,
@@ -7240,45 +7320,45 @@
             ]
         }
     };
-    const fromBytes$1c = (bytes) => {
-        if (bytes.length !== maxSize$1c) {
+    const fromBytes$1d = (bytes) => {
+        if (bytes.length !== maxSize$1d) {
             throw new Error('Invalid SetOpParams data size.');
         }
         const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getOperatorParameters();
     };
-    const toBytes$1c = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$1c);
+    const toBytes$1d = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$1d);
         buffer.setOperatorParameters(parameters);
-        return toBytes$2f(id$1c, buffer.data);
+        return toBytes$2h(id$1d, buffer.data);
     };
 
     var setOperatorParameters$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1c,
-        examples: examples$1c,
-        fromBytes: fromBytes$1c,
-        headerSize: headerSize$1c,
-        id: id$1c,
-        isLoraOnly: isLoraOnly$1c,
-        maxSize: maxSize$1c,
-        name: name$1c,
-        toBytes: toBytes$1c
+        accessLevel: accessLevel$1d,
+        examples: examples$1d,
+        fromBytes: fromBytes$1d,
+        headerSize: headerSize$1d,
+        id: id$1d,
+        isLoraOnly: isLoraOnly$1d,
+        maxSize: maxSize$1d,
+        name: name$1d,
+        toBytes: toBytes$1d
     });
 
-    const id$1b = setOperatorParametersExtended$2;
-    const name$1b = commandNames$1[setOperatorParametersExtended$2];
-    const headerSize$1b = 2;
-    const maxSize$1b = OPERATOR_PARAMETERS_EXTENDED_SIZE;
-    const accessLevel$1b = READ_WRITE;
-    const isLoraOnly$1b = false;
-    const examples$1b = {
+    const id$1c = setOperatorParametersExtended$2;
+    const name$1c = commandNames$2[setOperatorParametersExtended$2];
+    const headerSize$1c = 2;
+    const maxSize$1c = OPERATOR_PARAMETERS_EXTENDED_SIZE;
+    const accessLevel$1c = READ_WRITE;
+    const isLoraOnly$1c = false;
+    const examples$1c = {
         'simple request': {
-            id: id$1b,
-            name: name$1b,
-            headerSize: headerSize$1b,
-            maxSize: maxSize$1b,
-            accessLevel: accessLevel$1b,
+            id: id$1c,
+            name: name$1c,
+            headerSize: headerSize$1c,
+            maxSize: maxSize$1c,
+            accessLevel: accessLevel$1c,
             parameters: {
                 timeoutRelayOn: 1,
                 define1: {
@@ -7302,45 +7382,45 @@
             ]
         }
     };
-    const fromBytes$1b = (bytes) => {
-        if (bytes.length !== maxSize$1b) {
+    const fromBytes$1c = (bytes) => {
+        if (bytes.length !== maxSize$1c) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getOperatorParametersExtended();
     };
-    const toBytes$1b = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$1b);
+    const toBytes$1c = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$1c);
         buffer.setOperatorParametersExtended(parameters);
-        return toBytes$2f(id$1b, buffer.data);
+        return toBytes$2h(id$1c, buffer.data);
     };
 
     var setOperatorParametersExtended$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1b,
-        examples: examples$1b,
-        fromBytes: fromBytes$1b,
-        headerSize: headerSize$1b,
-        id: id$1b,
-        isLoraOnly: isLoraOnly$1b,
-        maxSize: maxSize$1b,
-        name: name$1b,
-        toBytes: toBytes$1b
+        accessLevel: accessLevel$1c,
+        examples: examples$1c,
+        fromBytes: fromBytes$1c,
+        headerSize: headerSize$1c,
+        id: id$1c,
+        isLoraOnly: isLoraOnly$1c,
+        maxSize: maxSize$1c,
+        name: name$1c,
+        toBytes: toBytes$1c
     });
 
-    const id$1a = setOperatorParametersExtended2$2;
-    const name$1a = commandNames$1[setOperatorParametersExtended2$2];
-    const headerSize$1a = 2;
-    const maxSize$1a = OPERATOR_PARAMETERS_EXTENDED2_SIZE;
-    const accessLevel$1a = READ_WRITE;
-    const isLoraOnly$1a = false;
-    const examples$1a = {
+    const id$1b = setOperatorParametersExtended2$2;
+    const name$1b = commandNames$2[setOperatorParametersExtended2$2];
+    const headerSize$1b = 2;
+    const maxSize$1b = OPERATOR_PARAMETERS_EXTENDED2_SIZE;
+    const accessLevel$1b = READ_WRITE;
+    const isLoraOnly$1b = false;
+    const examples$1b = {
         'simple request': {
-            id: id$1a,
-            name: name$1a,
-            headerSize: headerSize$1a,
-            maxSize: maxSize$1a,
-            accessLevel: accessLevel$1a,
+            id: id$1b,
+            name: name$1b,
+            headerSize: headerSize$1b,
+            maxSize: maxSize$1b,
+            accessLevel: accessLevel$1b,
             parameters: {
                 deltaCorMin: 15,
                 timeoutMagnetOff: 5,
@@ -7350,7 +7430,7 @@
                     RELAY_ON_MAGNET_AUTO: true
                 },
                 timeoutMagnetOn: 5,
-                phaseDefault: 1,
+                defaultPlcPhase: 1,
                 displaySet21: {
                     SET_ALL_SEGMENT_DISPLAY: false,
                     SOFTWARE_VERSION: false,
@@ -7394,28 +7474,28 @@
                     VOLTAGE_IN_PHASE_B: false,
                     VOLTAGE_IN_PHASE_C: false,
                     BATTERY_VOLTAGE: false,
-                    FREQUENCY: false,
+                    SUPPLY_FREQUENCY: false,
                     ACTIVE_POWER_SUM: false,
                     ACTIVE_POWER_PHASE_A: false,
                     ACTIVE_POWER_PHASE_B: false,
                     ACTIVE_POWER_PHASE_C: false,
-                    REACTIVE_POWER_QPLUS_SUM: false,
+                    TOTAL_REACTIVE_POWER_QPLUS: false,
                     REACTIVE_POWER_QPLUS_PHASE_A: false,
                     REACTIVE_POWER_QPLUS_PHASE_B: false,
                     REACTIVE_POWER_QPLUS_PHASE_C: false,
-                    REACTIVE_POWER_QMINUS_SUM: false,
+                    TOTAL_REACTIVE_POWER_QMINUS: false,
                     REACTIVE_POWER_QMINUS_PHASE_A: false,
                     REACTIVE_POWER_QMINUS_PHASE_B: false,
                     REACTIVE_POWER_QMINUS_PHASE_C: false,
-                    POWER_COEFFICIENT_SUM: false,
+                    TOTAL_POWER_FACTOR: false,
                     POWER_COEFFICIENT_PHASE_A: false,
                     POWER_COEFFICIENT_PHASE_B: false,
                     POWER_COEFFICIENT_PHASE_C: false,
-                    APPARENT_POWER_QPLUS_SUM: false,
+                    TOTAL_APPARENT_POWER_QPLUS: false,
                     APPARENT_POWER_QPLUS_PHASE_A: false,
                     APPARENT_POWER_QPLUS_PHASE_B: false,
                     APPARENT_POWER_QPLUS_PHASE_C: false,
-                    APPARENT_POWER_QMINUS_SUM: false,
+                    TOTAL_APPARENT_POWER_QMINUS: false,
                     APPARENT_POWER_QMINUS_PHASE_A: false,
                     APPARENT_POWER_QMINUS_PHASE_B: false
                 },
@@ -7463,14 +7543,14 @@
                     MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
                     MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
                     MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
                     HOUR_MINUTE_SECOND: false,
                     DATE_MONTH_YEAR: false,
                     CURRENT_TRANSFORMATION_RATIO: false,
@@ -7513,45 +7593,45 @@
             ]
         }
     };
-    const fromBytes$1a = (bytes) => {
-        if (bytes.length !== maxSize$1a) {
+    const fromBytes$1b = (bytes) => {
+        if (bytes.length !== maxSize$1b) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getOperatorParametersExtended2();
     };
-    const toBytes$1a = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$1a);
+    const toBytes$1b = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$1b);
         buffer.setOperatorParametersExtended2(parameters);
-        return toBytes$2f(id$1a, buffer.data);
+        return toBytes$2h(id$1b, buffer.data);
     };
 
     var setOperatorParametersExtended2$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$1a,
-        examples: examples$1a,
-        fromBytes: fromBytes$1a,
-        headerSize: headerSize$1a,
-        id: id$1a,
-        isLoraOnly: isLoraOnly$1a,
-        maxSize: maxSize$1a,
-        name: name$1a,
-        toBytes: toBytes$1a
+        accessLevel: accessLevel$1b,
+        examples: examples$1b,
+        fromBytes: fromBytes$1b,
+        headerSize: headerSize$1b,
+        id: id$1b,
+        isLoraOnly: isLoraOnly$1b,
+        maxSize: maxSize$1b,
+        name: name$1b,
+        toBytes: toBytes$1b
     });
 
-    const id$19 = setOperatorParametersExtended4$2;
-    const name$19 = commandNames$1[setOperatorParametersExtended4$2];
-    const headerSize$19 = 2;
-    const maxSize$19 = OPERATOR_PARAMETERS_EXTENDED4_SIZE;
-    const accessLevel$19 = READ_WRITE;
-    const isLoraOnly$19 = false;
-    const examples$19 = {
+    const id$1a = setOperatorParametersExtended4$2;
+    const name$1a = commandNames$2[setOperatorParametersExtended4$2];
+    const headerSize$1a = 2;
+    const maxSize$1a = OPERATOR_PARAMETERS_EXTENDED4_SIZE;
+    const accessLevel$1a = READ_WRITE;
+    const isLoraOnly$1a = false;
+    const examples$1a = {
         'simple request': {
-            id: id$19,
-            name: name$19,
-            headerSize: headerSize$19,
-            maxSize: maxSize$19,
-            accessLevel: accessLevel$19,
+            id: id$1a,
+            name: name$1a,
+            headerSize: headerSize$1a,
+            maxSize: maxSize$1a,
+            accessLevel: accessLevel$1a,
             parameters: {
                 displaySet5: {
                     EVENT: true,
@@ -7572,82 +7652,14 @@
                     PROFILE_P06: true
                 },
                 displaySet31: {
-                    SET_ALL_SEGMENT_DISPLAY: false,
+                    SET_ALL_SEGMENT_DISPLAY: true,
                     SOFTWARE_VERSION: false,
-                    TOTAL_ACTIVE_ENERGY: false,
+                    TOTAL_ACTIVE_ENERGY: true,
                     ACTIVE_ENERGY_T1: false,
                     ACTIVE_ENERGY_T2: false,
-                    ACTIVE_ENERGY_T3: true,
-                    ACTIVE_ENERGY_T4: false,
-                    TOTAL_REACTIVE_ENERGY: false,
-                    REACTIVE_ENERGY_T1: false,
-                    REACTIVE_ENERGY_T2: true,
-                    REACTIVE_ENERGY_T3: false,
-                    REACTIVE_ENERGY_T4: false,
-                    TOTAL_NEGATIVE_REACTIVE_ENERGY: false,
-                    NEGATIVE_REACTIVE_ENERGY_T1: false,
-                    NEGATIVE_REACTIVE_ENERGY_T2: false,
-                    NEGATIVE_REACTIVE_ENERGY_T3: false,
-                    NEGATIVE_REACTIVE_ENERGY_T4: false,
-                    TOTAL_EXPORTED_ACTIVE_ENERGY: false,
-                    EXPORTED_ACTIVE_ENERGY_T1: true,
-                    EXPORTED_ACTIVE_ENERGY_T2: false,
-                    EXPORTED_ACTIVE_ENERGY_T3: false,
-                    EXPORTED_ACTIVE_ENERGY_T4: false,
-                    TOTAL_EXPORTED_REACTIVE_ENERGY: false,
-                    EXPORTED_REACTIVE_ENERGY_T1: false,
-                    EXPORTED_REACTIVE_ENERGY_T2: false,
-                    EXPORTED_REACTIVE_ENERGY_T3: false,
-                    EXPORTED_REACTIVE_ENERGY_T4: false,
-                    TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: false,
-                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T1: false,
-                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T2: false,
-                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T3: true,
-                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T4: false
-                },
-                displaySet32: {
-                    SET_ALL_SEGMENT_DISPLAY: false,
-                    SOFTWARE_VERSION: true,
-                    TOTAL_ACTIVE_ENERGY: false,
-                    ACTIVE_ENERGY_T1: false,
-                    ACTIVE_ENERGY_T2: false,
-                    ACTIVE_ENERGY_T3: true,
-                    ACTIVE_ENERGY_T4: false,
-                    TOTAL_REACTIVE_ENERGY: false,
-                    REACTIVE_ENERGY_T1: false,
-                    REACTIVE_ENERGY_T2: false,
-                    REACTIVE_ENERGY_T3: false,
-                    REACTIVE_ENERGY_T4: true,
-                    TOTAL_NEGATIVE_REACTIVE_ENERGY: false,
-                    NEGATIVE_REACTIVE_ENERGY_T1: false,
-                    NEGATIVE_REACTIVE_ENERGY_T2: false,
-                    NEGATIVE_REACTIVE_ENERGY_T3: false,
-                    NEGATIVE_REACTIVE_ENERGY_T4: false,
-                    TOTAL_EXPORTED_ACTIVE_ENERGY: false,
-                    EXPORTED_ACTIVE_ENERGY_T1: false,
-                    EXPORTED_ACTIVE_ENERGY_T2: false,
-                    EXPORTED_ACTIVE_ENERGY_T3: false,
-                    EXPORTED_ACTIVE_ENERGY_T4: false,
-                    TOTAL_EXPORTED_REACTIVE_ENERGY: false,
-                    EXPORTED_REACTIVE_ENERGY_T1: false,
-                    EXPORTED_REACTIVE_ENERGY_T2: true,
-                    EXPORTED_REACTIVE_ENERGY_T3: false,
-                    EXPORTED_REACTIVE_ENERGY_T4: false,
-                    TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: false,
-                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T1: false,
-                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T2: false,
-                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T3: false,
-                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T4: false
-                },
-                displaySet33: {
-                    SET_ALL_SEGMENT_DISPLAY: false,
-                    SOFTWARE_VERSION: false,
-                    TOTAL_ACTIVE_ENERGY: false,
-                    ACTIVE_ENERGY_T1: true,
-                    ACTIVE_ENERGY_T2: true,
                     ACTIVE_ENERGY_T3: false,
                     ACTIVE_ENERGY_T4: false,
-                    TOTAL_REACTIVE_ENERGY: false,
+                    TOTAL_REACTIVE_ENERGY: true,
                     REACTIVE_ENERGY_T1: false,
                     REACTIVE_ENERGY_T2: false,
                     REACTIVE_ENERGY_T3: false,
@@ -7666,46 +7678,110 @@
                     EXPORTED_REACTIVE_ENERGY_T1: false,
                     EXPORTED_REACTIVE_ENERGY_T2: false,
                     EXPORTED_REACTIVE_ENERGY_T3: false,
-                    EXPORTED_REACTIVE_ENERGY_T4: true,
-                    TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: true,
+                    EXPORTED_REACTIVE_ENERGY_T4: false,
+                    TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: false,
                     EXPORTED_NEGATIVE_REACTIVE_ENERGY_T1: false,
                     EXPORTED_NEGATIVE_REACTIVE_ENERGY_T2: false,
                     EXPORTED_NEGATIVE_REACTIVE_ENERGY_T3: false,
                     EXPORTED_NEGATIVE_REACTIVE_ENERGY_T4: false
                 },
+                displaySet32: {
+                    CURRENT_IN_PHASE_A: false,
+                    CURRENT_IN_PHASE_B: false,
+                    CURRENT_IN_PHASE_C: false,
+                    CURRENT_IN_NEUTRAL: false,
+                    VOLTAGE_IN_PHASE_A: false,
+                    VOLTAGE_IN_PHASE_B: false,
+                    VOLTAGE_IN_PHASE_C: false,
+                    BATTERY_VOLTAGE: false,
+                    SUPPLY_FREQUENCY: false,
+                    ACTIVE_POWER_SUM: true,
+                    ACTIVE_POWER_PHASE_A: false,
+                    ACTIVE_POWER_PHASE_B: false,
+                    ACTIVE_POWER_PHASE_C: false,
+                    TOTAL_REACTIVE_POWER_QPLUS: true,
+                    REACTIVE_POWER_QPLUS_PHASE_A: false,
+                    REACTIVE_POWER_QPLUS_PHASE_B: false,
+                    REACTIVE_POWER_QPLUS_PHASE_C: false,
+                    TOTAL_REACTIVE_POWER_QMINUS: true,
+                    REACTIVE_POWER_QMINUS_PHASE_A: false,
+                    REACTIVE_POWER_QMINUS_PHASE_B: false,
+                    REACTIVE_POWER_QMINUS_PHASE_C: false,
+                    TOTAL_POWER_FACTOR: false,
+                    POWER_COEFFICIENT_PHASE_A: false,
+                    POWER_COEFFICIENT_PHASE_B: false,
+                    POWER_COEFFICIENT_PHASE_C: false,
+                    TOTAL_APPARENT_POWER_QPLUS: false,
+                    APPARENT_POWER_QPLUS_PHASE_A: false,
+                    APPARENT_POWER_QPLUS_PHASE_B: false,
+                    APPARENT_POWER_QPLUS_PHASE_C: false,
+                    TOTAL_APPARENT_POWER_QMINUS: false,
+                    APPARENT_POWER_QMINUS_PHASE_A: false,
+                    APPARENT_POWER_QMINUS_PHASE_B: false
+                },
+                displaySet33: {
+                    APPARENT_POWER_QMINUS_PHASE_C: false,
+                    MAX_ACTIVE_POWER_DAY_T1: false,
+                    MAX_ACTIVE_POWER_DAY_T2: false,
+                    MAX_ACTIVE_POWER_DAY_T3: false,
+                    MAX_ACTIVE_POWER_DAY_T4: false,
+                    MAX_ACTIVE_POWER_MONTH_T1: false,
+                    MAX_ACTIVE_POWER_MONTH_T2: false,
+                    MAX_ACTIVE_POWER_MONTH_T3: false,
+                    MAX_ACTIVE_POWER_MONTH_T4: false,
+                    MAX_REACTIVE_POWER_DAY_T1: false,
+                    MAX_REACTIVE_POWER_DAY_T2: false,
+                    MAX_REACTIVE_POWER_DAY_T3: false,
+                    MAX_REACTIVE_POWER_DAY_T4: false,
+                    MAX_REACTIVE_POWER_MONTH_T1: false,
+                    MAX_REACTIVE_POWER_MONTH_T2: false,
+                    MAX_REACTIVE_POWER_MONTH_T3: false,
+                    MAX_REACTIVE_POWER_MONTH_T4: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
+                    MAX_EXPORTED_ACTIVE_POWER_DAY_T1: false,
+                    MAX_EXPORTED_ACTIVE_POWER_DAY_T2: false,
+                    MAX_EXPORTED_ACTIVE_POWER_DAY_T3: false,
+                    MAX_EXPORTED_ACTIVE_POWER_DAY_T4: false,
+                    MAX_EXPORTED_ACTIVE_POWER_MONTH_T1: false,
+                    MAX_EXPORTED_ACTIVE_POWER_MONTH_T2: false,
+                    MAX_EXPORTED_ACTIVE_POWER_MONTH_T3: false
+                },
                 displaySet34: {
-                    SET_ALL_SEGMENT_DISPLAY: false,
-                    SOFTWARE_VERSION: false,
-                    TOTAL_ACTIVE_ENERGY: false,
-                    ACTIVE_ENERGY_T1: true,
-                    ACTIVE_ENERGY_T2: true,
-                    ACTIVE_ENERGY_T3: false,
-                    ACTIVE_ENERGY_T4: false,
-                    TOTAL_REACTIVE_ENERGY: false,
-                    REACTIVE_ENERGY_T1: false,
-                    REACTIVE_ENERGY_T2: false,
-                    REACTIVE_ENERGY_T3: false,
-                    REACTIVE_ENERGY_T4: false,
-                    TOTAL_NEGATIVE_REACTIVE_ENERGY: false,
-                    NEGATIVE_REACTIVE_ENERGY_T1: false,
-                    NEGATIVE_REACTIVE_ENERGY_T2: false,
-                    NEGATIVE_REACTIVE_ENERGY_T3: false,
-                    NEGATIVE_REACTIVE_ENERGY_T4: false,
-                    TOTAL_EXPORTED_ACTIVE_ENERGY: false,
-                    EXPORTED_ACTIVE_ENERGY_T1: false,
-                    EXPORTED_ACTIVE_ENERGY_T2: true,
-                    EXPORTED_ACTIVE_ENERGY_T3: true,
-                    EXPORTED_ACTIVE_ENERGY_T4: false,
-                    TOTAL_EXPORTED_REACTIVE_ENERGY: false,
-                    EXPORTED_REACTIVE_ENERGY_T1: false,
-                    EXPORTED_REACTIVE_ENERGY_T2: false,
-                    EXPORTED_REACTIVE_ENERGY_T3: false,
-                    EXPORTED_REACTIVE_ENERGY_T4: false,
-                    TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: false,
-                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T1: false,
-                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T2: false,
-                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T3: true,
-                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T4: false
+                    MAX_EXPORTED_ACTIVE_POWER_MONTH_T4: false,
+                    MAX_EXPORTED_REACTIVE_POWER_DAY_T1: false,
+                    MAX_EXPORTED_REACTIVE_POWER_DAY_T2: false,
+                    MAX_EXPORTED_REACTIVE_POWER_DAY_T3: false,
+                    MAX_EXPORTED_REACTIVE_POWER_DAY_T4: false,
+                    MAX_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
+                    MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
+                    MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
+                    MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
+                    HOUR_MINUTE_SECOND: true,
+                    DATE_MONTH_YEAR: true,
+                    CURRENT_TRANSFORMATION_RATIO: false,
+                    VOLTAGE_TRANSFORMATION_RATIO: false,
+                    CURRENT_BALANCE: false,
+                    POWER_THRESHOLD_T1: false,
+                    POWER_THRESHOLD_T2: false,
+                    POWER_THRESHOLD_T3: false,
+                    POWER_THRESHOLD_T4: false,
+                    SORT_DISPLAY_SCREENS: false,
+                    AUTO_SCREEN_SCROLLING: true
                 },
                 displaySet35: {
                     EVENT: false,
@@ -7721,38 +7797,38 @@
                 0x74, 0x1c,
                 0x00, 0x00, 0x00, 0x5b,
                 0x00, 0x00, 0x00, 0x55,
-                0x40, 0x04, 0x02, 0x20,
-                0x01, 0x00, 0x08, 0x22,
-                0x0c, 0x00, 0x10, 0x18,
-                0x40, 0x18, 0x00, 0x18,
+                0x00, 0x00, 0x10, 0x85,
+                0x00, 0x02, 0x22, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x80, 0x06, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x1c
             ]
         }
     };
-    const fromBytes$19 = (bytes) => {
-        if (bytes.length !== maxSize$19) {
+    const fromBytes$1a = (bytes) => {
+        if (bytes.length !== maxSize$1a) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getOperatorParametersExtended4();
     };
-    const toBytes$19 = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$19);
+    const toBytes$1a = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$1a);
         buffer.setOperatorParametersExtended4(parameters);
-        return toBytes$2f(id$19, buffer.data);
+        return toBytes$2h(id$1a, buffer.data);
     };
 
     var setOperatorParametersExtended4$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$19,
-        examples: examples$19,
-        fromBytes: fromBytes$19,
-        headerSize: headerSize$19,
-        id: id$19,
-        isLoraOnly: isLoraOnly$19,
-        maxSize: maxSize$19,
-        name: name$19,
-        toBytes: toBytes$19
+        accessLevel: accessLevel$1a,
+        examples: examples$1a,
+        fromBytes: fromBytes$1a,
+        headerSize: headerSize$1a,
+        id: id$1a,
+        isLoraOnly: isLoraOnly$1a,
+        maxSize: maxSize$1a,
+        name: name$1a,
+        toBytes: toBytes$1a
     });
 
     var downlink = /*#__PURE__*/Object.freeze({
@@ -7799,6 +7875,7 @@
         getOperatorParametersExtended: getOperatorParametersExtended$1,
         getOperatorParametersExtended2: getOperatorParametersExtended2$1,
         getOperatorParametersExtended3: getOperatorParametersExtended3$2,
+        getOperatorParametersExtended4: getOperatorParametersExtended4$1,
         getRatePlanInfo: getRatePlanInfo$2,
         getSaldo: getSaldo$2,
         getSaldoParameters: getSaldoParameters$2,
@@ -7829,59 +7906,59 @@
         turnRelayOn: turnRelayOn$2
     });
 
-    const id$18 = activateRatePlan$3;
-    const name$18 = commandNames$2[activateRatePlan$3];
-    const headerSize$18 = 2;
-    const maxSize$18 = 0;
-    const accessLevel$18 = READ_WRITE;
-    const isLoraOnly$18 = false;
-    const examples$18 = {
+    const id$19 = activateRatePlan$3;
+    const name$19 = commandNames$1[activateRatePlan$3];
+    const headerSize$19 = 2;
+    const maxSize$19 = 0;
+    const accessLevel$19 = READ_WRITE;
+    const isLoraOnly$19 = false;
+    const examples$19 = {
         'simple response': {
-            id: id$18,
-            name: name$18,
-            headerSize: headerSize$18,
-            maxSize: maxSize$18,
-            accessLevel: accessLevel$18,
+            id: id$19,
+            name: name$19,
+            headerSize: headerSize$19,
+            maxSize: maxSize$19,
+            accessLevel: accessLevel$19,
             parameters: {},
             bytes: [
                 0x13, 0x00
             ]
         }
     };
-    const fromBytes$18 = (bytes) => {
-        if (bytes.length !== maxSize$18) {
+    const fromBytes$19 = (bytes) => {
+        if (bytes.length !== maxSize$19) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         return {};
     };
-    const toBytes$18 = () => toBytes$2f(id$18);
+    const toBytes$19 = () => toBytes$2h(id$19);
 
     var activateRatePlan = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$18,
-        examples: examples$18,
-        fromBytes: fromBytes$18,
-        headerSize: headerSize$18,
-        id: id$18,
-        isLoraOnly: isLoraOnly$18,
-        maxSize: maxSize$18,
-        name: name$18,
-        toBytes: toBytes$18
+        accessLevel: accessLevel$19,
+        examples: examples$19,
+        fromBytes: fromBytes$19,
+        headerSize: headerSize$19,
+        id: id$19,
+        isLoraOnly: isLoraOnly$19,
+        maxSize: maxSize$19,
+        name: name$19,
+        toBytes: toBytes$19
     });
 
-    const id$17 = getBuildVersion$3;
-    const name$17 = commandNames$2[getBuildVersion$3];
-    const headerSize$17 = 2;
-    const maxSize$17 = 6;
-    const accessLevel$17 = READ_ONLY;
-    const isLoraOnly$17 = false;
-    const examples$17 = {
+    const id$18 = getBuildVersion$3;
+    const name$18 = commandNames$1[getBuildVersion$3];
+    const headerSize$18 = 2;
+    const maxSize$18 = 6;
+    const accessLevel$18 = READ_ONLY;
+    const isLoraOnly$18 = false;
+    const examples$18 = {
         '2021.09.16/0.0.9': {
-            id: id$17,
-            name: name$17,
-            headerSize: headerSize$17,
-            maxSize: maxSize$17,
-            accessLevel: accessLevel$17,
+            id: id$18,
+            name: name$18,
+            headerSize: headerSize$18,
+            maxSize: maxSize$18,
+            accessLevel: accessLevel$18,
             parameters: {
                 date: {
                     date: 16,
@@ -7896,8 +7973,8 @@
             ]
         }
     };
-    const fromBytes$17 = (bytes) => {
-        if (bytes.length !== maxSize$17) {
+    const fromBytes$18 = (bytes) => {
+        if (bytes.length !== maxSize$18) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         const [date, month, year, n3, n2, n1] = bytes;
@@ -7910,38 +7987,38 @@
             version: `${n3}.${n2}.${n1}`
         };
     };
-    const toBytes$17 = (parameters) => {
+    const toBytes$18 = (parameters) => {
         const { date, version } = parameters;
         const versionParts = version.split('.').map(part => parseInt(part, 10));
-        return toBytes$2f(id$17, [date.date, date.month, date.year, ...versionParts]);
+        return toBytes$2h(id$18, [date.date, date.month, date.year, ...versionParts]);
     };
 
     var getBuildVersion = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$17,
-        examples: examples$17,
-        fromBytes: fromBytes$17,
-        headerSize: headerSize$17,
-        id: id$17,
-        isLoraOnly: isLoraOnly$17,
-        maxSize: maxSize$17,
-        name: name$17,
-        toBytes: toBytes$17
+        accessLevel: accessLevel$18,
+        examples: examples$18,
+        fromBytes: fromBytes$18,
+        headerSize: headerSize$18,
+        id: id$18,
+        isLoraOnly: isLoraOnly$18,
+        maxSize: maxSize$18,
+        name: name$18,
+        toBytes: toBytes$18
     });
 
-    const id$16 = getCorrectTime$3;
-    const name$16 = commandNames$2[getCorrectTime$3];
-    const headerSize$16 = 2;
-    const accessLevel$16 = READ_ONLY;
-    const maxSize$16 = 9;
-    const isLoraOnly$16 = false;
-    const examples$16 = {
+    const id$17 = getCorrectTime$3;
+    const name$17 = commandNames$1[getCorrectTime$3];
+    const headerSize$17 = 2;
+    const accessLevel$17 = READ_ONLY;
+    const maxSize$17 = 9;
+    const isLoraOnly$17 = false;
+    const examples$17 = {
         'default parameters': {
-            id: id$16,
-            name: name$16,
-            headerSize: headerSize$16,
-            maxSize: maxSize$16,
-            accessLevel: accessLevel$16,
+            id: id$17,
+            name: name$17,
+            headerSize: headerSize$17,
+            maxSize: maxSize$17,
+            accessLevel: accessLevel$17,
             parameters: {
                 monthTransitionSummer: 3,
                 dateTransitionSummer: 0,
@@ -7959,42 +8036,42 @@
             ]
         }
     };
-    const fromBytes$16 = (bytes) => {
+    const fromBytes$17 = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return buffer.getTimeCorrectionParameters();
     };
-    const toBytes$16 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$16);
+    const toBytes$17 = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$17);
         buffer.setTimeCorrectionParameters(parameters);
-        return toBytes$2f(id$16, buffer.data);
+        return toBytes$2h(id$17, buffer.data);
     };
 
     var getCorrectTime = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$16,
-        examples: examples$16,
-        fromBytes: fromBytes$16,
-        headerSize: headerSize$16,
-        id: id$16,
-        isLoraOnly: isLoraOnly$16,
-        maxSize: maxSize$16,
-        name: name$16,
-        toBytes: toBytes$16
+        accessLevel: accessLevel$17,
+        examples: examples$17,
+        fromBytes: fromBytes$17,
+        headerSize: headerSize$17,
+        id: id$17,
+        isLoraOnly: isLoraOnly$17,
+        maxSize: maxSize$17,
+        name: name$17,
+        toBytes: toBytes$17
     });
 
-    const id$15 = getDateTime$3;
-    const name$15 = commandNames$2[getDateTime$3];
-    const headerSize$15 = 2;
-    const maxSize$15 = 8;
-    const accessLevel$15 = READ_ONLY;
-    const isLoraOnly$15 = false;
-    const examples$15 = {
+    const id$16 = getDateTime$3;
+    const name$16 = commandNames$1[getDateTime$3];
+    const headerSize$16 = 2;
+    const maxSize$16 = 8;
+    const accessLevel$16 = READ_ONLY;
+    const isLoraOnly$16 = false;
+    const examples$16 = {
         'time: 2024.02.19 18:31:55': {
-            id: id$15,
-            name: name$15,
-            headerSize: headerSize$15,
-            maxSize: maxSize$15,
-            accessLevel: accessLevel$15,
+            id: id$16,
+            name: name$16,
+            headerSize: headerSize$16,
+            maxSize: maxSize$16,
+            accessLevel: accessLevel$16,
             parameters: {
                 isSummerTime: false,
                 seconds: 55,
@@ -8011,44 +8088,44 @@
             ]
         }
     };
-    const fromBytes$15 = (bytes) => {
+    const fromBytes$16 = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return buffer.getDateTime();
     };
-    const toBytes$15 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$15);
+    const toBytes$16 = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$16);
         buffer.setDateTime(parameters);
-        return toBytes$2f(id$15, buffer.data);
+        return toBytes$2h(id$16, buffer.data);
     };
 
     var getDateTime = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$15,
-        examples: examples$15,
-        fromBytes: fromBytes$15,
-        headerSize: headerSize$15,
-        id: id$15,
-        isLoraOnly: isLoraOnly$15,
-        maxSize: maxSize$15,
-        name: name$15,
-        toBytes: toBytes$15
+        accessLevel: accessLevel$16,
+        examples: examples$16,
+        fromBytes: fromBytes$16,
+        headerSize: headerSize$16,
+        id: id$16,
+        isLoraOnly: isLoraOnly$16,
+        maxSize: maxSize$16,
+        name: name$16,
+        toBytes: toBytes$16
     });
 
     const MAX_PERIODS_NUMBER = 8;
     const PERIODS_FINAL_BYTE = 0xff;
-    const id$14 = getDayProfile$3;
-    const name$14 = commandNames$2[getDayProfile$3];
-    const headerSize$14 = 2;
-    const maxSize$14 = MAX_PERIODS_NUMBER;
-    const accessLevel$14 = READ_ONLY;
-    const isLoraOnly$14 = false;
-    const examples$14 = {
+    const id$15 = getDayProfile$3;
+    const name$15 = commandNames$1[getDayProfile$3];
+    const headerSize$15 = 2;
+    const maxSize$15 = MAX_PERIODS_NUMBER;
+    const accessLevel$15 = READ_ONLY;
+    const isLoraOnly$15 = false;
+    const examples$15 = {
         'full periods response': {
-            id: id$14,
-            name: name$14,
-            headerSize: headerSize$14,
-            maxSize: maxSize$14,
-            accessLevel: accessLevel$14,
+            id: id$15,
+            name: name$15,
+            headerSize: headerSize$15,
+            maxSize: maxSize$15,
+            accessLevel: accessLevel$15,
             parameters: {
                 periods: [
                     { tariff: 0, isFirstHalfHour: true, hour: 2 },
@@ -8067,11 +8144,11 @@
             ]
         },
         'response with 4 periods': {
-            id: id$14,
-            name: name$14,
-            headerSize: headerSize$14,
-            maxSize: maxSize$14,
-            accessLevel: accessLevel$14,
+            id: id$15,
+            name: name$15,
+            headerSize: headerSize$15,
+            maxSize: maxSize$15,
+            accessLevel: accessLevel$15,
             parameters: {
                 periods: [
                     { tariff: 0, isFirstHalfHour: true, hour: 2 },
@@ -8086,14 +8163,14 @@
             ]
         }
     };
-    const fromBytes$14 = (bytes) => {
+    const fromBytes$15 = (bytes) => {
         const finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE);
         const cleanData = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
         return {
             periods: [...cleanData].map(CommandBinaryBuffer$2.getDayProfileFromByte)
         };
     };
-    const toBytes$14 = (parameters) => {
+    const toBytes$15 = (parameters) => {
         const hasPeriodsFinalByte = parameters.periods.length < MAX_PERIODS_NUMBER;
         const size = parameters.periods.length + +hasPeriodsFinalByte;
         const buffer = new CommandBinaryBuffer$2(size);
@@ -8103,35 +8180,35 @@
         if (hasPeriodsFinalByte) {
             buffer.setUint8(PERIODS_FINAL_BYTE);
         }
-        return toBytes$2f(id$14, buffer.data);
+        return toBytes$2h(id$15, buffer.data);
     };
 
     var getDayProfile = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$14,
-        examples: examples$14,
-        fromBytes: fromBytes$14,
-        headerSize: headerSize$14,
-        id: id$14,
-        isLoraOnly: isLoraOnly$14,
-        maxSize: maxSize$14,
-        name: name$14,
-        toBytes: toBytes$14
+        accessLevel: accessLevel$15,
+        examples: examples$15,
+        fromBytes: fromBytes$15,
+        headerSize: headerSize$15,
+        id: id$15,
+        isLoraOnly: isLoraOnly$15,
+        maxSize: maxSize$15,
+        name: name$15,
+        toBytes: toBytes$15
     });
 
-    const id$13 = getDeviceId$3;
-    const name$13 = commandNames$2[getDeviceId$3];
-    const headerSize$13 = 2;
-    const accessLevel$13 = READ_ONLY;
-    const maxSize$13 = 8;
-    const isLoraOnly$13 = false;
-    const examples$13 = {
+    const id$14 = getDeviceId$3;
+    const name$14 = commandNames$1[getDeviceId$3];
+    const headerSize$14 = 2;
+    const accessLevel$14 = READ_ONLY;
+    const maxSize$14 = 8;
+    const isLoraOnly$14 = false;
+    const examples$14 = {
         'simple response': {
-            id: id$13,
-            name: name$13,
-            headerSize: headerSize$13,
-            accessLevel: accessLevel$13,
-            maxSize: maxSize$13,
+            id: id$14,
+            name: name$14,
+            headerSize: headerSize$14,
+            accessLevel: accessLevel$14,
+            maxSize: maxSize$14,
             parameters: {
                 manufacturer: '001a79',
                 type: 23,
@@ -8144,17 +8221,90 @@
             ]
         }
     };
-    const fromBytes$13 = (bytes) => {
+    const fromBytes$14 = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return buffer.getDeviceId();
     };
-    const toBytes$13 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$13);
+    const toBytes$14 = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$14);
         buffer.setDeviceId(parameters);
-        return toBytes$2f(id$13, buffer.data);
+        return toBytes$2h(id$14, buffer.data);
     };
 
     var getDeviceId = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$14,
+        examples: examples$14,
+        fromBytes: fromBytes$14,
+        headerSize: headerSize$14,
+        id: id$14,
+        isLoraOnly: isLoraOnly$14,
+        maxSize: maxSize$14,
+        name: name$14,
+        toBytes: toBytes$14
+    });
+
+    const id$13 = getDeviceType$3;
+    const name$13 = commandNames$1[getDeviceType$3];
+    const headerSize$13 = 2;
+    const accessLevel$13 = READ_ONLY;
+    const maxSize$13 = 9;
+    const isLoraOnly$13 = false;
+    const examples$13 = {
+        'type 1': {
+            id: id$13,
+            name: name$13,
+            headerSize: headerSize$13,
+            maxSize: maxSize$13,
+            accessLevel: accessLevel$13,
+            parameters: {
+                type: 'MTX 1A10.DG.2L5-LD4',
+                revision: 0x0b,
+                descriptor: {
+                    meterType: 'mtx1',
+                    typeMeterG: false,
+                    downgradedToA: false,
+                    supportMeterInfo: false
+                }
+            },
+            bytes: [
+                0x04, 0x09,
+                0x00, 0x11, 0x21, 0x49, 0x21, 0xB6, 0x81, 0xC0, 0x00
+            ]
+        },
+        'type 2': {
+            id: id$13,
+            name: name$13,
+            headerSize: headerSize$13,
+            maxSize: maxSize$13,
+            accessLevel: accessLevel$13,
+            parameters: {
+                type: 'MTX 1G05.DH.2L2-DOB4',
+                revision: 0x0b,
+                descriptor: {
+                    meterType: 'mtx1',
+                    typeMeterG: true,
+                    downgradedToA: true,
+                    supportMeterInfo: false
+                }
+            },
+            bytes: [
+                0x04, 0x09,
+                0x00, 0x12, 0x16, 0x47, 0x21, 0xb3, 0x17, 0x2c, 0x11
+            ]
+        }
+    };
+    const fromBytes$13 = (data) => {
+        const buffer = new CommandBinaryBuffer$2(data);
+        return buffer.getDeviceType();
+    };
+    const toBytes$13 = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$13);
+        buffer.setDeviceType(parameters);
+        return toBytes$2h(id$13, buffer.data);
+    };
+
+    var getDeviceType = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$13,
         examples: examples$13,
@@ -8167,84 +8317,21 @@
         toBytes: toBytes$13
     });
 
-    const id$12 = getDeviceType$3;
-    const name$12 = commandNames$2[getDeviceType$3];
-    const headerSize$12 = 2;
-    const accessLevel$12 = READ_ONLY;
-    const maxSize$12 = 9;
-    const isLoraOnly$12 = false;
-    const examples$12 = {
-        'type 1': {
-            id: id$12,
-            name: name$12,
-            headerSize: headerSize$12,
-            maxSize: maxSize$12,
-            accessLevel: accessLevel$12,
-            parameters: {
-                type: 'MTX 1A10.DG.2L5-LD4',
-                revision: 0x0b,
-                meterType: A
-            },
-            bytes: [
-                0x04, 0x09,
-                0x00, 0x11, 0x21, 0x49, 0x21, 0xB6, 0x81, 0xC0, 0x00
-            ]
-        },
-        'type 2': {
-            id: id$12,
-            name: name$12,
-            headerSize: headerSize$12,
-            maxSize: maxSize$12,
-            accessLevel: accessLevel$12,
-            parameters: {
-                type: 'MTX 1G05.DH.2L2-DOB4',
-                revision: 0x0b,
-                meterType: G_FULL
-            },
-            bytes: [
-                0x04, 0x09,
-                0x00, 0x12, 0x16, 0x47, 0x21, 0xb3, 0x17, 0x2c, 0x11
-            ]
-        }
-    };
-    const fromBytes$12 = (data) => {
-        const buffer = new CommandBinaryBuffer$2(data);
-        return buffer.getDeviceType();
-    };
-    const toBytes$12 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$12);
-        buffer.setDeviceType(parameters);
-        return toBytes$2f(id$12, buffer.data);
-    };
-
-    var getDeviceType = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$12,
-        examples: examples$12,
-        fromBytes: fromBytes$12,
-        headerSize: headerSize$12,
-        id: id$12,
-        isLoraOnly: isLoraOnly$12,
-        maxSize: maxSize$12,
-        name: name$12,
-        toBytes: toBytes$12
-    });
-
     const COMMAND_BODY_SIZE = 14;
     const OLD_COMMAND_BODY_SIZE = 20;
-    const id$11 = getEventsCounters$3;
-    const name$11 = commandNames$2[getEventsCounters$3];
-    const headerSize$11 = 2;
-    const accessLevel$11 = READ_ONLY;
-    const maxSize$11 = OLD_COMMAND_BODY_SIZE;
-    const isLoraOnly$11 = false;
-    const examples$11 = {
+    const id$12 = getEventsCounters$3;
+    const name$12 = commandNames$1[getEventsCounters$3];
+    const headerSize$12 = 2;
+    const accessLevel$12 = READ_ONLY;
+    const maxSize$12 = OLD_COMMAND_BODY_SIZE;
+    const isLoraOnly$12 = false;
+    const examples$12 = {
         'simple response': {
-            id: id$11,
-            name: name$11,
-            headerSize: headerSize$11,
-            accessLevel: accessLevel$11,
-            maxSize: maxSize$11,
+            id: id$12,
+            name: name$12,
+            headerSize: headerSize$12,
+            accessLevel: accessLevel$12,
+            maxSize: maxSize$12,
             parameters: {
                 accessClosed: 22,
                 accessError: 34,
@@ -8260,7 +8347,7 @@
             ]
         }
     };
-    const fromBytes$11 = (bytes) => {
+    const fromBytes$12 = (bytes) => {
         if ((bytes.length !== COMMAND_BODY_SIZE && bytes.length !== OLD_COMMAND_BODY_SIZE)) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
@@ -8276,7 +8363,7 @@
             accessClosed, accessError, localParametersChange, remoteParametersChange, powerOff, restart, setClock
         };
     };
-    const toBytes$11 = (parameters) => {
+    const toBytes$12 = (parameters) => {
         const buffer = new CommandBinaryBuffer$2(COMMAND_BODY_SIZE);
         buffer.setUint16(parameters.restart);
         buffer.setUint16(parameters.powerOff);
@@ -8285,35 +8372,35 @@
         buffer.setUint16(parameters.accessError);
         buffer.setUint16(parameters.accessClosed);
         buffer.setUint16(parameters.setClock);
-        return toBytes$2f(id$11, buffer.data);
+        return toBytes$2h(id$12, buffer.data);
     };
 
     var getEventsCounters = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$11,
-        examples: examples$11,
-        fromBytes: fromBytes$11,
-        headerSize: headerSize$11,
-        id: id$11,
-        isLoraOnly: isLoraOnly$11,
-        maxSize: maxSize$11,
-        name: name$11,
-        toBytes: toBytes$11
+        accessLevel: accessLevel$12,
+        examples: examples$12,
+        fromBytes: fromBytes$12,
+        headerSize: headerSize$12,
+        id: id$12,
+        isLoraOnly: isLoraOnly$12,
+        maxSize: maxSize$12,
+        name: name$12,
+        toBytes: toBytes$12
     });
 
-    const id$10 = getEventStatus$3;
-    const name$10 = commandNames$2[getEventStatus$3];
-    const headerSize$10 = 2;
-    const accessLevel$10 = READ_ONLY;
-    const maxSize$10 = 2;
-    const isLoraOnly$10 = false;
-    const examples$10 = {
+    const id$11 = getEventStatus$3;
+    const name$11 = commandNames$1[getEventStatus$3];
+    const headerSize$11 = 2;
+    const accessLevel$11 = READ_ONLY;
+    const maxSize$11 = 2;
+    const isLoraOnly$11 = false;
+    const examples$11 = {
         'simple response': {
-            id: id$10,
-            name: name$10,
-            headerSize: headerSize$10,
-            accessLevel: accessLevel$10,
-            maxSize: maxSize$10,
+            id: id$11,
+            name: name$11,
+            headerSize: headerSize$11,
+            accessLevel: accessLevel$11,
+            maxSize: maxSize$11,
             parameters: {
                 CASE_OPEN: true,
                 MAGNETIC_ON: false,
@@ -8337,42 +8424,42 @@
             ]
         }
     };
-    const fromBytes$10 = (bytes) => {
+    const fromBytes$11 = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes, true);
         return buffer.getEventStatus();
     };
-    const toBytes$10 = (eventStatus) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$10, true);
+    const toBytes$11 = (eventStatus) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$11, true);
         buffer.setEventStatus(eventStatus);
-        return toBytes$2f(id$10, buffer.data);
+        return toBytes$2h(id$11, buffer.data);
     };
 
     var getEventStatus = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$10,
-        examples: examples$10,
-        fromBytes: fromBytes$10,
-        headerSize: headerSize$10,
-        id: id$10,
-        isLoraOnly: isLoraOnly$10,
-        maxSize: maxSize$10,
-        name: name$10,
-        toBytes: toBytes$10
+        accessLevel: accessLevel$11,
+        examples: examples$11,
+        fromBytes: fromBytes$11,
+        headerSize: headerSize$11,
+        id: id$11,
+        isLoraOnly: isLoraOnly$11,
+        maxSize: maxSize$11,
+        name: name$11,
+        toBytes: toBytes$11
     });
 
-    const id$$ = getMagneticFieldThreshold$3;
-    const name$$ = commandNames$2[getMagneticFieldThreshold$3];
-    const headerSize$$ = 2;
-    const maxSize$$ = 10;
-    const accessLevel$$ = READ_ONLY;
-    const isLoraOnly$$ = false;
-    const examples$$ = {
+    const id$10 = getMagneticFieldThreshold$3;
+    const name$10 = commandNames$1[getMagneticFieldThreshold$3];
+    const headerSize$10 = 2;
+    const maxSize$10 = 10;
+    const accessLevel$10 = READ_ONLY;
+    const isLoraOnly$10 = false;
+    const examples$10 = {
         'simple response': {
-            id: id$$,
-            name: name$$,
-            headerSize: headerSize$$,
-            maxSize: maxSize$$,
-            accessLevel: accessLevel$$,
+            id: id$10,
+            name: name$10,
+            headerSize: headerSize$10,
+            maxSize: maxSize$10,
+            accessLevel: accessLevel$10,
             parameters: {
                 induction: 10,
                 threshold: 5,
@@ -8385,7 +8472,7 @@
             ]
         }
     };
-    const fromBytes$$ = (bytes) => {
+    const fromBytes$10 = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return {
             induction: buffer.getUint16(),
@@ -8394,16 +8481,52 @@
             reserved: buffer.getUint32()
         };
     };
-    const toBytes$$ = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$$);
+    const toBytes$10 = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$10);
         buffer.setUint16(parameters.induction);
         buffer.setUint16(parameters.threshold);
         buffer.setUint16(parameters.inductionCoefficient * 100);
         buffer.setUint32(parameters.reserved);
-        return toBytes$2f(id$$, buffer.data);
+        return toBytes$2h(id$10, buffer.data);
     };
 
     var getMagneticFieldThreshold = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$10,
+        examples: examples$10,
+        fromBytes: fromBytes$10,
+        headerSize: headerSize$10,
+        id: id$10,
+        isLoraOnly: isLoraOnly$10,
+        maxSize: maxSize$10,
+        name: name$10,
+        toBytes: toBytes$10
+    });
+
+    const id$$ = getMeterInfo$3;
+    const name$$ = commandNames$1[getMeterInfo$3];
+    const headerSize$$ = 2;
+    const maxSize$$ = 1;
+    const accessLevel$$ = READ_ONLY;
+    const isLoraOnly$$ = false;
+    const examples$$ = {
+        'simple response': {
+            id: id$$,
+            name: name$$,
+            headerSize: headerSize$$,
+            maxSize: maxSize$$,
+            accessLevel: accessLevel$$,
+            parameters: { ten: 0 },
+            bytes: [
+                0x7a, 0x01,
+                0x00
+            ]
+        }
+    };
+    const fromBytes$$ = ([ten]) => ({ ten });
+    const toBytes$$ = ({ ten }) => toBytes$2h(id$$, [ten]);
+
+    var getMeterInfo = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$$,
         examples: examples$$,
@@ -8416,10 +8539,10 @@
         toBytes: toBytes$$
     });
 
-    const id$_ = getMeterInfo$3;
-    const name$_ = commandNames$2[getMeterInfo$3];
+    const id$_ = getOperatorParametersExtended3$3;
+    const name$_ = commandNames$1[getOperatorParametersExtended3$3];
     const headerSize$_ = 2;
-    const maxSize$_ = 1;
+    const maxSize$_ = 17;
     const accessLevel$_ = READ_ONLY;
     const isLoraOnly$_ = false;
     const examples$_ = {
@@ -8429,42 +8552,6 @@
             headerSize: headerSize$_,
             maxSize: maxSize$_,
             accessLevel: accessLevel$_,
-            parameters: { ten: 0 },
-            bytes: [
-                0x7a, 0x01,
-                0x00
-            ]
-        }
-    };
-    const fromBytes$_ = ([ten]) => ({ ten });
-    const toBytes$_ = ({ ten }) => toBytes$2f(id$_, [ten]);
-
-    var getMeterInfo = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$_,
-        examples: examples$_,
-        fromBytes: fromBytes$_,
-        headerSize: headerSize$_,
-        id: id$_,
-        isLoraOnly: isLoraOnly$_,
-        maxSize: maxSize$_,
-        name: name$_,
-        toBytes: toBytes$_
-    });
-
-    const id$Z = getOperatorParametersExtended3$3;
-    const name$Z = commandNames$2[getOperatorParametersExtended3$3];
-    const headerSize$Z = 2;
-    const maxSize$Z = 17;
-    const accessLevel$Z = READ_ONLY;
-    const isLoraOnly$Z = false;
-    const examples$Z = {
-        'simple response': {
-            id: id$Z,
-            name: name$Z,
-            headerSize: headerSize$Z,
-            maxSize: maxSize$Z,
-            accessLevel: accessLevel$Z,
             parameters: {
                 pmaxMinusThreshold0: 100,
                 pmaxMinusThreshold1: 200,
@@ -8483,46 +8570,46 @@
                 0x00, 0x00, 0x00, 0xc8,
                 0x00, 0x00, 0x01, 0x2c,
                 0x00, 0x00, 0x01, 0x90,
-                0x14
+                0x28
             ]
         }
     };
-    const fromBytes$Z = (bytes) => {
+    const fromBytes$_ = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return buffer.getOperatorParametersExtended3();
     };
-    const toBytes$Z = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$Z);
+    const toBytes$_ = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$_);
         buffer.setOperatorParametersExtended3(parameters);
-        return toBytes$2f(id$Z, buffer.data);
+        return toBytes$2h(id$_, buffer.data);
     };
 
     var getOperatorParametersExtended3 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$Z,
-        examples: examples$Z,
-        fromBytes: fromBytes$Z,
-        headerSize: headerSize$Z,
-        id: id$Z,
-        isLoraOnly: isLoraOnly$Z,
-        maxSize: maxSize$Z,
-        name: name$Z,
-        toBytes: toBytes$Z
+        accessLevel: accessLevel$_,
+        examples: examples$_,
+        fromBytes: fromBytes$_,
+        headerSize: headerSize$_,
+        id: id$_,
+        isLoraOnly: isLoraOnly$_,
+        maxSize: maxSize$_,
+        name: name$_,
+        toBytes: toBytes$_
     });
 
-    const id$Y = getRatePlanInfo$3;
-    const name$Y = commandNames$2[getRatePlanInfo$3];
-    const headerSize$Y = 2;
-    const maxSize$Y = 1 + TARIFF_PLAN_SIZE * 2;
-    const accessLevel$Y = READ_ONLY;
-    const isLoraOnly$Y = false;
-    const examples$Y = {
+    const id$Z = getRatePlanInfo$3;
+    const name$Z = commandNames$1[getRatePlanInfo$3];
+    const headerSize$Z = 2;
+    const maxSize$Z = 1 + TARIFF_PLAN_SIZE * 2;
+    const accessLevel$Z = READ_ONLY;
+    const isLoraOnly$Z = false;
+    const examples$Z = {
         'rate plan info response for A- table': {
-            id: id$Y,
-            name: name$Y,
-            headerSize: headerSize$Y,
-            maxSize: maxSize$Y,
-            accessLevel: accessLevel$Y,
+            id: id$Z,
+            name: name$Z,
+            headerSize: headerSize$Z,
+            maxSize: maxSize$Z,
+            accessLevel: accessLevel$Z,
             parameters: {
                 tariffTable: 1,
                 activePlan: {
@@ -8553,8 +8640,8 @@
             ]
         }
     };
-    const fromBytes$Y = (bytes) => {
-        if (bytes.length !== maxSize$Y) {
+    const fromBytes$Z = (bytes) => {
+        if (bytes.length !== maxSize$Z) {
             throw new Error('Invalid getRatePlanInfo data size.');
         }
         const buffer = new CommandBinaryBuffer$2(bytes);
@@ -8564,40 +8651,40 @@
             passivePlan: buffer.getTariffPlan()
         };
     };
-    const toBytes$Y = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$Y);
+    const toBytes$Z = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$Z);
         buffer.setUint8(parameters.tariffTable);
         buffer.setTariffPlan(parameters.activePlan);
         buffer.setTariffPlan(parameters.passivePlan);
-        return toBytes$2f(id$Y, buffer.data);
+        return toBytes$2h(id$Z, buffer.data);
     };
 
     var getRatePlanInfo = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$Y,
-        examples: examples$Y,
-        fromBytes: fromBytes$Y,
-        headerSize: headerSize$Y,
-        id: id$Y,
-        isLoraOnly: isLoraOnly$Y,
-        maxSize: maxSize$Y,
-        name: name$Y,
-        toBytes: toBytes$Y
+        accessLevel: accessLevel$Z,
+        examples: examples$Z,
+        fromBytes: fromBytes$Z,
+        headerSize: headerSize$Z,
+        id: id$Z,
+        isLoraOnly: isLoraOnly$Z,
+        maxSize: maxSize$Z,
+        name: name$Z,
+        toBytes: toBytes$Z
     });
 
-    const id$X = getSaldo$3;
-    const name$X = commandNames$2[getSaldo$3];
-    const headerSize$X = 2;
-    const maxSize$X = 29;
-    const accessLevel$X = READ_ONLY;
-    const isLoraOnly$X = false;
-    const examples$X = {
+    const id$Y = getSaldo$3;
+    const name$Y = commandNames$1[getSaldo$3];
+    const headerSize$Y = 2;
+    const maxSize$Y = 29;
+    const accessLevel$Y = READ_ONLY;
+    const isLoraOnly$Y = false;
+    const examples$Y = {
         'test response': {
-            id: id$X,
-            name: name$X,
-            headerSize: headerSize$X,
-            maxSize: maxSize$X,
-            accessLevel: accessLevel$X,
+            id: id$Y,
+            name: name$Y,
+            headerSize: headerSize$Y,
+            maxSize: maxSize$Y,
+            accessLevel: accessLevel$Y,
             parameters: {
                 currentSaldo: 1,
                 count: 0,
@@ -8617,8 +8704,8 @@
             ]
         }
     };
-    const fromBytes$X = (bytes) => {
-        if (bytes.length !== maxSize$X) {
+    const fromBytes$Y = (bytes) => {
+        if (bytes.length !== maxSize$Y) {
             throw new Error('Invalid getSaldo data size.');
         }
         const buffer = new CommandBinaryBuffer$2(bytes);
@@ -8635,8 +8722,8 @@
             }
         };
     };
-    const toBytes$X = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$X);
+    const toBytes$Y = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$Y);
         buffer.setInt32(parameters.currentSaldo);
         buffer.setUint8(parameters.count);
         parameters.energy.forEach(value => buffer.setInt32(value));
@@ -8645,35 +8732,35 @@
         buffer.setUint8(parameters.date.date);
         buffer.setUint8(parameters.date.hours);
         buffer.setUint8(parameters.date.minutes);
-        return toBytes$2f(id$X, buffer.data);
+        return toBytes$2h(id$Y, buffer.data);
     };
 
     var getSaldo = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$X,
-        examples: examples$X,
-        fromBytes: fromBytes$X,
-        headerSize: headerSize$X,
-        id: id$X,
-        isLoraOnly: isLoraOnly$X,
-        maxSize: maxSize$X,
-        name: name$X,
-        toBytes: toBytes$X
+        accessLevel: accessLevel$Y,
+        examples: examples$Y,
+        fromBytes: fromBytes$Y,
+        headerSize: headerSize$Y,
+        id: id$Y,
+        isLoraOnly: isLoraOnly$Y,
+        maxSize: maxSize$Y,
+        name: name$Y,
+        toBytes: toBytes$Y
     });
 
-    const id$W = getSaldoParameters$3;
-    const name$W = commandNames$2[getSaldoParameters$3];
-    const headerSize$W = 2;
-    const maxSize$W = 37;
-    const accessLevel$W = READ_ONLY;
-    const isLoraOnly$W = false;
-    const examples$W = {
+    const id$X = getSaldoParameters$3;
+    const name$X = commandNames$1[getSaldoParameters$3];
+    const headerSize$X = 2;
+    const maxSize$X = 37;
+    const accessLevel$X = READ_ONLY;
+    const isLoraOnly$X = false;
+    const examples$X = {
         'default response': {
-            id: id$W,
-            name: name$W,
-            headerSize: headerSize$W,
-            maxSize: maxSize$W,
-            accessLevel: accessLevel$W,
+            id: id$X,
+            name: name$X,
+            headerSize: headerSize$X,
+            maxSize: maxSize$X,
+            accessLevel: accessLevel$X,
             parameters: {
                 coefficients: [0, 0, 0, 0],
                 decimalPointTariff: 0,
@@ -8694,11 +8781,11 @@
             ]
         },
         'test response': {
-            id: id$W,
-            name: name$W,
-            headerSize: headerSize$W,
-            maxSize: maxSize$W,
-            accessLevel: accessLevel$W,
+            id: id$X,
+            name: name$X,
+            headerSize: headerSize$X,
+            maxSize: maxSize$X,
+            accessLevel: accessLevel$X,
             parameters: {
                 coefficients: [2, 3, 4, 5],
                 decimalPointTariff: 6,
@@ -8719,20 +8806,67 @@
             ]
         }
     };
-    const fromBytes$W = (bytes) => {
-        if (bytes.length !== maxSize$W) {
+    const fromBytes$X = (bytes) => {
+        if (bytes.length !== maxSize$X) {
             throw new Error('Invalid getSaldoParameters data size.');
         }
         const buffer = new CommandBinaryBuffer$2(bytes);
         return buffer.getSaldoParameters();
     };
-    const toBytes$W = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$W);
+    const toBytes$X = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$X);
         buffer.setSaldoParameters(parameters);
-        return toBytes$2f(id$W, buffer.data);
+        return toBytes$2h(id$X, buffer.data);
     };
 
     var getSaldoParameters = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$X,
+        examples: examples$X,
+        fromBytes: fromBytes$X,
+        headerSize: headerSize$X,
+        id: id$X,
+        isLoraOnly: isLoraOnly$X,
+        maxSize: maxSize$X,
+        name: name$X,
+        toBytes: toBytes$X
+    });
+
+    const id$W = getSeasonProfile$3;
+    const name$W = commandNames$1[getSeasonProfile$3];
+    const headerSize$W = 2;
+    const maxSize$W = 9;
+    const accessLevel$W = READ_ONLY;
+    const isLoraOnly$W = false;
+    const examples$W = {
+        'simple response': {
+            id: id$W,
+            name: name$W,
+            headerSize: headerSize$W,
+            maxSize: maxSize$W,
+            accessLevel: accessLevel$W,
+            parameters: {
+                month: 1,
+                date: 2,
+                dayIndexes: [0, 1, 0, 1, 0, 1, 0]
+            },
+            bytes: [
+                0x3c, 0x09,
+                0x01, 0x02, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00
+            ]
+        }
+    };
+    const fromBytes$W = (bytes) => {
+        const buffer = new CommandBinaryBuffer$2(bytes);
+        return buffer.getSeasonProfile();
+    };
+    const toBytes$W = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$W);
+        buffer.setSeasonProfile(parameters);
+        return toBytes$2h(id$W, buffer.data);
+    };
+
+    var getSeasonProfile = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$W,
         examples: examples$W,
@@ -8745,66 +8879,19 @@
         toBytes: toBytes$W
     });
 
-    const id$V = getSeasonProfile$3;
-    const name$V = commandNames$2[getSeasonProfile$3];
+    const id$V = getSpecialDay$3;
+    const name$V = commandNames$1[getSpecialDay$3];
     const headerSize$V = 2;
-    const maxSize$V = 9;
+    const maxSize$V = 4;
     const accessLevel$V = READ_ONLY;
     const isLoraOnly$V = false;
     const examples$V = {
-        'simple response': {
+        'special day response': {
             id: id$V,
             name: name$V,
             headerSize: headerSize$V,
             maxSize: maxSize$V,
             accessLevel: accessLevel$V,
-            parameters: {
-                month: 1,
-                date: 2,
-                dayIndexes: [0, 1, 0, 1, 0, 1, 0]
-            },
-            bytes: [
-                0x3c, 0x09,
-                0x01, 0x02, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00
-            ]
-        }
-    };
-    const fromBytes$V = (bytes) => {
-        const buffer = new CommandBinaryBuffer$2(bytes);
-        return buffer.getSeasonProfile();
-    };
-    const toBytes$V = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$V);
-        buffer.setSeasonProfile(parameters);
-        return toBytes$2f(id$V, buffer.data);
-    };
-
-    var getSeasonProfile = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$V,
-        examples: examples$V,
-        fromBytes: fromBytes$V,
-        headerSize: headerSize$V,
-        id: id$V,
-        isLoraOnly: isLoraOnly$V,
-        maxSize: maxSize$V,
-        name: name$V,
-        toBytes: toBytes$V
-    });
-
-    const id$U = getSpecialDay$3;
-    const name$U = commandNames$2[getSpecialDay$3];
-    const headerSize$U = 2;
-    const maxSize$U = 4;
-    const accessLevel$U = READ_ONLY;
-    const isLoraOnly$U = false;
-    const examples$U = {
-        'special day response': {
-            id: id$U,
-            name: name$U,
-            headerSize: headerSize$U,
-            maxSize: maxSize$U,
-            accessLevel: accessLevel$U,
             parameters: {
                 month: 1,
                 date: 9,
@@ -8817,17 +8904,58 @@
             ]
         }
     };
-    const fromBytes$U = (bytes) => {
+    const fromBytes$V = (bytes) => {
         const buffer = new CommandBinaryBuffer$2(bytes);
         return buffer.getSpecialDay();
     };
-    const toBytes$U = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$U);
+    const toBytes$V = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$V);
         buffer.setSpecialDay(parameters);
-        return toBytes$2f(id$U, buffer.data);
+        return toBytes$2h(id$V, buffer.data);
     };
 
     var getSpecialDay = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$V,
+        examples: examples$V,
+        fromBytes: fromBytes$V,
+        headerSize: headerSize$V,
+        id: id$V,
+        isLoraOnly: isLoraOnly$V,
+        maxSize: maxSize$V,
+        name: name$V,
+        toBytes: toBytes$V
+    });
+
+    const id$U = getVersion$3;
+    const name$U = commandNames$1[getVersion$3];
+    const headerSize$U = 2;
+    const maxSize$U = 10;
+    const accessLevel$U = READ_ONLY;
+    const isLoraOnly$U = false;
+    const examples$U = {
+        'simple response': {
+            id: id$U,
+            name: name$U,
+            headerSize: headerSize$U,
+            maxSize: maxSize$U,
+            accessLevel: accessLevel$U,
+            parameters: {
+                version: '104.25.003'
+            },
+            bytes: [
+                0x28, 0x0a,
+                0x31, 0x30, 0x34, 0x2e, 0x32, 0x35, 0x2e, 0x30, 0x30, 0x33
+            ]
+        }
+    };
+    const fromBytes$U = (bytes) => ({ version: String.fromCharCode.apply(null, [...bytes]) });
+    const toBytes$U = (parameters) => {
+        const version = parameters.version.split('').map(char => char.charCodeAt(0));
+        return toBytes$2h(id$U, version);
+    };
+
+    var getVersion = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$U,
         examples: examples$U,
@@ -8840,11 +8968,11 @@
         toBytes: toBytes$U
     });
 
-    const id$T = getVersion$3;
-    const name$T = commandNames$2[getVersion$3];
+    const id$T = prepareRatePlan$3;
+    const name$T = commandNames$1[prepareRatePlan$3];
     const headerSize$T = 2;
-    const maxSize$T = 10;
-    const accessLevel$T = READ_ONLY;
+    const maxSize$T = 0;
+    const accessLevel$T = READ_WRITE;
     const isLoraOnly$T = false;
     const examples$T = {
         'simple response': {
@@ -8853,22 +8981,21 @@
             headerSize: headerSize$T,
             maxSize: maxSize$T,
             accessLevel: accessLevel$T,
-            parameters: {
-                version: '104.25.003'
-            },
+            parameters: {},
             bytes: [
-                0x28, 0x0a,
-                0x31, 0x30, 0x34, 0x2e, 0x32, 0x35, 0x2e, 0x30, 0x30, 0x33
+                0x14, 0x00
             ]
         }
     };
-    const fromBytes$T = (bytes) => ({ version: String.fromCharCode.apply(null, [...bytes]) });
-    const toBytes$T = (parameters) => {
-        const version = parameters.version.split('').map(char => char.charCodeAt(0));
-        return toBytes$2f(id$T, version);
+    const fromBytes$T = (bytes) => {
+        if (bytes.length !== maxSize$T) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        return {};
     };
+    const toBytes$T = () => toBytes$2h(id$T);
 
-    var getVersion = /*#__PURE__*/Object.freeze({
+    var prepareRatePlan = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$T,
         examples: examples$T,
@@ -8881,8 +9008,8 @@
         toBytes: toBytes$T
     });
 
-    const id$S = prepareRatePlan$3;
-    const name$S = commandNames$2[prepareRatePlan$3];
+    const id$S = resetPowerMaxDay$3;
+    const name$S = commandNames$1[resetPowerMaxDay$3];
     const headerSize$S = 2;
     const maxSize$S = 0;
     const accessLevel$S = READ_WRITE;
@@ -8896,7 +9023,7 @@
             accessLevel: accessLevel$S,
             parameters: {},
             bytes: [
-                0x14, 0x00
+                0x35, 0x00
             ]
         }
     };
@@ -8906,9 +9033,9 @@
         }
         return {};
     };
-    const toBytes$S = () => toBytes$2f(id$S);
+    const toBytes$S = () => toBytes$2h(id$S);
 
-    var prepareRatePlan = /*#__PURE__*/Object.freeze({
+    var resetPowerMaxDay = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$S,
         examples: examples$S,
@@ -8921,8 +9048,8 @@
         toBytes: toBytes$S
     });
 
-    const id$R = resetPowerMaxDay$3;
-    const name$R = commandNames$2[resetPowerMaxDay$3];
+    const id$R = resetPowerMaxMonth$3;
+    const name$R = commandNames$1[resetPowerMaxMonth$3];
     const headerSize$R = 2;
     const maxSize$R = 0;
     const accessLevel$R = READ_WRITE;
@@ -8936,7 +9063,7 @@
             accessLevel: accessLevel$R,
             parameters: {},
             bytes: [
-                0x35, 0x00
+                0x36, 0x00
             ]
         }
     };
@@ -8946,9 +9073,9 @@
         }
         return {};
     };
-    const toBytes$R = () => toBytes$2f(id$R);
+    const toBytes$R = () => toBytes$2h(id$R);
 
-    var resetPowerMaxDay = /*#__PURE__*/Object.freeze({
+    var resetPowerMaxMonth = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$R,
         examples: examples$R,
@@ -8961,8 +9088,8 @@
         toBytes: toBytes$R
     });
 
-    const id$Q = resetPowerMaxMonth$3;
-    const name$Q = commandNames$2[resetPowerMaxMonth$3];
+    const id$Q = runTariffPlan$3;
+    const name$Q = commandNames$1[runTariffPlan$3];
     const headerSize$Q = 2;
     const maxSize$Q = 0;
     const accessLevel$Q = READ_WRITE;
@@ -8976,7 +9103,7 @@
             accessLevel: accessLevel$Q,
             parameters: {},
             bytes: [
-                0x36, 0x00
+                0x46, 0x00
             ]
         }
     };
@@ -8986,9 +9113,9 @@
         }
         return {};
     };
-    const toBytes$Q = () => toBytes$2f(id$Q);
+    const toBytes$Q = () => toBytes$2h(id$Q);
 
-    var resetPowerMaxMonth = /*#__PURE__*/Object.freeze({
+    var runTariffPlan = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$Q,
         examples: examples$Q,
@@ -9001,8 +9128,8 @@
         toBytes: toBytes$Q
     });
 
-    const id$P = runTariffPlan$3;
-    const name$P = commandNames$2[runTariffPlan$3];
+    const id$P = setAccessKey$3;
+    const name$P = commandNames$1[setAccessKey$3];
     const headerSize$P = 2;
     const maxSize$P = 0;
     const accessLevel$P = READ_WRITE;
@@ -9016,7 +9143,7 @@
             accessLevel: accessLevel$P,
             parameters: {},
             bytes: [
-                0x46, 0x00
+                0x09, 0x00
             ]
         }
     };
@@ -9026,9 +9153,9 @@
         }
         return {};
     };
-    const toBytes$P = () => toBytes$2f(id$P);
+    const toBytes$P = () => toBytes$2h(id$P);
 
-    var runTariffPlan = /*#__PURE__*/Object.freeze({
+    var setAccessKey = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$P,
         examples: examples$P,
@@ -9041,11 +9168,11 @@
         toBytes: toBytes$P
     });
 
-    const id$O = setAccessKey$3;
-    const name$O = commandNames$2[setAccessKey$3];
+    const id$O = setCorrectDateTime$3;
+    const name$O = commandNames$1[setCorrectDateTime$3];
     const headerSize$O = 2;
     const maxSize$O = 0;
-    const accessLevel$O = READ_WRITE;
+    const accessLevel$O = READ_ONLY;
     const isLoraOnly$O = false;
     const examples$O = {
         'simple response': {
@@ -9056,7 +9183,7 @@
             accessLevel: accessLevel$O,
             parameters: {},
             bytes: [
-                0x09, 0x00
+                0x5c, 0x00
             ]
         }
     };
@@ -9066,9 +9193,9 @@
         }
         return {};
     };
-    const toBytes$O = () => toBytes$2f(id$O);
+    const toBytes$O = () => toBytes$2h(id$O);
 
-    var setAccessKey = /*#__PURE__*/Object.freeze({
+    var setCorrectDateTime = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$O,
         examples: examples$O,
@@ -9081,11 +9208,11 @@
         toBytes: toBytes$O
     });
 
-    const id$N = setCorrectDateTime$3;
-    const name$N = commandNames$2[setCorrectDateTime$3];
+    const id$N = setCorrectTime$3;
+    const name$N = commandNames$1[setCorrectTime$3];
     const headerSize$N = 2;
     const maxSize$N = 0;
-    const accessLevel$N = READ_ONLY;
+    const accessLevel$N = READ_WRITE;
     const isLoraOnly$N = false;
     const examples$N = {
         'simple response': {
@@ -9096,7 +9223,7 @@
             accessLevel: accessLevel$N,
             parameters: {},
             bytes: [
-                0x5c, 0x00
+                0x1c, 0x00
             ]
         }
     };
@@ -9106,9 +9233,9 @@
         }
         return {};
     };
-    const toBytes$N = () => toBytes$2f(id$N);
+    const toBytes$N = () => toBytes$2h(id$N);
 
-    var setCorrectDateTime = /*#__PURE__*/Object.freeze({
+    var setCorrectTime = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$N,
         examples: examples$N,
@@ -9121,11 +9248,11 @@
         toBytes: toBytes$N
     });
 
-    const id$M = setCorrectTime$3;
-    const name$M = commandNames$2[setCorrectTime$3];
+    const id$M = setDateTime$3;
+    const name$M = commandNames$1[setDateTime$3];
     const headerSize$M = 2;
     const maxSize$M = 0;
-    const accessLevel$M = READ_WRITE;
+    const accessLevel$M = READ_ONLY;
     const isLoraOnly$M = false;
     const examples$M = {
         'simple response': {
@@ -9136,7 +9263,7 @@
             accessLevel: accessLevel$M,
             parameters: {},
             bytes: [
-                0x1c, 0x00
+                0x08, 0x00
             ]
         }
     };
@@ -9146,9 +9273,9 @@
         }
         return {};
     };
-    const toBytes$M = () => toBytes$2f(id$M);
+    const toBytes$M = () => toBytes$2h(id$M);
 
-    var setCorrectTime = /*#__PURE__*/Object.freeze({
+    var setDateTime = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$M,
         examples: examples$M,
@@ -9161,11 +9288,11 @@
         toBytes: toBytes$M
     });
 
-    const id$L = setDateTime$3;
-    const name$L = commandNames$2[setDateTime$3];
+    const id$L = setDayProfile$3;
+    const name$L = commandNames$1[setDayProfile$3];
     const headerSize$L = 2;
     const maxSize$L = 0;
-    const accessLevel$L = READ_ONLY;
+    const accessLevel$L = READ_WRITE;
     const isLoraOnly$L = false;
     const examples$L = {
         'simple response': {
@@ -9176,7 +9303,7 @@
             accessLevel: accessLevel$L,
             parameters: {},
             bytes: [
-                0x08, 0x00
+                0x10, 0x00
             ]
         }
     };
@@ -9186,9 +9313,9 @@
         }
         return {};
     };
-    const toBytes$L = () => toBytes$2f(id$L);
+    const toBytes$L = () => toBytes$2h(id$L);
 
-    var setDateTime = /*#__PURE__*/Object.freeze({
+    var setDayProfile = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$L,
         examples: examples$L,
@@ -9201,8 +9328,8 @@
         toBytes: toBytes$L
     });
 
-    const id$K = setDayProfile$3;
-    const name$K = commandNames$2[setDayProfile$3];
+    const id$K = setDisplayParam$3;
+    const name$K = commandNames$1[setDisplayParam$3];
     const headerSize$K = 2;
     const maxSize$K = 0;
     const accessLevel$K = READ_WRITE;
@@ -9216,7 +9343,7 @@
             accessLevel: accessLevel$K,
             parameters: {},
             bytes: [
-                0x10, 0x00
+                0x5d, 0x00
             ]
         }
     };
@@ -9226,9 +9353,9 @@
         }
         return {};
     };
-    const toBytes$K = () => toBytes$2f(id$K);
+    const toBytes$K = () => toBytes$2h(id$K);
 
-    var setDayProfile = /*#__PURE__*/Object.freeze({
+    var setDisplayParam = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$K,
         examples: examples$K,
@@ -9241,8 +9368,8 @@
         toBytes: toBytes$K
     });
 
-    const id$J = setDisplayParam$3;
-    const name$J = commandNames$2[setDisplayParam$3];
+    const id$J = setOperatorParameters$3;
+    const name$J = commandNames$1[setOperatorParameters$3];
     const headerSize$J = 2;
     const maxSize$J = 0;
     const accessLevel$J = READ_WRITE;
@@ -9256,7 +9383,7 @@
             accessLevel: accessLevel$J,
             parameters: {},
             bytes: [
-                0x5d, 0x00
+                0x1f, 0x00
             ]
         }
     };
@@ -9266,9 +9393,9 @@
         }
         return {};
     };
-    const toBytes$J = () => toBytes$2f(id$J);
+    const toBytes$J = () => toBytes$2h(id$J);
 
-    var setDisplayParam = /*#__PURE__*/Object.freeze({
+    var setOperatorParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$J,
         examples: examples$J,
@@ -9281,8 +9408,8 @@
         toBytes: toBytes$J
     });
 
-    const id$I = setOperatorParameters$3;
-    const name$I = commandNames$2[setOperatorParameters$3];
+    const id$I = setOperatorParametersExtended3$3;
+    const name$I = commandNames$1[setOperatorParametersExtended3$3];
     const headerSize$I = 2;
     const maxSize$I = 0;
     const accessLevel$I = READ_WRITE;
@@ -9296,7 +9423,7 @@
             accessLevel: accessLevel$I,
             parameters: {},
             bytes: [
-                0x1f, 0x00
+                0x72, 0x00
             ]
         }
     };
@@ -9306,9 +9433,9 @@
         }
         return {};
     };
-    const toBytes$I = () => toBytes$2f(id$I);
+    const toBytes$I = () => toBytes$2h(id$I);
 
-    var setOperatorParameters = /*#__PURE__*/Object.freeze({
+    var setOperatorParametersExtended3 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$I,
         examples: examples$I,
@@ -9321,8 +9448,8 @@
         toBytes: toBytes$I
     });
 
-    const id$H = setOperatorParametersExtended3$3;
-    const name$H = commandNames$2[setOperatorParametersExtended3$3];
+    const id$H = setSaldo$3;
+    const name$H = commandNames$1[setSaldo$3];
     const headerSize$H = 2;
     const maxSize$H = 0;
     const accessLevel$H = READ_WRITE;
@@ -9336,7 +9463,7 @@
             accessLevel: accessLevel$H,
             parameters: {},
             bytes: [
-                0x72, 0x00
+                0x2a, 0x00
             ]
         }
     };
@@ -9346,9 +9473,9 @@
         }
         return {};
     };
-    const toBytes$H = () => toBytes$2f(id$H);
+    const toBytes$H = () => toBytes$2h(id$H);
 
-    var setOperatorParametersExtended3 = /*#__PURE__*/Object.freeze({
+    var setSaldo = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$H,
         examples: examples$H,
@@ -9361,8 +9488,8 @@
         toBytes: toBytes$H
     });
 
-    const id$G = setSaldo$3;
-    const name$G = commandNames$2[setSaldo$3];
+    const id$G = setSaldoParameters$3;
+    const name$G = commandNames$1[setSaldoParameters$3];
     const headerSize$G = 2;
     const maxSize$G = 0;
     const accessLevel$G = READ_WRITE;
@@ -9376,7 +9503,7 @@
             accessLevel: accessLevel$G,
             parameters: {},
             bytes: [
-                0x2a, 0x00
+                0x2f, 0x00
             ]
         }
     };
@@ -9386,9 +9513,9 @@
         }
         return {};
     };
-    const toBytes$G = () => toBytes$2f(id$G);
+    const toBytes$G = () => toBytes$2h(id$G);
 
-    var setSaldo = /*#__PURE__*/Object.freeze({
+    var setSaldoParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$G,
         examples: examples$G,
@@ -9401,8 +9528,8 @@
         toBytes: toBytes$G
     });
 
-    const id$F = setSaldoParameters$3;
-    const name$F = commandNames$2[setSaldoParameters$3];
+    const id$F = setSeasonProfile$3;
+    const name$F = commandNames$1[setSeasonProfile$3];
     const headerSize$F = 2;
     const maxSize$F = 0;
     const accessLevel$F = READ_WRITE;
@@ -9416,7 +9543,7 @@
             accessLevel: accessLevel$F,
             parameters: {},
             bytes: [
-                0x2f, 0x00
+                0x11, 0x00
             ]
         }
     };
@@ -9426,9 +9553,9 @@
         }
         return {};
     };
-    const toBytes$F = () => toBytes$2f(id$F);
+    const toBytes$F = () => toBytes$2h(id$F);
 
-    var setSaldoParameters = /*#__PURE__*/Object.freeze({
+    var setSeasonProfile = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$F,
         examples: examples$F,
@@ -9441,8 +9568,8 @@
         toBytes: toBytes$F
     });
 
-    const id$E = setSeasonProfile$3;
-    const name$E = commandNames$2[setSeasonProfile$3];
+    const id$E = setSpecialDay$3;
+    const name$E = commandNames$1[setSpecialDay$3];
     const headerSize$E = 2;
     const maxSize$E = 0;
     const accessLevel$E = READ_WRITE;
@@ -9456,7 +9583,7 @@
             accessLevel: accessLevel$E,
             parameters: {},
             bytes: [
-                0x11, 0x00
+                0x12, 0x00
             ]
         }
     };
@@ -9466,9 +9593,9 @@
         }
         return {};
     };
-    const toBytes$E = () => toBytes$2f(id$E);
+    const toBytes$E = () => toBytes$2h(id$E);
 
-    var setSeasonProfile = /*#__PURE__*/Object.freeze({
+    var setSpecialDay = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$E,
         examples: examples$E,
@@ -9481,34 +9608,83 @@
         toBytes: toBytes$E
     });
 
-    const id$D = setSpecialDay$3;
-    const name$D = commandNames$2[setSpecialDay$3];
+    const id$D = setSpecialOperation$3;
+    const name$D = commandNames$1[setSpecialOperation$3];
     const headerSize$D = 2;
-    const maxSize$D = 0;
+    const maxSize$D = 1;
     const accessLevel$D = READ_WRITE;
     const isLoraOnly$D = false;
     const examples$D = {
-        'simple response': {
+        'electro-magnetic screen is present': {
             id: id$D,
             name: name$D,
             headerSize: headerSize$D,
             maxSize: maxSize$D,
             accessLevel: accessLevel$D,
-            parameters: {},
+            parameters: {
+                electroMagneticIndication: true,
+                magneticIndication: false
+            },
             bytes: [
-                0x12, 0x00
+                0x64, 0x01,
+                0x01
+            ]
+        },
+        'magnetic screen is present': {
+            id: id$D,
+            name: name$D,
+            headerSize: headerSize$D,
+            maxSize: maxSize$D,
+            accessLevel: accessLevel$D,
+            parameters: {
+                electroMagneticIndication: false,
+                magneticIndication: true
+            },
+            bytes: [
+                0x64, 0x01,
+                0x02
+            ]
+        },
+        'both screens are present': {
+            id: id$D,
+            name: name$D,
+            headerSize: headerSize$D,
+            maxSize: maxSize$D,
+            accessLevel: accessLevel$D,
+            parameters: {
+                electroMagneticIndication: true,
+                magneticIndication: true
+            },
+            bytes: [
+                0x64, 0x01,
+                0x03
             ]
         }
     };
     const fromBytes$D = (bytes) => {
-        if (bytes.length !== maxSize$D) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
+        const buffer = new CommandBinaryBuffer$2(bytes);
+        const flags = buffer.getUint8();
+        const electroMagneticIndication = !!(flags & 1);
+        const magneticIndication = !!(flags & 2);
+        return {
+            electroMagneticIndication,
+            magneticIndication
+        };
     };
-    const toBytes$D = () => toBytes$2f(id$D);
+    const toBytes$D = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$D);
+        let flags = 0;
+        if (parameters.electroMagneticIndication) {
+            flags |= 1;
+        }
+        if (parameters.magneticIndication) {
+            flags |= 2;
+        }
+        buffer.setUint8(flags);
+        return toBytes$2h(id$D, buffer.data);
+    };
 
-    var setSpecialDay = /*#__PURE__*/Object.freeze({
+    var setSpecialOperation = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$D,
         examples: examples$D,
@@ -9521,83 +9697,34 @@
         toBytes: toBytes$D
     });
 
-    const id$C = setSpecialOperation$3;
-    const name$C = commandNames$2[setSpecialOperation$3];
+    const id$C = turnRelayOff$3;
+    const name$C = commandNames$1[turnRelayOff$3];
     const headerSize$C = 2;
-    const maxSize$C = 1;
+    const maxSize$C = 0;
     const accessLevel$C = READ_WRITE;
     const isLoraOnly$C = false;
     const examples$C = {
-        'electro-magnetic screen is present': {
+        'simple response': {
             id: id$C,
             name: name$C,
             headerSize: headerSize$C,
             maxSize: maxSize$C,
             accessLevel: accessLevel$C,
-            parameters: {
-                electroMagneticIndication: true,
-                magneticIndication: false
-            },
+            parameters: {},
             bytes: [
-                0x64, 0x01,
-                0x01
-            ]
-        },
-        'magnetic screen is present': {
-            id: id$C,
-            name: name$C,
-            headerSize: headerSize$C,
-            maxSize: maxSize$C,
-            accessLevel: accessLevel$C,
-            parameters: {
-                electroMagneticIndication: false,
-                magneticIndication: true
-            },
-            bytes: [
-                0x64, 0x01,
-                0x02
-            ]
-        },
-        'both screens are present': {
-            id: id$C,
-            name: name$C,
-            headerSize: headerSize$C,
-            maxSize: maxSize$C,
-            accessLevel: accessLevel$C,
-            parameters: {
-                electroMagneticIndication: true,
-                magneticIndication: true
-            },
-            bytes: [
-                0x64, 0x01,
-                0x03
+                0x19, 0x00
             ]
         }
     };
     const fromBytes$C = (bytes) => {
-        const buffer = new CommandBinaryBuffer$2(bytes);
-        const flags = buffer.getUint8();
-        const electroMagneticIndication = !!(flags & 1);
-        const magneticIndication = !!(flags & 2);
-        return {
-            electroMagneticIndication,
-            magneticIndication
-        };
-    };
-    const toBytes$C = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$C);
-        let flags = 0;
-        if (parameters.electroMagneticIndication) {
-            flags |= 1;
+        if (bytes.length !== maxSize$C) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        if (parameters.magneticIndication) {
-            flags |= 2;
-        }
-        buffer.setUint8(flags);
-        return toBytes$2f(id$C, buffer.data);
+        return {};
     };
+    const toBytes$C = () => toBytes$2h(id$C);
 
-    var setSpecialOperation = /*#__PURE__*/Object.freeze({
+    var turnRelayOff = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$C,
         examples: examples$C,
@@ -9610,8 +9737,8 @@
         toBytes: toBytes$C
     });
 
-    const id$B = turnRelayOff$3;
-    const name$B = commandNames$2[turnRelayOff$3];
+    const id$B = turnRelayOn$3;
+    const name$B = commandNames$1[turnRelayOn$3];
     const headerSize$B = 2;
     const maxSize$B = 0;
     const accessLevel$B = READ_WRITE;
@@ -9625,7 +9752,7 @@
             accessLevel: accessLevel$B,
             parameters: {},
             bytes: [
-                0x19, 0x00
+                0x18, 0x00
             ]
         }
     };
@@ -9635,9 +9762,9 @@
         }
         return {};
     };
-    const toBytes$B = () => toBytes$2f(id$B);
+    const toBytes$B = () => toBytes$2h(id$B);
 
-    var turnRelayOff = /*#__PURE__*/Object.freeze({
+    var turnRelayOn = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$B,
         examples: examples$B,
@@ -9650,59 +9777,19 @@
         toBytes: toBytes$B
     });
 
-    const id$A = turnRelayOn$3;
-    const name$A = commandNames$2[turnRelayOn$3];
+    const id$A = errorResponse$2;
+    const name$A = commandNames$1[errorResponse$2];
     const headerSize$A = 2;
-    const maxSize$A = 0;
-    const accessLevel$A = READ_WRITE;
+    const accessLevel$A = READ_ONLY;
+    const maxSize$A = 2;
     const isLoraOnly$A = false;
     const examples$A = {
-        'simple response': {
+        'ACCESS_DENIED on TurnRelayOn command': {
             id: id$A,
             name: name$A,
             headerSize: headerSize$A,
             maxSize: maxSize$A,
             accessLevel: accessLevel$A,
-            parameters: {},
-            bytes: [
-                0x18, 0x00
-            ]
-        }
-    };
-    const fromBytes$A = (bytes) => {
-        if (bytes.length !== maxSize$A) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        return {};
-    };
-    const toBytes$A = () => toBytes$2f(id$A);
-
-    var turnRelayOn = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$A,
-        examples: examples$A,
-        fromBytes: fromBytes$A,
-        headerSize: headerSize$A,
-        id: id$A,
-        isLoraOnly: isLoraOnly$A,
-        maxSize: maxSize$A,
-        name: name$A,
-        toBytes: toBytes$A
-    });
-
-    const id$z = errorResponse$2;
-    const name$z = commandNames$2[errorResponse$2];
-    const headerSize$z = 2;
-    const accessLevel$z = READ_ONLY;
-    const maxSize$z = 2;
-    const isLoraOnly$z = false;
-    const examples$z = {
-        'ACCESS_DENIED on TurnRelayOn command': {
-            id: id$z,
-            name: name$z,
-            headerSize: headerSize$z,
-            maxSize: maxSize$z,
-            accessLevel: accessLevel$z,
             parameters: {
                 commandId: 0x18,
                 commandName: 'turnRelayOn',
@@ -9726,36 +9813,36 @@
             errorName: resultNames[errorCode]
         };
     });
-    const fromBytes$z = getFromBytes$1(commandNames$2);
-    const toBytes$z = (parameters) => {
-        const buffer = new CommandBinaryBuffer$2(maxSize$z);
+    const fromBytes$A = getFromBytes$1(commandNames$1);
+    const toBytes$A = (parameters) => {
+        const buffer = new CommandBinaryBuffer$2(maxSize$A);
         buffer.setUint8(parameters.commandId);
         buffer.setUint8(parameters.errorCode);
-        return toBytes$2f(id$z, buffer.data);
+        return toBytes$2h(id$A, buffer.data);
     };
 
     var mtx1$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$z,
-        examples: examples$z,
-        fromBytes: fromBytes$z,
+        accessLevel: accessLevel$A,
+        examples: examples$A,
+        fromBytes: fromBytes$A,
         getFromBytes: getFromBytes$1,
-        headerSize: headerSize$z,
-        id: id$z,
-        isLoraOnly: isLoraOnly$z,
-        maxSize: maxSize$z,
-        name: name$z,
-        toBytes: toBytes$z
+        headerSize: headerSize$A,
+        id: id$A,
+        isLoraOnly: isLoraOnly$A,
+        maxSize: maxSize$A,
+        name: name$A,
+        toBytes: toBytes$A
     });
 
-    const { id: id$y, name: name$y, headerSize: headerSize$y, accessLevel: accessLevel$y, maxSize: maxSize$y, isLoraOnly: isLoraOnly$y, toBytes: toBytes$y } = mtx1$1;
-    const examples$y = {
+    const { id: id$z, name: name$z, headerSize: headerSize$z, accessLevel: accessLevel$z, maxSize: maxSize$z, isLoraOnly: isLoraOnly$z, toBytes: toBytes$z } = mtx1$1;
+    const examples$z = {
         'NO_DATA_FOR_DATE on getHalfHourDemandVariExport command': {
-            id: id$y,
-            name: name$y,
-            headerSize: headerSize$y,
-            maxSize: maxSize$y,
-            accessLevel: accessLevel$y,
+            id: id$z,
+            name: name$z,
+            headerSize: headerSize$z,
+            maxSize: maxSize$z,
+            accessLevel: accessLevel$z,
             parameters: {
                 commandId: 0x54,
                 commandName: 'getHalfHourDemandVariExport',
@@ -9768,36 +9855,37 @@
             ]
         }
     };
-    const fromBytes$y = getFromBytes$1(commandNames);
+    const fromBytes$z = getFromBytes$1(commandNames);
 
     var errorResponse = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$y,
-        examples: examples$y,
-        fromBytes: fromBytes$y,
-        headerSize: headerSize$y,
-        id: id$y,
-        isLoraOnly: isLoraOnly$y,
-        maxSize: maxSize$y,
-        name: name$y,
-        toBytes: toBytes$y
+        accessLevel: accessLevel$z,
+        examples: examples$z,
+        fromBytes: fromBytes$z,
+        headerSize: headerSize$z,
+        id: id$z,
+        isLoraOnly: isLoraOnly$z,
+        maxSize: maxSize$z,
+        name: name$z,
+        toBytes: toBytes$z
     });
 
-    const id$x = getCriticalEvent$2;
-    const name$x = commandNames[getCriticalEvent$2];
-    const headerSize$x = 2;
-    const accessLevel$x = READ_ONLY;
-    const maxSize$x = 9;
-    const isLoraOnly$x = false;
-    const examples$x = {
+    const id$y = getCriticalEvent$2;
+    const name$y = commandNames[getCriticalEvent$2];
+    const headerSize$y = 2;
+    const accessLevel$y = READ_ONLY;
+    const maxSize$y = 9;
+    const isLoraOnly$y = false;
+    const examples$y = {
         'simple response': {
-            id: id$x,
-            name: name$x,
-            headerSize: headerSize$x,
-            accessLevel: accessLevel$x,
-            maxSize: maxSize$x,
+            id: id$y,
+            name: name$y,
+            headerSize: headerSize$y,
+            accessLevel: accessLevel$y,
+            maxSize: maxSize$y,
             parameters: {
                 event: 1,
+                name: 'MAGNETIC_ON',
                 index: 1,
                 date: {
                     year: 23,
@@ -9815,13 +9903,14 @@
             ]
         }
     };
-    const fromBytes$x = (bytes) => {
-        if (bytes.length !== maxSize$x) {
+    const fromBytes$y = (bytes) => {
+        if (bytes.length !== maxSize$y) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         const [event, index, year, month, date, hours, minutes, seconds, count] = bytes;
         return {
             event,
+            name: criticalEventNames[event],
             index,
             date: {
                 year,
@@ -9834,9 +9923,9 @@
             count
         };
     };
-    const toBytes$x = (parameters) => {
+    const toBytes$y = (parameters) => {
         const { event, index, date, count } = parameters;
-        return toBytes$2f(id$x, [
+        return toBytes$2h(id$y, [
             event,
             index,
             date.year,
@@ -9851,30 +9940,30 @@
 
     var getCriticalEvent = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$x,
-        examples: examples$x,
-        fromBytes: fromBytes$x,
-        headerSize: headerSize$x,
-        id: id$x,
-        isLoraOnly: isLoraOnly$x,
-        maxSize: maxSize$x,
-        name: name$x,
-        toBytes: toBytes$x
+        accessLevel: accessLevel$y,
+        examples: examples$y,
+        fromBytes: fromBytes$y,
+        headerSize: headerSize$y,
+        id: id$y,
+        isLoraOnly: isLoraOnly$y,
+        maxSize: maxSize$y,
+        name: name$y,
+        toBytes: toBytes$y
     });
 
-    const id$w = getCurrentStatusMeter$1;
-    const name$w = commandNames[getCurrentStatusMeter$1];
-    const headerSize$w = 2;
-    const maxSize$w = 41;
-    const accessLevel$w = READ_ONLY;
-    const isLoraOnly$w = false;
-    const examples$w = {
+    const id$x = getCurrentStatusMeter$1;
+    const name$x = commandNames[getCurrentStatusMeter$1];
+    const headerSize$x = 2;
+    const maxSize$x = 41;
+    const accessLevel$x = READ_ONLY;
+    const isLoraOnly$x = false;
+    const examples$x = {
         'simple response': {
-            id: id$w,
-            name: name$w,
-            headerSize: headerSize$w,
-            maxSize: maxSize$w,
-            accessLevel: accessLevel$w,
+            id: id$x,
+            name: name$x,
+            headerSize: headerSize$x,
+            maxSize: maxSize$x,
+            accessLevel: accessLevel$x,
             parameters: {
                 operatingSeconds: 74320,
                 tbadVAAll: 34567,
@@ -9932,7 +10021,7 @@
             ]
         }
     };
-    const fromBytes$w = (data) => {
+    const fromBytes$x = (data) => {
         const buffer = new CommandBinaryBuffer(data);
         const operatingSeconds = buffer.getUint32();
         const tbadVAAll = buffer.getUint32();
@@ -9970,8 +10059,8 @@
             isSummerTime
         };
     };
-    const toBytes$w = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$w);
+    const toBytes$x = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$x);
         const statusEventValue = fromObject(eventStatusMask, parameters.statusEvent);
         buffer.setUint32(parameters.operatingSeconds);
         buffer.setUint32(parameters.tbadVAAll);
@@ -9990,20 +10079,20 @@
         buffer.setUint8(parameters.currentTariffs['A-']);
         buffer.setUint8((statusEventValue >> 8) & 0xff);
         buffer.setUint8(parameters.isSummerTime ? 1 : 0);
-        return toBytes$2f(id$w, buffer.data);
+        return toBytes$2h(id$x, buffer.data);
     };
 
     var getCurrentStatusMeter = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$w,
-        examples: examples$w,
-        fromBytes: fromBytes$w,
-        headerSize: headerSize$w,
-        id: id$w,
-        isLoraOnly: isLoraOnly$w,
-        maxSize: maxSize$w,
-        name: name$w,
-        toBytes: toBytes$w
+        accessLevel: accessLevel$x,
+        examples: examples$x,
+        fromBytes: fromBytes$x,
+        headerSize: headerSize$x,
+        id: id$x,
+        isLoraOnly: isLoraOnly$x,
+        maxSize: maxSize$x,
+        name: name$x,
+        toBytes: toBytes$x
     });
 
     const defaultJsonOptions = {
@@ -10011,19 +10100,19 @@
         isGreen: false
     };
 
-    const id$v = getCurrentValues$1;
-    const name$v = commandNames[getCurrentValues$1];
-    const headerSize$v = 2;
-    const accessLevel$v = READ_ONLY;
-    const maxSize$v = 52;
-    const isLoraOnly$v = false;
-    const examples$v = {
+    const id$w = getCurrentValues$1;
+    const name$w = commandNames[getCurrentValues$1];
+    const headerSize$w = 2;
+    const accessLevel$w = READ_ONLY;
+    const maxSize$w = 52;
+    const isLoraOnly$w = false;
+    const examples$w = {
         'simple response': {
-            id: id$v,
-            name: name$v,
-            maxSize: maxSize$v,
-            headerSize: headerSize$v,
-            accessLevel: accessLevel$v,
+            id: id$w,
+            name: name$w,
+            maxSize: maxSize$w,
+            headerSize: headerSize$w,
+            accessLevel: accessLevel$w,
             parameters: {
                 vaRms: 230000,
                 vbRms: 231000,
@@ -10057,7 +10146,7 @@
             ]
         }
     };
-    const fromBytes$v = (bytes) => {
+    const fromBytes$w = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
         return {
             vaRms: buffer.getInt32(),
@@ -10075,8 +10164,8 @@
             iNeutral: buffer.getInt32()
         };
     };
-    const toBytes$v = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$v);
+    const toBytes$w = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$w);
         buffer.setInt32(parameters.vaRms);
         buffer.setInt32(parameters.vbRms);
         buffer.setInt32(parameters.vcRms);
@@ -10090,7 +10179,7 @@
         buffer.setInt32(parameters.varB);
         buffer.setInt32(parameters.varC);
         buffer.setInt32(parameters.iNeutral);
-        return toBytes$2f(id$v, buffer.data);
+        return toBytes$2h(id$w, buffer.data);
     };
     const toJson$a = (parameters, options = defaultJsonOptions) => {
         if (!options.dlms) {
@@ -10119,15 +10208,15 @@
 
     var getCurrentValues = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$v,
-        examples: examples$v,
-        fromBytes: fromBytes$v,
-        headerSize: headerSize$v,
-        id: id$v,
-        isLoraOnly: isLoraOnly$v,
-        maxSize: maxSize$v,
-        name: name$v,
-        toBytes: toBytes$v,
+        accessLevel: accessLevel$w,
+        examples: examples$w,
+        fromBytes: fromBytes$w,
+        headerSize: headerSize$w,
+        id: id$w,
+        isLoraOnly: isLoraOnly$w,
+        maxSize: maxSize$w,
+        name: name$w,
+        toBytes: toBytes$w,
         toJson: toJson$a
     });
 
@@ -10160,19 +10249,19 @@
 
     const COMMAND_SIZE$1 = 51;
     const MAX_COMMAND_SIZE$2 = COMMAND_SIZE$1 + PACKED_ENERGY_TYPE_SIZE;
-    const id$u = getDayDemand$2;
-    const name$u = commandNames[getDayDemand$2];
-    const headerSize$u = 2;
-    const maxSize$u = MAX_COMMAND_SIZE$2;
-    const accessLevel$u = READ_ONLY;
-    const isLoraOnly$u = false;
-    const examples$u = {
+    const id$v = getDayDemand$2;
+    const name$v = commandNames[getDayDemand$2];
+    const headerSize$v = 2;
+    const maxSize$v = MAX_COMMAND_SIZE$2;
+    const accessLevel$v = READ_ONLY;
+    const isLoraOnly$v = false;
+    const examples$v = {
         'default A+, R+, R- energies': {
-            id: id$u,
-            name: name$u,
-            headerSize: headerSize$u,
-            maxSize: maxSize$u,
-            accessLevel: accessLevel$u,
+            id: id$v,
+            name: name$v,
+            headerSize: headerSize$v,
+            maxSize: maxSize$v,
+            accessLevel: accessLevel$v,
             parameters: {
                 date: {
                     year: 24,
@@ -10195,11 +10284,11 @@
             ]
         },
         'received A-, R+, R- energies by T1, T4 only': {
-            id: id$u,
-            name: name$u,
-            headerSize: headerSize$u,
-            maxSize: maxSize$u,
-            accessLevel: accessLevel$u,
+            id: id$v,
+            name: name$v,
+            headerSize: headerSize$v,
+            maxSize: maxSize$v,
+            accessLevel: accessLevel$v,
             parameters: {
                 date: {
                     year: 24,
@@ -10222,7 +10311,7 @@
             ]
         }
     };
-    const fromBytes$u = (bytes) => {
+    const fromBytes$v = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
         let parameters;
         if (bytes.length === COMMAND_SIZE$1) {
@@ -10239,11 +10328,11 @@
         }
         return parameters;
     };
-    const toBytes$u = (parameters) => {
+    const toBytes$v = (parameters) => {
         const buffer = new CommandBinaryBuffer(getPackedEnergiesWithDateSize(parameters));
         buffer.setDate(parameters.date);
         buffer.setPackedEnergyWithType(parameters);
-        return toBytes$2f(id$u, buffer.data);
+        return toBytes$2h(id$v, buffer.data);
     };
     const toJson$9 = (parameters, options = defaultJsonOptions) => {
         if (!options.dlms) {
@@ -10258,32 +10347,32 @@
 
     var getDayDemand = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$u,
-        examples: examples$u,
-        fromBytes: fromBytes$u,
-        headerSize: headerSize$u,
-        id: id$u,
-        isLoraOnly: isLoraOnly$u,
-        maxSize: maxSize$u,
-        name: name$u,
-        toBytes: toBytes$u,
+        accessLevel: accessLevel$v,
+        examples: examples$v,
+        fromBytes: fromBytes$v,
+        headerSize: headerSize$v,
+        id: id$v,
+        isLoraOnly: isLoraOnly$v,
+        maxSize: maxSize$v,
+        name: name$v,
+        toBytes: toBytes$v,
         toJson: toJson$9
     });
 
     const isGreen$3 = true;
-    const id$t = getDayDemandExport$2;
-    const name$t = commandNames[getDayDemandExport$2];
-    const headerSize$t = 2;
-    const maxSize$t = 51;
-    const accessLevel$t = READ_ONLY;
-    const isLoraOnly$t = false;
-    const examples$t = {
+    const id$u = getDayDemandExport$2;
+    const name$u = commandNames[getDayDemandExport$2];
+    const headerSize$u = 2;
+    const maxSize$u = 51;
+    const accessLevel$u = READ_ONLY;
+    const isLoraOnly$u = false;
+    const examples$u = {
         'simple response': {
-            id: id$t,
-            name: name$t,
-            headerSize: headerSize$t,
-            maxSize: maxSize$t,
-            accessLevel: accessLevel$t,
+            id: id$u,
+            name: name$u,
+            headerSize: headerSize$u,
+            maxSize: maxSize$u,
+            accessLevel: accessLevel$u,
             parameters: {
                 date: {
                     year: 24,
@@ -10306,18 +10395,18 @@
             ]
         }
     };
-    const fromBytes$t = (bytes) => {
+    const fromBytes$u = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
         return {
             date: buffer.getDate(),
             energies: buffer.getEnergies()
         };
     };
-    const toBytes$t = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$t);
+    const toBytes$u = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$u);
         buffer.setDate(parameters.date);
         buffer.setEnergies(parameters.energies);
-        return toBytes$2f(id$t, buffer.data);
+        return toBytes$2h(id$u, buffer.data);
     };
     const toJson$8 = (parameters, options = defaultJsonOptions) => {
         if (!options.dlms) {
@@ -10332,6 +10421,106 @@
 
     var getDayDemandExport = /*#__PURE__*/Object.freeze({
         __proto__: null,
+        accessLevel: accessLevel$u,
+        examples: examples$u,
+        fromBytes: fromBytes$u,
+        headerSize: headerSize$u,
+        id: id$u,
+        isLoraOnly: isLoraOnly$u,
+        maxSize: maxSize$u,
+        name: name$u,
+        toBytes: toBytes$u,
+        toJson: toJson$8
+    });
+
+    const id$t = getDayMaxDemand$1;
+    const name$t = commandNames[getDayMaxDemand$1];
+    const headerSize$t = 2;
+    const accessLevel$t = READ_ONLY;
+    const maxSize$t = 75;
+    const isLoraOnly$t = false;
+    const examples$t = {
+        'response for 2023.03.12': {
+            id: id$t,
+            name: name$t,
+            headerSize: headerSize$t,
+            accessLevel: accessLevel$t,
+            maxSize: maxSize$t,
+            parameters: {
+                date: {
+                    year: 23,
+                    month: 3,
+                    date: 12
+                },
+                maxDemands: [
+                    {
+                        hourPmax: 0,
+                        minPmax: 10,
+                        pmax: 100,
+                        hourVariMax: 1,
+                        minVariMax: 23,
+                        variMax: 2000,
+                        hourVareMax: 8,
+                        minVareMax: 15,
+                        vareMax: 5555
+                    },
+                    {
+                        hourPmax: 2,
+                        minPmax: 20,
+                        pmax: 1000,
+                        hourVariMax: 3,
+                        minVariMax: 24,
+                        variMax: 20000,
+                        hourVareMax: 9,
+                        minVareMax: 16,
+                        vareMax: 55555
+                    },
+                    {
+                        hourPmax: 4,
+                        minPmax: 30,
+                        pmax: 10000,
+                        hourVariMax: 5,
+                        minVariMax: 25,
+                        variMax: 200000,
+                        hourVareMax: 10,
+                        minVareMax: 17,
+                        vareMax: 555555
+                    },
+                    {
+                        hourPmax: 6,
+                        minPmax: 40,
+                        pmax: 100000,
+                        hourVariMax: 7,
+                        minVariMax: 26,
+                        variMax: 2000000,
+                        hourVareMax: 11,
+                        minVareMax: 18,
+                        vareMax: 5555555
+                    }
+                ]
+            },
+            bytes: [
+                0x31, 0x4b,
+                0x17, 0x03, 0x0c,
+                0x00, 0x0a, 0x00, 0x00, 0x00, 0x64, 0x01, 0x17, 0x00, 0x00, 0x07, 0xd0, 0x08, 0x0f, 0x00, 0x00, 0x15, 0xb3,
+                0x02, 0x14, 0x00, 0x00, 0x03, 0xe8, 0x03, 0x18, 0x00, 0x00, 0x4e, 0x20, 0x09, 0x10, 0x00, 0x00, 0xd9, 0x03,
+                0x04, 0x1e, 0x00, 0x00, 0x27, 0x10, 0x05, 0x19, 0x00, 0x03, 0x0d, 0x40, 0x0a, 0x11, 0x00, 0x08, 0x7a, 0x23,
+                0x06, 0x28, 0x00, 0x01, 0x86, 0xa0, 0x07, 0x1a, 0x00, 0x1e, 0x84, 0x80, 0x0b, 0x12, 0x00, 0x54, 0xc5, 0x63
+            ]
+        }
+    };
+    const fromBytes$t = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        return buffer.getDayMaxDemandResponse();
+    };
+    const toBytes$t = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$t);
+        buffer.setDayMaxDemandResponse(parameters);
+        return toBytes$2h(id$t, buffer.getBytesToOffset());
+    };
+
+    var getDayMaxDemand = /*#__PURE__*/Object.freeze({
+        __proto__: null,
         accessLevel: accessLevel$t,
         examples: examples$t,
         fromBytes: fromBytes$t,
@@ -10340,12 +10529,11 @@
         isLoraOnly: isLoraOnly$t,
         maxSize: maxSize$t,
         name: name$t,
-        toBytes: toBytes$t,
-        toJson: toJson$8
+        toBytes: toBytes$t
     });
 
-    const id$s = getDayMaxDemand$1;
-    const name$s = commandNames[getDayMaxDemand$1];
+    const id$s = getDayMaxDemandExport$1;
+    const name$s = commandNames[getDayMaxDemandExport$1];
     const headerSize$s = 2;
     const accessLevel$s = READ_ONLY;
     const maxSize$s = 75;
@@ -10411,7 +10599,7 @@
                 ]
             },
             bytes: [
-                0x31, 0x4b,
+                0x58, 0x4b,
                 0x17, 0x03, 0x0c,
                 0x00, 0x0a, 0x00, 0x00, 0x00, 0x64, 0x01, 0x17, 0x00, 0x00, 0x07, 0xd0, 0x08, 0x0f, 0x00, 0x00, 0x15, 0xb3,
                 0x02, 0x14, 0x00, 0x00, 0x03, 0xe8, 0x03, 0x18, 0x00, 0x00, 0x4e, 0x20, 0x09, 0x10, 0x00, 0x00, 0xd9, 0x03,
@@ -10427,10 +10615,10 @@
     const toBytes$s = (parameters) => {
         const buffer = new CommandBinaryBuffer(maxSize$s);
         buffer.setDayMaxDemandResponse(parameters);
-        return toBytes$2f(id$s, buffer.getBytesToOffset());
+        return toBytes$2h(id$s, buffer.getBytesToOffset());
     };
 
-    var getDayMaxDemand = /*#__PURE__*/Object.freeze({
+    var getDayMaxDemandExport = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$s,
         examples: examples$s,
@@ -10443,24 +10631,1772 @@
         toBytes: toBytes$s
     });
 
-    const id$r = getDayMaxDemandExport$1;
-    const name$r = commandNames[getDayMaxDemandExport$1];
+    const id$r = getDemand$2;
+    const name$r = commandNames[getDemand$2];
     const headerSize$r = 2;
+    const maxSize$r = maxSize$1s + 48 * 2;
     const accessLevel$r = READ_ONLY;
-    const maxSize$r = 75;
     const isLoraOnly$r = false;
     const examples$r = {
-        'response for 2023.03.12': {
+        'response for A+': {
             id: id$r,
             name: name$r,
             headerSize: headerSize$r,
-            accessLevel: accessLevel$r,
             maxSize: maxSize$r,
+            parameters: {
+                date: {
+                    year: 21,
+                    month: 6,
+                    date: 18
+                },
+                demandParam: 0x81,
+                firstIndex: 0,
+                count: 2,
+                period: 30,
+                demands: [2000, 43981]
+            },
+            bytes: [
+                0x76, 0x0b,
+                0x2a, 0xd2,
+                0x81,
+                0x00, 0x00,
+                0x02,
+                0x1e,
+                0x07, 0xd0,
+                0xab, 0xcd
+            ]
+        }
+    };
+    const fromBytes$r = (bytes) => {
+        if (!bytes || bytes.length < maxSize$1s) {
+            throw new Error('Invalid uplink GetDemand byte length.');
+        }
+        const buffer = new CommandBinaryBuffer(bytes);
+        const parameters = buffer.getDemand();
+        if (bytes.length !== maxSize$1s + (2 * parameters.count)) {
+            throw new Error('Invalid uplink GetDemand demands byte length.');
+        }
+        const demands = new Array(parameters.count).fill(0).map(() => buffer.getUint16());
+        return {
+            ...parameters,
+            demands
+        };
+    };
+    const toBytes$r = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$1s + parameters.count * 2);
+        buffer.setDemand(parameters);
+        parameters.demands.forEach(value => buffer.setUint16(value));
+        return toBytes$2h(id$r, buffer.data);
+    };
+
+    var getDemand = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$r,
+        examples: examples$r,
+        fromBytes: fromBytes$r,
+        headerSize: headerSize$r,
+        id: id$r,
+        isLoraOnly: isLoraOnly$r,
+        maxSize: maxSize$r,
+        name: name$r,
+        toBytes: toBytes$r
+    });
+
+    const id$q = getDisplayParam$2;
+    const name$q = commandNames[getDisplayParam$2];
+    const headerSize$q = 2;
+    const maxSize$q = 65;
+    const accessLevel$q = READ_ONLY;
+    const isLoraOnly$q = false;
+    const examples$q = {
+        'mode with order': {
+            id: id$q,
+            name: name$q,
+            headerSize: headerSize$q,
+            maxSize: maxSize$q,
+            accessLevel: accessLevel$q,
+            parameters: {
+                displayMode: MAIN_1,
+                order: [4, 5, 6, 7]
+            },
+            bytes: [
+                0x5e, 0x05,
+                0x00, 0x04, 0x05, 0x06, 0x07
+            ]
+        },
+        'mode without order': {
+            id: id$q,
+            name: name$q,
+            maxSize: maxSize$q,
+            accessLevel: accessLevel$q,
+            parameters: {
+                displayMode: MAIN_2,
+                order: []
+            },
+            bytes: [
+                0x5e, 0x01,
+                0x01
+            ]
+        }
+    };
+    const fromBytes$q = (bytes) => {
+        const [displayMode, ...order] = bytes;
+        return { displayMode, order };
+    };
+    const toBytes$q = (parameters) => (toBytes$2h(id$q, [parameters.displayMode, ...parameters.order]));
+
+    var getDisplayParam = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$q,
+        examples: examples$q,
+        fromBytes: fromBytes$q,
+        headerSize: headerSize$q,
+        id: id$q,
+        isLoraOnly: isLoraOnly$q,
+        maxSize: maxSize$q,
+        name: name$q,
+        toBytes: toBytes$q
+    });
+
+    const id$p = getEnergy$2;
+    const name$p = commandNames[getEnergy$2];
+    const headerSize$p = 2;
+    const accessLevel$p = READ_ONLY;
+    const maxSize$p = 48;
+    const isLoraOnly$p = false;
+    const examples$p = {
+        'simple response': {
+            id: id$p,
+            name: name$p,
+            headerSize: headerSize$p,
+            maxSize: maxSize$p,
+            accessLevel: accessLevel$p,
+            parameters: {
+                wh: [40301230, 3334244, 15000, 2145623],
+                vari: [25000, 1234567, 789456, 9876543],
+                vare: [987654, 654321, 123456, 789012]
+            },
+            bytes: [
+                0x0f, 0x30,
+                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
+                0x00, 0x32, 0xe0, 0x64, 0x00, 0x12, 0xd6, 0x87, 0x00, 0x09, 0xfb, 0xf1,
+                0x00, 0x00, 0x3a, 0x98, 0x00, 0x0c, 0x0b, 0xd0, 0x00, 0x01, 0xe2, 0x40,
+                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
+            ]
+        }
+    };
+    const fromBytes$p = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        return buffer.getEnergies();
+    };
+    const toBytes$p = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$p);
+        buffer.setEnergies(parameters);
+        return toBytes$2h(id$p, buffer.data);
+    };
+    const toJson$7 = (parameters, options = defaultJsonOptions) => (options.dlms
+        ? JSON.stringify(mapEnergiesToObisCodes(parameters, options.isGreen, A_PLUS_R_PLUS_R_MINUS))
+        : JSON.stringify(parameters));
+
+    var getEnergy = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$p,
+        examples: examples$p,
+        fromBytes: fromBytes$p,
+        headerSize: headerSize$p,
+        id: id$p,
+        isLoraOnly: isLoraOnly$p,
+        maxSize: maxSize$p,
+        name: name$p,
+        toBytes: toBytes$p,
+        toJson: toJson$7
+    });
+
+    const COMMAND_SIZE = 51;
+    const MAX_COMMAND_SIZE$1 = COMMAND_SIZE + PACKED_ENERGY_TYPE_SIZE;
+    const id$o = getEnergyDayPrevious$2;
+    const name$o = commandNames[getEnergyDayPrevious$2];
+    const headerSize$o = 2;
+    const maxSize$o = MAX_COMMAND_SIZE$1;
+    const accessLevel$o = READ_ONLY;
+    const isLoraOnly$o = false;
+    const examples$o = {
+        'simple response': {
+            id: id$o,
+            name: name$o,
+            headerSize: headerSize$o,
+            maxSize: maxSize$o,
+            accessLevel: accessLevel$o,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 3,
+                    date: 22
+                },
+                energies: {
+                    wh: [40301230, 3334244, 15000, 2145623],
+                    vari: [25000, 1234567, 789456, 9876543],
+                    vare: [987654, 654321, 123456, 789012]
+                }
+            },
+            bytes: [
+                0x03, 0x33,
+                0x18, 0x03, 0x16,
+                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
+                0x00, 0x32, 0xe0, 0x64, 0x00, 0x12, 0xd6, 0x87, 0x00, 0x09, 0xfb, 0xf1,
+                0x00, 0x00, 0x3a, 0x98, 0x00, 0x0c, 0x0b, 0xd0, 0x00, 0x01, 0xe2, 0x40,
+                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
+            ]
+        },
+        'response with A-R+R- energy by T1, T4 only': {
+            id: id$o,
+            name: name$o,
+            headerSize: headerSize$o,
+            maxSize: maxSize$o,
+            accessLevel: accessLevel$o,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 3,
+                    date: 22
+                },
+                energyType: 2,
+                energies: {
+                    wh: [40301230, null, null, 2145623],
+                    vari: [25000, null, null, 9876543],
+                    vare: [987654, null, null, 789012]
+                }
+            },
+            bytes: [
+                0x03, 0x1c,
+                0x18, 0x03, 0x16,
+                0x92,
+                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
+                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
+            ]
+        }
+    };
+    const fromBytes$o = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        let parameters;
+        if (bytes.length === COMMAND_SIZE) {
+            parameters = {
+                date: buffer.getDate(),
+                energies: buffer.getEnergies()
+            };
+        }
+        else {
+            parameters = {
+                date: buffer.getDate(),
+                ...buffer.getPackedEnergyWithType()
+            };
+        }
+        return parameters;
+    };
+    const toBytes$o = (parameters) => {
+        const buffer = new CommandBinaryBuffer(getPackedEnergiesWithDateSize(parameters));
+        buffer.setDate(parameters.date);
+        buffer.setPackedEnergyWithType(parameters);
+        return toBytes$2h(id$o, buffer.data);
+    };
+    const toJson$6 = (parameters, options = defaultJsonOptions) => {
+        if (!options.dlms) {
+            return JSON.stringify(parameters);
+        }
+        const { date, energyType, energies } = parameters;
+        return JSON.stringify({
+            date,
+            ...mapEnergiesToObisCodes(energies, options.isGreen, energyType ?? A_PLUS_R_PLUS_R_MINUS)
+        });
+    };
+
+    var getEnergyDayPrevious = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$o,
+        examples: examples$o,
+        fromBytes: fromBytes$o,
+        headerSize: headerSize$o,
+        id: id$o,
+        isLoraOnly: isLoraOnly$o,
+        maxSize: maxSize$o,
+        name: name$o,
+        toBytes: toBytes$o,
+        toJson: toJson$6
+    });
+
+    const isGreen$2 = true;
+    const id$n = getEnergyExport$2;
+    const name$n = commandNames[getEnergyExport$2];
+    const headerSize$n = 2;
+    const accessLevel$n = READ_ONLY;
+    const maxSize$n = 48;
+    const isLoraOnly$n = false;
+    const examples$n = {
+        'simple response': {
+            id: id$n,
+            name: name$n,
+            headerSize: headerSize$n,
+            maxSize: maxSize$n,
+            accessLevel: accessLevel$n,
+            parameters: {
+                wh: [40301230, 3334244, 15000, 2145623],
+                vari: [25000, 1234567, 789456, 9876543],
+                vare: [987654, 654321, 123456, 789012]
+            },
+            bytes: [
+                0x4e, 0x30,
+                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
+                0x00, 0x32, 0xe0, 0x64, 0x00, 0x12, 0xd6, 0x87, 0x00, 0x09, 0xfb, 0xf1,
+                0x00, 0x00, 0x3a, 0x98, 0x00, 0x0c, 0x0b, 0xd0, 0x00, 0x01, 0xe2, 0x40,
+                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
+            ]
+        }
+    };
+    const fromBytes$n = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        return buffer.getEnergies();
+    };
+    const toBytes$n = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$n);
+        buffer.setEnergies(parameters);
+        return toBytes$2h(id$n, buffer.data);
+    };
+    const toJson$5 = (parameters, options = defaultJsonOptions) => {
+        if (!options.dlms) {
+            return JSON.stringify(parameters);
+        }
+        return JSON.stringify(mapEnergiesToObisCodes(parameters, isGreen$2, A_MINUS_R_PLUS_R_MINUS));
+    };
+
+    var getEnergyExport = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$n,
+        examples: examples$n,
+        fromBytes: fromBytes$n,
+        headerSize: headerSize$n,
+        id: id$n,
+        isLoraOnly: isLoraOnly$n,
+        maxSize: maxSize$n,
+        name: name$n,
+        toBytes: toBytes$n,
+        toJson: toJson$5
+    });
+
+    const isGreen$1 = true;
+    const id$m = getEnergyExportDayPrevious$2;
+    const name$m = commandNames[getEnergyExportDayPrevious$2];
+    const headerSize$m = 2;
+    const maxSize$m = 48;
+    const accessLevel$m = READ_ONLY;
+    const isLoraOnly$m = false;
+    const examples$m = {
+        'simple response': {
+            id: id$m,
+            name: name$m,
+            headerSize: headerSize$m,
+            maxSize: maxSize$m,
+            accessLevel: accessLevel$m,
+            parameters: {
+                wh: [40301230, 3334244, 15000, 2145623],
+                vari: [25000, 1234567, 789456, 9876543],
+                vare: [987654, 654321, 123456, 789012]
+            },
+            bytes: [
+                0x50, 0x30,
+                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
+                0x00, 0x32, 0xe0, 0x64, 0x00, 0x12, 0xd6, 0x87, 0x00, 0x09, 0xfb, 0xf1,
+                0x00, 0x00, 0x3a, 0x98, 0x00, 0x0c, 0x0b, 0xd0, 0x00, 0x01, 0xe2, 0x40,
+                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
+            ]
+        }
+    };
+    const fromBytes$m = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        return buffer.getEnergies();
+    };
+    const toBytes$m = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$m);
+        buffer.setEnergies(parameters);
+        return toBytes$2h(id$m, buffer.data);
+    };
+    const toJson$4 = (parameters, options = defaultJsonOptions) => {
+        if (!options.dlms) {
+            return JSON.stringify(parameters);
+        }
+        return JSON.stringify(mapEnergiesToObisCodes(parameters, isGreen$1, A_MINUS_R_PLUS_R_MINUS));
+    };
+
+    var getEnergyExportDayPrevious = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$m,
+        examples: examples$m,
+        fromBytes: fromBytes$m,
+        headerSize: headerSize$m,
+        id: id$m,
+        isLoraOnly: isLoraOnly$m,
+        maxSize: maxSize$m,
+        name: name$m,
+        toBytes: toBytes$m,
+        toJson: toJson$4
+    });
+
+    const BODY_WITHOUT_EVENTS_SIZE = 3 + 1;
+    const EVENT_SIZE = 4;
+    const id$l = getEvents$3;
+    const name$l = commandNames$1[getEvents$3];
+    const headerSize$l = 2;
+    const accessLevel$l = READ_ONLY;
+    const maxSize$l = BODY_WITHOUT_EVENTS_SIZE + 255 * EVENT_SIZE;
+    const isLoraOnly$l = false;
+    const examples$l = {
+        'simple response': {
+            id: id$l,
+            name: name$l,
+            headerSize: headerSize$l,
+            accessLevel: accessLevel$l,
+            maxSize: maxSize$l,
             parameters: {
                 date: {
                     year: 23,
                     month: 3,
                     date: 12
+                },
+                eventsNumber: 2,
+                events: [
+                    {
+                        hours: 1,
+                        minutes: 12,
+                        seconds: 33,
+                        event: 157,
+                        eventName: 'POWER_OVER_RELAY_OFF',
+                        power: [22, 25, 12, 143]
+                    },
+                    {
+                        hours: 1,
+                        minutes: 12,
+                        seconds: 33,
+                        event: 121,
+                        eventName: 'TIME_CORRECT',
+                        newDate: {
+                            isSummerTime: false,
+                            seconds: 10,
+                            minutes: 22,
+                            hours: 3,
+                            day: 4,
+                            date: 12,
+                            month: 7,
+                            year: 24
+                        }
+                    }
+                ]
+            },
+            bytes: [
+                0x33, 0x18,
+                0x17, 0x03, 0x0c, 0x02, 0x01, 0x0c, 0x21, 0x9d, 0x16, 0x19, 0x0c, 0x8f,
+                0x01, 0x0c, 0x21, 0x79, 0x00, 0x0a, 0x16, 0x03, 0x04, 0x0c, 0x07, 0x18
+            ]
+        }
+    };
+    const getFromBytes = BinaryBufferConstructor => ((bytes) => {
+        if (bytes.length > maxSize$l) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
+        }
+        const buffer = new BinaryBufferConstructor(bytes);
+        const date = buffer.getDate();
+        const eventsNumber = buffer.getUint8();
+        const events = [];
+        while (!buffer.isEmpty) {
+            events.push(buffer.getEvent());
+        }
+        return { date, eventsNumber, events };
+    });
+    const getToBytes = BinaryBufferConstructor => ((parameters) => {
+        const buffer = new BinaryBufferConstructor(maxSize$l);
+        buffer.setDate(parameters.date);
+        buffer.setUint8(parameters.eventsNumber);
+        for (const event of parameters.events) {
+            buffer.setEvent(event);
+        }
+        return toBytes$2h(id$l, buffer.getBytesToOffset());
+    });
+    const fromBytes$l = getFromBytes(CommandBinaryBuffer$2);
+    const toBytes$l = getToBytes(CommandBinaryBuffer$2);
+
+    var mtx1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$l,
+        examples: examples$l,
+        fromBytes: fromBytes$l,
+        getFromBytes: getFromBytes,
+        getToBytes: getToBytes,
+        headerSize: headerSize$l,
+        id: id$l,
+        isLoraOnly: isLoraOnly$l,
+        maxSize: maxSize$l,
+        name: name$l,
+        toBytes: toBytes$l
+    });
+
+    const { id: id$k, name: name$k, headerSize: headerSize$k, accessLevel: accessLevel$k, maxSize: maxSize$k, isLoraOnly: isLoraOnly$k } = mtx1;
+    const examples$k = {
+        'simple response': {
+            id: id$k,
+            name: name$k,
+            headerSize: headerSize$k,
+            accessLevel: accessLevel$k,
+            maxSize: maxSize$k,
+            parameters: {
+                date: {
+                    year: 23,
+                    month: 3,
+                    date: 12
+                },
+                eventsNumber: 2,
+                events: [
+                    {
+                        hours: 1,
+                        minutes: 12,
+                        seconds: 33,
+                        event: 157,
+                        eventName: 'POWER_OVER_RELAY_OFF',
+                        power: [22, 25, 12, 143]
+                    },
+                    {
+                        hours: 1,
+                        minutes: 12,
+                        seconds: 33,
+                        event: 142,
+                        eventName: 'TIME_CORRECT',
+                        newDate: {
+                            isSummerTime: false,
+                            seconds: 10,
+                            minutes: 22,
+                            hours: 3,
+                            day: 4,
+                            date: 12,
+                            month: 7,
+                            year: 24
+                        }
+                    }
+                ]
+            },
+            bytes: [
+                0x33, 0x18,
+                0x17, 0x03, 0x0c, 0x02, 0x01, 0x0c, 0x21, 0x9d, 0x16, 0x19, 0x0c, 0x8f,
+                0x01, 0x0c, 0x21, 0x8e, 0x00, 0x0a, 0x16, 0x03, 0x04, 0x0c, 0x07, 0x18
+            ]
+        }
+    };
+    const fromBytes$k = getFromBytes(CommandBinaryBuffer);
+    const toBytes$k = getToBytes(CommandBinaryBuffer);
+
+    var getEvents = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$k,
+        examples: examples$k,
+        fromBytes: fromBytes$k,
+        headerSize: headerSize$k,
+        id: id$k,
+        isLoraOnly: isLoraOnly$k,
+        maxSize: maxSize$k,
+        name: name$k,
+        toBytes: toBytes$k
+    });
+
+    const id$j = getExtendedCurrentValues$1;
+    const name$j = commandNames[getExtendedCurrentValues$1];
+    const headerSize$j = 2;
+    const maxSize$j = 38;
+    const accessLevel$j = READ_ONLY;
+    const isLoraOnly$j = false;
+    const examples$j = {
+        'simple response': {
+            id: id$j,
+            name: name$j,
+            headerSize: headerSize$j,
+            maxSize: maxSize$j,
+            accessLevel: accessLevel$j,
+            parameters: {
+                temperature: 67,
+                frequency: 60,
+                vPhaseAB: 30,
+                vPhaseAC: 45,
+                pfA: 0.5,
+                pfB: -0.5,
+                pfC: 1,
+                pf: 0.95,
+                vaA: 5000,
+                vaB: 4500,
+                vaC: 4800,
+                vaSum: 14300,
+                uBatteryRtc: 338
+            },
+            bytes: [
+                0x3a, 0x26,
+                0x00, 0x43,
+                0x00, 0x3c,
+                0x00, 0x00, 0x00, 0x1e,
+                0x00, 0x00, 0x00, 0x2d,
+                0x01, 0xf4,
+                0xfe, 0x0c,
+                0x03, 0xe8,
+                0x03, 0xb6,
+                0x00, 0x00, 0x13, 0x88,
+                0x00, 0x00, 0x11, 0x94,
+                0x00, 0x00, 0x12, 0xc0,
+                0x00, 0x00, 0x37, 0xdc,
+                0x01, 0x52
+            ]
+        }
+    };
+    const fromBytes$j = (data) => {
+        const buffer = new CommandBinaryBuffer(data);
+        return {
+            temperature: buffer.getInt16(),
+            frequency: buffer.getUint16(),
+            vPhaseAB: buffer.getInt32(),
+            vPhaseAC: buffer.getInt32(),
+            pfA: buffer.getInt16() / 1000,
+            pfB: buffer.getInt16() / 1000,
+            pfC: buffer.getInt16() / 1000,
+            pf: buffer.getInt16() / 1000,
+            vaA: buffer.getInt32(),
+            vaB: buffer.getInt32(),
+            vaC: buffer.getInt32(),
+            vaSum: buffer.getInt32(),
+            uBatteryRtc: buffer.getInt16()
+        };
+    };
+    const toBytes$j = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$j);
+        buffer.setInt16(parameters.temperature);
+        buffer.setUint16(parameters.frequency);
+        buffer.setInt32(parameters.vPhaseAB);
+        buffer.setInt32(parameters.vPhaseAC);
+        buffer.setInt16(parameters.pfA * 1000);
+        buffer.setInt16(parameters.pfB * 1000);
+        buffer.setInt16(parameters.pfC * 1000);
+        buffer.setInt16(parameters.pf * 1000);
+        buffer.setInt32(parameters.vaA);
+        buffer.setInt32(parameters.vaB);
+        buffer.setInt32(parameters.vaC);
+        buffer.setInt32(parameters.vaSum);
+        buffer.setInt16(parameters.uBatteryRtc);
+        return toBytes$2h(id$j, buffer.data);
+    };
+    const toJson$3 = (parameters, options = defaultJsonOptions) => {
+        if (!options.dlms) {
+            return JSON.stringify(parameters);
+        }
+        const result = {
+            '0.11.0': parameters.temperature,
+            '14.7.0': parameters.frequency,
+            '33.7.0': parameters.pfA,
+            '53.7.0': parameters.pfB,
+            '73.7.0': parameters.pfC,
+            '13.7.0': parameters.pf,
+            '29.7.0': parameters.vaA,
+            '49.7.0': parameters.vaB,
+            '69.7.0': parameters.vaC,
+            '9.7.0': parameters.vaSum,
+            '96.6.3': parameters.uBatteryRtc,
+            vPhaseAB: parameters.vPhaseAB,
+            vPhaseAC: parameters.vPhaseAC
+        };
+        return JSON.stringify(result);
+    };
+
+    var getExtendedCurrentValues = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$j,
+        examples: examples$j,
+        fromBytes: fromBytes$j,
+        headerSize: headerSize$j,
+        id: id$j,
+        isLoraOnly: isLoraOnly$j,
+        maxSize: maxSize$j,
+        name: name$j,
+        toBytes: toBytes$j,
+        toJson: toJson$3
+    });
+
+    const id$i = getHalfHourDemand$1;
+    const name$i = commandNames[getHalfHourDemand$1];
+    const headerSize$i = 2;
+    const maxSize$i = MIN_HALF_HOUR_COMMAND_SIZE;
+    const accessLevel$i = READ_ONLY;
+    const isLoraOnly$i = false;
+    const examples$i = {
+        'simple response': {
+            id: id$i,
+            name: name$i,
+            headerSize: headerSize$i,
+            maxSize: maxSize$i,
+            accessLevel: accessLevel$i,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 3,
+                    date: 22
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
+                ]
+            },
+            bytes: [
+                0x15, 0x63,
+                0x18, 0x03, 0x16,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
+            ]
+        },
+        'response for day when DST start/end': {
+            id: id$i,
+            name: name$i,
+            headerSize: headerSize$i,
+            maxSize: maxSize$i,
+            accessLevel: accessLevel$i,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 2,
+                    date: 31
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
+                ],
+                dstHour: 3
+            },
+            bytes: [
+                0x15, 0x68,
+                0x18, 0x02, 0x1f,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
+                0x17, 0x70, 0x17, 0xdf,
+                0x03
+            ]
+        }
+    };
+    const fromBytes$i = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
+        const date = buffer.getDate();
+        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
+        if (hasDst) {
+            return {
+                date,
+                energies,
+                dstHour: buffer.getUint8()
+            };
+        }
+        return { date, energies };
+    };
+    const toBytes$i = (parameters) => {
+        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE;
+        const buffer = new CommandBinaryBuffer(size);
+        buffer.setDate(parameters.date);
+        buffer.setEnergyPeriods(parameters.energies);
+        if (parameters.dstHour) {
+            buffer.setUint8(parameters.dstHour);
+        }
+        return toBytes$2h(id$i, buffer.data);
+    };
+
+    var getHalfHourDemand = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$i,
+        examples: examples$i,
+        fromBytes: fromBytes$i,
+        headerSize: headerSize$i,
+        id: id$i,
+        isLoraOnly: isLoraOnly$i,
+        maxSize: maxSize$i,
+        name: name$i,
+        toBytes: toBytes$i
+    });
+
+    const MIN_COMMAND_SIZE = MIN_HALF_HOUR_COMMAND_SIZE + 2;
+    const MAX_COMMAND_SIZE = MAX_HALF_HOUR_COMMAND_SIZE + 2;
+    const id$h = getHalfHourDemandChannel$2;
+    const name$h = commandNames[getHalfHourDemandChannel$2];
+    const headerSize$h = 2;
+    const maxSize$h = MIN_COMMAND_SIZE;
+    const accessLevel$h = READ_ONLY;
+    const isLoraOnly$h = false;
+    const examples$h = {
+        'simple response': {
+            id: id$h,
+            name: name$h,
+            headerSize: headerSize$h,
+            maxSize: maxSize$h,
+            accessLevel: accessLevel$h,
+            parameters: {
+                channel: 1,
+                loadProfile: 16,
+                date: {
+                    year: 24,
+                    month: 3,
+                    date: 22
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
+                ]
+            },
+            bytes: [
+                0x5a, 0x65,
+                0x01,
+                0x10,
+                0x18, 0x03, 0x16,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
+            ]
+        },
+        'response for day when DST start/end': {
+            id: id$h,
+            name: name$h,
+            headerSize: headerSize$h,
+            maxSize: maxSize$h,
+            accessLevel: accessLevel$h,
+            parameters: {
+                channel: 1,
+                loadProfile: 16,
+                date: {
+                    year: 24,
+                    month: 2,
+                    date: 31
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
+                ],
+                dstHour: 3
+            },
+            bytes: [
+                0x5a, 0x6a,
+                0x01,
+                0x10,
+                0x18, 0x02, 0x1f,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
+                0x17, 0x70, 0x17, 0xdf,
+                0x03
+            ]
+        }
+    };
+    const fromBytes$h = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        const hasDst = bytes.length > MIN_COMMAND_SIZE;
+        const channel = buffer.getUint8();
+        const loadProfile = buffer.getUint8();
+        const date = buffer.getDate();
+        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
+        if (hasDst) {
+            return {
+                channel,
+                loadProfile,
+                date,
+                energies,
+                dstHour: buffer.getUint8()
+            };
+        }
+        return {
+            channel,
+            loadProfile,
+            date,
+            energies
+        };
+    };
+    const toBytes$h = (parameters) => {
+        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_COMMAND_SIZE : MIN_COMMAND_SIZE;
+        const buffer = new CommandBinaryBuffer(size);
+        buffer.setUint8(parameters.channel);
+        buffer.setUint8(parameters.loadProfile);
+        buffer.setDate(parameters.date);
+        buffer.setEnergyPeriods(parameters.energies);
+        if (parameters.dstHour) {
+            buffer.setUint8(parameters.dstHour);
+        }
+        return toBytes$2h(id$h, buffer.data);
+    };
+
+    var getHalfHourDemandChannel = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$h,
+        examples: examples$h,
+        fromBytes: fromBytes$h,
+        headerSize: headerSize$h,
+        id: id$h,
+        isLoraOnly: isLoraOnly$h,
+        maxSize: maxSize$h,
+        name: name$h,
+        toBytes: toBytes$h
+    });
+
+    const id$g = getHalfHourDemandExport$1;
+    const name$g = commandNames[getHalfHourDemandExport$1];
+    const headerSize$g = 2;
+    const maxSize$g = MAX_HALF_HOUR_COMMAND_SIZE;
+    const accessLevel$g = READ_ONLY;
+    const isLoraOnly$g = false;
+    const examples$g = {
+        'simple response': {
+            id: id$g,
+            name: name$g,
+            headerSize: headerSize$g,
+            maxSize: maxSize$g,
+            accessLevel: accessLevel$g,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 3,
+                    date: 22
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
+                ]
+            },
+            bytes: [
+                0x53, 0x63,
+                0x18, 0x03, 0x16,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
+            ]
+        },
+        'response for day when DST start/end': {
+            id: id$g,
+            name: name$g,
+            headerSize: headerSize$g,
+            maxSize: maxSize$g,
+            accessLevel: accessLevel$g,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 2,
+                    date: 31
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
+                ],
+                dstHour: 3
+            },
+            bytes: [
+                0x53, 0x68,
+                0x18, 0x02, 0x1f,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
+                0x17, 0x70, 0x17, 0xdf,
+                0x03
+            ]
+        }
+    };
+    const fromBytes$g = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
+        const date = buffer.getDate();
+        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
+        if (hasDst) {
+            return {
+                date,
+                energies,
+                dstHour: buffer.getUint8()
+            };
+        }
+        return { date, energies };
+    };
+    const toBytes$g = (parameters) => {
+        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE;
+        const buffer = new CommandBinaryBuffer(size);
+        buffer.setDate(parameters.date);
+        buffer.setEnergyPeriods(parameters.energies);
+        if (parameters.dstHour) {
+            buffer.setUint8(parameters.dstHour);
+        }
+        return toBytes$2h(id$g, buffer.data);
+    };
+
+    var getHalfHourDemandExport = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$g,
+        examples: examples$g,
+        fromBytes: fromBytes$g,
+        headerSize: headerSize$g,
+        id: id$g,
+        isLoraOnly: isLoraOnly$g,
+        maxSize: maxSize$g,
+        name: name$g,
+        toBytes: toBytes$g
+    });
+
+    const id$f = getHalfHourDemandVare$2;
+    const name$f = commandNames[getHalfHourDemandVare$2];
+    const headerSize$f = 2;
+    const maxSize$f = MIN_HALF_HOUR_COMMAND_SIZE;
+    const accessLevel$f = READ_ONLY;
+    const isLoraOnly$f = false;
+    const examples$f = {
+        'simple response': {
+            id: id$f,
+            name: name$f,
+            headerSize: headerSize$f,
+            maxSize: maxSize$f,
+            accessLevel: accessLevel$f,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 3,
+                    date: 22
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
+                ]
+            },
+            bytes: [
+                0x49, 0x63,
+                0x18, 0x03, 0x16,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
+            ]
+        },
+        'response for day when DST start/end': {
+            id: id$f,
+            name: name$f,
+            headerSize: headerSize$f,
+            maxSize: maxSize$f,
+            accessLevel: accessLevel$f,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 2,
+                    date: 31
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
+                ],
+                dstHour: 3
+            },
+            bytes: [
+                0x49, 0x68,
+                0x18, 0x02, 0x1f,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
+                0x17, 0x70, 0x17, 0xdf,
+                0x03
+            ]
+        }
+    };
+    const fromBytes$f = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
+        const date = buffer.getDate();
+        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
+        if (hasDst) {
+            return {
+                date,
+                energies,
+                dstHour: buffer.getUint8()
+            };
+        }
+        return { date, energies };
+    };
+    const toBytes$f = (parameters) => {
+        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE;
+        const buffer = new CommandBinaryBuffer(size);
+        buffer.setDate(parameters.date);
+        buffer.setEnergyPeriods(parameters.energies);
+        if (parameters.dstHour) {
+            buffer.setUint8(parameters.dstHour);
+        }
+        return toBytes$2h(id$f, buffer.data);
+    };
+
+    var getHalfHourDemandVare = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$f,
+        examples: examples$f,
+        fromBytes: fromBytes$f,
+        headerSize: headerSize$f,
+        id: id$f,
+        isLoraOnly: isLoraOnly$f,
+        maxSize: maxSize$f,
+        name: name$f,
+        toBytes: toBytes$f
+    });
+
+    const id$e = getHalfHourDemandVareExport$2;
+    const name$e = commandNames[getHalfHourDemandVareExport$2];
+    const headerSize$e = 2;
+    const maxSize$e = MIN_HALF_HOUR_COMMAND_SIZE;
+    const accessLevel$e = READ_ONLY;
+    const isLoraOnly$e = false;
+    const examples$e = {
+        'simple response': {
+            id: id$e,
+            name: name$e,
+            headerSize: headerSize$e,
+            maxSize: maxSize$e,
+            accessLevel: accessLevel$e,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 3,
+                    date: 22
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
+                ]
+            },
+            bytes: [
+                0x55, 0x63,
+                0x18, 0x03, 0x16,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
+            ]
+        },
+        'response for day when DST start/end': {
+            id: id$e,
+            name: name$e,
+            headerSize: headerSize$e,
+            maxSize: maxSize$e,
+            accessLevel: accessLevel$e,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 2,
+                    date: 31
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
+                ],
+                dstHour: 3
+            },
+            bytes: [
+                0x55, 0x68,
+                0x18, 0x02, 0x1f,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
+                0x17, 0x70, 0x17, 0xdf,
+                0x03
+            ]
+        }
+    };
+    const fromBytes$e = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
+        const date = buffer.getDate();
+        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
+        if (hasDst) {
+            return {
+                date,
+                energies,
+                dstHour: buffer.getUint8()
+            };
+        }
+        return { date, energies };
+    };
+    const toBytes$e = (parameters) => {
+        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE;
+        const buffer = new CommandBinaryBuffer(size);
+        buffer.setDate(parameters.date);
+        buffer.setEnergyPeriods(parameters.energies);
+        if (parameters.dstHour) {
+            buffer.setUint8(parameters.dstHour);
+        }
+        return toBytes$2h(id$e, buffer.data);
+    };
+
+    var getHalfHourDemandVareExport = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$e,
+        examples: examples$e,
+        fromBytes: fromBytes$e,
+        headerSize: headerSize$e,
+        id: id$e,
+        isLoraOnly: isLoraOnly$e,
+        maxSize: maxSize$e,
+        name: name$e,
+        toBytes: toBytes$e
+    });
+
+    const id$d = getHalfHourDemandVari$2;
+    const name$d = commandNames[getHalfHourDemandVari$2];
+    const headerSize$d = 2;
+    const maxSize$d = MIN_HALF_HOUR_COMMAND_SIZE;
+    const accessLevel$d = READ_ONLY;
+    const isLoraOnly$d = false;
+    const examples$d = {
+        'simple response': {
+            id: id$d,
+            name: name$d,
+            headerSize: headerSize$d,
+            maxSize: maxSize$d,
+            accessLevel: accessLevel$d,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 3,
+                    date: 22
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
+                ]
+            },
+            bytes: [
+                0x48, 0x63,
+                0x18, 0x03, 0x16,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
+            ]
+        },
+        'response for day when DST start/end': {
+            id: id$d,
+            name: name$d,
+            headerSize: headerSize$d,
+            maxSize: maxSize$d,
+            accessLevel: accessLevel$d,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 2,
+                    date: 31
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
+                ],
+                dstHour: 3
+            },
+            bytes: [
+                0x48, 0x68,
+                0x18, 0x02, 0x1f,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
+                0x17, 0x70, 0x17, 0xdf,
+                0x03
+            ]
+        }
+    };
+    const fromBytes$d = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
+        const date = buffer.getDate();
+        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
+        if (hasDst) {
+            return {
+                date,
+                energies,
+                dstHour: buffer.getUint8()
+            };
+        }
+        return { date, energies };
+    };
+    const toBytes$d = (parameters) => {
+        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE;
+        const buffer = new CommandBinaryBuffer(size);
+        buffer.setDate(parameters.date);
+        buffer.setEnergyPeriods(parameters.energies);
+        if (parameters.dstHour) {
+            buffer.setUint8(parameters.dstHour);
+        }
+        return toBytes$2h(id$d, buffer.data);
+    };
+
+    var getHalfHourDemandVari = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$d,
+        examples: examples$d,
+        fromBytes: fromBytes$d,
+        headerSize: headerSize$d,
+        id: id$d,
+        isLoraOnly: isLoraOnly$d,
+        maxSize: maxSize$d,
+        name: name$d,
+        toBytes: toBytes$d
+    });
+
+    const id$c = getHalfHourDemandVariExport$2;
+    const name$c = commandNames[getHalfHourDemandVariExport$2];
+    const headerSize$c = 2;
+    const maxSize$c = MIN_HALF_HOUR_COMMAND_SIZE;
+    const accessLevel$c = READ_ONLY;
+    const isLoraOnly$c = false;
+    const examples$c = {
+        'simple response': {
+            id: id$c,
+            name: name$c,
+            headerSize: headerSize$c,
+            maxSize: maxSize$c,
+            accessLevel: accessLevel$c,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 3,
+                    date: 22
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
+                ]
+            },
+            bytes: [
+                0x54, 0x63,
+                0x18, 0x03, 0x16,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
+            ]
+        },
+        'response for day when DST start/end': {
+            id: id$c,
+            name: name$c,
+            headerSize: headerSize$c,
+            maxSize: maxSize$c,
+            accessLevel: accessLevel$c,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 2,
+                    date: 31
+                },
+                energies: [
+                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
+                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
+                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
+                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
+                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
+                ],
+                dstHour: 3
+            },
+            bytes: [
+                0x54, 0x68,
+                0x18, 0x02, 0x1f,
+                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
+                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
+                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
+                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
+                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
+                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
+                0x17, 0x70, 0x17, 0xdf,
+                0x03
+            ]
+        }
+    };
+    const fromBytes$c = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
+        const date = buffer.getDate();
+        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
+        if (hasDst) {
+            return {
+                date,
+                energies,
+                dstHour: buffer.getUint8()
+            };
+        }
+        return { date, energies };
+    };
+    const toBytes$c = (parameters) => {
+        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE;
+        const buffer = new CommandBinaryBuffer(size);
+        buffer.setDate(parameters.date);
+        buffer.setEnergyPeriods(parameters.energies);
+        if (parameters.dstHour) {
+            buffer.setUint8(parameters.dstHour);
+        }
+        return toBytes$2h(id$c, buffer.data);
+    };
+
+    var getHalfHourDemandVariExport = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$c,
+        examples: examples$c,
+        fromBytes: fromBytes$c,
+        headerSize: headerSize$c,
+        id: id$c,
+        isLoraOnly: isLoraOnly$c,
+        maxSize: maxSize$c,
+        name: name$c,
+        toBytes: toBytes$c
+    });
+
+    const DATE_SIZE = 2;
+    const ENERGY_FLAGS_SIZE = 1;
+    const START_HALFHOUR_SIZE = 1;
+    const HALFHOURS_NUMBER_SIZE = 1;
+    const MAX_HALFHOURS_ENERGY_SIZE = 247;
+    const energiesToObis = {
+        'A+': '1.5.x',
+        'A+R+': '3.5.x',
+        'A+R-': '4.5.x',
+        'A-': '2.5.x',
+        'A-R+': '6.5.x',
+        'A-R-': '7.5.x'
+    };
+    const convertEnergyToObis = (energy, tariff = 0) => {
+        const obis = energiesToObis[energy];
+        return obis ? obis.replace('x', tariff.toString(10)) : '';
+    };
+    const convertHalfhoursEnergiesToDlms = (energies) => {
+        const dlms = {};
+        Object.keys(energies).forEach(energy => {
+            const values = energies[energy];
+            for (let tariff = 0; tariff < TARIFF_NUMBER; tariff++) {
+                const value = values[tariff];
+                if (value || value === 0) {
+                    dlms[convertEnergyToObis(energy, tariff + 1)] = value;
+                }
+            }
+        });
+        return dlms;
+    };
+    const id$b = getHalfhoursEnergies$3;
+    const name$b = commandNames$1[getHalfhoursEnergies$3];
+    const headerSize$b = 2;
+    const maxSize$b = DATE_SIZE + ENERGY_FLAGS_SIZE + START_HALFHOUR_SIZE + HALFHOURS_NUMBER_SIZE + MAX_HALFHOURS_ENERGY_SIZE;
+    const accessLevel$b = UNENCRYPTED;
+    const isLoraOnly$b = true;
+    const toJson$2 = (parameters, { dlms } = defaultDlmsJsonOptions) => {
+        const { date, firstHalfhour, halfhoursNumber, energies } = parameters;
+        const result = dlms
+            ? {
+                date,
+                firstHalfhour,
+                halfhoursNumber,
+                ...convertHalfhoursEnergiesToDlms(energies)
+            }
+            : parameters;
+        return JSON.stringify(result);
+    };
+
+    const examples$b = {
+        'get halfhours energies': {
+            id: id$b,
+            headerSize: headerSize$b,
+            name: name$b,
+            maxSize: maxSize$b,
+            parameters: {
+                date: {
+                    year: 21,
+                    month: 2,
+                    date: 3
+                },
+                firstHalfhour: 1,
+                halfhoursNumber: 2,
+                energies: {
+                    'A+': [0x1000, 0x2000],
+                    'A-R+': [0x3000, 0x4000]
+                }
+            },
+            bytes: [
+                0x6f, 0x0d,
+                0x2a, 0x43, 0x11,
+                0x01, 0x02,
+                0x10, 0x00, 0x20, 0x00,
+                0x30, 0x00, 0x40, 0x00
+            ]
+        }
+    };
+    const fromBytes$b = (bytes) => {
+        const buffer = new CommandBinaryBuffer$1(bytes);
+        const date = buffer.getDate();
+        const energiesFlags = buffer.getEnergiesFlags();
+        const firstHalfhour = buffer.getUint8();
+        const halfhoursNumber = buffer.getUint8();
+        return {
+            date,
+            firstHalfhour,
+            halfhoursNumber,
+            energies: buffer.getHalfhoursEnergies3(energiesFlags, halfhoursNumber)
+        };
+    };
+    const toBytes$b = (parameters) => {
+        const buffer = new CommandBinaryBuffer$1(maxSize$b);
+        const { date, firstHalfhour, halfhoursNumber, energies } = parameters;
+        buffer.setDate(date);
+        buffer.setEnergiesFlags(energies);
+        buffer.setUint8(firstHalfhour);
+        buffer.setUint8(halfhoursNumber);
+        buffer.setHalfhoursEnergies3(energies);
+        return toBytes$2h(id$b, buffer.getBytesToOffset());
+    };
+
+    var getHalfhoursEnergies = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$b,
+        examples: examples$b,
+        fromBytes: fromBytes$b,
+        headerSize: headerSize$b,
+        id: id$b,
+        isLoraOnly: isLoraOnly$b,
+        maxSize: maxSize$b,
+        name: name$b,
+        toBytes: toBytes$b,
+        toJson: toJson$2
+    });
+
+    const id$a = getMonthDemand$1;
+    const name$a = commandNames[getMonthDemand$1];
+    const headerSize$a = 2;
+    const accessLevel$a = READ_ONLY;
+    const maxSize$a = 50;
+    const isLoraOnly$a = false;
+    const examples$a = {
+        'response energy for 2024.03': {
+            id: id$a,
+            name: name$a,
+            headerSize: headerSize$a,
+            maxSize: maxSize$a,
+            accessLevel: accessLevel$a,
+            parameters: {
+                year: 24,
+                month: 3,
+                energies: {
+                    wh: [40301230, 3334244, 15000, 2145623],
+                    vari: [25000, 1234567, 789456, 9876543],
+                    vare: [987654, 654321, 123456, 789012]
+                }
+            },
+            bytes: [
+                0x17, 0x32,
+                0x18, 0x03,
+                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
+                0x00, 0x32, 0xe0, 0x64, 0x00, 0x12, 0xd6, 0x87, 0x00, 0x09, 0xfb, 0xf1,
+                0x00, 0x00, 0x3a, 0x98, 0x00, 0x0c, 0x0b, 0xd0, 0x00, 0x01, 0xe2, 0x40,
+                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
+            ]
+        }
+    };
+    const fromBytes$a = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        return {
+            year: buffer.getUint8(),
+            month: buffer.getUint8(),
+            energies: buffer.getEnergies()
+        };
+    };
+    const toBytes$a = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$a);
+        buffer.setUint8(parameters.year);
+        buffer.setUint8(parameters.month);
+        buffer.setEnergies(parameters.energies);
+        return toBytes$2h(id$a, buffer.data);
+    };
+    const toJson$1 = (parameters, options = defaultJsonOptions) => {
+        if (!options.dlms) {
+            return JSON.stringify(parameters);
+        }
+        const { year, month, energies } = parameters;
+        return JSON.stringify({
+            year,
+            month,
+            ...mapEnergiesToObisCodes(energies, options.isGreen, A_PLUS_R_PLUS_R_MINUS)
+        });
+    };
+
+    var getMonthDemand = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$a,
+        examples: examples$a,
+        fromBytes: fromBytes$a,
+        headerSize: headerSize$a,
+        id: id$a,
+        isLoraOnly: isLoraOnly$a,
+        maxSize: maxSize$a,
+        name: name$a,
+        toBytes: toBytes$a,
+        toJson: toJson$1
+    });
+
+    const isGreen = true;
+    const id$9 = getMonthDemandExport$1;
+    const name$9 = commandNames[getMonthDemandExport$1];
+    const headerSize$9 = 2;
+    const maxSize$9 = 50;
+    const accessLevel$9 = READ_ONLY;
+    const isLoraOnly$9 = false;
+    const examples$9 = {
+        'simple response': {
+            id: id$9,
+            name: name$9,
+            headerSize: headerSize$9,
+            maxSize: maxSize$9,
+            accessLevel: accessLevel$9,
+            parameters: {
+                year: 24,
+                month: 3,
+                energies: {
+                    wh: [40301230, 3334244, 15000, 2145623],
+                    vari: [25000, 1234567, 789456, 9876543],
+                    vare: [987654, 654321, 123456, 789012]
+                }
+            },
+            bytes: [
+                0x52, 0x32,
+                0x18, 0x03,
+                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
+                0x00, 0x32, 0xe0, 0x64, 0x00, 0x12, 0xd6, 0x87, 0x00, 0x09, 0xfb, 0xf1,
+                0x00, 0x00, 0x3a, 0x98, 0x00, 0x0c, 0x0b, 0xd0, 0x00, 0x01, 0xe2, 0x40,
+                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
+            ]
+        }
+    };
+    const fromBytes$9 = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        return {
+            year: buffer.getUint8(),
+            month: buffer.getUint8(),
+            energies: buffer.getEnergies()
+        };
+    };
+    const toBytes$9 = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$9);
+        buffer.setUint8(parameters.year);
+        buffer.setUint8(parameters.month);
+        buffer.setEnergies(parameters.energies);
+        return toBytes$2h(id$9, buffer.data);
+    };
+    const toJson = (parameters, options = defaultJsonOptions) => {
+        if (!options.dlms) {
+            return JSON.stringify(parameters);
+        }
+        const { year, month, energies } = parameters;
+        return JSON.stringify({
+            year,
+            month,
+            ...mapEnergiesToObisCodes(energies, isGreen, A_MINUS_R_PLUS_R_MINUS)
+        });
+    };
+
+    var getMonthDemandExport = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$9,
+        examples: examples$9,
+        fromBytes: fromBytes$9,
+        headerSize: headerSize$9,
+        id: id$9,
+        isLoraOnly: isLoraOnly$9,
+        maxSize: maxSize$9,
+        name: name$9,
+        toBytes: toBytes$9,
+        toJson: toJson
+    });
+
+    const id$8 = getMonthMaxDemand$1;
+    const name$8 = commandNames[getMonthMaxDemand$1];
+    const headerSize$8 = 2;
+    const accessLevel$8 = READ_ONLY;
+    const maxSize$8 = 74;
+    const isLoraOnly$8 = false;
+    const examples$8 = {
+        'response for 2023.03': {
+            id: id$8,
+            name: name$8,
+            headerSize: headerSize$8,
+            accessLevel: accessLevel$8,
+            maxSize: maxSize$8,
+            parameters: {
+                date: {
+                    year: 23,
+                    month: 3
                 },
                 maxDemands: [
                     {
@@ -10510,8 +12446,8 @@
                 ]
             },
             bytes: [
-                0x58, 0x4b,
-                0x17, 0x03, 0x0c,
+                0x32, 0x4a,
+                0x17, 0x03,
                 0x00, 0x0a, 0x00, 0x00, 0x00, 0x64, 0x01, 0x17, 0x00, 0x00, 0x07, 0xd0, 0x08, 0x0f, 0x00, 0x00, 0x15, 0xb3,
                 0x02, 0x14, 0x00, 0x00, 0x03, 0xe8, 0x03, 0x18, 0x00, 0x00, 0x4e, 0x20, 0x09, 0x10, 0x00, 0x00, 0xd9, 0x03,
                 0x04, 0x1e, 0x00, 0x00, 0x27, 0x10, 0x05, 0x19, 0x00, 0x03, 0x0d, 0x40, 0x0a, 0x11, 0x00, 0x08, 0x7a, 0x23,
@@ -10519,1765 +12455,17 @@
             ]
         }
     };
-    const fromBytes$r = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        return buffer.getDayMaxDemandResponse();
-    };
-    const toBytes$r = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$r);
-        buffer.setDayMaxDemandResponse(parameters);
-        return toBytes$2f(id$r, buffer.getBytesToOffset());
-    };
-
-    var getDayMaxDemandExport = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$r,
-        examples: examples$r,
-        fromBytes: fromBytes$r,
-        headerSize: headerSize$r,
-        id: id$r,
-        isLoraOnly: isLoraOnly$r,
-        maxSize: maxSize$r,
-        name: name$r,
-        toBytes: toBytes$r
-    });
-
-    const id$q = getDemand$2;
-    const name$q = commandNames[getDemand$2];
-    const headerSize$q = 2;
-    const maxSize$q = maxSize$1q + 48 * 2;
-    const accessLevel$q = READ_ONLY;
-    const isLoraOnly$q = false;
-    const examples$q = {
-        'response for A+': {
-            id: id$q,
-            name: name$q,
-            headerSize: headerSize$q,
-            maxSize: maxSize$q,
-            parameters: {
-                date: {
-                    year: 21,
-                    month: 6,
-                    date: 18
-                },
-                demandParam: 0x81,
-                firstIndex: 0,
-                count: 2,
-                period: 30,
-                demands: [2000, 43981]
-            },
-            bytes: [
-                0x76, 0x0b,
-                0x2a, 0xd2,
-                0x81,
-                0x00, 0x00,
-                0x02,
-                0x1e,
-                0x07, 0xd0,
-                0xab, 0xcd
-            ]
-        }
-    };
-    const fromBytes$q = (bytes) => {
-        if (!bytes || bytes.length < maxSize$1q) {
-            throw new Error('Invalid uplink GetDemand byte length.');
-        }
-        const buffer = new CommandBinaryBuffer(bytes);
-        const parameters = buffer.getDemand();
-        if (bytes.length !== maxSize$1q + (2 * parameters.count)) {
-            throw new Error('Invalid uplink GetDemand demands byte length.');
-        }
-        const demands = new Array(parameters.count).fill(0).map(() => buffer.getUint16());
-        return {
-            ...parameters,
-            demands
-        };
-    };
-    const toBytes$q = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$1q + parameters.count * 2);
-        buffer.setDemand(parameters);
-        parameters.demands.forEach(value => buffer.setUint16(value));
-        return toBytes$2f(id$q, buffer.data);
-    };
-
-    var getDemand = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$q,
-        examples: examples$q,
-        fromBytes: fromBytes$q,
-        headerSize: headerSize$q,
-        id: id$q,
-        isLoraOnly: isLoraOnly$q,
-        maxSize: maxSize$q,
-        name: name$q,
-        toBytes: toBytes$q
-    });
-
-    const id$p = getDisplayParam$2;
-    const name$p = commandNames[getDisplayParam$2];
-    const headerSize$p = 2;
-    const maxSize$p = 65;
-    const accessLevel$p = READ_ONLY;
-    const isLoraOnly$p = false;
-    const examples$p = {
-        'mode with order': {
-            id: id$p,
-            name: name$p,
-            headerSize: headerSize$p,
-            maxSize: maxSize$p,
-            accessLevel: accessLevel$p,
-            parameters: {
-                displayMode: MAIN_1,
-                order: [4, 5, 6, 7]
-            },
-            bytes: [
-                0x5e, 0x05,
-                0x00, 0x04, 0x05, 0x06, 0x07
-            ]
-        },
-        'mode without order': {
-            id: id$p,
-            name: name$p,
-            maxSize: maxSize$p,
-            accessLevel: accessLevel$p,
-            parameters: {
-                displayMode: MAIN_2,
-                order: []
-            },
-            bytes: [
-                0x5e, 0x01,
-                0x01
-            ]
-        }
-    };
-    const fromBytes$p = (bytes) => {
-        const [displayMode, ...order] = bytes;
-        return { displayMode, order };
-    };
-    const toBytes$p = (parameters) => (toBytes$2f(id$p, [parameters.displayMode, ...parameters.order]));
-
-    var getDisplayParam = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$p,
-        examples: examples$p,
-        fromBytes: fromBytes$p,
-        headerSize: headerSize$p,
-        id: id$p,
-        isLoraOnly: isLoraOnly$p,
-        maxSize: maxSize$p,
-        name: name$p,
-        toBytes: toBytes$p
-    });
-
-    const id$o = getEnergy$2;
-    const name$o = commandNames[getEnergy$2];
-    const headerSize$o = 2;
-    const accessLevel$o = READ_ONLY;
-    const maxSize$o = 48;
-    const isLoraOnly$o = false;
-    const examples$o = {
-        'simple response': {
-            id: id$o,
-            name: name$o,
-            headerSize: headerSize$o,
-            maxSize: maxSize$o,
-            accessLevel: accessLevel$o,
-            parameters: {
-                wh: [40301230, 3334244, 15000, 2145623],
-                vari: [25000, 1234567, 789456, 9876543],
-                vare: [987654, 654321, 123456, 789012]
-            },
-            bytes: [
-                0x0f, 0x30,
-                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
-                0x00, 0x32, 0xe0, 0x64, 0x00, 0x12, 0xd6, 0x87, 0x00, 0x09, 0xfb, 0xf1,
-                0x00, 0x00, 0x3a, 0x98, 0x00, 0x0c, 0x0b, 0xd0, 0x00, 0x01, 0xe2, 0x40,
-                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
-            ]
-        }
-    };
-    const fromBytes$o = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        return buffer.getEnergies();
-    };
-    const toBytes$o = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$o);
-        buffer.setEnergies(parameters);
-        return toBytes$2f(id$o, buffer.data);
-    };
-    const toJson$7 = (parameters, options = defaultJsonOptions) => (options.dlms
-        ? JSON.stringify(mapEnergiesToObisCodes(parameters, options.isGreen, A_PLUS_R_PLUS_R_MINUS))
-        : JSON.stringify(parameters));
-
-    var getEnergy = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$o,
-        examples: examples$o,
-        fromBytes: fromBytes$o,
-        headerSize: headerSize$o,
-        id: id$o,
-        isLoraOnly: isLoraOnly$o,
-        maxSize: maxSize$o,
-        name: name$o,
-        toBytes: toBytes$o,
-        toJson: toJson$7
-    });
-
-    const COMMAND_SIZE = 51;
-    const MAX_COMMAND_SIZE$1 = COMMAND_SIZE + PACKED_ENERGY_TYPE_SIZE;
-    const id$n = getEnergyDayPrevious$2;
-    const name$n = commandNames[getEnergyDayPrevious$2];
-    const headerSize$n = 2;
-    const maxSize$n = MAX_COMMAND_SIZE$1;
-    const accessLevel$n = READ_ONLY;
-    const isLoraOnly$n = false;
-    const examples$n = {
-        'simple response': {
-            id: id$n,
-            name: name$n,
-            headerSize: headerSize$n,
-            maxSize: maxSize$n,
-            accessLevel: accessLevel$n,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 3,
-                    date: 22
-                },
-                energies: {
-                    wh: [40301230, 3334244, 15000, 2145623],
-                    vari: [25000, 1234567, 789456, 9876543],
-                    vare: [987654, 654321, 123456, 789012]
-                }
-            },
-            bytes: [
-                0x03, 0x33,
-                0x18, 0x03, 0x16,
-                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
-                0x00, 0x32, 0xe0, 0x64, 0x00, 0x12, 0xd6, 0x87, 0x00, 0x09, 0xfb, 0xf1,
-                0x00, 0x00, 0x3a, 0x98, 0x00, 0x0c, 0x0b, 0xd0, 0x00, 0x01, 0xe2, 0x40,
-                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
-            ]
-        },
-        'response with A-R+R- energy by T1, T4 only': {
-            id: id$n,
-            name: name$n,
-            headerSize: headerSize$n,
-            maxSize: maxSize$n,
-            accessLevel: accessLevel$n,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 3,
-                    date: 22
-                },
-                energyType: 2,
-                energies: {
-                    wh: [40301230, null, null, 2145623],
-                    vari: [25000, null, null, 9876543],
-                    vare: [987654, null, null, 789012]
-                }
-            },
-            bytes: [
-                0x03, 0x1c,
-                0x18, 0x03, 0x16,
-                0x92,
-                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
-                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
-            ]
-        }
-    };
-    const fromBytes$n = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        let parameters;
-        if (bytes.length === COMMAND_SIZE) {
-            parameters = {
-                date: buffer.getDate(),
-                energies: buffer.getEnergies()
-            };
-        }
-        else {
-            parameters = {
-                date: buffer.getDate(),
-                ...buffer.getPackedEnergyWithType()
-            };
-        }
-        return parameters;
-    };
-    const toBytes$n = (parameters) => {
-        const buffer = new CommandBinaryBuffer(getPackedEnergiesWithDateSize(parameters));
-        buffer.setDate(parameters.date);
-        buffer.setPackedEnergyWithType(parameters);
-        return toBytes$2f(id$n, buffer.data);
-    };
-    const toJson$6 = (parameters, options = defaultJsonOptions) => {
-        if (!options.dlms) {
-            return JSON.stringify(parameters);
-        }
-        const { date, energyType, energies } = parameters;
-        return JSON.stringify({
-            date,
-            ...mapEnergiesToObisCodes(energies, options.isGreen, energyType ?? A_PLUS_R_PLUS_R_MINUS)
-        });
-    };
-
-    var getEnergyDayPrevious = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$n,
-        examples: examples$n,
-        fromBytes: fromBytes$n,
-        headerSize: headerSize$n,
-        id: id$n,
-        isLoraOnly: isLoraOnly$n,
-        maxSize: maxSize$n,
-        name: name$n,
-        toBytes: toBytes$n,
-        toJson: toJson$6
-    });
-
-    const isGreen$2 = true;
-    const id$m = getEnergyExport$2;
-    const name$m = commandNames[getEnergyExport$2];
-    const headerSize$m = 2;
-    const accessLevel$m = READ_ONLY;
-    const maxSize$m = 48;
-    const isLoraOnly$m = false;
-    const examples$m = {
-        'simple response': {
-            id: id$m,
-            name: name$m,
-            headerSize: headerSize$m,
-            maxSize: maxSize$m,
-            accessLevel: accessLevel$m,
-            parameters: {
-                wh: [40301230, 3334244, 15000, 2145623],
-                vari: [25000, 1234567, 789456, 9876543],
-                vare: [987654, 654321, 123456, 789012]
-            },
-            bytes: [
-                0x4e, 0x30,
-                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
-                0x00, 0x32, 0xe0, 0x64, 0x00, 0x12, 0xd6, 0x87, 0x00, 0x09, 0xfb, 0xf1,
-                0x00, 0x00, 0x3a, 0x98, 0x00, 0x0c, 0x0b, 0xd0, 0x00, 0x01, 0xe2, 0x40,
-                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
-            ]
-        }
-    };
-    const fromBytes$m = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        return buffer.getEnergies();
-    };
-    const toBytes$m = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$m);
-        buffer.setEnergies(parameters);
-        return toBytes$2f(id$m, buffer.data);
-    };
-    const toJson$5 = (parameters, options = defaultJsonOptions) => {
-        if (!options.dlms) {
-            return JSON.stringify(parameters);
-        }
-        return JSON.stringify(mapEnergiesToObisCodes(parameters, isGreen$2, A_MINUS_R_PLUS_R_MINUS));
-    };
-
-    var getEnergyExport = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$m,
-        examples: examples$m,
-        fromBytes: fromBytes$m,
-        headerSize: headerSize$m,
-        id: id$m,
-        isLoraOnly: isLoraOnly$m,
-        maxSize: maxSize$m,
-        name: name$m,
-        toBytes: toBytes$m,
-        toJson: toJson$5
-    });
-
-    const isGreen$1 = true;
-    const id$l = getEnergyExportDayPrevious$2;
-    const name$l = commandNames[getEnergyExportDayPrevious$2];
-    const headerSize$l = 2;
-    const maxSize$l = 48;
-    const accessLevel$l = READ_ONLY;
-    const isLoraOnly$l = false;
-    const examples$l = {
-        'simple response': {
-            id: id$l,
-            name: name$l,
-            headerSize: headerSize$l,
-            maxSize: maxSize$l,
-            accessLevel: accessLevel$l,
-            parameters: {
-                wh: [40301230, 3334244, 15000, 2145623],
-                vari: [25000, 1234567, 789456, 9876543],
-                vare: [987654, 654321, 123456, 789012]
-            },
-            bytes: [
-                0x50, 0x30,
-                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
-                0x00, 0x32, 0xe0, 0x64, 0x00, 0x12, 0xd6, 0x87, 0x00, 0x09, 0xfb, 0xf1,
-                0x00, 0x00, 0x3a, 0x98, 0x00, 0x0c, 0x0b, 0xd0, 0x00, 0x01, 0xe2, 0x40,
-                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
-            ]
-        }
-    };
-    const fromBytes$l = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        return buffer.getEnergies();
-    };
-    const toBytes$l = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$l);
-        buffer.setEnergies(parameters);
-        return toBytes$2f(id$l, buffer.data);
-    };
-    const toJson$4 = (parameters, options = defaultJsonOptions) => {
-        if (!options.dlms) {
-            return JSON.stringify(parameters);
-        }
-        return JSON.stringify(mapEnergiesToObisCodes(parameters, isGreen$1, A_MINUS_R_PLUS_R_MINUS));
-    };
-
-    var getEnergyExportDayPrevious = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$l,
-        examples: examples$l,
-        fromBytes: fromBytes$l,
-        headerSize: headerSize$l,
-        id: id$l,
-        isLoraOnly: isLoraOnly$l,
-        maxSize: maxSize$l,
-        name: name$l,
-        toBytes: toBytes$l,
-        toJson: toJson$4
-    });
-
-    const BODY_WITHOUT_EVENTS_SIZE = 3 + 1;
-    const EVENT_SIZE = 4;
-    const id$k = getEvents$3;
-    const name$k = commandNames$2[getEvents$3];
-    const headerSize$k = 2;
-    const accessLevel$k = READ_ONLY;
-    const maxSize$k = BODY_WITHOUT_EVENTS_SIZE + 255 * EVENT_SIZE;
-    const isLoraOnly$k = false;
-    const examples$k = {
-        'simple response': {
-            id: id$k,
-            name: name$k,
-            headerSize: headerSize$k,
-            accessLevel: accessLevel$k,
-            maxSize: maxSize$k,
-            parameters: {
-                date: {
-                    year: 23,
-                    month: 3,
-                    date: 12
-                },
-                eventsNumber: 2,
-                events: [
-                    {
-                        hours: 1,
-                        minutes: 12,
-                        seconds: 33,
-                        event: 157,
-                        eventName: 'POWER_OVER_RELAY_OFF',
-                        power: [22, 25, 12, 143]
-                    },
-                    {
-                        hours: 1,
-                        minutes: 12,
-                        seconds: 33,
-                        event: 121,
-                        eventName: 'TIME_CORRECT',
-                        newDate: {
-                            isSummerTime: false,
-                            seconds: 10,
-                            minutes: 22,
-                            hours: 3,
-                            day: 4,
-                            date: 12,
-                            month: 7,
-                            year: 24
-                        }
-                    }
-                ]
-            },
-            bytes: [
-                0x33, 0x18,
-                0x17, 0x03, 0x0c, 0x02, 0x01, 0x0c, 0x21, 0x9d, 0x16, 0x19, 0x0c, 0x8f,
-                0x01, 0x0c, 0x21, 0x79, 0x00, 0x0a, 0x16, 0x03, 0x04, 0x0c, 0x07, 0x18
-            ]
-        }
-    };
-    const getFromBytes = BinaryBufferConstructor => ((bytes) => {
-        if (bytes.length > maxSize$k) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
-        const buffer = new BinaryBufferConstructor(bytes);
-        const date = buffer.getDate();
-        const eventsNumber = buffer.getUint8();
-        const events = [];
-        while (!buffer.isEmpty) {
-            events.push(buffer.getEvent());
-        }
-        return { date, eventsNumber, events };
-    });
-    const getToBytes = BinaryBufferConstructor => ((parameters) => {
-        const buffer = new BinaryBufferConstructor(maxSize$k);
-        buffer.setDate(parameters.date);
-        buffer.setUint8(parameters.eventsNumber);
-        for (const event of parameters.events) {
-            buffer.setEvent(event);
-        }
-        return toBytes$2f(id$k, buffer.getBytesToOffset());
-    });
-    const fromBytes$k = getFromBytes(CommandBinaryBuffer$2);
-    const toBytes$k = getToBytes(CommandBinaryBuffer$2);
-
-    var mtx1 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$k,
-        examples: examples$k,
-        fromBytes: fromBytes$k,
-        getFromBytes: getFromBytes,
-        getToBytes: getToBytes,
-        headerSize: headerSize$k,
-        id: id$k,
-        isLoraOnly: isLoraOnly$k,
-        maxSize: maxSize$k,
-        name: name$k,
-        toBytes: toBytes$k
-    });
-
-    const { id: id$j, name: name$j, headerSize: headerSize$j, accessLevel: accessLevel$j, maxSize: maxSize$j, isLoraOnly: isLoraOnly$j } = mtx1;
-    const examples$j = {
-        'simple response': {
-            id: id$j,
-            name: name$j,
-            headerSize: headerSize$j,
-            accessLevel: accessLevel$j,
-            maxSize: maxSize$j,
-            parameters: {
-                date: {
-                    year: 23,
-                    month: 3,
-                    date: 12
-                },
-                eventsNumber: 2,
-                events: [
-                    {
-                        hours: 1,
-                        minutes: 12,
-                        seconds: 33,
-                        event: 157,
-                        eventName: 'POWER_OVER_RELAY_OFF',
-                        power: [22, 25, 12, 143]
-                    },
-                    {
-                        hours: 1,
-                        minutes: 12,
-                        seconds: 33,
-                        event: 142,
-                        eventName: 'TIME_CORRECT',
-                        newDate: {
-                            isSummerTime: false,
-                            seconds: 10,
-                            minutes: 22,
-                            hours: 3,
-                            day: 4,
-                            date: 12,
-                            month: 7,
-                            year: 24
-                        }
-                    }
-                ]
-            },
-            bytes: [
-                0x33, 0x18,
-                0x17, 0x03, 0x0c, 0x02, 0x01, 0x0c, 0x21, 0x9d, 0x16, 0x19, 0x0c, 0x8f,
-                0x01, 0x0c, 0x21, 0x8e, 0x00, 0x0a, 0x16, 0x03, 0x04, 0x0c, 0x07, 0x18
-            ]
-        }
-    };
-    const fromBytes$j = getFromBytes(CommandBinaryBuffer);
-    const toBytes$j = getToBytes(CommandBinaryBuffer);
-
-    var getEvents = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$j,
-        examples: examples$j,
-        fromBytes: fromBytes$j,
-        headerSize: headerSize$j,
-        id: id$j,
-        isLoraOnly: isLoraOnly$j,
-        maxSize: maxSize$j,
-        name: name$j,
-        toBytes: toBytes$j
-    });
-
-    const id$i = getExtendedCurrentValues$1;
-    const name$i = commandNames[getExtendedCurrentValues$1];
-    const headerSize$i = 2;
-    const maxSize$i = 38;
-    const accessLevel$i = READ_ONLY;
-    const isLoraOnly$i = false;
-    const examples$i = {
-        'simple response': {
-            id: id$i,
-            name: name$i,
-            headerSize: headerSize$i,
-            maxSize: maxSize$i,
-            accessLevel: accessLevel$i,
-            parameters: {
-                temperature: 67,
-                frequency: 60,
-                vPhaseAB: 30,
-                vPhaseAC: 45,
-                pfA: 0.5,
-                pfB: -0.5,
-                pfC: 1,
-                pf: 0.95,
-                vaA: 5000,
-                vaB: 4500,
-                vaC: 4800,
-                vaSum: 14300,
-                uBatteryRtc: 338
-            },
-            bytes: [
-                0x3a, 0x26,
-                0x00, 0x43,
-                0x00, 0x3c,
-                0x00, 0x00, 0x00, 0x1e,
-                0x00, 0x00, 0x00, 0x2d,
-                0x01, 0xf4,
-                0xfe, 0x0c,
-                0x03, 0xe8,
-                0x03, 0xb6,
-                0x00, 0x00, 0x13, 0x88,
-                0x00, 0x00, 0x11, 0x94,
-                0x00, 0x00, 0x12, 0xc0,
-                0x00, 0x00, 0x37, 0xdc,
-                0x01, 0x52
-            ]
-        }
-    };
-    const fromBytes$i = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
-        return {
-            temperature: buffer.getInt16(),
-            frequency: buffer.getUint16(),
-            vPhaseAB: buffer.getInt32(),
-            vPhaseAC: buffer.getInt32(),
-            pfA: buffer.getInt16() / 1000,
-            pfB: buffer.getInt16() / 1000,
-            pfC: buffer.getInt16() / 1000,
-            pf: buffer.getInt16() / 1000,
-            vaA: buffer.getInt32(),
-            vaB: buffer.getInt32(),
-            vaC: buffer.getInt32(),
-            vaSum: buffer.getInt32(),
-            uBatteryRtc: buffer.getInt16()
-        };
-    };
-    const toBytes$i = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$i);
-        buffer.setInt16(parameters.temperature);
-        buffer.setUint16(parameters.frequency);
-        buffer.setInt32(parameters.vPhaseAB);
-        buffer.setInt32(parameters.vPhaseAC);
-        buffer.setInt16(parameters.pfA * 1000);
-        buffer.setInt16(parameters.pfB * 1000);
-        buffer.setInt16(parameters.pfC * 1000);
-        buffer.setInt16(parameters.pf * 1000);
-        buffer.setInt32(parameters.vaA);
-        buffer.setInt32(parameters.vaB);
-        buffer.setInt32(parameters.vaC);
-        buffer.setInt32(parameters.vaSum);
-        buffer.setInt16(parameters.uBatteryRtc);
-        return toBytes$2f(id$i, buffer.data);
-    };
-    const toJson$3 = (parameters, options = defaultJsonOptions) => {
-        if (!options.dlms) {
-            return JSON.stringify(parameters);
-        }
-        const result = {
-            '0.11.0': parameters.temperature,
-            '14.7.0': parameters.frequency,
-            '33.7.0': parameters.pfA,
-            '53.7.0': parameters.pfB,
-            '73.7.0': parameters.pfC,
-            '13.7.0': parameters.pf,
-            '29.7.0': parameters.vaA,
-            '49.7.0': parameters.vaB,
-            '69.7.0': parameters.vaC,
-            '9.7.0': parameters.vaSum,
-            '96.6.3': parameters.uBatteryRtc,
-            vPhaseAB: parameters.vPhaseAB,
-            vPhaseAC: parameters.vPhaseAC
-        };
-        return JSON.stringify(result);
-    };
-
-    var getExtendedCurrentValues = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$i,
-        examples: examples$i,
-        fromBytes: fromBytes$i,
-        headerSize: headerSize$i,
-        id: id$i,
-        isLoraOnly: isLoraOnly$i,
-        maxSize: maxSize$i,
-        name: name$i,
-        toBytes: toBytes$i,
-        toJson: toJson$3
-    });
-
-    const id$h = getHalfHourDemand$1;
-    const name$h = commandNames[getHalfHourDemand$1];
-    const headerSize$h = 2;
-    const maxSize$h = MIN_HALF_HOUR_COMMAND_SIZE;
-    const accessLevel$h = READ_ONLY;
-    const isLoraOnly$h = false;
-    const examples$h = {
-        'simple response': {
-            id: id$h,
-            name: name$h,
-            headerSize: headerSize$h,
-            maxSize: maxSize$h,
-            accessLevel: accessLevel$h,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 3,
-                    date: 22
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
-                ]
-            },
-            bytes: [
-                0x15, 0x63,
-                0x18, 0x03, 0x16,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
-            ]
-        },
-        'response for day when DST start/end': {
-            id: id$h,
-            name: name$h,
-            headerSize: headerSize$h,
-            maxSize: maxSize$h,
-            accessLevel: accessLevel$h,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 2,
-                    date: 31
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
-                ],
-                dstHour: 3
-            },
-            bytes: [
-                0x15, 0x68,
-                0x18, 0x02, 0x1f,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
-                0x17, 0x70, 0x17, 0xdf,
-                0x03
-            ]
-        }
-    };
-    const fromBytes$h = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
-        const date = buffer.getDate();
-        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
-        if (hasDst) {
-            return {
-                date,
-                energies,
-                dstHour: buffer.getUint8()
-            };
-        }
-        return { date, energies };
-    };
-    const toBytes$h = (parameters) => {
-        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE;
-        const buffer = new CommandBinaryBuffer(size);
-        buffer.setDate(parameters.date);
-        buffer.setEnergyPeriods(parameters.energies);
-        if (parameters.dstHour) {
-            buffer.setUint8(parameters.dstHour);
-        }
-        return toBytes$2f(id$h, buffer.data);
-    };
-
-    var getHalfHourDemand = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$h,
-        examples: examples$h,
-        fromBytes: fromBytes$h,
-        headerSize: headerSize$h,
-        id: id$h,
-        isLoraOnly: isLoraOnly$h,
-        maxSize: maxSize$h,
-        name: name$h,
-        toBytes: toBytes$h
-    });
-
-    const MIN_COMMAND_SIZE = MIN_HALF_HOUR_COMMAND_SIZE + 2;
-    const MAX_COMMAND_SIZE = MAX_HALF_HOUR_COMMAND_SIZE + 2;
-    const id$g = getHalfHourDemandChannel$2;
-    const name$g = commandNames[getHalfHourDemandChannel$2];
-    const headerSize$g = 2;
-    const maxSize$g = MIN_COMMAND_SIZE;
-    const accessLevel$g = READ_ONLY;
-    const isLoraOnly$g = false;
-    const examples$g = {
-        'simple response': {
-            id: id$g,
-            name: name$g,
-            headerSize: headerSize$g,
-            maxSize: maxSize$g,
-            accessLevel: accessLevel$g,
-            parameters: {
-                channel: 1,
-                channelParameter: 16,
-                date: {
-                    year: 24,
-                    month: 3,
-                    date: 22
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
-                ]
-            },
-            bytes: [
-                0x5a, 0x65,
-                0x01,
-                0x10,
-                0x18, 0x03, 0x16,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
-            ]
-        },
-        'response for day when DST start/end': {
-            id: id$g,
-            name: name$g,
-            headerSize: headerSize$g,
-            maxSize: maxSize$g,
-            accessLevel: accessLevel$g,
-            parameters: {
-                channel: 1,
-                channelParameter: 16,
-                date: {
-                    year: 24,
-                    month: 2,
-                    date: 31
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
-                ],
-                dstHour: 3
-            },
-            bytes: [
-                0x5a, 0x6a,
-                0x01,
-                0x10,
-                0x18, 0x02, 0x1f,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
-                0x17, 0x70, 0x17, 0xdf,
-                0x03
-            ]
-        }
-    };
-    const fromBytes$g = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        const hasDst = bytes.length > MIN_COMMAND_SIZE;
-        const channel = buffer.getUint8();
-        const channelParameter = buffer.getUint8();
-        const date = buffer.getDate();
-        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
-        if (hasDst) {
-            return {
-                channel,
-                channelParameter,
-                date,
-                energies,
-                dstHour: buffer.getUint8()
-            };
-        }
-        return {
-            channel,
-            channelParameter,
-            date,
-            energies
-        };
-    };
-    const toBytes$g = (parameters) => {
-        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_COMMAND_SIZE : MIN_COMMAND_SIZE;
-        const buffer = new CommandBinaryBuffer(size);
-        buffer.setUint8(parameters.channel);
-        buffer.setUint8(parameters.channelParameter);
-        buffer.setDate(parameters.date);
-        buffer.setEnergyPeriods(parameters.energies);
-        if (parameters.dstHour) {
-            buffer.setUint8(parameters.dstHour);
-        }
-        return toBytes$2f(id$g, buffer.data);
-    };
-
-    var getHalfHourDemandChannel = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$g,
-        examples: examples$g,
-        fromBytes: fromBytes$g,
-        headerSize: headerSize$g,
-        id: id$g,
-        isLoraOnly: isLoraOnly$g,
-        maxSize: maxSize$g,
-        name: name$g,
-        toBytes: toBytes$g
-    });
-
-    const id$f = getHalfHourDemandExport$1;
-    const name$f = commandNames[getHalfHourDemandExport$1];
-    const headerSize$f = 2;
-    const maxSize$f = MAX_HALF_HOUR_COMMAND_SIZE;
-    const accessLevel$f = READ_ONLY;
-    const isLoraOnly$f = false;
-    const examples$f = {
-        'simple response': {
-            id: id$f,
-            name: name$f,
-            headerSize: headerSize$f,
-            maxSize: maxSize$f,
-            accessLevel: accessLevel$f,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 3,
-                    date: 22
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
-                ]
-            },
-            bytes: [
-                0x53, 0x63,
-                0x18, 0x03, 0x16,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
-            ]
-        },
-        'response for day when DST start/end': {
-            id: id$f,
-            name: name$f,
-            headerSize: headerSize$f,
-            maxSize: maxSize$f,
-            accessLevel: accessLevel$f,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 2,
-                    date: 31
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
-                ],
-                dstHour: 3
-            },
-            bytes: [
-                0x53, 0x68,
-                0x18, 0x02, 0x1f,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
-                0x17, 0x70, 0x17, 0xdf,
-                0x03
-            ]
-        }
-    };
-    const fromBytes$f = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
-        const date = buffer.getDate();
-        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
-        if (hasDst) {
-            return {
-                date,
-                energies,
-                dstHour: buffer.getUint8()
-            };
-        }
-        return { date, energies };
-    };
-    const toBytes$f = (parameters) => {
-        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE;
-        const buffer = new CommandBinaryBuffer(size);
-        buffer.setDate(parameters.date);
-        buffer.setEnergyPeriods(parameters.energies);
-        if (parameters.dstHour) {
-            buffer.setUint8(parameters.dstHour);
-        }
-        return toBytes$2f(id$f, buffer.data);
-    };
-
-    var getHalfHourDemandExport = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$f,
-        examples: examples$f,
-        fromBytes: fromBytes$f,
-        headerSize: headerSize$f,
-        id: id$f,
-        isLoraOnly: isLoraOnly$f,
-        maxSize: maxSize$f,
-        name: name$f,
-        toBytes: toBytes$f
-    });
-
-    const id$e = getHalfHourDemandVare$2;
-    const name$e = commandNames[getHalfHourDemandVare$2];
-    const headerSize$e = 2;
-    const maxSize$e = MIN_HALF_HOUR_COMMAND_SIZE;
-    const accessLevel$e = READ_ONLY;
-    const isLoraOnly$e = false;
-    const examples$e = {
-        'simple response': {
-            id: id$e,
-            name: name$e,
-            headerSize: headerSize$e,
-            maxSize: maxSize$e,
-            accessLevel: accessLevel$e,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 3,
-                    date: 22
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
-                ]
-            },
-            bytes: [
-                0x49, 0x63,
-                0x18, 0x03, 0x16,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
-            ]
-        },
-        'response for day when DST start/end': {
-            id: id$e,
-            name: name$e,
-            headerSize: headerSize$e,
-            maxSize: maxSize$e,
-            accessLevel: accessLevel$e,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 2,
-                    date: 31
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
-                ],
-                dstHour: 3
-            },
-            bytes: [
-                0x49, 0x68,
-                0x18, 0x02, 0x1f,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
-                0x17, 0x70, 0x17, 0xdf,
-                0x03
-            ]
-        }
-    };
-    const fromBytes$e = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
-        const date = buffer.getDate();
-        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
-        if (hasDst) {
-            return {
-                date,
-                energies,
-                dstHour: buffer.getUint8()
-            };
-        }
-        return { date, energies };
-    };
-    const toBytes$e = (parameters) => {
-        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE;
-        const buffer = new CommandBinaryBuffer(size);
-        buffer.setDate(parameters.date);
-        buffer.setEnergyPeriods(parameters.energies);
-        if (parameters.dstHour) {
-            buffer.setUint8(parameters.dstHour);
-        }
-        return toBytes$2f(id$e, buffer.data);
-    };
-
-    var getHalfHourDemandVare = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$e,
-        examples: examples$e,
-        fromBytes: fromBytes$e,
-        headerSize: headerSize$e,
-        id: id$e,
-        isLoraOnly: isLoraOnly$e,
-        maxSize: maxSize$e,
-        name: name$e,
-        toBytes: toBytes$e
-    });
-
-    const id$d = getHalfHourDemandVareExport$2;
-    const name$d = commandNames[getHalfHourDemandVareExport$2];
-    const headerSize$d = 2;
-    const maxSize$d = MIN_HALF_HOUR_COMMAND_SIZE;
-    const accessLevel$d = READ_ONLY;
-    const isLoraOnly$d = false;
-    const examples$d = {
-        'simple response': {
-            id: id$d,
-            name: name$d,
-            headerSize: headerSize$d,
-            maxSize: maxSize$d,
-            accessLevel: accessLevel$d,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 3,
-                    date: 22
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
-                ]
-            },
-            bytes: [
-                0x55, 0x63,
-                0x18, 0x03, 0x16,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
-            ]
-        },
-        'response for day when DST start/end': {
-            id: id$d,
-            name: name$d,
-            headerSize: headerSize$d,
-            maxSize: maxSize$d,
-            accessLevel: accessLevel$d,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 2,
-                    date: 31
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
-                ],
-                dstHour: 3
-            },
-            bytes: [
-                0x55, 0x68,
-                0x18, 0x02, 0x1f,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
-                0x17, 0x70, 0x17, 0xdf,
-                0x03
-            ]
-        }
-    };
-    const fromBytes$d = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
-        const date = buffer.getDate();
-        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
-        if (hasDst) {
-            return {
-                date,
-                energies,
-                dstHour: buffer.getUint8()
-            };
-        }
-        return { date, energies };
-    };
-    const toBytes$d = (parameters) => {
-        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE;
-        const buffer = new CommandBinaryBuffer(size);
-        buffer.setDate(parameters.date);
-        buffer.setEnergyPeriods(parameters.energies);
-        if (parameters.dstHour) {
-            buffer.setUint8(parameters.dstHour);
-        }
-        return toBytes$2f(id$d, buffer.data);
-    };
-
-    var getHalfHourDemandVareExport = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$d,
-        examples: examples$d,
-        fromBytes: fromBytes$d,
-        headerSize: headerSize$d,
-        id: id$d,
-        isLoraOnly: isLoraOnly$d,
-        maxSize: maxSize$d,
-        name: name$d,
-        toBytes: toBytes$d
-    });
-
-    const id$c = getHalfHourDemandVari$2;
-    const name$c = commandNames[getHalfHourDemandVari$2];
-    const headerSize$c = 2;
-    const maxSize$c = MIN_HALF_HOUR_COMMAND_SIZE;
-    const accessLevel$c = READ_ONLY;
-    const isLoraOnly$c = false;
-    const examples$c = {
-        'simple response': {
-            id: id$c,
-            name: name$c,
-            headerSize: headerSize$c,
-            maxSize: maxSize$c,
-            accessLevel: accessLevel$c,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 3,
-                    date: 22
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
-                ]
-            },
-            bytes: [
-                0x48, 0x63,
-                0x18, 0x03, 0x16,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
-            ]
-        },
-        'response for day when DST start/end': {
-            id: id$c,
-            name: name$c,
-            headerSize: headerSize$c,
-            maxSize: maxSize$c,
-            accessLevel: accessLevel$c,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 2,
-                    date: 31
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
-                ],
-                dstHour: 3
-            },
-            bytes: [
-                0x48, 0x68,
-                0x18, 0x02, 0x1f,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
-                0x17, 0x70, 0x17, 0xdf,
-                0x03
-            ]
-        }
-    };
-    const fromBytes$c = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
-        const date = buffer.getDate();
-        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
-        if (hasDst) {
-            return {
-                date,
-                energies,
-                dstHour: buffer.getUint8()
-            };
-        }
-        return { date, energies };
-    };
-    const toBytes$c = (parameters) => {
-        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE;
-        const buffer = new CommandBinaryBuffer(size);
-        buffer.setDate(parameters.date);
-        buffer.setEnergyPeriods(parameters.energies);
-        if (parameters.dstHour) {
-            buffer.setUint8(parameters.dstHour);
-        }
-        return toBytes$2f(id$c, buffer.data);
-    };
-
-    var getHalfHourDemandVari = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$c,
-        examples: examples$c,
-        fromBytes: fromBytes$c,
-        headerSize: headerSize$c,
-        id: id$c,
-        isLoraOnly: isLoraOnly$c,
-        maxSize: maxSize$c,
-        name: name$c,
-        toBytes: toBytes$c
-    });
-
-    const id$b = getHalfHourDemandVariExport$2;
-    const name$b = commandNames[getHalfHourDemandVariExport$2];
-    const headerSize$b = 2;
-    const maxSize$b = MIN_HALF_HOUR_COMMAND_SIZE;
-    const accessLevel$b = READ_ONLY;
-    const isLoraOnly$b = false;
-    const examples$b = {
-        'simple response': {
-            id: id$b,
-            name: name$b,
-            headerSize: headerSize$b,
-            maxSize: maxSize$b,
-            accessLevel: accessLevel$b,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 3,
-                    date: 22
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, undefined, undefined, 5666, 5777, 5888, 5999
-                ]
-            },
-            bytes: [
-                0x54, 0x63,
-                0x18, 0x03, 0x16,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0xff, 0xff, 0xff, 0xff, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f
-            ]
-        },
-        'response for day when DST start/end': {
-            id: id$b,
-            name: name$b,
-            headerSize: headerSize$b,
-            maxSize: maxSize$b,
-            accessLevel: accessLevel$b,
-            parameters: {
-                date: {
-                    year: 24,
-                    month: 2,
-                    date: 31
-                },
-                energies: [
-                    1111, 1222, 1333, 1444, 1555, 1666, 1777, 1888, 1999, 2000,
-                    2111, 2222, 2333, 2444, 2555, 2666, 2777, 2888, 2999, 3000,
-                    3111, 3222, 3333, 3444, 3555, 3666, 3777, 3888, 3999, 4000,
-                    4111, 4222, 4333, 4444, 4555, 4666, 4777, 4888, 4999, 5000,
-                    5222, 5333, 5444, 5555, 5666, 5777, 5888, 5999, 6000, 6111
-                ],
-                dstHour: 3
-            },
-            bytes: [
-                0x54, 0x68,
-                0x18, 0x02, 0x1f,
-                0x04, 0x57, 0x04, 0xc6, 0x05, 0x35, 0x05, 0xa4, 0x06, 0x13, 0x06, 0x82, 0x06, 0xf1, 0x07, 0x60,
-                0x07, 0xcf, 0x07, 0xd0, 0x08, 0x3f, 0x08, 0xae, 0x09, 0x1d, 0x09, 0x8c, 0x09, 0xfb, 0x0a, 0x6a,
-                0x0a, 0xd9, 0x0b, 0x48, 0x0b, 0xb7, 0x0b, 0xb8, 0x0c, 0x27, 0x0c, 0x96, 0x0d, 0x05, 0x0d, 0x74,
-                0x0d, 0xe3, 0x0e, 0x52, 0x0e, 0xc1, 0x0f, 0x30, 0x0f, 0x9f, 0x0f, 0xa0, 0x10, 0x0f, 0x10, 0x7e,
-                0x10, 0xed, 0x11, 0x5c, 0x11, 0xcb, 0x12, 0x3a, 0x12, 0xa9, 0x13, 0x18, 0x13, 0x87, 0x13, 0x88,
-                0x14, 0x66, 0x14, 0xd5, 0x15, 0x44, 0x15, 0xb3, 0x16, 0x22, 0x16, 0x91, 0x17, 0x00, 0x17, 0x6f,
-                0x17, 0x70, 0x17, 0xdf,
-                0x03
-            ]
-        }
-    };
-    const fromBytes$b = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
-        const date = buffer.getDate();
-        const energies = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
-        if (hasDst) {
-            return {
-                date,
-                energies,
-                dstHour: buffer.getUint8()
-            };
-        }
-        return { date, energies };
-    };
-    const toBytes$b = (parameters) => {
-        const size = parameters.energies.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE;
-        const buffer = new CommandBinaryBuffer(size);
-        buffer.setDate(parameters.date);
-        buffer.setEnergyPeriods(parameters.energies);
-        if (parameters.dstHour) {
-            buffer.setUint8(parameters.dstHour);
-        }
-        return toBytes$2f(id$b, buffer.data);
-    };
-
-    var getHalfHourDemandVariExport = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$b,
-        examples: examples$b,
-        fromBytes: fromBytes$b,
-        headerSize: headerSize$b,
-        id: id$b,
-        isLoraOnly: isLoraOnly$b,
-        maxSize: maxSize$b,
-        name: name$b,
-        toBytes: toBytes$b
-    });
-
-    const DATE_SIZE = 2;
-    const ENERGY_FLAGS_SIZE = 1;
-    const START_HALFHOUR_SIZE = 1;
-    const HALFHOURS_NUMBER_SIZE = 1;
-    const MAX_HALFHOURS_ENERGY_SIZE = 247;
-    const energiesToObis = {
-        'A+': '1.5.x',
-        'A+R+': '3.5.x',
-        'A+R-': '4.5.x',
-        'A-': '2.5.x',
-        'A-R+': '6.5.x',
-        'A-R-': '7.5.x'
-    };
-    const convertEnergyToObis = (energy, tariff = 0) => {
-        const obis = energiesToObis[energy];
-        return obis ? obis.replace('x', tariff.toString(10)) : '';
-    };
-    const convertHalfhoursEnergiesToDlms = (energies) => {
-        const dlms = {};
-        Object.keys(energies).forEach(energy => {
-            const values = energies[energy];
-            for (let tariff = 0; tariff < TARIFF_NUMBER; tariff++) {
-                const value = values[tariff];
-                if (value || value === 0) {
-                    dlms[convertEnergyToObis(energy, tariff + 1)] = value;
-                }
-            }
-        });
-        return dlms;
-    };
-    const id$a = getHalfhoursEnergies$3;
-    const name$a = commandNames$2[getHalfhoursEnergies$3];
-    const headerSize$a = 2;
-    const maxSize$a = DATE_SIZE + ENERGY_FLAGS_SIZE + START_HALFHOUR_SIZE + HALFHOURS_NUMBER_SIZE + MAX_HALFHOURS_ENERGY_SIZE;
-    const accessLevel$a = UNENCRYPTED;
-    const isLoraOnly$a = true;
-    const toJson$2 = (parameters, { dlms } = defaultDlmsJsonOptions) => {
-        const { date, firstHalfhour, halfhoursNumber, energies } = parameters;
-        const result = dlms
-            ? {
-                date,
-                firstHalfhour,
-                halfhoursNumber,
-                ...convertHalfhoursEnergiesToDlms(energies)
-            }
-            : parameters;
-        return JSON.stringify(result);
-    };
-
-    const examples$a = {
-        'get halfhours energies': {
-            id: id$a,
-            headerSize: headerSize$a,
-            name: name$a,
-            maxSize: maxSize$a,
-            parameters: {
-                date: {
-                    year: 21,
-                    month: 2,
-                    date: 3
-                },
-                firstHalfhour: 1,
-                halfhoursNumber: 2,
-                energies: {
-                    'A+': [0x1000, 0x2000],
-                    'A-R+': [0x3000, 0x4000]
-                }
-            },
-            bytes: [
-                0x6f, 0x0d,
-                0x2a, 0x43, 0x11,
-                0x01, 0x02,
-                0x10, 0x00, 0x20, 0x00,
-                0x30, 0x00, 0x40, 0x00
-            ]
-        }
-    };
-    const fromBytes$a = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        const date = buffer.getDate();
-        const energiesFlags = buffer.getEnergiesFlags();
-        const firstHalfhour = buffer.getUint8();
-        const halfhoursNumber = buffer.getUint8();
-        return {
-            date,
-            firstHalfhour,
-            halfhoursNumber,
-            energies: buffer.getHalfhoursEnergies3(energiesFlags, halfhoursNumber)
-        };
-    };
-    const toBytes$a = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$a);
-        const { date, firstHalfhour, halfhoursNumber, energies } = parameters;
-        buffer.setDate(date);
-        buffer.setEnergiesFlags(energies);
-        buffer.setUint8(firstHalfhour);
-        buffer.setUint8(halfhoursNumber);
-        buffer.setHalfhoursEnergies3(energies);
-        return toBytes$2f(id$a, buffer.getBytesToOffset());
-    };
-
-    var getHalfhoursEnergies = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$a,
-        examples: examples$a,
-        fromBytes: fromBytes$a,
-        headerSize: headerSize$a,
-        id: id$a,
-        isLoraOnly: isLoraOnly$a,
-        maxSize: maxSize$a,
-        name: name$a,
-        toBytes: toBytes$a,
-        toJson: toJson$2
-    });
-
-    const id$9 = getMonthDemand$1;
-    const name$9 = commandNames[getMonthDemand$1];
-    const headerSize$9 = 2;
-    const accessLevel$9 = READ_ONLY;
-    const maxSize$9 = 50;
-    const isLoraOnly$9 = false;
-    const examples$9 = {
-        'response energy for 2024.03': {
-            id: id$9,
-            name: name$9,
-            headerSize: headerSize$9,
-            maxSize: maxSize$9,
-            accessLevel: accessLevel$9,
-            parameters: {
-                year: 24,
-                month: 3,
-                energies: {
-                    wh: [40301230, 3334244, 15000, 2145623],
-                    vari: [25000, 1234567, 789456, 9876543],
-                    vare: [987654, 654321, 123456, 789012]
-                }
-            },
-            bytes: [
-                0x17, 0x32,
-                0x18, 0x03,
-                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
-                0x00, 0x32, 0xe0, 0x64, 0x00, 0x12, 0xd6, 0x87, 0x00, 0x09, 0xfb, 0xf1,
-                0x00, 0x00, 0x3a, 0x98, 0x00, 0x0c, 0x0b, 0xd0, 0x00, 0x01, 0xe2, 0x40,
-                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
-            ]
-        }
-    };
-    const fromBytes$9 = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        return {
-            year: buffer.getUint8(),
-            month: buffer.getUint8(),
-            energies: buffer.getEnergies()
-        };
-    };
-    const toBytes$9 = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$9);
-        buffer.setUint8(parameters.year);
-        buffer.setUint8(parameters.month);
-        buffer.setEnergies(parameters.energies);
-        return toBytes$2f(id$9, buffer.data);
-    };
-    const toJson$1 = (parameters, options = defaultJsonOptions) => {
-        if (!options.dlms) {
-            return JSON.stringify(parameters);
-        }
-        const { year, month, energies } = parameters;
-        return JSON.stringify({
-            year,
-            month,
-            ...mapEnergiesToObisCodes(energies, options.isGreen, A_PLUS_R_PLUS_R_MINUS)
-        });
-    };
-
-    var getMonthDemand = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$9,
-        examples: examples$9,
-        fromBytes: fromBytes$9,
-        headerSize: headerSize$9,
-        id: id$9,
-        isLoraOnly: isLoraOnly$9,
-        maxSize: maxSize$9,
-        name: name$9,
-        toBytes: toBytes$9,
-        toJson: toJson$1
-    });
-
-    const isGreen = true;
-    const id$8 = getMonthDemandExport$1;
-    const name$8 = commandNames[getMonthDemandExport$1];
-    const headerSize$8 = 2;
-    const maxSize$8 = 50;
-    const accessLevel$8 = READ_ONLY;
-    const isLoraOnly$8 = false;
-    const examples$8 = {
-        'simple response': {
-            id: id$8,
-            name: name$8,
-            headerSize: headerSize$8,
-            maxSize: maxSize$8,
-            accessLevel: accessLevel$8,
-            parameters: {
-                year: 24,
-                month: 3,
-                energies: {
-                    wh: [40301230, 3334244, 15000, 2145623],
-                    vari: [25000, 1234567, 789456, 9876543],
-                    vare: [987654, 654321, 123456, 789012]
-                }
-            },
-            bytes: [
-                0x52, 0x32,
-                0x18, 0x03,
-                0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x61, 0xa8, 0x00, 0x0f, 0x12, 0x06,
-                0x00, 0x32, 0xe0, 0x64, 0x00, 0x12, 0xd6, 0x87, 0x00, 0x09, 0xfb, 0xf1,
-                0x00, 0x00, 0x3a, 0x98, 0x00, 0x0c, 0x0b, 0xd0, 0x00, 0x01, 0xe2, 0x40,
-                0x00, 0x20, 0xbd, 0x57, 0x00, 0x96, 0xb4, 0x3f, 0x00, 0x0c, 0x0a, 0x14
-            ]
-        }
-    };
     const fromBytes$8 = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
-        return {
-            year: buffer.getUint8(),
-            month: buffer.getUint8(),
-            energies: buffer.getEnergies()
-        };
+        return buffer.getMonthMaxDemandResponse();
     };
     const toBytes$8 = (parameters) => {
         const buffer = new CommandBinaryBuffer(maxSize$8);
-        buffer.setUint8(parameters.year);
-        buffer.setUint8(parameters.month);
-        buffer.setEnergies(parameters.energies);
-        return toBytes$2f(id$8, buffer.data);
-    };
-    const toJson = (parameters, options = defaultJsonOptions) => {
-        if (!options.dlms) {
-            return JSON.stringify(parameters);
-        }
-        const { year, month, energies } = parameters;
-        return JSON.stringify({
-            year,
-            month,
-            ...mapEnergiesToObisCodes(energies, isGreen, A_MINUS_R_PLUS_R_MINUS)
-        });
+        buffer.setMonthMaxDemandResponse(parameters);
+        return toBytes$2h(id$8, buffer.getBytesToOffset());
     };
 
-    var getMonthDemandExport = /*#__PURE__*/Object.freeze({
+    var getMonthMaxDemand = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$8,
         examples: examples$8,
@@ -12287,12 +12475,11 @@
         isLoraOnly: isLoraOnly$8,
         maxSize: maxSize$8,
         name: name$8,
-        toBytes: toBytes$8,
-        toJson: toJson
+        toBytes: toBytes$8
     });
 
-    const id$7 = getMonthMaxDemand$1;
-    const name$7 = commandNames[getMonthMaxDemand$1];
+    const id$7 = getMonthMaxDemandExport$1;
+    const name$7 = commandNames[getMonthMaxDemandExport$1];
     const headerSize$7 = 2;
     const accessLevel$7 = READ_ONLY;
     const maxSize$7 = 74;
@@ -12357,7 +12544,7 @@
                 ]
             },
             bytes: [
-                0x32, 0x4a,
+                0x59, 0x4a,
                 0x17, 0x03,
                 0x00, 0x0a, 0x00, 0x00, 0x00, 0x64, 0x01, 0x17, 0x00, 0x00, 0x07, 0xd0, 0x08, 0x0f, 0x00, 0x00, 0x15, 0xb3,
                 0x02, 0x14, 0x00, 0x00, 0x03, 0xe8, 0x03, 0x18, 0x00, 0x00, 0x4e, 0x20, 0x09, 0x10, 0x00, 0x00, 0xd9, 0x03,
@@ -12373,10 +12560,10 @@
     const toBytes$7 = (parameters) => {
         const buffer = new CommandBinaryBuffer(maxSize$7);
         buffer.setMonthMaxDemandResponse(parameters);
-        return toBytes$2f(id$7, buffer.getBytesToOffset());
+        return toBytes$2h(id$7, buffer.getBytesToOffset());
     };
 
-    var getMonthMaxDemand = /*#__PURE__*/Object.freeze({
+    var getMonthMaxDemandExport = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$7,
         examples: examples$7,
@@ -12389,117 +12576,19 @@
         toBytes: toBytes$7
     });
 
-    const id$6 = getMonthMaxDemandExport$1;
-    const name$6 = commandNames[getMonthMaxDemandExport$1];
+    const id$6 = getOperatorParameters$1;
+    const name$6 = commandNames[getOperatorParameters$1];
     const headerSize$6 = 2;
+    const maxSize$6 = OPERATOR_PARAMETERS_SIZE;
     const accessLevel$6 = READ_ONLY;
-    const maxSize$6 = 74;
     const isLoraOnly$6 = false;
     const examples$6 = {
-        'response for 2023.03': {
+        'get default operator parameters response': {
             id: id$6,
             name: name$6,
             headerSize: headerSize$6,
-            accessLevel: accessLevel$6,
             maxSize: maxSize$6,
-            parameters: {
-                date: {
-                    year: 23,
-                    month: 3
-                },
-                maxDemands: [
-                    {
-                        hourPmax: 0,
-                        minPmax: 10,
-                        pmax: 100,
-                        hourVariMax: 1,
-                        minVariMax: 23,
-                        variMax: 2000,
-                        hourVareMax: 8,
-                        minVareMax: 15,
-                        vareMax: 5555
-                    },
-                    {
-                        hourPmax: 2,
-                        minPmax: 20,
-                        pmax: 1000,
-                        hourVariMax: 3,
-                        minVariMax: 24,
-                        variMax: 20000,
-                        hourVareMax: 9,
-                        minVareMax: 16,
-                        vareMax: 55555
-                    },
-                    {
-                        hourPmax: 4,
-                        minPmax: 30,
-                        pmax: 10000,
-                        hourVariMax: 5,
-                        minVariMax: 25,
-                        variMax: 200000,
-                        hourVareMax: 10,
-                        minVareMax: 17,
-                        vareMax: 555555
-                    },
-                    {
-                        hourPmax: 6,
-                        minPmax: 40,
-                        pmax: 100000,
-                        hourVariMax: 7,
-                        minVariMax: 26,
-                        variMax: 2000000,
-                        hourVareMax: 11,
-                        minVareMax: 18,
-                        vareMax: 5555555
-                    }
-                ]
-            },
-            bytes: [
-                0x59, 0x4a,
-                0x17, 0x03,
-                0x00, 0x0a, 0x00, 0x00, 0x00, 0x64, 0x01, 0x17, 0x00, 0x00, 0x07, 0xd0, 0x08, 0x0f, 0x00, 0x00, 0x15, 0xb3,
-                0x02, 0x14, 0x00, 0x00, 0x03, 0xe8, 0x03, 0x18, 0x00, 0x00, 0x4e, 0x20, 0x09, 0x10, 0x00, 0x00, 0xd9, 0x03,
-                0x04, 0x1e, 0x00, 0x00, 0x27, 0x10, 0x05, 0x19, 0x00, 0x03, 0x0d, 0x40, 0x0a, 0x11, 0x00, 0x08, 0x7a, 0x23,
-                0x06, 0x28, 0x00, 0x01, 0x86, 0xa0, 0x07, 0x1a, 0x00, 0x1e, 0x84, 0x80, 0x0b, 0x12, 0x00, 0x54, 0xc5, 0x63
-            ]
-        }
-    };
-    const fromBytes$6 = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        return buffer.getMonthMaxDemandResponse();
-    };
-    const toBytes$6 = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$6);
-        buffer.setMonthMaxDemandResponse(parameters);
-        return toBytes$2f(id$6, buffer.getBytesToOffset());
-    };
-
-    var getMonthMaxDemandExport = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        accessLevel: accessLevel$6,
-        examples: examples$6,
-        fromBytes: fromBytes$6,
-        headerSize: headerSize$6,
-        id: id$6,
-        isLoraOnly: isLoraOnly$6,
-        maxSize: maxSize$6,
-        name: name$6,
-        toBytes: toBytes$6
-    });
-
-    const id$5 = getOperatorParameters$1;
-    const name$5 = commandNames[getOperatorParameters$1];
-    const headerSize$5 = 2;
-    const maxSize$5 = OPERATOR_PARAMETERS_SIZE;
-    const accessLevel$5 = READ_ONLY;
-    const isLoraOnly$5 = false;
-    const examples$5 = {
-        'get default operator parameters response': {
-            id: id$5,
-            name: name$5,
-            headerSize: headerSize$5,
-            maxSize: maxSize$5,
-            accessLevel: accessLevel$5,
+            accessLevel: accessLevel$6,
             parameters: {
                 vpThreshold: 265000,
                 vThreshold: 156000,
@@ -12559,28 +12648,28 @@
                     VOLTAGE_IN_PHASE_B: false,
                     VOLTAGE_IN_PHASE_C: false,
                     BATTERY_VOLTAGE: false,
-                    FREQUENCY: false,
+                    SUPPLY_FREQUENCY: false,
                     ACTIVE_POWER_SUM: true,
                     ACTIVE_POWER_PHASE_A: false,
                     ACTIVE_POWER_PHASE_B: false,
                     ACTIVE_POWER_PHASE_C: false,
-                    REACTIVE_POWER_QPLUS_SUM: true,
+                    TOTAL_REACTIVE_POWER_QPLUS: true,
                     REACTIVE_POWER_QPLUS_PHASE_A: false,
                     REACTIVE_POWER_QPLUS_PHASE_B: false,
                     REACTIVE_POWER_QPLUS_PHASE_C: false,
-                    REACTIVE_POWER_QMINUS_SUM: true,
+                    TOTAL_REACTIVE_POWER_QMINUS: true,
                     REACTIVE_POWER_QMINUS_PHASE_A: false,
                     REACTIVE_POWER_QMINUS_PHASE_B: false,
                     REACTIVE_POWER_QMINUS_PHASE_C: false,
-                    POWER_COEFFICIENT_SUM: false,
+                    TOTAL_POWER_FACTOR: false,
                     POWER_COEFFICIENT_PHASE_A: false,
                     POWER_COEFFICIENT_PHASE_B: false,
                     POWER_COEFFICIENT_PHASE_C: false,
-                    APPARENT_POWER_QPLUS_SUM: false,
+                    TOTAL_APPARENT_POWER_QPLUS: false,
                     APPARENT_POWER_QPLUS_PHASE_A: false,
                     APPARENT_POWER_QPLUS_PHASE_B: false,
                     APPARENT_POWER_QPLUS_PHASE_C: false,
-                    APPARENT_POWER_QMINUS_SUM: false,
+                    TOTAL_APPARENT_POWER_QMINUS: false,
                     APPARENT_POWER_QMINUS_PHASE_A: false,
                     APPARENT_POWER_QMINUS_PHASE_B: false
                 },
@@ -12622,28 +12711,28 @@
                     RELAY_ON_Y: true,
                     RELAY_ON_CENTER: true,
                     RELAY_ON_PB: false,
-                    RELAY_ON_TARIFF_0: false,
                     RELAY_ON_TARIFF_1: false,
                     RELAY_ON_TARIFF_2: false,
                     RELAY_ON_TARIFF_3: false,
+                    RELAY_ON_TARIFF_4: false,
                     RELAY_ON_V_GOOD: false,
                     RELAY_OFF_Y: true,
                     RELAY_OFF_CENTER: true,
-                    RELAY_OFF_TARIFF_0: false,
                     RELAY_OFF_TARIFF_1: false,
                     RELAY_OFF_TARIFF_2: false,
                     RELAY_OFF_TARIFF_3: false,
+                    RELAY_OFF_TARIFF_4: false,
                     RELAY_OFF_I_LIMIT: false,
                     RELAY_OFF_V_BAD: false,
-                    RELAY_OFF_DIFF_BAD: false,
-                    RELAY_OFF_LIM_TARIFF_0: false,
+                    RELAY_OFF_DIFF_CURRENT_BAD: false,
                     RELAY_OFF_LIM_TARIFF_1: false,
                     RELAY_OFF_LIM_TARIFF_2: false,
                     RELAY_OFF_LIM_TARIFF_3: false,
-                    RELAY_OFF_LIM_VAR_TARIFF_0: false,
+                    RELAY_OFF_LIM_TARIFF_4: false,
                     RELAY_OFF_LIM_VAR_TARIFF_1: false,
                     RELAY_OFF_LIM_VAR_TARIFF_2: false,
                     RELAY_OFF_LIM_VAR_TARIFF_3: false,
+                    RELAY_OFF_LIM_VAR_TARIFF_4: false,
                     RELAY_ON_PF_MIN: false,
                     RELAY_OFF_PF_MIN: false,
                     RELAY_ON_TIMEOUT: false,
@@ -12687,14 +12776,14 @@
                     MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
                     MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
                     MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
                     HOUR_MINUTE_SECOND: true,
                     DATE_MONTH_YEAR: true,
                     CURRENT_TRANSFORMATION_RATIO: false,
@@ -12719,42 +12808,42 @@
             ]
         }
     };
-    const fromBytes$5 = (bytes) => {
+    const fromBytes$6 = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getOperatorParameters();
     };
-    const toBytes$5 = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$5);
+    const toBytes$6 = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$6);
         buffer.setOperatorParameters(parameters);
-        return toBytes$2f(id$5, buffer.data);
+        return toBytes$2h(id$6, buffer.data);
     };
 
     var getOperatorParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$5,
-        examples: examples$5,
-        fromBytes: fromBytes$5,
-        headerSize: headerSize$5,
-        id: id$5,
-        isLoraOnly: isLoraOnly$5,
-        maxSize: maxSize$5,
-        name: name$5,
-        toBytes: toBytes$5
+        accessLevel: accessLevel$6,
+        examples: examples$6,
+        fromBytes: fromBytes$6,
+        headerSize: headerSize$6,
+        id: id$6,
+        isLoraOnly: isLoraOnly$6,
+        maxSize: maxSize$6,
+        name: name$6,
+        toBytes: toBytes$6
     });
 
-    const id$4 = getOperatorParametersExtended$2;
-    const name$4 = commandNames[getOperatorParametersExtended$2];
-    const headerSize$4 = 2;
-    const maxSize$4 = OPERATOR_PARAMETERS_EXTENDED_SIZE;
-    const accessLevel$4 = READ_ONLY;
-    const isLoraOnly$4 = false;
-    const examples$4 = {
+    const id$5 = getOperatorParametersExtended$2;
+    const name$5 = commandNames[getOperatorParametersExtended$2];
+    const headerSize$5 = 2;
+    const maxSize$5 = OPERATOR_PARAMETERS_EXTENDED_SIZE;
+    const accessLevel$5 = READ_ONLY;
+    const isLoraOnly$5 = false;
+    const examples$5 = {
         'simple response': {
-            id: id$4,
-            name: name$4,
-            headerSize: headerSize$4,
-            maxSize: maxSize$4,
-            accessLevel: accessLevel$4,
+            id: id$5,
+            name: name$5,
+            headerSize: headerSize$5,
+            maxSize: maxSize$5,
+            accessLevel: accessLevel$5,
             parameters: {
                 timeoutRelayOn: 1,
                 define1: {
@@ -12778,42 +12867,42 @@
             ]
         }
     };
-    const fromBytes$4 = (bytes) => {
+    const fromBytes$5 = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getOperatorParametersExtended();
     };
-    const toBytes$4 = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$4);
+    const toBytes$5 = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$5);
         buffer.setOperatorParametersExtended(parameters);
-        return toBytes$2f(id$4, buffer.data);
+        return toBytes$2h(id$5, buffer.data);
     };
 
     var getOperatorParametersExtended = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        accessLevel: accessLevel$4,
-        examples: examples$4,
-        fromBytes: fromBytes$4,
-        headerSize: headerSize$4,
-        id: id$4,
-        isLoraOnly: isLoraOnly$4,
-        maxSize: maxSize$4,
-        name: name$4,
-        toBytes: toBytes$4
+        accessLevel: accessLevel$5,
+        examples: examples$5,
+        fromBytes: fromBytes$5,
+        headerSize: headerSize$5,
+        id: id$5,
+        isLoraOnly: isLoraOnly$5,
+        maxSize: maxSize$5,
+        name: name$5,
+        toBytes: toBytes$5
     });
 
-    const id$3 = getOperatorParametersExtended2$2;
-    const name$3 = commandNames[getOperatorParametersExtended2$2];
-    const headerSize$3 = 2;
-    const maxSize$3 = OPERATOR_PARAMETERS_EXTENDED2_SIZE;
-    const accessLevel$3 = READ_ONLY;
-    const isLoraOnly$3 = false;
-    const examples$3 = {
+    const id$4 = getOperatorParametersExtended2$2;
+    const name$4 = commandNames[getOperatorParametersExtended2$2];
+    const headerSize$4 = 2;
+    const maxSize$4 = OPERATOR_PARAMETERS_EXTENDED2_SIZE;
+    const accessLevel$4 = READ_ONLY;
+    const isLoraOnly$4 = false;
+    const examples$4 = {
         'simple response': {
-            id: id$3,
-            name: name$3,
-            headerSize: headerSize$3,
-            maxSize: maxSize$3,
-            accessLevel: accessLevel$3,
+            id: id$4,
+            name: name$4,
+            headerSize: headerSize$4,
+            maxSize: maxSize$4,
+            accessLevel: accessLevel$4,
             parameters: {
                 deltaCorMin: 15,
                 timeoutMagnetOff: 5,
@@ -12823,7 +12912,7 @@
                     RELAY_ON_MAGNET_AUTO: true
                 },
                 timeoutMagnetOn: 5,
-                phaseDefault: 1,
+                defaultPlcPhase: 1,
                 displaySet21: {
                     SET_ALL_SEGMENT_DISPLAY: false,
                     SOFTWARE_VERSION: false,
@@ -12867,28 +12956,28 @@
                     VOLTAGE_IN_PHASE_B: false,
                     VOLTAGE_IN_PHASE_C: false,
                     BATTERY_VOLTAGE: false,
-                    FREQUENCY: false,
+                    SUPPLY_FREQUENCY: false,
                     ACTIVE_POWER_SUM: false,
                     ACTIVE_POWER_PHASE_A: false,
                     ACTIVE_POWER_PHASE_B: false,
                     ACTIVE_POWER_PHASE_C: false,
-                    REACTIVE_POWER_QPLUS_SUM: false,
+                    TOTAL_REACTIVE_POWER_QPLUS: false,
                     REACTIVE_POWER_QPLUS_PHASE_A: false,
                     REACTIVE_POWER_QPLUS_PHASE_B: false,
                     REACTIVE_POWER_QPLUS_PHASE_C: false,
-                    REACTIVE_POWER_QMINUS_SUM: false,
+                    TOTAL_REACTIVE_POWER_QMINUS: false,
                     REACTIVE_POWER_QMINUS_PHASE_A: false,
                     REACTIVE_POWER_QMINUS_PHASE_B: false,
                     REACTIVE_POWER_QMINUS_PHASE_C: false,
-                    POWER_COEFFICIENT_SUM: false,
+                    TOTAL_POWER_FACTOR: false,
                     POWER_COEFFICIENT_PHASE_A: false,
                     POWER_COEFFICIENT_PHASE_B: false,
                     POWER_COEFFICIENT_PHASE_C: false,
-                    APPARENT_POWER_QPLUS_SUM: false,
+                    TOTAL_APPARENT_POWER_QPLUS: false,
                     APPARENT_POWER_QPLUS_PHASE_A: false,
                     APPARENT_POWER_QPLUS_PHASE_B: false,
                     APPARENT_POWER_QPLUS_PHASE_C: false,
-                    APPARENT_POWER_QMINUS_SUM: false,
+                    TOTAL_APPARENT_POWER_QMINUS: false,
                     APPARENT_POWER_QMINUS_PHASE_A: false,
                     APPARENT_POWER_QMINUS_PHASE_B: false
                 },
@@ -12936,14 +13025,14 @@
                     MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
                     MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
                     MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T1: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T2: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T3: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_DAY_T4: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
-                    MAX_NEGATIVE_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
                     HOUR_MINUTE_SECOND: false,
                     DATE_MONTH_YEAR: false,
                     CURRENT_TRANSFORMATION_RATIO: false,
@@ -12986,17 +13075,226 @@
             ]
         }
     };
-    const fromBytes$3 = (bytes) => {
+    const fromBytes$4 = (bytes) => {
         const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getOperatorParametersExtended2();
     };
-    const toBytes$3 = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$3);
+    const toBytes$4 = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$4);
         buffer.setOperatorParametersExtended2(parameters);
-        return toBytes$2f(id$3, buffer.data);
+        return toBytes$2h(id$4, buffer.data);
     };
 
     var getOperatorParametersExtended2 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        accessLevel: accessLevel$4,
+        examples: examples$4,
+        fromBytes: fromBytes$4,
+        headerSize: headerSize$4,
+        id: id$4,
+        isLoraOnly: isLoraOnly$4,
+        maxSize: maxSize$4,
+        name: name$4,
+        toBytes: toBytes$4
+    });
+
+    const id$3 = getOperatorParametersExtended4$2;
+    const name$3 = commandNames[getOperatorParametersExtended4$2];
+    const headerSize$3 = 2;
+    const maxSize$3 = OPERATOR_PARAMETERS_EXTENDED4_SIZE;
+    const accessLevel$3 = READ_ONLY;
+    const isLoraOnly$3 = false;
+    const examples$3 = {
+        'simple response': {
+            id: id$3,
+            name: name$3,
+            headerSize: headerSize$3,
+            maxSize: maxSize$3,
+            accessLevel: accessLevel$3,
+            parameters: {
+                displaySet5: {
+                    EVENT: true,
+                    PROFILE_P01: true,
+                    PROFILE_P02: false,
+                    PROFILE_P03: true,
+                    PROFILE_P04: true,
+                    PROFILE_P05: false,
+                    PROFILE_P06: true
+                },
+                displaySet25: {
+                    EVENT: true,
+                    PROFILE_P01: false,
+                    PROFILE_P02: true,
+                    PROFILE_P03: false,
+                    PROFILE_P04: true,
+                    PROFILE_P05: false,
+                    PROFILE_P06: true
+                },
+                displaySet31: {
+                    SET_ALL_SEGMENT_DISPLAY: true,
+                    SOFTWARE_VERSION: false,
+                    TOTAL_ACTIVE_ENERGY: true,
+                    ACTIVE_ENERGY_T1: false,
+                    ACTIVE_ENERGY_T2: false,
+                    ACTIVE_ENERGY_T3: false,
+                    ACTIVE_ENERGY_T4: false,
+                    TOTAL_REACTIVE_ENERGY: true,
+                    REACTIVE_ENERGY_T1: false,
+                    REACTIVE_ENERGY_T2: false,
+                    REACTIVE_ENERGY_T3: false,
+                    REACTIVE_ENERGY_T4: false,
+                    TOTAL_NEGATIVE_REACTIVE_ENERGY: true,
+                    NEGATIVE_REACTIVE_ENERGY_T1: false,
+                    NEGATIVE_REACTIVE_ENERGY_T2: false,
+                    NEGATIVE_REACTIVE_ENERGY_T3: false,
+                    NEGATIVE_REACTIVE_ENERGY_T4: false,
+                    TOTAL_EXPORTED_ACTIVE_ENERGY: false,
+                    EXPORTED_ACTIVE_ENERGY_T1: false,
+                    EXPORTED_ACTIVE_ENERGY_T2: false,
+                    EXPORTED_ACTIVE_ENERGY_T3: false,
+                    EXPORTED_ACTIVE_ENERGY_T4: false,
+                    TOTAL_EXPORTED_REACTIVE_ENERGY: false,
+                    EXPORTED_REACTIVE_ENERGY_T1: false,
+                    EXPORTED_REACTIVE_ENERGY_T2: false,
+                    EXPORTED_REACTIVE_ENERGY_T3: false,
+                    EXPORTED_REACTIVE_ENERGY_T4: false,
+                    TOTAL_EXPORTED_NEGATIVE_REACTIVE_ENERGY: false,
+                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T1: false,
+                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T2: false,
+                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T3: false,
+                    EXPORTED_NEGATIVE_REACTIVE_ENERGY_T4: false
+                },
+                displaySet32: {
+                    CURRENT_IN_PHASE_A: false,
+                    CURRENT_IN_PHASE_B: false,
+                    CURRENT_IN_PHASE_C: false,
+                    CURRENT_IN_NEUTRAL: false,
+                    VOLTAGE_IN_PHASE_A: false,
+                    VOLTAGE_IN_PHASE_B: false,
+                    VOLTAGE_IN_PHASE_C: false,
+                    BATTERY_VOLTAGE: false,
+                    SUPPLY_FREQUENCY: false,
+                    ACTIVE_POWER_SUM: true,
+                    ACTIVE_POWER_PHASE_A: false,
+                    ACTIVE_POWER_PHASE_B: false,
+                    ACTIVE_POWER_PHASE_C: false,
+                    TOTAL_REACTIVE_POWER_QPLUS: true,
+                    REACTIVE_POWER_QPLUS_PHASE_A: false,
+                    REACTIVE_POWER_QPLUS_PHASE_B: false,
+                    REACTIVE_POWER_QPLUS_PHASE_C: false,
+                    TOTAL_REACTIVE_POWER_QMINUS: true,
+                    REACTIVE_POWER_QMINUS_PHASE_A: false,
+                    REACTIVE_POWER_QMINUS_PHASE_B: false,
+                    REACTIVE_POWER_QMINUS_PHASE_C: false,
+                    TOTAL_POWER_FACTOR: false,
+                    POWER_COEFFICIENT_PHASE_A: false,
+                    POWER_COEFFICIENT_PHASE_B: false,
+                    POWER_COEFFICIENT_PHASE_C: false,
+                    TOTAL_APPARENT_POWER_QPLUS: false,
+                    APPARENT_POWER_QPLUS_PHASE_A: false,
+                    APPARENT_POWER_QPLUS_PHASE_B: false,
+                    APPARENT_POWER_QPLUS_PHASE_C: false,
+                    TOTAL_APPARENT_POWER_QMINUS: false,
+                    APPARENT_POWER_QMINUS_PHASE_A: false,
+                    APPARENT_POWER_QMINUS_PHASE_B: false
+                },
+                displaySet33: {
+                    APPARENT_POWER_QMINUS_PHASE_C: false,
+                    MAX_ACTIVE_POWER_DAY_T1: false,
+                    MAX_ACTIVE_POWER_DAY_T2: false,
+                    MAX_ACTIVE_POWER_DAY_T3: false,
+                    MAX_ACTIVE_POWER_DAY_T4: false,
+                    MAX_ACTIVE_POWER_MONTH_T1: false,
+                    MAX_ACTIVE_POWER_MONTH_T2: false,
+                    MAX_ACTIVE_POWER_MONTH_T3: false,
+                    MAX_ACTIVE_POWER_MONTH_T4: false,
+                    MAX_REACTIVE_POWER_DAY_T1: false,
+                    MAX_REACTIVE_POWER_DAY_T2: false,
+                    MAX_REACTIVE_POWER_DAY_T3: false,
+                    MAX_REACTIVE_POWER_DAY_T4: false,
+                    MAX_REACTIVE_POWER_MONTH_T1: false,
+                    MAX_REACTIVE_POWER_MONTH_T2: false,
+                    MAX_REACTIVE_POWER_MONTH_T3: false,
+                    MAX_REACTIVE_POWER_MONTH_T4: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+                    MAX_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
+                    MAX_EXPORTED_ACTIVE_POWER_DAY_T1: false,
+                    MAX_EXPORTED_ACTIVE_POWER_DAY_T2: false,
+                    MAX_EXPORTED_ACTIVE_POWER_DAY_T3: false,
+                    MAX_EXPORTED_ACTIVE_POWER_DAY_T4: false,
+                    MAX_EXPORTED_ACTIVE_POWER_MONTH_T1: false,
+                    MAX_EXPORTED_ACTIVE_POWER_MONTH_T2: false,
+                    MAX_EXPORTED_ACTIVE_POWER_MONTH_T3: false
+                },
+                displaySet34: {
+                    MAX_EXPORTED_ACTIVE_POWER_MONTH_T4: false,
+                    MAX_EXPORTED_REACTIVE_POWER_DAY_T1: false,
+                    MAX_EXPORTED_REACTIVE_POWER_DAY_T2: false,
+                    MAX_EXPORTED_REACTIVE_POWER_DAY_T3: false,
+                    MAX_EXPORTED_REACTIVE_POWER_DAY_T4: false,
+                    MAX_EXPORTED_REACTIVE_POWER_MONTH_T1: false,
+                    MAX_EXPORTED_REACTIVE_POWER_MONTH_T2: false,
+                    MAX_EXPORTED_REACTIVE_POWER_MONTH_T3: false,
+                    MAX_EXPORTED_REACTIVE_POWER_MONTH_T4: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T1: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T2: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T3: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_DAY_T4: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T1: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T2: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T3: false,
+                    MAX_EXPORTED_NEGATIVE_REACTIVE_POWER_MONTH_T4: false,
+                    HOUR_MINUTE_SECOND: true,
+                    DATE_MONTH_YEAR: true,
+                    CURRENT_TRANSFORMATION_RATIO: false,
+                    VOLTAGE_TRANSFORMATION_RATIO: false,
+                    CURRENT_BALANCE: false,
+                    POWER_THRESHOLD_T1: false,
+                    POWER_THRESHOLD_T2: false,
+                    POWER_THRESHOLD_T3: false,
+                    POWER_THRESHOLD_T4: false,
+                    SORT_DISPLAY_SCREENS: false,
+                    AUTO_SCREEN_SCROLLING: true
+                },
+                displaySet35: {
+                    EVENT: false,
+                    PROFILE_P01: false,
+                    PROFILE_P02: true,
+                    PROFILE_P03: true,
+                    PROFILE_P04: true,
+                    PROFILE_P05: false,
+                    PROFILE_P06: false
+                }
+            },
+            bytes: [
+                0x75, 0x1c,
+                0x00, 0x00, 0x00, 0x5b,
+                0x00, 0x00, 0x00, 0x55,
+                0x00, 0x00, 0x10, 0x85,
+                0x00, 0x02, 0x22, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x80, 0x06, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x1c
+            ]
+        }
+    };
+    const fromBytes$3 = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
+        return buffer.getOperatorParametersExtended4();
+    };
+    const toBytes$3 = (parameters) => {
+        const buffer = new CommandBinaryBuffer(maxSize$3);
+        buffer.setOperatorParametersExtended4(parameters);
+        return toBytes$2h(id$3, buffer.data);
+    };
+
+    var getOperatorParametersExtended4 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$3,
         examples: examples$3,
@@ -13034,7 +13332,7 @@
         }
         return {};
     };
-    const toBytes$2 = () => toBytes$2f(id$2);
+    const toBytes$2 = () => toBytes$2h(id$2);
 
     var setOperatorParametersExtended = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -13074,7 +13372,7 @@
         }
         return {};
     };
-    const toBytes$1 = () => toBytes$2f(id$1);
+    const toBytes$1 = () => toBytes$2h(id$1);
 
     var setOperatorParametersExtended2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -13114,7 +13412,7 @@
         }
         return {};
     };
-    const toBytes = () => toBytes$2f(id);
+    const toBytes = () => toBytes$2h(id);
 
     var setOperatorParametersExtended4 = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -13174,6 +13472,7 @@
         getOperatorParametersExtended: getOperatorParametersExtended,
         getOperatorParametersExtended2: getOperatorParametersExtended2,
         getOperatorParametersExtended3: getOperatorParametersExtended3,
+        getOperatorParametersExtended4: getOperatorParametersExtended4,
         getRatePlanInfo: getRatePlanInfo,
         getSaldo: getSaldo,
         getSaldoParameters: getSaldoParameters,

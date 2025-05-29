@@ -350,6 +350,18 @@
     const nibbles10 = ['.', '0', '1', '2', '3', '4', '5', '6', 'P', 'R', 'L', 'E', 'G', '-', '/'];
     const nibbles11 = ['.', 'H', 'A', 'T', '0', '0', '0', '0', '0', '1', '2', '3', '4', '0', '0', '0'];
     const nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
+    const mtx1DeviceTypeDescriptorMask = {
+        typeMeterG: 1 << 0,
+        downgradedToA: 1 << 4,
+        supportMeterInfo: 1 << 6
+    };
+    const mtx3DeviceTypeDescriptorMask = {
+        typeMeterTransformer: 1 << 0,
+        downgradedToR: 1 << 3,
+        typeMeterG: 1 << 4,
+        supportMeterInfo: 1 << 6,
+        reactiveRPlusRMinus: 1 << 7
+    };
     const splitByte = (byte) => [
         byte >> 4,
         byte & 0x0F
@@ -411,8 +423,7 @@
         }
         return {
             type: type.join(''),
-            revision,
-            meterType: 0
+            revision
         };
     };
     const toBytesMtx = (type, prefix, revision) => {
@@ -468,10 +479,7 @@
                 type.push(nibbles10[nibbles[index]] ?? DEVICE_TYPE_INVALID_CHAR);
             }
         }
-        return {
-            type: type.join(''),
-            meterType: 0
-        };
+        return { type: type.join('') };
     };
     const toBytesMtx2 = (type) => {
         if (type.length < 3) {
@@ -507,10 +515,7 @@
                 type.push(nibbles12[nibbles[index]] ?? DEVICE_TYPE_INVALID_CHAR);
             }
         }
-        return {
-            type: type.join(''),
-            meterType: 0
-        };
+        return { type: type.join('') };
     };
     const toBytesM = (type) => {
         if (type.length < 1) {
@@ -539,17 +544,27 @@
         const deviceTypeNibble = nibbles[position];
         const deviceType = nibbles1[deviceTypeNibble];
         if (deviceType === '1' || deviceType === '3') {
-            result = fromBytesMtx(nibbles.slice(position));
+            result = {
+                ...fromBytesMtx(nibbles.slice(position)),
+                descriptor: deviceType === '1'
+                    ? {
+                        meterType: 'mtx1',
+                        ...toObject(mtx1DeviceTypeDescriptorMask, bytes[8])
+                    }
+                    : {
+                        meterType: 'mtx3',
+                        ...toObject(mtx3DeviceTypeDescriptorMask, bytes[8])
+                    }
+            };
         }
         else {
             result = deviceType === 'M'
                 ? fromBytesM(nibbles)
                 : fromBytesMtx2(nibbles);
         }
-        result.meterType = bytes[8];
         return result;
     };
-    const toBytes$22 = ({ type, revision, meterType }, prefix) => {
+    const toBytes$22 = ({ type, revision, descriptor }, prefix) => {
         if (!type.startsWith('MTX ')) {
             throw new Error('Wrong format');
         }
@@ -564,7 +579,14 @@
                 ? toBytesM(content)
                 : toBytesMtx2(content);
         }
-        result[8] = meterType;
+        if (descriptor?.meterType) {
+            result[8] = descriptor.meterType === 'mtx1'
+                ? fromObject(mtx1DeviceTypeDescriptorMask, descriptor)
+                : fromObject(mtx3DeviceTypeDescriptorMask, descriptor);
+        }
+        else {
+            result[8] = 0;
+        }
         return result;
     };
 
@@ -673,10 +695,10 @@
     const POWER_A_ON = 0x59;
     const CMD_RELAY_2_ON = 0x60;
     const CMD_RELAY_2_OFF = 0x61;
-    const CROSSZERO_ENT0 = 0x62;
-    const CROSSZERO_ENT1 = 0x63;
-    const CROSSZERO_ENT2 = 0x64;
-    const CROSSZERO_ENT3 = 0x65;
+    const CROSSZERO_ENT1 = 0x62;
+    const CROSSZERO_ENT2 = 0x63;
+    const CROSSZERO_ENT3 = 0x64;
+    const CROSSZERO_ENT4 = 0x65;
     const CALFLAG_SET = 0x66;
     const CALFLAG_RESET = 0x67;
     const BAD_TEST_EEPROM = 0x68;
@@ -701,10 +723,10 @@
     const RELAY_HARD_OFF = 0x94;
     const SET_SALDO_PARAM = 0x9C;
     const POWER_OVER_RELAY_OFF = 0x9D;
-    const CROSSZERO_EXP_ENT0 = 0x9E;
-    const CROSSZERO_EXP_ENT1 = 0x9F;
-    const CROSSZERO_EXP_ENT2 = 0xA0;
-    const CROSSZERO_EXP_ENT3 = 0xA1;
+    const CROSSZERO_EXP_ENT1 = 0x9E;
+    const CROSSZERO_EXP_ENT2 = 0x9F;
+    const CROSSZERO_EXP_ENT3 = 0xA0;
+    const CROSSZERO_EXP_ENT4 = 0xA1;
     const TIME_CORRECT_NEW = 0xA2;
     const EM_MAGNETIC_ON = 0xB0;
     const EM_MAGNETIC_OFF = 0xB1;
@@ -762,14 +784,14 @@
         CMD_RELAY_2_ON: CMD_RELAY_2_ON,
         CMD_RELAY_OFF: CMD_RELAY_OFF,
         CMD_RELAY_ON: CMD_RELAY_ON,
-        CROSSZERO_ENT0: CROSSZERO_ENT0,
         CROSSZERO_ENT1: CROSSZERO_ENT1,
         CROSSZERO_ENT2: CROSSZERO_ENT2,
         CROSSZERO_ENT3: CROSSZERO_ENT3,
-        CROSSZERO_EXP_ENT0: CROSSZERO_EXP_ENT0,
+        CROSSZERO_ENT4: CROSSZERO_ENT4,
         CROSSZERO_EXP_ENT1: CROSSZERO_EXP_ENT1,
         CROSSZERO_EXP_ENT2: CROSSZERO_EXP_ENT2,
         CROSSZERO_EXP_ENT3: CROSSZERO_EXP_ENT3,
+        CROSSZERO_EXP_ENT4: CROSSZERO_EXP_ENT4,
         CURRENT_UNEQUIL_FAULT: CURRENT_UNEQUIL_FAULT,
         CURRENT_UNEQUIL_OK: CURRENT_UNEQUIL_OK,
         EM_MAGNETIC_OFF: EM_MAGNETIC_OFF,
@@ -894,27 +916,27 @@
         RELAY_ON_Y: 0x01,
         RELAY_ON_CENTER: 0x02,
         RELAY_ON_PB: 0x04,
-        RELAY_ON_TARIFF_0: 0x08,
-        RELAY_ON_TARIFF_1: 0x10,
-        RELAY_ON_TARIFF_2: 0x20,
-        RELAY_ON_TARIFF_3: 0x40,
+        RELAY_ON_TARIFF_1: 0x08,
+        RELAY_ON_TARIFF_2: 0x10,
+        RELAY_ON_TARIFF_3: 0x20,
+        RELAY_ON_TARIFF_4: 0x40,
         RELAY_ON_V_GOOD: 0x80
     };
     const relaySet2Mask = {
         RELAY_OFF_Y: 0x01,
         RELAY_OFF_CENTER: 0x02,
-        RELAY_OFF_TARIFF_0: 0x04,
-        RELAY_OFF_TARIFF_1: 0x08,
-        RELAY_OFF_TARIFF_2: 0x10,
-        RELAY_OFF_TARIFF_3: 0x20,
+        RELAY_OFF_TARIFF_1: 0x04,
+        RELAY_OFF_TARIFF_2: 0x08,
+        RELAY_OFF_TARIFF_3: 0x10,
+        RELAY_OFF_TARIFF_4: 0x20,
         RELAY_OFF_I_LIMIT: 0x40,
         RELAY_OFF_V_BAD: 0x80
     };
     const relaySet3Mask = {
-        RELAY_OFF_LIM_TARIFF_0: 0x02,
-        RELAY_OFF_LIM_TARIFF_1: 0x04,
-        RELAY_OFF_LIM_TARIFF_2: 0x08,
-        RELAY_OFF_LIM_TARIFF_3: 0x10,
+        RELAY_OFF_LIM_TARIFF_1: 0x02,
+        RELAY_OFF_LIM_TARIFF_2: 0x04,
+        RELAY_OFF_LIM_TARIFF_3: 0x08,
+        RELAY_OFF_LIM_TARIFF_4: 0x10,
         RELAY_OFF_PF_MIN: 0x20
     };
     const relaySet4Mask = {
@@ -992,10 +1014,10 @@
         POWER_B_NEGATIVE: 2 ** 7
     };
     const operatorParametersExtended3RelaySetMask = {
-        RELAY_OFF_LIMIT_P_MINUS_T1: 0x04,
-        RELAY_OFF_LIMIT_P_MINUS_T2: 0x08,
-        RELAY_OFF_LIMIT_P_MINUS_T3: 0x10,
-        RELAY_OFF_LIMIT_P_MINUS_T4: 0x20
+        RELAY_OFF_LIMIT_P_MINUS_T1: 0x08,
+        RELAY_OFF_LIMIT_P_MINUS_T2: 0x10,
+        RELAY_OFF_LIMIT_P_MINUS_T3: 0x20,
+        RELAY_OFF_LIMIT_P_MINUS_T4: 0x40
     };
     function getPackedEnergies(buffer, energyType, tariffMapByte) {
         const byte = tariffMapByte >> TARIFF_NUMBER$1;
@@ -1926,11 +1948,27 @@
             parameters: {
                 event: 1,
                 name: 'MAGNETIC_ON',
-                index: 22
+                index: 2
             },
             bytes: [
                 0x41, 0x02,
-                0x01, 0x16
+                0x01, 0x02
+            ]
+        },
+        'the last event': {
+            id: id$1Z,
+            name: name$1Z,
+            headerSize: headerSize$1Z,
+            accessLevel: accessLevel$1Z,
+            maxSize: maxSize$1Z,
+            parameters: {
+                event: 4,
+                name: 'RESTART',
+                index: 255
+            },
+            bytes: [
+                0x41, 0x02,
+                0x04, 0xff
             ]
         }
     };
@@ -2762,9 +2800,6 @@
 
     const MAIN = 0;
     const ADDITIONAL = 1;
-
-    const A = 0b00000000;
-    const G_FULL = 0b00010001;
 
     const RESET_INFLUENCE_SCREENS = 0x55;
 
@@ -4957,7 +4992,7 @@
                 0x00, 0x00, 0x00, 0xc8,
                 0x00, 0x00, 0x01, 0x2c,
                 0x00, 0x00, 0x01, 0x90,
-                0x14
+                0x28
             ]
         }
     };
@@ -5050,19 +5085,19 @@
                     RELAY_ON_MAGNET_AUTO: false
                 },
                 relaySet3: {
-                    RELAY_OFF_LIM_TARIFF_0: false,
                     RELAY_OFF_LIM_TARIFF_1: false,
                     RELAY_OFF_LIM_TARIFF_2: false,
                     RELAY_OFF_LIM_TARIFF_3: false,
+                    RELAY_OFF_LIM_TARIFF_4: false,
                     RELAY_OFF_PF_MIN: false
                 },
                 relaySet2: {
                     RELAY_OFF_Y: true,
                     RELAY_OFF_CENTER: true,
-                    RELAY_OFF_TARIFF_0: false,
                     RELAY_OFF_TARIFF_1: false,
                     RELAY_OFF_TARIFF_2: false,
                     RELAY_OFF_TARIFF_3: false,
+                    RELAY_OFF_TARIFF_4: false,
                     RELAY_OFF_I_LIMIT: false,
                     RELAY_OFF_V_BAD: false
                 },
@@ -5070,10 +5105,10 @@
                     RELAY_ON_Y: true,
                     RELAY_ON_CENTER: true,
                     RELAY_ON_PB: false,
-                    RELAY_ON_TARIFF_0: false,
                     RELAY_ON_TARIFF_1: false,
                     RELAY_ON_TARIFF_2: false,
                     RELAY_ON_TARIFF_3: false,
+                    RELAY_ON_TARIFF_4: false,
                     RELAY_ON_V_GOOD: false
                 },
                 displayType: 0,
@@ -7477,7 +7512,12 @@
             parameters: {
                 type: 'MTX 1A10.DG.2L5-LD4',
                 revision: 0x0b,
-                meterType: A
+                descriptor: {
+                    meterType: 'mtx1',
+                    typeMeterG: false,
+                    downgradedToA: false,
+                    supportMeterInfo: false
+                }
             },
             bytes: [
                 0x04, 0x09,
@@ -7493,7 +7533,12 @@
             parameters: {
                 type: 'MTX 1G05.DH.2L2-DOB4',
                 revision: 0x0b,
-                meterType: G_FULL
+                descriptor: {
+                    meterType: 'mtx1',
+                    typeMeterG: true,
+                    downgradedToA: true,
+                    supportMeterInfo: false
+                }
             },
             bytes: [
                 0x04, 0x09,
@@ -9672,7 +9717,7 @@
                 0x00, 0x00, 0x00, 0xc8,
                 0x00, 0x00, 0x01, 0x2c,
                 0x00, 0x00, 0x01, 0x90,
-                0x14
+                0x28
             ]
         }
     };
@@ -9765,19 +9810,19 @@
                     RELAY_ON_MAGNET_AUTO: false
                 },
                 relaySet3: {
-                    RELAY_OFF_LIM_TARIFF_0: false,
                     RELAY_OFF_LIM_TARIFF_1: false,
                     RELAY_OFF_LIM_TARIFF_2: false,
                     RELAY_OFF_LIM_TARIFF_3: false,
+                    RELAY_OFF_LIM_TARIFF_4: false,
                     RELAY_OFF_PF_MIN: false
                 },
                 relaySet2: {
                     RELAY_OFF_Y: true,
                     RELAY_OFF_CENTER: true,
-                    RELAY_OFF_TARIFF_0: false,
                     RELAY_OFF_TARIFF_1: false,
                     RELAY_OFF_TARIFF_2: false,
                     RELAY_OFF_TARIFF_3: false,
+                    RELAY_OFF_TARIFF_4: false,
                     RELAY_OFF_I_LIMIT: false,
                     RELAY_OFF_V_BAD: false
                 },
@@ -9785,10 +9830,10 @@
                     RELAY_ON_Y: true,
                     RELAY_ON_CENTER: true,
                     RELAY_ON_PB: false,
-                    RELAY_ON_TARIFF_0: false,
                     RELAY_ON_TARIFF_1: false,
                     RELAY_ON_TARIFF_2: false,
                     RELAY_ON_TARIFF_3: false,
+                    RELAY_ON_TARIFF_4: false,
                     RELAY_ON_V_GOOD: false
                 },
                 displayType: 0,

@@ -564,6 +564,8 @@ var fromBytes, getBytesFromHex;
     const EXTRA_PAYLOAD_ENABLE = 57;
     const TIME_SYNCHRONIZATION_PERIOD_VIA_MAC = 58;
     const KEEP_LORA_CONNECTION_ON_REMOVAL = 59;
+    const NBIOT_NTP_SERVER = 60;
+    const ACTIVATE_MODULE = 61;
 
     var deviceParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -571,6 +573,7 @@ var fromBytes, getBytesFromHex;
         ABSOLUTE_DATA_ENABLE: ABSOLUTE_DATA_ENABLE,
         ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL: ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL,
         ABSOLUTE_DATA_MULTI_CHANNEL: ABSOLUTE_DATA_MULTI_CHANNEL,
+        ACTIVATE_MODULE: ACTIVATE_MODULE,
         ACTIVATION_METHOD: ACTIVATION_METHOD,
         BATTERY_DEPASSIVATION_CONFIG: BATTERY_DEPASSIVATION_CONFIG,
         BATTERY_DEPASSIVATION_INFO: BATTERY_DEPASSIVATION_INFO,
@@ -595,6 +598,7 @@ var fromBytes, getBytesFromHex;
         NBIOT_LED_INDICATION: NBIOT_LED_INDICATION,
         NBIOT_MODULE_FIRMWARE_UPDATE: NBIOT_MODULE_FIRMWARE_UPDATE,
         NBIOT_MODULE_INFO: NBIOT_MODULE_INFO,
+        NBIOT_NTP_SERVER: NBIOT_NTP_SERVER,
         NBIOT_SIM: NBIOT_SIM,
         NBIOT_SSL_CACERT_SET: NBIOT_SSL_CACERT_SET,
         NBIOT_SSL_CACERT_WRITE: NBIOT_SSL_CACERT_WRITE,
@@ -1184,6 +1188,24 @@ var fromBytes, getBytesFromHex;
             }),
             set: (buffer, parameter) => {
                 buffer.setUint8(parameter.value ? 1 : 0);
+            }
+        },
+        [NBIOT_NTP_SERVER]: {
+            get: (buffer) => ({
+                server: buffer.getString(),
+                port: buffer.getUint16()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setString(parameter.server);
+                buffer.setUint16(parameter.port);
+            }
+        },
+        [ACTIVATE_MODULE]: {
+            get: (buffer) => ({
+                enable: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setUint8(parameter.enable);
             }
         }
     };
