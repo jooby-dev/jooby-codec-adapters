@@ -803,6 +803,7 @@ var logs = '';
   var EMPTY_VALUE = 0xffffffff;
 
   var IDLE = 0;
+  var PULSE_SENSOR = 1;
   var POWER_CHANNEL = 2;
   var BINARY_SENSOR = 3;
   var TEMPERATURE_SENSOR = 4;
@@ -812,6 +813,7 @@ var logs = '';
     BINARY_SENSOR: BINARY_SENSOR,
     IDLE: IDLE,
     POWER_CHANNEL: POWER_CHANNEL,
+    PULSE_SENSOR: PULSE_SENSOR,
     TEMPERATURE_SENSOR: TEMPERATURE_SENSOR
   });
 
@@ -909,6 +911,7 @@ var logs = '';
     var size = 1;
     switch (type) {
       case IDLE:
+      case PULSE_SENSOR:
       case POWER_CHANNEL:
         break;
       case BINARY_SENSOR:
@@ -3393,14 +3396,18 @@ var logs = '';
       }],
       bytes: [0x1f, 0x32, 0x07, 0x04, 0x02, 0x18, 0x00, 0x00, 0x58, 0xc0]
     },
-    'binary and temperature sensors': {
+    'power channel and pulse, binary and temperature sensors': {
       id: id$l,
       name: name$l,
       headerSize: headerSize$l,
       parameters: [{
+        type: POWER_CHANNEL,
+        typeName: 'POWER_CHANNEL',
+        channel: 1
+      }, {
         type: BINARY_SENSOR,
         typeName: 'BINARY_SENSOR',
-        channel: 1,
+        channel: 2,
         status: {
           state: true
         }
@@ -3412,8 +3419,12 @@ var logs = '';
           temperature: 20,
           time2000: 22720
         }
+      }, {
+        type: PULSE_SENSOR,
+        typeName: 'PULSE_SENSOR',
+        channel: 4
       }],
-      bytes: [0x1f, 0x32, 0x0a, 0x03, 0x00, 0x01, 0x04, 0x02, 0x14, 0x00, 0x00, 0x58, 0xc0]
+      bytes: [0x1f, 0x32, 0x0e, 0x02, 0x00, 0x03, 0x01, 0x01, 0x04, 0x02, 0x14, 0x00, 0x00, 0x58, 0xc0, 0x01, 0x03]
     }
   };
   var getBufferSize = function getBufferSize(channelsStatus) {
@@ -3464,8 +3475,6 @@ var logs = '';
         case TEMPERATURE_SENSOR:
           channelStatus.status = getTemperatureSensorStatus(buffer);
           break;
-        default:
-          return result;
       }
       result.push(channelStatus);
     }

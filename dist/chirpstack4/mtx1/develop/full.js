@@ -421,8 +421,20 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         downgradedToR: 1 << 3,
         typeMeterG: 1 << 4,
         supportMeterInfo: 1 << 6,
-        reactiveRPlusRMinus: 1 << 7
+        reactiveByQuadrants: 1 << 7
     };
+    const mtx3DeviceTypeDescriptorFromByte = (byte) => {
+        const descriptor = toObject(mtx3DeviceTypeDescriptorMask, byte);
+        return {
+            meterType: 'mtx3',
+            ...descriptor,
+            typeMeterG: !descriptor.typeMeterG
+        };
+    };
+    const mtx3DeviceTypeDescriptorToByte = (descriptor) => (fromObject(mtx3DeviceTypeDescriptorMask, {
+        ...descriptor,
+        typeMeterG: !descriptor.typeMeterG
+    }));
     const splitByte = (byte) => [
         byte >> 4,
         byte & 0x0F
@@ -607,14 +619,11 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if (deviceType === '1' || deviceType === '3') {
             result = {
                 ...fromBytesMtx(nibbles.slice(position)),
-                descriptor: deviceType === '1'
-                    ? {
+                descriptor: deviceType === '3'
+                    ? mtx3DeviceTypeDescriptorFromByte(bytes[8])
+                    : {
                         meterType: 'mtx1',
                         ...toObject(mtx1DeviceTypeDescriptorMask, bytes[8])
-                    }
-                    : {
-                        meterType: 'mtx3',
-                        ...toObject(mtx3DeviceTypeDescriptorMask, bytes[8])
                     }
             };
         }
@@ -643,7 +652,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if (descriptor?.meterType) {
             result[8] = descriptor.meterType === 'mtx1'
                 ? fromObject(mtx1DeviceTypeDescriptorMask, descriptor)
-                : fromObject(mtx3DeviceTypeDescriptorMask, descriptor);
+                : mtx3DeviceTypeDescriptorToByte(descriptor);
         }
         else {
             result[8] = 0;
@@ -700,10 +709,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     var frameNames = invertObject(frameTypes);
 
-    const ENERGY_REG_FAULT = 0x01;
+    const ENERGY_REGISTER_FAULT = 0x01;
     const VENDOR_PAR_FAULT = 0x02;
     const OP_PAR_FAULT = 0x03;
-    const ACCESS_CLOSED = 0x10;
+    const ACCESS_LOCKED = 0x10;
     const ERR_ACCESS = 0x11;
     const CASE_OPEN$1 = 0x12;
     const CASE_CLOSE = 0x13;
@@ -719,15 +728,19 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const CMD_RELAY_ON = 0x27;
     const CMD_RELAY_OFF = 0x28;
     const CHANGE_COR_TIME = 0x29;
-    const ENERGY_REG_OVERFLOW = 0x31;
-    const CHANGE_TARIFF_TBL = 0x32;
-    const SET_TARIFF_TBL = 0x33;
+    const ENERGY_REGISTER_OVERFLOW = 0x31;
+    const CHANGE_TARIFF_TABLE = 0x32;
+    const SET_TARIFF_TABLE = 0x33;
     const SUMMER_TIME = 0x34;
     const WINTER_TIME = 0x35;
     const RELAY_ON = 0x36;
     const RELAY_OFF = 0x37;
     const RESTART$1 = 0x38;
     const WD_RESTART = 0x39;
+    const POWER_B_ON = 0x3c;
+    const POWER_B_OFF = 0x3d;
+    const POWER_C_ON = 0x3e;
+    const POWER_C_OFF = 0x3f;
     const V_MAX_OK = 0x40;
     const V_MAX_OVER = 0x41;
     const V_MIN_OK = 0x42;
@@ -738,66 +751,69 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const T_MIN_OVER = 0x47;
     const F_MAX_OK = 0x48;
     const F_MAX_OVER = 0x49;
-    const F_MIN_OK = 0x4A;
-    const F_MIN_OVER = 0x4B;
-    const I_MAX_OK = 0x4C;
-    const I_MAX_OVER = 0x4D;
-    const P_MAX_OK = 0x4E;
-    const P_MAX_OVER = 0x4F;
-    const POWERSALDO_OK = 0x50;
-    const POWERSALDO_OVER = 0x51;
-    const BAT_OK = 0x52;
-    const BAT_FAULT = 0x53;
-    const CAL_OK = 0x54;
-    const CAL_FAULT = 0x55;
+    const F_MIN_OK = 0x4a;
+    const F_MIN_OVER = 0x4b;
+    const I_MAX_OK = 0x4c;
+    const I_MAX_OVER = 0x4d;
+    const P_MAX_OK = 0x4e;
+    const P_MAX_OVER = 0x4f;
+    const POWER_SALDO_OK = 0x50;
+    const POWER_SALDO_OVER = 0x51;
+    const BATTERY_OK = 0x52;
+    const BATTERY_FAULT = 0x53;
+    const CALIBRATION_OK = 0x54;
+    const CALIBRATION_FAULT = 0x55;
     const CLOCK_OK = 0x56;
     const CLOCK_FAULT = 0x57;
     const POWER_A_OFF = 0x58;
     const POWER_A_ON = 0x59;
     const CMD_RELAY_2_ON = 0x60;
     const CMD_RELAY_2_OFF = 0x61;
-    const CROSSZERO_ENT1 = 0x62;
-    const CROSSZERO_ENT2 = 0x63;
-    const CROSSZERO_ENT3 = 0x64;
-    const CROSSZERO_ENT4 = 0x65;
-    const CALFLAG_SET = 0x66;
-    const CALFLAG_RESET = 0x67;
+    const CROSS_ZERO_ENT0 = 0x62;
+    const CROSS_ZERO_ENT1 = 0x63;
+    const CROSS_ZERO_ENT2 = 0x64;
+    const CROSS_ZERO_ENT3 = 0x65;
+    const CALIBRATION_FLAG_SET = 0x66;
+    const CALIBRATION_FLAG_RESET = 0x67;
     const BAD_TEST_EEPROM = 0x68;
     const BAD_TEST_FRAM = 0x69;
     const SET_NEW_SALDO = 0x70;
     const SALDO_PARAM_BAD = 0x71;
-    const ACCPARAM_BAD = 0x72;
-    const ACCPARAM_EXT_BAD = 0x73;
+    const ACC_PARAM_BAD = 0x72;
+    const ACC_PARAM_EXT_BAD = 0x73;
     const CALC_PERIOD_BAD = 0x74;
     const BLOCK_TARIFF_BAD = 0x75;
-    const CALIBR_PARAM_BAD = 0x76;
+    const CALIBRATION_PARAM_BAD = 0x76;
     const WINTER_SUMMER_BAD = 0x77;
     const SALDO_EN_BAD = 0x78;
     const TIME_CORRECT$1 = 0x79;
-    const CASE_TERMINAL_OPEN$1 = 0x7A;
-    const CASE_TERMINAL_CLOSE = 0x7B;
-    const CASE_MODULE_OPEN$1 = 0x7C;
-    const CASE_MODULE_CLOSE = 0x7D;
+    const CASE_KLEMA_OPEN = 0x7a;
+    const CASE_KLEMA_CLOSE = 0x7b;
+    const CASE_MODULE_OPEN$1 = 0x7c;
+    const CASE_MODULE_CLOSE = 0x7d;
+    const POWER_GOOD_DIO = 0x7e;
     const RELAY_HARD_BAD_OFF = 0x90;
     const RELAY_HARD_ON = 0x91;
     const RELAY_HARD_BAD_ON = 0x93;
     const RELAY_HARD_OFF = 0x94;
-    const SET_SALDO_PARAM = 0x9C;
-    const POWER_OVER_RELAY_OFF = 0x9D;
-    const CROSSZERO_EXP_ENT1 = 0x9E;
-    const CROSSZERO_EXP_ENT2 = 0x9F;
-    const CROSSZERO_EXP_ENT3 = 0xA0;
-    const CROSSZERO_EXP_ENT4 = 0xA1;
-    const TIME_CORRECT_NEW = 0xA2;
-    const EM_MAGNETIC_ON = 0xB0;
-    const EM_MAGNETIC_OFF = 0xB1;
-    const CURRENT_UNEQUIL_FAULT = 0xB2;
-    const CURRENT_UNEQUIL_OK = 0xB3;
-    const BIPOLAR_POWER_FAULT = 0xB4;
-    const BIPOLAR_POWER_OK = 0xB5;
+    const CHANGE_TARIFF_TBL_2 = 0x98;
+    const SET_SALDO_PARAM = 0x9c;
+    const POWER_OVER_RELAY_OFF = 0x9d;
+    const CROSS_ZERO_EXPORT_ENT0 = 0x9e;
+    const CROSS_ZERO_EXPORT_ENT1 = 0x9f;
+    const CROSS_ZERO_EXPORT_ENT2 = 0xa0;
+    const CROSS_ZERO_EXPORT_ENT3 = 0xa1;
+    const TIME_CORRECT_NEW = 0xa2;
+    const EM_MAGNETIC_ON = 0xb0;
+    const EM_MAGNETIC_OFF = 0xb1;
+    const CURRENT_UNEQUAL_FAULT = 0xb2;
+    const CURRENT_UNEQUAL_OK = 0xb3;
+    const BIPOLAR_POWER_FAULT = 0xb4;
+    const BIPOLAR_POWER_OK = 0xb5;
     const RESET_EM_FLAG = 0xB6;
-    const RESET_MAGN_FLAG = 0xB7;
-    const NVRAM_FAULT = 0xD0;
+    const RESET_MAGNET_FLAG = 0xB7;
+    const CHANGE_PARAM_CANAL = 0xB9;
+    const RELAY_OFF_BAD_SALDO = 0xBA;
     const SET_DEMAND_EN_1MIN = 0xE0;
     const SET_DEMAND_EN_3MIN = 0xE1;
     const SET_DEMAND_EN_5MIN = 0xE2;
@@ -805,39 +821,43 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const SET_DEMAND_EN_15MIN = 0xE4;
     const SET_DEMAND_EN_30MIN = 0xE5;
     const SET_DEMAND_EN_60MIN = 0xE6;
+    const P_MAX_A_MINUS_OK = 0xE7;
+    const P_MAX_A_MINUS_OVER = 0xE8;
 
     var events = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        ACCESS_CLOSED: ACCESS_CLOSED,
-        ACCPARAM_BAD: ACCPARAM_BAD,
-        ACCPARAM_EXT_BAD: ACCPARAM_EXT_BAD,
+        ACCESS_LOCKED: ACCESS_LOCKED,
+        ACC_PARAM_BAD: ACC_PARAM_BAD,
+        ACC_PARAM_EXT_BAD: ACC_PARAM_EXT_BAD,
         BAD_TEST_EEPROM: BAD_TEST_EEPROM,
         BAD_TEST_FRAM: BAD_TEST_FRAM,
-        BAT_FAULT: BAT_FAULT,
-        BAT_OK: BAT_OK,
+        BATTERY_FAULT: BATTERY_FAULT,
+        BATTERY_OK: BATTERY_OK,
         BIPOLAR_POWER_FAULT: BIPOLAR_POWER_FAULT,
         BIPOLAR_POWER_OK: BIPOLAR_POWER_OK,
         BLOCK_TARIFF_BAD: BLOCK_TARIFF_BAD,
         CALC_PERIOD_BAD: CALC_PERIOD_BAD,
-        CALFLAG_RESET: CALFLAG_RESET,
-        CALFLAG_SET: CALFLAG_SET,
-        CALIBR_PARAM_BAD: CALIBR_PARAM_BAD,
-        CAL_FAULT: CAL_FAULT,
-        CAL_OK: CAL_OK,
+        CALIBRATION_FAULT: CALIBRATION_FAULT,
+        CALIBRATION_FLAG_RESET: CALIBRATION_FLAG_RESET,
+        CALIBRATION_FLAG_SET: CALIBRATION_FLAG_SET,
+        CALIBRATION_OK: CALIBRATION_OK,
+        CALIBRATION_PARAM_BAD: CALIBRATION_PARAM_BAD,
         CASE_CLOSE: CASE_CLOSE,
+        CASE_KLEMA_CLOSE: CASE_KLEMA_CLOSE,
+        CASE_KLEMA_OPEN: CASE_KLEMA_OPEN,
         CASE_MODULE_CLOSE: CASE_MODULE_CLOSE,
         CASE_MODULE_OPEN: CASE_MODULE_OPEN$1,
         CASE_OPEN: CASE_OPEN$1,
-        CASE_TERMINAL_CLOSE: CASE_TERMINAL_CLOSE,
-        CASE_TERMINAL_OPEN: CASE_TERMINAL_OPEN$1,
         CHANGE_ACCESS_KEY0: CHANGE_ACCESS_KEY0,
         CHANGE_ACCESS_KEY1: CHANGE_ACCESS_KEY1,
         CHANGE_ACCESS_KEY2: CHANGE_ACCESS_KEY2,
         CHANGE_ACCESS_KEY3: CHANGE_ACCESS_KEY3,
         CHANGE_COR_TIME: CHANGE_COR_TIME,
+        CHANGE_PARAM_CANAL: CHANGE_PARAM_CANAL,
         CHANGE_PAR_LOCAL: CHANGE_PAR_LOCAL,
         CHANGE_PAR_REMOTE: CHANGE_PAR_REMOTE,
-        CHANGE_TARIFF_TBL: CHANGE_TARIFF_TBL,
+        CHANGE_TARIFF_TABLE: CHANGE_TARIFF_TABLE,
+        CHANGE_TARIFF_TBL_2: CHANGE_TARIFF_TBL_2,
         CLOCK_FAULT: CLOCK_FAULT,
         CLOCK_OK: CLOCK_OK,
         CMD_CHANGE_TIME: CMD_CHANGE_TIME,
@@ -845,20 +865,20 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         CMD_RELAY_2_ON: CMD_RELAY_2_ON,
         CMD_RELAY_OFF: CMD_RELAY_OFF,
         CMD_RELAY_ON: CMD_RELAY_ON,
-        CROSSZERO_ENT1: CROSSZERO_ENT1,
-        CROSSZERO_ENT2: CROSSZERO_ENT2,
-        CROSSZERO_ENT3: CROSSZERO_ENT3,
-        CROSSZERO_ENT4: CROSSZERO_ENT4,
-        CROSSZERO_EXP_ENT1: CROSSZERO_EXP_ENT1,
-        CROSSZERO_EXP_ENT2: CROSSZERO_EXP_ENT2,
-        CROSSZERO_EXP_ENT3: CROSSZERO_EXP_ENT3,
-        CROSSZERO_EXP_ENT4: CROSSZERO_EXP_ENT4,
-        CURRENT_UNEQUIL_FAULT: CURRENT_UNEQUIL_FAULT,
-        CURRENT_UNEQUIL_OK: CURRENT_UNEQUIL_OK,
+        CROSS_ZERO_ENT0: CROSS_ZERO_ENT0,
+        CROSS_ZERO_ENT1: CROSS_ZERO_ENT1,
+        CROSS_ZERO_ENT2: CROSS_ZERO_ENT2,
+        CROSS_ZERO_ENT3: CROSS_ZERO_ENT3,
+        CROSS_ZERO_EXPORT_ENT0: CROSS_ZERO_EXPORT_ENT0,
+        CROSS_ZERO_EXPORT_ENT1: CROSS_ZERO_EXPORT_ENT1,
+        CROSS_ZERO_EXPORT_ENT2: CROSS_ZERO_EXPORT_ENT2,
+        CROSS_ZERO_EXPORT_ENT3: CROSS_ZERO_EXPORT_ENT3,
+        CURRENT_UNEQUAL_FAULT: CURRENT_UNEQUAL_FAULT,
+        CURRENT_UNEQUAL_OK: CURRENT_UNEQUAL_OK,
         EM_MAGNETIC_OFF: EM_MAGNETIC_OFF,
         EM_MAGNETIC_ON: EM_MAGNETIC_ON,
-        ENERGY_REG_FAULT: ENERGY_REG_FAULT,
-        ENERGY_REG_OVERFLOW: ENERGY_REG_OVERFLOW,
+        ENERGY_REGISTER_FAULT: ENERGY_REGISTER_FAULT,
+        ENERGY_REGISTER_OVERFLOW: ENERGY_REGISTER_OVERFLOW,
         ERR_ACCESS: ERR_ACCESS,
         F_MAX_OK: F_MAX_OK,
         F_MAX_OVER: F_MAX_OVER,
@@ -868,13 +888,19 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         I_MAX_OVER: I_MAX_OVER,
         MAGNETIC_OFF: MAGNETIC_OFF,
         MAGNETIC_ON: MAGNETIC_ON$1,
-        NVRAM_FAULT: NVRAM_FAULT,
         OP_PAR_FAULT: OP_PAR_FAULT,
-        POWERSALDO_OK: POWERSALDO_OK,
-        POWERSALDO_OVER: POWERSALDO_OVER,
         POWER_A_OFF: POWER_A_OFF,
         POWER_A_ON: POWER_A_ON,
+        POWER_B_OFF: POWER_B_OFF,
+        POWER_B_ON: POWER_B_ON,
+        POWER_C_OFF: POWER_C_OFF,
+        POWER_C_ON: POWER_C_ON,
+        POWER_GOOD_DIO: POWER_GOOD_DIO,
         POWER_OVER_RELAY_OFF: POWER_OVER_RELAY_OFF,
+        POWER_SALDO_OK: POWER_SALDO_OK,
+        POWER_SALDO_OVER: POWER_SALDO_OVER,
+        P_MAX_A_MINUS_OK: P_MAX_A_MINUS_OK,
+        P_MAX_A_MINUS_OVER: P_MAX_A_MINUS_OVER,
         P_MAX_OK: P_MAX_OK,
         P_MAX_OVER: P_MAX_OVER,
         RELAY_HARD_BAD_OFF: RELAY_HARD_BAD_OFF,
@@ -882,9 +908,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         RELAY_HARD_OFF: RELAY_HARD_OFF,
         RELAY_HARD_ON: RELAY_HARD_ON,
         RELAY_OFF: RELAY_OFF,
+        RELAY_OFF_BAD_SALDO: RELAY_OFF_BAD_SALDO,
         RELAY_ON: RELAY_ON,
         RESET_EM_FLAG: RESET_EM_FLAG,
-        RESET_MAGN_FLAG: RESET_MAGN_FLAG,
+        RESET_MAGNET_FLAG: RESET_MAGNET_FLAG,
         RESTART: RESTART$1,
         SALDO_EN_BAD: SALDO_EN_BAD,
         SALDO_PARAM_BAD: SALDO_PARAM_BAD,
@@ -897,7 +924,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         SET_DEMAND_EN_60MIN: SET_DEMAND_EN_60MIN,
         SET_NEW_SALDO: SET_NEW_SALDO,
         SET_SALDO_PARAM: SET_SALDO_PARAM,
-        SET_TARIFF_TBL: SET_TARIFF_TBL,
+        SET_TARIFF_TABLE: SET_TARIFF_TABLE,
         SUMMER_TIME: SUMMER_TIME,
         TIME_CORRECT: TIME_CORRECT$1,
         TIME_CORRECT_NEW: TIME_CORRECT_NEW,
@@ -954,8 +981,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         EXPORTED_ACTIVE_ENERGY_T2: 0x00010000,
         EXPORTED_ACTIVE_ENERGY_T3: 0x00020000,
         EXPORTED_ACTIVE_ENERGY_T4: 0x00040000,
-        POWER_COEFFICIENT_PHASE_A: 0x00080000,
-        POWER_COEFFICIENT_PHASE_B: 0x00100000,
+        POWER_FACTOR_PHASE_A: 0x00080000,
+        POWER_FACTOR_PHASE_B: 0x00100000,
         BATTERY_VOLTAGE: 0x00200000,
         POWER_THRESHOLD_T1: 0x00400000,
         POWER_THRESHOLD_T2: 0x00800000,
@@ -2123,8 +2150,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const EXPORTED_ACTIVE_ENERGY_T2 = 17;
     const EXPORTED_ACTIVE_ENERGY_T3 = 18;
     const EXPORTED_ACTIVE_ENERGY_T4 = 19;
-    const POWER_COEFFICIENT_PHASE_A = 20;
-    const POWER_COEFFICIENT_PHASE_B = 21;
+    const POWER_FACTOR_PHASE_A = 20;
+    const POWER_FACTOR_PHASE_B = 21;
     const BATTERY_VOLTAGE = 22;
     const POWER_THRESHOLD_T1 = 23;
     const POWER_THRESHOLD_T2 = 24;
@@ -2154,8 +2181,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND,
         MAGNET_INDUCTION: MAGNET_INDUCTION,
         OPTOPORT_SPEED: OPTOPORT_SPEED,
-        POWER_COEFFICIENT_PHASE_A: POWER_COEFFICIENT_PHASE_A,
-        POWER_COEFFICIENT_PHASE_B: POWER_COEFFICIENT_PHASE_B,
+        POWER_FACTOR_PHASE_A: POWER_FACTOR_PHASE_A,
+        POWER_FACTOR_PHASE_B: POWER_FACTOR_PHASE_B,
         POWER_THRESHOLD_T1: POWER_THRESHOLD_T1,
         POWER_THRESHOLD_T2: POWER_THRESHOLD_T2,
         POWER_THRESHOLD_T3: POWER_THRESHOLD_T3,

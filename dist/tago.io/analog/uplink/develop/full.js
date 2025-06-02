@@ -623,6 +623,7 @@ var fromBytes, getBytesFromHex;
     const EMPTY_VALUE = 0xffffffff;
 
     const IDLE = 0;
+    const PULSE_SENSOR = 1;
     const POWER_CHANNEL = 2;
     const BINARY_SENSOR = 3;
     const TEMPERATURE_SENSOR = 4;
@@ -632,6 +633,7 @@ var fromBytes, getBytesFromHex;
         BINARY_SENSOR: BINARY_SENSOR,
         IDLE: IDLE,
         POWER_CHANNEL: POWER_CHANNEL,
+        PULSE_SENSOR: PULSE_SENSOR,
         TEMPERATURE_SENSOR: TEMPERATURE_SENSOR
     });
 
@@ -2135,8 +2137,6 @@ var fromBytes, getBytesFromHex;
                 case TEMPERATURE_SENSOR:
                     channelStatus.status = getTemperatureSensorStatus(buffer);
                     break;
-                default:
-                    return result;
             }
             result.push(channelStatus);
         }

@@ -553,15 +553,28 @@ var logs = '';
     downgradedToR: 1 << 3,
     typeMeterG: 1 << 4,
     supportMeterInfo: 1 << 6,
-    reactiveRPlusRMinus: 1 << 7
+    reactiveByQuadrants: 1 << 7
   };
-  var splitByte = function splitByte(_byte) {
-    return [_byte >> 4, _byte & 0x0F];
+  var mtx3DeviceTypeDescriptorFromByte = function mtx3DeviceTypeDescriptorFromByte(_byte) {
+    var descriptor = toObject(mtx3DeviceTypeDescriptorMask, _byte);
+    return _objectSpread2(_objectSpread2({
+      meterType: 'mtx3'
+    }, descriptor), {}, {
+      typeMeterG: !descriptor.typeMeterG
+    });
+  };
+  var mtx3DeviceTypeDescriptorToByte = function mtx3DeviceTypeDescriptorToByte(descriptor) {
+    return fromObject(mtx3DeviceTypeDescriptorMask, _objectSpread2(_objectSpread2({}, descriptor), {}, {
+      typeMeterG: !descriptor.typeMeterG
+    }));
+  };
+  var splitByte = function splitByte(_byte2) {
+    return [_byte2 >> 4, _byte2 & 0x0F];
   };
   var splitToNibbles = function splitToNibbles(data) {
     var result = new Array(data.length * 2).fill(0);
-    data.forEach(function (_byte2, index) {
-      var _splitByte = splitByte(_byte2),
+    data.forEach(function (_byte3, index) {
+      var _splitByte = splitByte(_byte3),
         _splitByte2 = _slicedToArray(_splitByte, 2),
         high = _splitByte2[0],
         low = _splitByte2[1];
@@ -753,11 +766,9 @@ var logs = '';
     var deviceType = nibbles1[deviceTypeNibble];
     if (deviceType === '1' || deviceType === '3') {
       result = _objectSpread2(_objectSpread2({}, fromBytesMtx(nibbles.slice(position))), {}, {
-        descriptor: deviceType === '1' ? _objectSpread2({
+        descriptor: deviceType === '3' ? mtx3DeviceTypeDescriptorFromByte(bytes[8]) : _objectSpread2({
           meterType: 'mtx1'
-        }, toObject(mtx1DeviceTypeDescriptorMask, bytes[8])) : _objectSpread2({
-          meterType: 'mtx3'
-        }, toObject(mtx3DeviceTypeDescriptorMask, bytes[8]))
+        }, toObject(mtx1DeviceTypeDescriptorMask, bytes[8]))
       });
     } else {
       result = deviceType === 'M' ? fromBytesM(nibbles) : fromBytesMtx2(nibbles);
@@ -780,7 +791,7 @@ var logs = '';
       result = deviceTypeSymbol === 'M' ? toBytesM(content) : toBytesMtx2(content);
     }
     if (descriptor !== null && descriptor !== void 0 && descriptor.meterType) {
-      result[8] = descriptor.meterType === 'mtx1' ? fromObject(mtx1DeviceTypeDescriptorMask, descriptor) : fromObject(mtx3DeviceTypeDescriptorMask, descriptor);
+      result[8] = descriptor.meterType === 'mtx1' ? fromObject(mtx1DeviceTypeDescriptorMask, descriptor) : mtx3DeviceTypeDescriptorToByte(descriptor);
     } else {
       result[8] = 0;
     }
@@ -839,10 +850,10 @@ var logs = '';
 
   var frameNames = invertObject(frameTypes);
 
-  var ENERGY_REG_FAULT = 0x01;
+  var ENERGY_REGISTER_FAULT = 0x01;
   var VENDOR_PAR_FAULT = 0x02;
   var OP_PAR_FAULT = 0x03;
-  var ACCESS_CLOSED = 0x10;
+  var ACCESS_LOCKED$1 = 0x10;
   var ERR_ACCESS$1 = 0x11;
   var CASE_OPEN$2 = 0x12;
   var CASE_CLOSE$1 = 0x13;
@@ -858,15 +869,19 @@ var logs = '';
   var CMD_RELAY_ON$1 = 0x27;
   var CMD_RELAY_OFF$1 = 0x28;
   var CHANGE_COR_TIME$1 = 0x29;
-  var ENERGY_REG_OVERFLOW = 0x31;
-  var CHANGE_TARIFF_TBL = 0x32;
-  var SET_TARIFF_TBL = 0x33;
+  var ENERGY_REGISTER_OVERFLOW$1 = 0x31;
+  var CHANGE_TARIFF_TABLE$1 = 0x32;
+  var SET_TARIFF_TABLE$1 = 0x33;
   var SUMMER_TIME$1 = 0x34;
   var WINTER_TIME$1 = 0x35;
   var RELAY_ON$1 = 0x36;
   var RELAY_OFF$1 = 0x37;
   var RESTART$2 = 0x38;
   var WD_RESTART$1 = 0x39;
+  var POWER_B_ON$1 = 0x3c;
+  var POWER_B_OFF$1 = 0x3d;
+  var POWER_C_ON$1 = 0x3e;
+  var POWER_C_OFF$1 = 0x3f;
   var V_MAX_OK = 0x40;
   var V_MAX_OVER = 0x41;
   var V_MIN_OK = 0x42;
@@ -877,66 +892,69 @@ var logs = '';
   var T_MIN_OVER = 0x47;
   var F_MAX_OK$1 = 0x48;
   var F_MAX_OVER$1 = 0x49;
-  var F_MIN_OK$1 = 0x4A;
-  var F_MIN_OVER = 0x4B;
-  var I_MAX_OK = 0x4C;
-  var I_MAX_OVER = 0x4D;
-  var P_MAX_OK = 0x4E;
-  var P_MAX_OVER = 0x4F;
-  var POWERSALDO_OK = 0x50;
-  var POWERSALDO_OVER = 0x51;
-  var BAT_OK = 0x52;
-  var BAT_FAULT = 0x53;
-  var CAL_OK = 0x54;
-  var CAL_FAULT = 0x55;
+  var F_MIN_OK$1 = 0x4a;
+  var F_MIN_OVER = 0x4b;
+  var I_MAX_OK = 0x4c;
+  var I_MAX_OVER = 0x4d;
+  var P_MAX_OK = 0x4e;
+  var P_MAX_OVER = 0x4f;
+  var POWER_SALDO_OK = 0x50;
+  var POWER_SALDO_OVER = 0x51;
+  var BATTERY_OK$1 = 0x52;
+  var BATTERY_FAULT$1 = 0x53;
+  var CALIBRATION_OK$1 = 0x54;
+  var CALIBRATION_FAULT$1 = 0x55;
   var CLOCK_OK$1 = 0x56;
   var CLOCK_FAULT$1 = 0x57;
   var POWER_A_OFF$1 = 0x58;
   var POWER_A_ON$1 = 0x59;
   var CMD_RELAY_2_ON$1 = 0x60;
   var CMD_RELAY_2_OFF$1 = 0x61;
-  var CROSSZERO_ENT1 = 0x62;
-  var CROSSZERO_ENT2 = 0x63;
-  var CROSSZERO_ENT3 = 0x64;
-  var CROSSZERO_ENT4 = 0x65;
-  var CALFLAG_SET = 0x66;
-  var CALFLAG_RESET = 0x67;
+  var CROSS_ZERO_ENT0 = 0x62;
+  var CROSS_ZERO_ENT1$1 = 0x63;
+  var CROSS_ZERO_ENT2$1 = 0x64;
+  var CROSS_ZERO_ENT3$1 = 0x65;
+  var CALIBRATION_FLAG_SET$1 = 0x66;
+  var CALIBRATION_FLAG_RESET$1 = 0x67;
   var BAD_TEST_EEPROM$1 = 0x68;
   var BAD_TEST_FRAM$1 = 0x69;
   var SET_NEW_SALDO$1 = 0x70;
   var SALDO_PARAM_BAD$1 = 0x71;
-  var ACCPARAM_BAD = 0x72;
-  var ACCPARAM_EXT_BAD = 0x73;
+  var ACC_PARAM_BAD = 0x72;
+  var ACC_PARAM_EXT_BAD = 0x73;
   var CALC_PERIOD_BAD = 0x74;
   var BLOCK_TARIFF_BAD$1 = 0x75;
-  var CALIBR_PARAM_BAD = 0x76;
+  var CALIBRATION_PARAM_BAD$1 = 0x76;
   var WINTER_SUMMER_BAD$1 = 0x77;
   var SALDO_EN_BAD = 0x78;
   var TIME_CORRECT$2 = 0x79;
-  var CASE_TERMINAL_OPEN$1 = 0x7A;
-  var CASE_TERMINAL_CLOSE = 0x7B;
-  var CASE_MODULE_OPEN$2 = 0x7C;
-  var CASE_MODULE_CLOSE$1 = 0x7D;
+  var CASE_KLEMA_OPEN$1 = 0x7a;
+  var CASE_KLEMA_CLOSE$1 = 0x7b;
+  var CASE_MODULE_OPEN$2 = 0x7c;
+  var CASE_MODULE_CLOSE$1 = 0x7d;
+  var POWER_GOOD_DIO = 0x7e;
   var RELAY_HARD_BAD_OFF$1 = 0x90;
   var RELAY_HARD_ON$1 = 0x91;
   var RELAY_HARD_BAD_ON$1 = 0x93;
   var RELAY_HARD_OFF$1 = 0x94;
-  var SET_SALDO_PARAM$1 = 0x9C;
-  var POWER_OVER_RELAY_OFF$1 = 0x9D;
-  var CROSSZERO_EXP_ENT1 = 0x9E;
-  var CROSSZERO_EXP_ENT2 = 0x9F;
-  var CROSSZERO_EXP_ENT3 = 0xA0;
-  var CROSSZERO_EXP_ENT4 = 0xA1;
-  var TIME_CORRECT_NEW = 0xA2;
-  var EM_MAGNETIC_ON$1 = 0xB0;
-  var EM_MAGNETIC_OFF$1 = 0xB1;
-  var CURRENT_UNEQUIL_FAULT = 0xB2;
-  var CURRENT_UNEQUIL_OK = 0xB3;
-  var BIPOLAR_POWER_FAULT = 0xB4;
-  var BIPOLAR_POWER_OK = 0xB5;
+  var CHANGE_TARIFF_TBL_2 = 0x98;
+  var SET_SALDO_PARAM$1 = 0x9c;
+  var POWER_OVER_RELAY_OFF$1 = 0x9d;
+  var CROSS_ZERO_EXPORT_ENT0 = 0x9e;
+  var CROSS_ZERO_EXPORT_ENT1$1 = 0x9f;
+  var CROSS_ZERO_EXPORT_ENT2$1 = 0xa0;
+  var CROSS_ZERO_EXPORT_ENT3$1 = 0xa1;
+  var TIME_CORRECT_NEW = 0xa2;
+  var EM_MAGNETIC_ON$1 = 0xb0;
+  var EM_MAGNETIC_OFF$1 = 0xb1;
+  var CURRENT_UNEQUAL_FAULT = 0xb2;
+  var CURRENT_UNEQUAL_OK = 0xb3;
+  var BIPOLAR_POWER_FAULT = 0xb4;
+  var BIPOLAR_POWER_OK = 0xb5;
   var RESET_EM_FLAG$1 = 0xB6;
-  var RESET_MAGN_FLAG = 0xB7;
-  var NVRAM_FAULT = 0xD0;
+  var RESET_MAGNET_FLAG = 0xB7;
+  var CHANGE_PARAM_CANAL = 0xB9;
+  var RELAY_OFF_BAD_SALDO = 0xBA;
   var SET_DEMAND_EN_1MIN = 0xE0;
   var SET_DEMAND_EN_3MIN = 0xE1;
   var SET_DEMAND_EN_5MIN = 0xE2;
@@ -944,39 +962,43 @@ var logs = '';
   var SET_DEMAND_EN_15MIN = 0xE4;
   var SET_DEMAND_EN_30MIN = 0xE5;
   var SET_DEMAND_EN_60MIN = 0xE6;
+  var P_MAX_A_MINUS_OK$1 = 0xE7;
+  var P_MAX_A_MINUS_OVER$1 = 0xE8;
 
   var events$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    ACCESS_CLOSED: ACCESS_CLOSED,
-    ACCPARAM_BAD: ACCPARAM_BAD,
-    ACCPARAM_EXT_BAD: ACCPARAM_EXT_BAD,
+    ACCESS_LOCKED: ACCESS_LOCKED$1,
+    ACC_PARAM_BAD: ACC_PARAM_BAD,
+    ACC_PARAM_EXT_BAD: ACC_PARAM_EXT_BAD,
     BAD_TEST_EEPROM: BAD_TEST_EEPROM$1,
     BAD_TEST_FRAM: BAD_TEST_FRAM$1,
-    BAT_FAULT: BAT_FAULT,
-    BAT_OK: BAT_OK,
+    BATTERY_FAULT: BATTERY_FAULT$1,
+    BATTERY_OK: BATTERY_OK$1,
     BIPOLAR_POWER_FAULT: BIPOLAR_POWER_FAULT,
     BIPOLAR_POWER_OK: BIPOLAR_POWER_OK,
     BLOCK_TARIFF_BAD: BLOCK_TARIFF_BAD$1,
     CALC_PERIOD_BAD: CALC_PERIOD_BAD,
-    CALFLAG_RESET: CALFLAG_RESET,
-    CALFLAG_SET: CALFLAG_SET,
-    CALIBR_PARAM_BAD: CALIBR_PARAM_BAD,
-    CAL_FAULT: CAL_FAULT,
-    CAL_OK: CAL_OK,
+    CALIBRATION_FAULT: CALIBRATION_FAULT$1,
+    CALIBRATION_FLAG_RESET: CALIBRATION_FLAG_RESET$1,
+    CALIBRATION_FLAG_SET: CALIBRATION_FLAG_SET$1,
+    CALIBRATION_OK: CALIBRATION_OK$1,
+    CALIBRATION_PARAM_BAD: CALIBRATION_PARAM_BAD$1,
     CASE_CLOSE: CASE_CLOSE$1,
+    CASE_KLEMA_CLOSE: CASE_KLEMA_CLOSE$1,
+    CASE_KLEMA_OPEN: CASE_KLEMA_OPEN$1,
     CASE_MODULE_CLOSE: CASE_MODULE_CLOSE$1,
     CASE_MODULE_OPEN: CASE_MODULE_OPEN$2,
     CASE_OPEN: CASE_OPEN$2,
-    CASE_TERMINAL_CLOSE: CASE_TERMINAL_CLOSE,
-    CASE_TERMINAL_OPEN: CASE_TERMINAL_OPEN$1,
     CHANGE_ACCESS_KEY0: CHANGE_ACCESS_KEY0$1,
     CHANGE_ACCESS_KEY1: CHANGE_ACCESS_KEY1$1,
     CHANGE_ACCESS_KEY2: CHANGE_ACCESS_KEY2$1,
     CHANGE_ACCESS_KEY3: CHANGE_ACCESS_KEY3$1,
     CHANGE_COR_TIME: CHANGE_COR_TIME$1,
+    CHANGE_PARAM_CANAL: CHANGE_PARAM_CANAL,
     CHANGE_PAR_LOCAL: CHANGE_PAR_LOCAL,
     CHANGE_PAR_REMOTE: CHANGE_PAR_REMOTE,
-    CHANGE_TARIFF_TBL: CHANGE_TARIFF_TBL,
+    CHANGE_TARIFF_TABLE: CHANGE_TARIFF_TABLE$1,
+    CHANGE_TARIFF_TBL_2: CHANGE_TARIFF_TBL_2,
     CLOCK_FAULT: CLOCK_FAULT$1,
     CLOCK_OK: CLOCK_OK$1,
     CMD_CHANGE_TIME: CMD_CHANGE_TIME$1,
@@ -984,20 +1006,20 @@ var logs = '';
     CMD_RELAY_2_ON: CMD_RELAY_2_ON$1,
     CMD_RELAY_OFF: CMD_RELAY_OFF$1,
     CMD_RELAY_ON: CMD_RELAY_ON$1,
-    CROSSZERO_ENT1: CROSSZERO_ENT1,
-    CROSSZERO_ENT2: CROSSZERO_ENT2,
-    CROSSZERO_ENT3: CROSSZERO_ENT3,
-    CROSSZERO_ENT4: CROSSZERO_ENT4,
-    CROSSZERO_EXP_ENT1: CROSSZERO_EXP_ENT1,
-    CROSSZERO_EXP_ENT2: CROSSZERO_EXP_ENT2,
-    CROSSZERO_EXP_ENT3: CROSSZERO_EXP_ENT3,
-    CROSSZERO_EXP_ENT4: CROSSZERO_EXP_ENT4,
-    CURRENT_UNEQUIL_FAULT: CURRENT_UNEQUIL_FAULT,
-    CURRENT_UNEQUIL_OK: CURRENT_UNEQUIL_OK,
+    CROSS_ZERO_ENT0: CROSS_ZERO_ENT0,
+    CROSS_ZERO_ENT1: CROSS_ZERO_ENT1$1,
+    CROSS_ZERO_ENT2: CROSS_ZERO_ENT2$1,
+    CROSS_ZERO_ENT3: CROSS_ZERO_ENT3$1,
+    CROSS_ZERO_EXPORT_ENT0: CROSS_ZERO_EXPORT_ENT0,
+    CROSS_ZERO_EXPORT_ENT1: CROSS_ZERO_EXPORT_ENT1$1,
+    CROSS_ZERO_EXPORT_ENT2: CROSS_ZERO_EXPORT_ENT2$1,
+    CROSS_ZERO_EXPORT_ENT3: CROSS_ZERO_EXPORT_ENT3$1,
+    CURRENT_UNEQUAL_FAULT: CURRENT_UNEQUAL_FAULT,
+    CURRENT_UNEQUAL_OK: CURRENT_UNEQUAL_OK,
     EM_MAGNETIC_OFF: EM_MAGNETIC_OFF$1,
     EM_MAGNETIC_ON: EM_MAGNETIC_ON$1,
-    ENERGY_REG_FAULT: ENERGY_REG_FAULT,
-    ENERGY_REG_OVERFLOW: ENERGY_REG_OVERFLOW,
+    ENERGY_REGISTER_FAULT: ENERGY_REGISTER_FAULT,
+    ENERGY_REGISTER_OVERFLOW: ENERGY_REGISTER_OVERFLOW$1,
     ERR_ACCESS: ERR_ACCESS$1,
     F_MAX_OK: F_MAX_OK$1,
     F_MAX_OVER: F_MAX_OVER$1,
@@ -1007,13 +1029,19 @@ var logs = '';
     I_MAX_OVER: I_MAX_OVER,
     MAGNETIC_OFF: MAGNETIC_OFF$1,
     MAGNETIC_ON: MAGNETIC_ON$2,
-    NVRAM_FAULT: NVRAM_FAULT,
     OP_PAR_FAULT: OP_PAR_FAULT,
-    POWERSALDO_OK: POWERSALDO_OK,
-    POWERSALDO_OVER: POWERSALDO_OVER,
     POWER_A_OFF: POWER_A_OFF$1,
     POWER_A_ON: POWER_A_ON$1,
+    POWER_B_OFF: POWER_B_OFF$1,
+    POWER_B_ON: POWER_B_ON$1,
+    POWER_C_OFF: POWER_C_OFF$1,
+    POWER_C_ON: POWER_C_ON$1,
+    POWER_GOOD_DIO: POWER_GOOD_DIO,
     POWER_OVER_RELAY_OFF: POWER_OVER_RELAY_OFF$1,
+    POWER_SALDO_OK: POWER_SALDO_OK,
+    POWER_SALDO_OVER: POWER_SALDO_OVER,
+    P_MAX_A_MINUS_OK: P_MAX_A_MINUS_OK$1,
+    P_MAX_A_MINUS_OVER: P_MAX_A_MINUS_OVER$1,
     P_MAX_OK: P_MAX_OK,
     P_MAX_OVER: P_MAX_OVER,
     RELAY_HARD_BAD_OFF: RELAY_HARD_BAD_OFF$1,
@@ -1021,9 +1049,10 @@ var logs = '';
     RELAY_HARD_OFF: RELAY_HARD_OFF$1,
     RELAY_HARD_ON: RELAY_HARD_ON$1,
     RELAY_OFF: RELAY_OFF$1,
+    RELAY_OFF_BAD_SALDO: RELAY_OFF_BAD_SALDO,
     RELAY_ON: RELAY_ON$1,
     RESET_EM_FLAG: RESET_EM_FLAG$1,
-    RESET_MAGN_FLAG: RESET_MAGN_FLAG,
+    RESET_MAGNET_FLAG: RESET_MAGNET_FLAG,
     RESTART: RESTART$2,
     SALDO_EN_BAD: SALDO_EN_BAD,
     SALDO_PARAM_BAD: SALDO_PARAM_BAD$1,
@@ -1036,7 +1065,7 @@ var logs = '';
     SET_DEMAND_EN_60MIN: SET_DEMAND_EN_60MIN,
     SET_NEW_SALDO: SET_NEW_SALDO$1,
     SET_SALDO_PARAM: SET_SALDO_PARAM$1,
-    SET_TARIFF_TBL: SET_TARIFF_TBL,
+    SET_TARIFF_TABLE: SET_TARIFF_TABLE$1,
     SUMMER_TIME: SUMMER_TIME$1,
     TIME_CORRECT: TIME_CORRECT$2,
     TIME_CORRECT_NEW: TIME_CORRECT_NEW,
@@ -1085,8 +1114,8 @@ var logs = '';
     EXPORTED_ACTIVE_ENERGY_T2: 0x00010000,
     EXPORTED_ACTIVE_ENERGY_T3: 0x00020000,
     EXPORTED_ACTIVE_ENERGY_T4: 0x00040000,
-    POWER_COEFFICIENT_PHASE_A: 0x00080000,
-    POWER_COEFFICIENT_PHASE_B: 0x00100000,
+    POWER_FACTOR_PHASE_A: 0x00080000,
+    POWER_FACTOR_PHASE_B: 0x00100000,
     BATTERY_VOLTAGE: 0x00200000,
     POWER_THRESHOLD_T1: 0x00400000,
     POWER_THRESHOLD_T2: 0x00800000,
@@ -5081,8 +5110,8 @@ var logs = '';
   var EXPORTED_ACTIVE_ENERGY_T2$1 = 17;
   var EXPORTED_ACTIVE_ENERGY_T3$1 = 18;
   var EXPORTED_ACTIVE_ENERGY_T4$1 = 19;
-  var POWER_COEFFICIENT_PHASE_A$1 = 20;
-  var POWER_COEFFICIENT_PHASE_B$1 = 21;
+  var POWER_FACTOR_PHASE_A$1 = 20;
+  var POWER_FACTOR_PHASE_B$1 = 21;
   var BATTERY_VOLTAGE$1 = 22;
   var POWER_THRESHOLD_T1$1 = 23;
   var POWER_THRESHOLD_T2$1 = 24;
@@ -5112,8 +5141,8 @@ var logs = '';
     HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND$1,
     MAGNET_INDUCTION: MAGNET_INDUCTION$1,
     OPTOPORT_SPEED: OPTOPORT_SPEED$1,
-    POWER_COEFFICIENT_PHASE_A: POWER_COEFFICIENT_PHASE_A$1,
-    POWER_COEFFICIENT_PHASE_B: POWER_COEFFICIENT_PHASE_B$1,
+    POWER_FACTOR_PHASE_A: POWER_FACTOR_PHASE_A$1,
+    POWER_FACTOR_PHASE_B: POWER_FACTOR_PHASE_B$1,
     POWER_THRESHOLD_T1: POWER_THRESHOLD_T1$1,
     POWER_THRESHOLD_T2: POWER_THRESHOLD_T2$1,
     POWER_THRESHOLD_T3: POWER_THRESHOLD_T3$1,
@@ -5570,9 +5599,9 @@ var logs = '';
   var REACTIVE_POWER_QMINUS_PHASE_B = 52;
   var REACTIVE_POWER_QMINUS_PHASE_C = 53;
   var TOTAL_POWER_FACTOR = 54;
-  var POWER_COEFFICIENT_PHASE_A = 55;
-  var POWER_COEFFICIENT_PHASE_B = 56;
-  var POWER_COEFFICIENT_PHASE_C = 57;
+  var POWER_FACTOR_PHASE_A = 55;
+  var POWER_FACTOR_PHASE_B = 56;
+  var POWER_FACTOR_PHASE_C = 57;
   var TOTAL_APPARENT_POWER_QPLUS = 58;
   var APPARENT_POWER_QPLUS_PHASE_A = 59;
   var APPARENT_POWER_QPLUS_PHASE_B = 60;
@@ -5731,9 +5760,9 @@ var logs = '';
     NEGATIVE_REACTIVE_ENERGY_T3: NEGATIVE_REACTIVE_ENERGY_T3,
     NEGATIVE_REACTIVE_ENERGY_T4: NEGATIVE_REACTIVE_ENERGY_T4,
     OPTOPORT_SPEED: OPTOPORT_SPEED,
-    POWER_COEFFICIENT_PHASE_A: POWER_COEFFICIENT_PHASE_A,
-    POWER_COEFFICIENT_PHASE_B: POWER_COEFFICIENT_PHASE_B,
-    POWER_COEFFICIENT_PHASE_C: POWER_COEFFICIENT_PHASE_C,
+    POWER_FACTOR_PHASE_A: POWER_FACTOR_PHASE_A,
+    POWER_FACTOR_PHASE_B: POWER_FACTOR_PHASE_B,
+    POWER_FACTOR_PHASE_C: POWER_FACTOR_PHASE_C,
     POWER_THRESHOLD_T1: POWER_THRESHOLD_T1,
     POWER_THRESHOLD_T2: POWER_THRESHOLD_T2,
     POWER_THRESHOLD_T3: POWER_THRESHOLD_T3,
@@ -5925,7 +5954,7 @@ var logs = '';
     VOLTAGE_IN_PHASE_C: 1 << 6,
     BATTERY_VOLTAGE: 1 << 7,
     SUPPLY_FREQUENCY: 1 << 8,
-    ACTIVE_POWER_SUM: 1 << 9,
+    TOTAL_ACTIVE_POWER: 1 << 9,
     ACTIVE_POWER_PHASE_A: 1 << 10,
     ACTIVE_POWER_PHASE_B: 1 << 11,
     ACTIVE_POWER_PHASE_C: 1 << 12,
@@ -5938,9 +5967,9 @@ var logs = '';
     REACTIVE_POWER_QMINUS_PHASE_B: 1 << 19,
     REACTIVE_POWER_QMINUS_PHASE_C: 1 << 20,
     TOTAL_POWER_FACTOR: 1 << 21,
-    POWER_COEFFICIENT_PHASE_A: 1 << 22,
-    POWER_COEFFICIENT_PHASE_B: 1 << 23,
-    POWER_COEFFICIENT_PHASE_C: 1 << 24,
+    POWER_FACTOR_PHASE_A: 1 << 22,
+    POWER_FACTOR_PHASE_B: 1 << 23,
+    POWER_FACTOR_PHASE_C: 1 << 24,
     TOTAL_APPARENT_POWER_QPLUS: 1 << 25,
     APPARENT_POWER_QPLUS_PHASE_A: 1 << 26,
     APPARENT_POWER_QPLUS_PHASE_B: 1 << 27,
@@ -7485,7 +7514,7 @@ var logs = '';
           VOLTAGE_IN_PHASE_C: false,
           BATTERY_VOLTAGE: false,
           SUPPLY_FREQUENCY: false,
-          ACTIVE_POWER_SUM: true,
+          TOTAL_ACTIVE_POWER: true,
           ACTIVE_POWER_PHASE_A: false,
           ACTIVE_POWER_PHASE_B: false,
           ACTIVE_POWER_PHASE_C: false,
@@ -7498,9 +7527,9 @@ var logs = '';
           REACTIVE_POWER_QMINUS_PHASE_B: false,
           REACTIVE_POWER_QMINUS_PHASE_C: false,
           TOTAL_POWER_FACTOR: false,
-          POWER_COEFFICIENT_PHASE_A: false,
-          POWER_COEFFICIENT_PHASE_B: false,
-          POWER_COEFFICIENT_PHASE_C: false,
+          POWER_FACTOR_PHASE_A: false,
+          POWER_FACTOR_PHASE_B: false,
+          POWER_FACTOR_PHASE_C: false,
           TOTAL_APPARENT_POWER_QPLUS: false,
           APPARENT_POWER_QPLUS_PHASE_A: false,
           APPARENT_POWER_QPLUS_PHASE_B: false,
@@ -7786,7 +7815,7 @@ var logs = '';
           VOLTAGE_IN_PHASE_C: false,
           BATTERY_VOLTAGE: false,
           SUPPLY_FREQUENCY: false,
-          ACTIVE_POWER_SUM: false,
+          TOTAL_ACTIVE_POWER: false,
           ACTIVE_POWER_PHASE_A: false,
           ACTIVE_POWER_PHASE_B: false,
           ACTIVE_POWER_PHASE_C: false,
@@ -7799,9 +7828,9 @@ var logs = '';
           REACTIVE_POWER_QMINUS_PHASE_B: false,
           REACTIVE_POWER_QMINUS_PHASE_C: false,
           TOTAL_POWER_FACTOR: false,
-          POWER_COEFFICIENT_PHASE_A: false,
-          POWER_COEFFICIENT_PHASE_B: false,
-          POWER_COEFFICIENT_PHASE_C: false,
+          POWER_FACTOR_PHASE_A: false,
+          POWER_FACTOR_PHASE_B: false,
+          POWER_FACTOR_PHASE_C: false,
           TOTAL_APPARENT_POWER_QPLUS: false,
           APPARENT_POWER_QPLUS_PHASE_A: false,
           APPARENT_POWER_QPLUS_PHASE_B: false,
@@ -7988,7 +8017,7 @@ var logs = '';
           VOLTAGE_IN_PHASE_C: false,
           BATTERY_VOLTAGE: false,
           SUPPLY_FREQUENCY: false,
-          ACTIVE_POWER_SUM: true,
+          TOTAL_ACTIVE_POWER: true,
           ACTIVE_POWER_PHASE_A: false,
           ACTIVE_POWER_PHASE_B: false,
           ACTIVE_POWER_PHASE_C: false,
@@ -8001,9 +8030,9 @@ var logs = '';
           REACTIVE_POWER_QMINUS_PHASE_B: false,
           REACTIVE_POWER_QMINUS_PHASE_C: false,
           TOTAL_POWER_FACTOR: false,
-          POWER_COEFFICIENT_PHASE_A: false,
-          POWER_COEFFICIENT_PHASE_B: false,
-          POWER_COEFFICIENT_PHASE_C: false,
+          POWER_FACTOR_PHASE_A: false,
+          POWER_FACTOR_PHASE_B: false,
+          POWER_FACTOR_PHASE_C: false,
           TOTAL_APPARENT_POWER_QPLUS: false,
           APPARENT_POWER_QPLUS_PHASE_A: false,
           APPARENT_POWER_QPLUS_PHASE_B: false,

@@ -631,6 +631,7 @@
     const EMPTY_VALUE = 0xffffffff;
 
     const IDLE = 0;
+    const PULSE_SENSOR = 1;
     const POWER_CHANNEL = 2;
     const BINARY_SENSOR = 3;
     const TEMPERATURE_SENSOR = 4;
@@ -640,6 +641,7 @@
         BINARY_SENSOR: BINARY_SENSOR,
         IDLE: IDLE,
         POWER_CHANNEL: POWER_CHANNEL,
+        PULSE_SENSOR: PULSE_SENSOR,
         TEMPERATURE_SENSOR: TEMPERATURE_SENSOR
     });
 
@@ -753,6 +755,7 @@
         let size = 1;
         switch (type) {
             case IDLE:
+            case PULSE_SENSOR:
             case POWER_CHANNEL:
                 break;
             case BINARY_SENSOR:
@@ -5000,15 +5003,20 @@
                 0x1f, 0x32, 0x07, 0x04, 0x02, 0x18, 0x00, 0x00, 0x58, 0xc0
             ]
         },
-        'binary and temperature sensors': {
+        'power channel and pulse, binary and temperature sensors': {
             id: id$l,
             name: name$l,
             headerSize: headerSize$l,
             parameters: [
                 {
+                    type: POWER_CHANNEL,
+                    typeName: 'POWER_CHANNEL',
+                    channel: 1
+                },
+                {
                     type: BINARY_SENSOR,
                     typeName: 'BINARY_SENSOR',
-                    channel: 1,
+                    channel: 2,
                     status: {
                         state: true
                     }
@@ -5021,10 +5029,15 @@
                         temperature: 20,
                         time2000: 22720
                     }
+                },
+                {
+                    type: PULSE_SENSOR,
+                    typeName: 'PULSE_SENSOR',
+                    channel: 4
                 }
             ],
             bytes: [
-                0x1f, 0x32, 0x0a, 0x03, 0x00, 0x01, 0x04, 0x02, 0x14, 0x00, 0x00, 0x58, 0xc0
+                0x1f, 0x32, 0x0e, 0x02, 0x00, 0x03, 0x01, 0x01, 0x04, 0x02, 0x14, 0x00, 0x00, 0x58, 0xc0, 0x01, 0x03
             ]
         }
     };
@@ -5072,8 +5085,6 @@
                 case TEMPERATURE_SENSOR:
                     channelStatus.status = getTemperatureSensorStatus(buffer);
                     break;
-                default:
-                    return result;
             }
             result.push(channelStatus);
         }

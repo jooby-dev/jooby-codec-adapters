@@ -887,6 +887,7 @@ var fromBytes, toBytes;
     var EMPTY_VALUE = 0xffffffff;
 
     var IDLE = 0;
+    var PULSE_SENSOR = 1;
     var POWER_CHANNEL = 2;
     var BINARY_SENSOR = 3;
     var TEMPERATURE_SENSOR = 4;
@@ -896,6 +897,7 @@ var fromBytes, toBytes;
         BINARY_SENSOR: BINARY_SENSOR,
         IDLE: IDLE,
         POWER_CHANNEL: POWER_CHANNEL,
+        PULSE_SENSOR: PULSE_SENSOR,
         TEMPERATURE_SENSOR: TEMPERATURE_SENSOR
     });
 
@@ -993,6 +995,7 @@ var fromBytes, toBytes;
       var size = 1;
       switch (type) {
         case IDLE:
+        case PULSE_SENSOR:
         case POWER_CHANNEL:
           break;
         case BINARY_SENSOR:
@@ -3611,8 +3614,6 @@ var fromBytes, toBytes;
           case TEMPERATURE_SENSOR:
             channelStatus.status = getTemperatureSensorStatus(buffer);
             break;
-          default:
-            return result;
         }
         result.push(channelStatus);
       }
