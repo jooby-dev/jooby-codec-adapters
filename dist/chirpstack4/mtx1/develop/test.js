@@ -1707,7 +1707,7 @@
     const getDisplayParam$2 = 0x5e;
     const setSpecialOperation$2 = 0x64;
     const getMagneticFieldThreshold$2 = 0x6d;
-    const getHalfhoursEnergies$2 = 0x6f;
+    const getHalfHourEnergies$2 = 0x6f;
     const getBuildVersion$2 = 0x70;
     const getOperatorParametersExtended3$2 = 0x71;
     const setOperatorParametersExtended3$2 = 0x72;
@@ -1745,7 +1745,7 @@
         getHalfHourDemand: getHalfHourDemand$2,
         getHalfHourDemandExport: getHalfHourDemandExport$2,
         getHalfHourDemandPrevious: getHalfHourDemandPrevious$2,
-        getHalfhoursEnergies: getHalfhoursEnergies$2,
+        getHalfHourEnergies: getHalfHourEnergies$2,
         getMagneticFieldThreshold: getMagneticFieldThreshold$2,
         getMeterInfo: getMeterInfo$2,
         getMonthDemand: getMonthDemand$2,
@@ -2787,7 +2787,7 @@
         getHalfHourDemand: getHalfHourDemand$2,
         getHalfHourDemandExport: getHalfHourDemandExport$2,
         getHalfHourDemandPrevious: getHalfHourDemandPrevious$2,
-        getHalfhoursEnergies: getHalfhoursEnergies$2,
+        getHalfHourEnergies: getHalfHourEnergies$2,
         getMagneticFieldThreshold: getMagneticFieldThreshold$2,
         getMeterInfo: getMeterInfo$2,
         getMonthDemand: getMonthDemand$2,
@@ -3539,7 +3539,7 @@
     CommandBinaryBuffer.prototype.setEnergiesFlags = function (energies) {
         this.setUint8(getEnergiesFlags(energies));
     };
-    CommandBinaryBuffer.prototype.getHalfhoursEnergy1 = function (halfhoursNumber) {
+    CommandBinaryBuffer.prototype.getHalfHourEnergy1 = function (halfhoursNumber) {
         const halfhours = [];
         for (let index = 0; index < halfhoursNumber; index++) {
             const value = this.getUint16();
@@ -3549,7 +3549,7 @@
         }
         return halfhours;
     };
-    CommandBinaryBuffer.prototype.setHalfhoursEnergy1 = function (halfhours) {
+    CommandBinaryBuffer.prototype.setHalfHourEnergy1 = function (halfhours) {
         if (halfhours) {
             for (let index = 0; index < halfhours.length; index++) {
                 const { tariff, energy } = halfhours[index];
@@ -3558,7 +3558,7 @@
             }
         }
     };
-    CommandBinaryBuffer.prototype.getHalfhoursEnergy3 = function (halfhoursNumber) {
+    CommandBinaryBuffer.prototype.getHalfHourEnergy3 = function (halfhoursNumber) {
         const halfhours = [];
         for (let index = 0; index < halfhoursNumber; index++) {
             const value = this.getUint16();
@@ -3566,7 +3566,7 @@
         }
         return halfhours;
     };
-    CommandBinaryBuffer.prototype.setHalfhoursEnergy3 = function (halfhours) {
+    CommandBinaryBuffer.prototype.setHalfHourEnergy3 = function (halfhours) {
         if (halfhours) {
             for (let index = 0; index < halfhours.length; index++) {
                 const value = halfhours[index];
@@ -3574,32 +3574,32 @@
             }
         }
     };
-    CommandBinaryBuffer.prototype.getHalfhoursEnergies1 = function (energiesFlags, halfhoursNumber) {
+    CommandBinaryBuffer.prototype.getHalfHourEnergies1 = function (energiesFlags, halfhoursNumber) {
         const energies = {};
         ENERGY_NAMES.forEach(energyName => {
             if (energiesFlags[energyName]) {
-                energies[energyName] = this.getHalfhoursEnergy1(halfhoursNumber);
+                energies[energyName] = this.getHalfHourEnergy1(halfhoursNumber);
             }
         });
         return energies;
     };
-    CommandBinaryBuffer.prototype.getHalfhoursEnergies3 = function (energiesFlags, halfhoursNumber) {
+    CommandBinaryBuffer.prototype.getHalfHourEnergies3 = function (energiesFlags, halfhoursNumber) {
         const energies = {};
         ENERGY_NAMES.forEach(energyName => {
             if (energiesFlags[energyName]) {
-                energies[energyName] = this.getHalfhoursEnergy3(halfhoursNumber);
+                energies[energyName] = this.getHalfHourEnergy3(halfhoursNumber);
             }
         });
         return energies;
     };
-    CommandBinaryBuffer.prototype.setHalfhoursEnergies1 = function (energies) {
+    CommandBinaryBuffer.prototype.setHalfHourEnergies1 = function (energies) {
         ENERGY_NAMES.forEach(energyName => {
-            this.setHalfhoursEnergy1(energies[energyName]);
+            this.setHalfHourEnergy1(energies[energyName]);
         });
     };
-    CommandBinaryBuffer.prototype.setHalfhoursEnergies3 = function (energies) {
+    CommandBinaryBuffer.prototype.setHalfHourEnergies3 = function (energies) {
         ENERGY_NAMES.forEach(energyName => {
-            this.setHalfhoursEnergy3(energies[energyName]);
+            this.setHalfHourEnergy3(energies[energyName]);
         });
     };
     CommandBinaryBuffer.prototype.getAPlusTariffEnergies = function (energyFlags) {
@@ -3770,8 +3770,8 @@
         tariffs.forEach(tariff => this.setAMinusTariffPowerMax(tariff));
     };
 
-    const id$1z = getHalfhoursEnergies$2;
-    const name$1z = commandNames$1[getHalfhoursEnergies$2];
+    const id$1z = getHalfHourEnergies$2;
+    const name$1z = commandNames$1[getHalfHourEnergies$2];
     const headerSize$1z = 2;
     const maxSize$1z = 5;
     const accessLevel$1z = UNENCRYPTED;
@@ -3823,7 +3823,7 @@
         return toBytes$21(id$1z, buffer.data);
     };
 
-    var getHalfhoursEnergies$1 = /*#__PURE__*/Object.freeze({
+    var getHalfHourEnergies$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1z,
         examples: examples$1z,
@@ -5706,7 +5706,7 @@
         getHalfHourDemand: getHalfHourDemand$1,
         getHalfHourDemandExport: getHalfHourDemandExport$1,
         getHalfHourDemandPrevious: getHalfHourDemandPrevious$1,
-        getHalfhoursEnergies: getHalfhoursEnergies$1,
+        getHalfHourEnergies: getHalfHourEnergies$1,
         getMagneticFieldThreshold: getMagneticFieldThreshold$1,
         getMeterInfo: getMeterInfo$1,
         getMonthDemand: getMonthDemand$1,
@@ -9246,7 +9246,7 @@
         const obis = energiesToObis[energy];
         return obis ? obis.replace('x', tariff.toString(10)) : '';
     };
-    const convertHalfhoursEnergiesToDlms = (energies) => {
+    const convertHalfHourEnergiesToDlms = (energies) => {
         const dlms = {};
         Object.keys(energies).forEach(energy => {
             const values = energies[energy];
@@ -9259,8 +9259,8 @@
         });
         return dlms;
     };
-    const id$x = getHalfhoursEnergies$2;
-    const name$x = commandNames[getHalfhoursEnergies$2];
+    const id$x = getHalfHourEnergies$2;
+    const name$x = commandNames[getHalfHourEnergies$2];
     const headerSize$x = 2;
     const maxSize$x = DATE_SIZE + ENERGY_FLAGS_SIZE + START_HALFHOUR_SIZE + HALFHOURS_NUMBER_SIZE + MAX_HALFHOURS_ENERGY_SIZE;
     const accessLevel$x = UNENCRYPTED;
@@ -9311,7 +9311,7 @@
             date,
             firstHalfhour,
             halfhoursNumber,
-            energies: buffer.getHalfhoursEnergies1(energiesFlags, halfhoursNumber)
+            energies: buffer.getHalfHourEnergies1(energiesFlags, halfhoursNumber)
         };
     };
     const toBytes$x = (parameters) => {
@@ -9321,7 +9321,7 @@
         buffer.setEnergiesFlags(energies);
         buffer.setUint8(firstHalfhour);
         buffer.setUint8(halfhoursNumber);
-        buffer.setHalfhoursEnergies1(energies);
+        buffer.setHalfHourEnergies1(energies);
         return toBytes$21(id$x, buffer.getBytesToOffset());
     };
     const toJson = (parameters, { dlms } = defaultDlmsJsonOptions) => {
@@ -9331,13 +9331,13 @@
                 date,
                 firstHalfhour,
                 halfhoursNumber,
-                ...convertHalfhoursEnergiesToDlms(energies)
+                ...convertHalfHourEnergiesToDlms(energies)
             }
             : parameters;
         return JSON.stringify(result);
     };
 
-    var getHalfhoursEnergies = /*#__PURE__*/Object.freeze({
+    var getHalfHourEnergies = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$x,
         examples: examples$x,
@@ -11175,7 +11175,7 @@
         getHalfHourDemand: getHalfHourDemand,
         getHalfHourDemandExport: getHalfHourDemandExport,
         getHalfHourDemandPrevious: getHalfHourDemandPrevious,
-        getHalfhoursEnergies: getHalfhoursEnergies,
+        getHalfHourEnergies: getHalfHourEnergies,
         getMagneticFieldThreshold: getMagneticFieldThreshold,
         getMeterInfo: getMeterInfo,
         getMonthDemand: getMonthDemand,

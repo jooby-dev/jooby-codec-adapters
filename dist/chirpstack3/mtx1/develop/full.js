@@ -2125,7 +2125,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var getDisplayParam = 0x5e;
     var setSpecialOperation = 0x64;
     var getMagneticFieldThreshold = 0x6d;
-    var getHalfhoursEnergies = 0x6f;
+    var getHalfHourEnergies = 0x6f;
     var getBuildVersion = 0x70;
     var getOperatorParametersExtended3 = 0x71;
     var setOperatorParametersExtended3 = 0x72;
@@ -2163,7 +2163,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         getHalfHourDemand: getHalfHourDemand,
         getHalfHourDemandExport: getHalfHourDemandExport,
         getHalfHourDemandPrevious: getHalfHourDemandPrevious,
-        getHalfhoursEnergies: getHalfhoursEnergies,
+        getHalfHourEnergies: getHalfHourEnergies,
         getMagneticFieldThreshold: getMagneticFieldThreshold,
         getMeterInfo: getMeterInfo,
         getMonthDemand: getMonthDemand,
@@ -2641,7 +2641,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         getHalfHourDemand: getHalfHourDemand,
         getHalfHourDemandExport: getHalfHourDemandExport,
         getHalfHourDemandPrevious: getHalfHourDemandPrevious,
-        getHalfhoursEnergies: getHalfhoursEnergies,
+        getHalfHourEnergies: getHalfHourEnergies,
         getMagneticFieldThreshold: getMagneticFieldThreshold,
         getMeterInfo: getMeterInfo,
         getMonthDemand: getMonthDemand,
@@ -2954,7 +2954,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     CommandBinaryBuffer.prototype.setEnergiesFlags = function (energies) {
       this.setUint8(getEnergiesFlags(energies));
     };
-    CommandBinaryBuffer.prototype.getHalfhoursEnergy1 = function (halfhoursNumber) {
+    CommandBinaryBuffer.prototype.getHalfHourEnergy1 = function (halfhoursNumber) {
       var halfhours = [];
       for (var index = 0; index < halfhoursNumber; index++) {
         var value = this.getUint16();
@@ -2967,7 +2967,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       }
       return halfhours;
     };
-    CommandBinaryBuffer.prototype.setHalfhoursEnergy1 = function (halfhours) {
+    CommandBinaryBuffer.prototype.setHalfHourEnergy1 = function (halfhours) {
       if (halfhours) {
         for (var index = 0; index < halfhours.length; index++) {
           var _halfhours$index = halfhours[index],
@@ -2978,7 +2978,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         }
       }
     };
-    CommandBinaryBuffer.prototype.getHalfhoursEnergy3 = function (halfhoursNumber) {
+    CommandBinaryBuffer.prototype.getHalfHourEnergy3 = function (halfhoursNumber) {
       var halfhours = [];
       for (var index = 0; index < halfhoursNumber; index++) {
         var value = this.getUint16();
@@ -2986,7 +2986,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       }
       return halfhours;
     };
-    CommandBinaryBuffer.prototype.setHalfhoursEnergy3 = function (halfhours) {
+    CommandBinaryBuffer.prototype.setHalfHourEnergy3 = function (halfhours) {
       if (halfhours) {
         for (var index = 0; index < halfhours.length; index++) {
           var value = halfhours[index];
@@ -2994,36 +2994,36 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         }
       }
     };
-    CommandBinaryBuffer.prototype.getHalfhoursEnergies1 = function (energiesFlags, halfhoursNumber) {
+    CommandBinaryBuffer.prototype.getHalfHourEnergies1 = function (energiesFlags, halfhoursNumber) {
       var _this = this;
       var energies = {};
       ENERGY_NAMES.forEach(function (energyName) {
         if (energiesFlags[energyName]) {
-          energies[energyName] = _this.getHalfhoursEnergy1(halfhoursNumber);
+          energies[energyName] = _this.getHalfHourEnergy1(halfhoursNumber);
         }
       });
       return energies;
     };
-    CommandBinaryBuffer.prototype.getHalfhoursEnergies3 = function (energiesFlags, halfhoursNumber) {
+    CommandBinaryBuffer.prototype.getHalfHourEnergies3 = function (energiesFlags, halfhoursNumber) {
       var _this2 = this;
       var energies = {};
       ENERGY_NAMES.forEach(function (energyName) {
         if (energiesFlags[energyName]) {
-          energies[energyName] = _this2.getHalfhoursEnergy3(halfhoursNumber);
+          energies[energyName] = _this2.getHalfHourEnergy3(halfhoursNumber);
         }
       });
       return energies;
     };
-    CommandBinaryBuffer.prototype.setHalfhoursEnergies1 = function (energies) {
+    CommandBinaryBuffer.prototype.setHalfHourEnergies1 = function (energies) {
       var _this3 = this;
       ENERGY_NAMES.forEach(function (energyName) {
-        _this3.setHalfhoursEnergy1(energies[energyName]);
+        _this3.setHalfHourEnergy1(energies[energyName]);
       });
     };
-    CommandBinaryBuffer.prototype.setHalfhoursEnergies3 = function (energies) {
+    CommandBinaryBuffer.prototype.setHalfHourEnergies3 = function (energies) {
       var _this4 = this;
       ENERGY_NAMES.forEach(function (energyName) {
-        _this4.setHalfhoursEnergy3(energies[energyName]);
+        _this4.setHalfHourEnergy3(energies[energyName]);
       });
     };
     CommandBinaryBuffer.prototype.getAPlusTariffEnergies = function (energyFlags) {
@@ -3206,7 +3206,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       });
     };
 
-    var id$1z = getHalfhoursEnergies;
+    var id$1z = getHalfHourEnergies;
     var maxSize$1f = 5;
     var fromBytes$1B = function fromBytes(bytes) {
       var buffer = new CommandBinaryBuffer(bytes);
@@ -4849,7 +4849,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var START_HALFHOUR_SIZE = 1;
     var HALFHOURS_NUMBER_SIZE = 1;
     var MAX_HALFHOURS_ENERGY_SIZE = 247;
-    var id$x = getHalfhoursEnergies;
+    var id$x = getHalfHourEnergies;
     var maxSize$v = DATE_SIZE + ENERGY_FLAGS_SIZE + START_HALFHOUR_SIZE + HALFHOURS_NUMBER_SIZE + MAX_HALFHOURS_ENERGY_SIZE;
     var fromBytes$z = function fromBytes(bytes) {
       var buffer = new CommandBinaryBuffer(bytes);
@@ -4861,7 +4861,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         date: date,
         firstHalfhour: firstHalfhour,
         halfhoursNumber: halfhoursNumber,
-        energies: buffer.getHalfhoursEnergies1(energiesFlags, halfhoursNumber)
+        energies: buffer.getHalfHourEnergies1(energiesFlags, halfhoursNumber)
       };
     };
     var toBytes$y = function toBytes(parameters) {
@@ -4874,7 +4874,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       buffer.setEnergiesFlags(energies);
       buffer.setUint8(firstHalfhour);
       buffer.setUint8(halfhoursNumber);
-      buffer.setHalfhoursEnergies1(energies);
+      buffer.setHalfHourEnergies1(energies);
       return toBytes$23(id$x, buffer.getBytesToOffset());
     };
 

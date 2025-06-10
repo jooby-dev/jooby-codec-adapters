@@ -190,7 +190,7 @@ var fromBytes, getDataSegment;
   var getDisplayParam$1 = 0x5e;
   var setSpecialOperation$1 = 0x64;
   var getMagneticFieldThreshold$1 = 0x6d;
-  var getHalfhoursEnergies$1 = 0x6f;
+  var getHalfHourEnergies$1 = 0x6f;
   var getBuildVersion$1 = 0x70;
   var getOperatorParametersExtended3$1 = 0x71;
   var setOperatorParametersExtended3$1 = 0x72;
@@ -228,7 +228,7 @@ var fromBytes, getDataSegment;
     getHalfHourDemand: getHalfHourDemand$1,
     getHalfHourDemandExport: getHalfHourDemandExport$1,
     getHalfHourDemandPrevious: getHalfHourDemandPrevious,
-    getHalfhoursEnergies: getHalfhoursEnergies$1,
+    getHalfHourEnergies: getHalfHourEnergies$1,
     getMagneticFieldThreshold: getMagneticFieldThreshold$1,
     getMeterInfo: getMeterInfo$1,
     getMonthDemand: getMonthDemand$1,
@@ -302,7 +302,7 @@ var fromBytes, getDataSegment;
     getHalfHourDemand: getHalfHourDemand$1,
     getHalfHourDemandExport: getHalfHourDemandExport$1,
     getHalfHourDemandPrevious: getHalfHourDemandPrevious,
-    getHalfhoursEnergies: getHalfhoursEnergies$1,
+    getHalfHourEnergies: getHalfHourEnergies$1,
     getMagneticFieldThreshold: getMagneticFieldThreshold$1,
     getMeterInfo: getMeterInfo$1,
     getMonthDemand: getMonthDemand$1,
@@ -2256,7 +2256,7 @@ var fromBytes, getDataSegment;
   CommandBinaryBuffer$1.prototype.setEnergiesFlags = function (energies) {
     this.setUint8(getEnergiesFlags(energies));
   };
-  CommandBinaryBuffer$1.prototype.getHalfhoursEnergy1 = function (halfhoursNumber) {
+  CommandBinaryBuffer$1.prototype.getHalfHourEnergy1 = function (halfhoursNumber) {
     var halfhours = [];
     for (var index = 0; index < halfhoursNumber; index++) {
       var value = this.getUint16();
@@ -2269,7 +2269,7 @@ var fromBytes, getDataSegment;
     }
     return halfhours;
   };
-  CommandBinaryBuffer$1.prototype.setHalfhoursEnergy1 = function (halfhours) {
+  CommandBinaryBuffer$1.prototype.setHalfHourEnergy1 = function (halfhours) {
     if (halfhours) {
       for (var index = 0; index < halfhours.length; index++) {
         var _halfhours$index = halfhours[index],
@@ -2280,7 +2280,7 @@ var fromBytes, getDataSegment;
       }
     }
   };
-  CommandBinaryBuffer$1.prototype.getHalfhoursEnergy3 = function (halfhoursNumber) {
+  CommandBinaryBuffer$1.prototype.getHalfHourEnergy3 = function (halfhoursNumber) {
     var halfhours = [];
     for (var index = 0; index < halfhoursNumber; index++) {
       var value = this.getUint16();
@@ -2288,7 +2288,7 @@ var fromBytes, getDataSegment;
     }
     return halfhours;
   };
-  CommandBinaryBuffer$1.prototype.setHalfhoursEnergy3 = function (halfhours) {
+  CommandBinaryBuffer$1.prototype.setHalfHourEnergy3 = function (halfhours) {
     if (halfhours) {
       for (var index = 0; index < halfhours.length; index++) {
         var value = halfhours[index];
@@ -2296,36 +2296,36 @@ var fromBytes, getDataSegment;
       }
     }
   };
-  CommandBinaryBuffer$1.prototype.getHalfhoursEnergies1 = function (energiesFlags, halfhoursNumber) {
+  CommandBinaryBuffer$1.prototype.getHalfHourEnergies1 = function (energiesFlags, halfhoursNumber) {
     var _this = this;
     var energies = {};
     ENERGY_NAMES.forEach(function (energyName) {
       if (energiesFlags[energyName]) {
-        energies[energyName] = _this.getHalfhoursEnergy1(halfhoursNumber);
+        energies[energyName] = _this.getHalfHourEnergy1(halfhoursNumber);
       }
     });
     return energies;
   };
-  CommandBinaryBuffer$1.prototype.getHalfhoursEnergies3 = function (energiesFlags, halfhoursNumber) {
+  CommandBinaryBuffer$1.prototype.getHalfHourEnergies3 = function (energiesFlags, halfhoursNumber) {
     var _this2 = this;
     var energies = {};
     ENERGY_NAMES.forEach(function (energyName) {
       if (energiesFlags[energyName]) {
-        energies[energyName] = _this2.getHalfhoursEnergy3(halfhoursNumber);
+        energies[energyName] = _this2.getHalfHourEnergy3(halfhoursNumber);
       }
     });
     return energies;
   };
-  CommandBinaryBuffer$1.prototype.setHalfhoursEnergies1 = function (energies) {
+  CommandBinaryBuffer$1.prototype.setHalfHourEnergies1 = function (energies) {
     var _this3 = this;
     ENERGY_NAMES.forEach(function (energyName) {
-      _this3.setHalfhoursEnergy1(energies[energyName]);
+      _this3.setHalfHourEnergy1(energies[energyName]);
     });
   };
-  CommandBinaryBuffer$1.prototype.setHalfhoursEnergies3 = function (energies) {
+  CommandBinaryBuffer$1.prototype.setHalfHourEnergies3 = function (energies) {
     var _this4 = this;
     ENERGY_NAMES.forEach(function (energyName) {
-      _this4.setHalfhoursEnergy3(energies[energyName]);
+      _this4.setHalfHourEnergy3(energies[energyName]);
     });
   };
   CommandBinaryBuffer$1.prototype.getAPlusTariffEnergies = function (energyFlags) {
@@ -2660,7 +2660,7 @@ var fromBytes, getDataSegment;
     return buffer.getEventStatus();
   };
 
-  var id$Z = getHalfhoursEnergies$1;
+  var id$Z = getHalfHourEnergies$1;
   var fromBytes$ = function (bytes) {
     var buffer = new CommandBinaryBuffer$1(bytes);
     var date = buffer.getDate();
@@ -2671,7 +2671,7 @@ var fromBytes, getDataSegment;
       date: date,
       firstHalfhour: firstHalfhour,
       halfhoursNumber: halfhoursNumber,
-      energies: buffer.getHalfhoursEnergies1(energiesFlags, halfhoursNumber)
+      energies: buffer.getHalfHourEnergies1(energiesFlags, halfhoursNumber)
     };
   };
 
@@ -3101,7 +3101,7 @@ var fromBytes, getDataSegment;
   var getDisplayParam = 0x5e;
   var setSpecialOperation = 0x64;
   var getMagneticFieldThreshold = 0x6d;
-  var getHalfhoursEnergies = 0x6f;
+  var getHalfHourEnergies = 0x6f;
   var getBuildVersion = 0x70;
   var getOperatorParametersExtended3 = 0x71;
   var setOperatorParametersExtended3 = 0x72;
@@ -3143,7 +3143,7 @@ var fromBytes, getDataSegment;
     getHalfHourDemandVareExport: getHalfHourDemandVareExport,
     getHalfHourDemandVari: getHalfHourDemandVari,
     getHalfHourDemandVariExport: getHalfHourDemandVariExport,
-    getHalfhoursEnergies: getHalfhoursEnergies,
+    getHalfHourEnergies: getHalfHourEnergies,
     getMagneticFieldThreshold: getMagneticFieldThreshold,
     getMeterInfo: getMeterInfo,
     getMonthDemand: getMonthDemand,
@@ -3221,7 +3221,7 @@ var fromBytes, getDataSegment;
     getHalfHourDemandVareExport: getHalfHourDemandVareExport,
     getHalfHourDemandVari: getHalfHourDemandVari,
     getHalfHourDemandVariExport: getHalfHourDemandVariExport,
-    getHalfhoursEnergies: getHalfhoursEnergies,
+    getHalfHourEnergies: getHalfHourEnergies,
     getMagneticFieldThreshold: getMagneticFieldThreshold,
     getMeterInfo: getMeterInfo,
     getMonthDemand: getMonthDemand,
