@@ -5156,7 +5156,7 @@ var logs = '';
 
   invertObject(screenIds$1);
 
-  var getDayEnergies = 0x78;
+  var getDayEnergies$1 = 0x78;
   var getDayMaxPower = 0x79;
   var errorResponse$1 = 0xfe;
 
@@ -5172,7 +5172,7 @@ var logs = '';
     getDateTime: getDateTime$2,
     getDayDemand: getDayDemand$2,
     getDayDemandExport: getDayDemandExport$2,
-    getDayEnergies: getDayEnergies,
+    getDayEnergies: getDayEnergies$1,
     getDayMaxDemand: getDayMaxDemand$2,
     getDayMaxDemandExport: getDayMaxDemandExport$2,
     getDayMaxDemandPrevious: getDayMaxDemandPrevious,
@@ -5800,6 +5800,7 @@ var logs = '';
 
   invertObject(screenIds);
 
+  var getDayEnergies = 0x78;
   var errorResponse = 0xfe;
 
   var uplinkIds = /*#__PURE__*/Object.freeze({
@@ -5814,6 +5815,7 @@ var logs = '';
     getDateTime: getDateTime,
     getDayDemand: getDayDemand$1,
     getDayDemandExport: getDayDemandExport$1,
+    getDayEnergies: getDayEnergies,
     getDayMaxDemand: getDayMaxDemand,
     getDayMaxDemandExport: getDayMaxDemandExport,
     getDayProfile: getDayProfile,

@@ -264,7 +264,7 @@ var fromBytes, getDataSegment;
     turnRelayOn: turnRelayOn$1
   });
 
-  var getDayEnergies = 0x78;
+  var getDayEnergies$1 = 0x78;
   var getDayMaxPower = 0x79;
   var errorResponse$1 = 0xfe;
 
@@ -280,7 +280,7 @@ var fromBytes, getDataSegment;
     getDateTime: getDateTime$1,
     getDayDemand: getDayDemand$1,
     getDayDemandExport: getDayDemandExport$1,
-    getDayEnergies: getDayEnergies,
+    getDayEnergies: getDayEnergies$1,
     getDayMaxDemand: getDayMaxDemand$1,
     getDayMaxDemandExport: getDayMaxDemandExport$1,
     getDayMaxDemandPrevious: getDayMaxDemandPrevious,
@@ -349,9 +349,9 @@ var fromBytes, getDataSegment;
 
   invertObject(uplinkIds$1);
 
-  var id$18 = activateRatePlan$1;
+  var id$19 = activateRatePlan$1;
   var maxSize$s = 0;
-  var fromBytes$1a = function (bytes) {
+  var fromBytes$1b = function (bytes) {
     if (bytes.length !== maxSize$s) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
@@ -918,7 +918,7 @@ var fromBytes, getDataSegment;
     }
     return result;
   };
-  var fromBytes$19 = function (bytes) {
+  var fromBytes$1a = function (bytes) {
     if (bytes.length !== 9) {
       throw new Error('The buffer is too small');
     }
@@ -1673,7 +1673,7 @@ var fromBytes, getDataSegment;
     this.setUint8(+!specialDay.isPeriodic);
   };
   CommandBinaryBuffer$2.prototype.getDeviceType = function () {
-    return fromBytes$19(this.getBytes(9));
+    return fromBytes$1a(this.getBytes(9));
   };
   CommandBinaryBuffer$2.prototype.setDeviceType = function (deviceType) {
     this.setBytes(toBytes(deviceType));
@@ -2102,7 +2102,7 @@ var fromBytes, getDataSegment;
 
   var resultNames = invertObject(resultCodes);
 
-  var id$17 = errorResponse$1;
+  var id$18 = errorResponse$1;
   var getFromBytes$2 = function (commandNamesParameter) {
     return function (bytes) {
       var buffer = new CommandBinaryBuffer$2(bytes);
@@ -2117,9 +2117,9 @@ var fromBytes, getDataSegment;
     };
   };
 
-  var id$16 = getBuildVersion$1;
+  var id$17 = getBuildVersion$1;
   var maxSize$r = 6;
-  var fromBytes$18 = function (bytes) {
+  var fromBytes$19 = function (bytes) {
     if (bytes.length !== maxSize$r) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
@@ -2140,8 +2140,8 @@ var fromBytes, getDataSegment;
     };
   };
 
-  var id$15 = getCorrectTime$1;
-  var fromBytes$17 = function (bytes) {
+  var id$16 = getCorrectTime$1;
+  var fromBytes$18 = function (bytes) {
     var buffer = new CommandBinaryBuffer$2(bytes);
     return buffer.getTimeCorrectionParameters();
   };
@@ -2183,8 +2183,8 @@ var fromBytes, getDataSegment;
 
   var criticalEventNames = invertObject(criticalEvents);
 
-  var id$14 = getDateTime$1;
-  var fromBytes$16 = function (bytes) {
+  var id$15 = getDateTime$1;
+  var fromBytes$17 = function (bytes) {
     var buffer = new CommandBinaryBuffer$2(bytes);
     return buffer.getDateTime();
   };
@@ -2512,6 +2512,15 @@ var fromBytes, getDataSegment;
     tariffs.forEach(function (tariff) {
       return _this6.setAMinusTariffPowerMax(tariff);
     });
+  };
+
+  var id$14 = getDayEnergies$1;
+  var fromBytes$16 = function (bytes) {
+    var buffer = new CommandBinaryBuffer$1(bytes);
+    return {
+      date: buffer.getDate(),
+      energies: buffer.getTariffsEnergies()
+    };
   };
 
   var PERIODS_FINAL_BYTE = 0xff;
@@ -3185,6 +3194,7 @@ var fromBytes, getDataSegment;
     turnRelayOn: turnRelayOn
   });
 
+  var getDayEnergies = 0x78;
   var errorResponse = 0xfe;
 
   var uplinkIds = /*#__PURE__*/Object.freeze({
@@ -3199,6 +3209,7 @@ var fromBytes, getDataSegment;
     getDateTime: getDateTime,
     getDayDemand: getDayDemand,
     getDayDemandExport: getDayDemandExport,
+    getDayEnergies: getDayEnergies,
     getDayMaxDemand: getDayMaxDemand,
     getDayMaxDemandExport: getDayMaxDemandExport,
     getDayProfile: getDayProfile,
@@ -3265,7 +3276,7 @@ var fromBytes, getDataSegment;
 
   var uplinkNames = invertObject(uplinkIds);
 
-  var id$w = id$17;
+  var id$w = id$18;
   var fromBytes$y = getFromBytes$2(uplinkNames);
 
   var id$v = getCriticalEvent;
@@ -5027,7 +5038,8 @@ var fromBytes, getDataSegment;
   var fromBytesMap = {};
   var nameMap = uplinkNames;
   var fromBytes$1 = getFromBytes(fromBytesMap, nameMap);
-  fromBytesMap[id$18] = fromBytes$1a;
+  fromBytesMap[id$19] = fromBytes$1b;
+  fromBytesMap[id$17] = fromBytes$19;
   fromBytesMap[id$16] = fromBytes$18;
   fromBytesMap[id$15] = fromBytes$17;
   fromBytesMap[id$14] = fromBytes$16;

@@ -2177,7 +2177,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   invertObject(screenIds$1);
 
-  var getDayEnergies = 0x78;
+  var getDayEnergies$1 = 0x78;
   var getDayMaxPower = 0x79;
   var errorResponse$1 = 0xfe;
 
@@ -2193,7 +2193,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getDateTime: getDateTime$1,
     getDayDemand: getDayDemand$1,
     getDayDemandExport: getDayDemandExport$1,
-    getDayEnergies: getDayEnergies,
+    getDayEnergies: getDayEnergies$1,
     getDayMaxDemand: getDayMaxDemand$1,
     getDayMaxDemandExport: getDayMaxDemandExport$1,
     getDayMaxDemandPrevious: getDayMaxDemandPrevious,
@@ -3648,6 +3648,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   invertObject(screenIds);
 
+  var getDayEnergies = 0x78;
   var errorResponse = 0xfe;
 
   var uplinkIds = /*#__PURE__*/Object.freeze({
@@ -3662,6 +3663,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getDateTime: getDateTime,
     getDayDemand: getDayDemand,
     getDayDemandExport: getDayDemandExport,
+    getDayEnergies: getDayEnergies,
     getDayMaxDemand: getDayMaxDemand,
     getDayMaxDemandExport: getDayMaxDemandExport,
     getDayProfile: getDayProfile,
