@@ -1072,7 +1072,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const extendedCurrentValues2RelayStatus2Mask = {
         RELAY_COSFI: 2 ** 0,
         RELAY_SALDO_OFF_FLAG: 2 ** 1,
-        RELAY_UNEQUIL_CURRENT_OFF: 2 ** 2,
+        RELAY_UNEQUAL_CURRENT_OFF: 2 ** 2,
         RELAY_BIPOLAR_POWER_OFF: 2 ** 3,
         RELAY_SALDO_OFF_ON_MAX_POWER: 2 ** 4,
         RELAY_HARD_ST1: 2 ** 5
@@ -1094,7 +1094,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         MIN_COS_FI: 2 ** 5
     };
     const extendedCurrentValues2Status3Mask = {
-        UNEQUIL_CURRENT: 2 ** 0,
+        UNEQUAL_CURRENT: 2 ** 0,
         BIPOLAR_POWER: 2 ** 1,
         POWER_A_NEGATIVE: 2 ** 6,
         POWER_B_NEGATIVE: 2 ** 7
@@ -1634,6 +1634,18 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         this.setUint8(parameters.count);
         this.setUint8(parameters.period);
     };
+    CommandBinaryBuffer$2.prototype.getDemandParameters = function () {
+        const channelParam1 = this.getUint8();
+        const counterInterval = this.getUint8();
+        const channelParam2 = this.getUint8();
+        return { channelParam1, counterInterval, channelParam2 };
+    };
+    CommandBinaryBuffer$2.prototype.setDemandParameters = function (parameters) {
+        this.setUint8(parameters.channelParam1);
+        this.setUint8(parameters.counterInterval);
+        this.setUint8(parameters.channelParam2);
+        this.setUint8(0);
+    };
     CommandBinaryBuffer$2.prototype.getDayMaxDemandResponse = function () {
         const date = this.getDate();
         const power = new Array(TARIFF_NUMBER$1).fill(0).map(() => ({
@@ -1751,6 +1763,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const getBuildVersion$1 = 0x70;
     const getOperatorParametersExtended3$1 = 0x71;
     const setOperatorParametersExtended3$1 = 0x72;
+    const setDemandParameters = 0x74;
+    const getDemandParameters = 0x75;
     const getDemand$1 = 0x76;
     const getMeterInfo$1 = 0x7a;
 
@@ -1770,6 +1784,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         getDayMaxDemandPrevious: getDayMaxDemandPrevious,
         getDayProfile: getDayProfile$1,
         getDemand: getDemand$1,
+        getDemandParameters: getDemandParameters,
         getDeviceId: getDeviceId$1,
         getDeviceType: getDeviceType$1,
         getDisplayParam: getDisplayParam$1,
@@ -1809,6 +1824,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         setCorrectTime: setCorrectTime$1,
         setDateTime: setDateTime$1,
         setDayProfile: setDayProfile$1,
+        setDemandParameters: setDemandParameters,
         setDisplayParam: setDisplayParam$1,
         setOperatorParameters: setOperatorParameters$1,
         setOperatorParametersExtended3: setOperatorParametersExtended3$1,
@@ -1980,6 +1996,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     commandNames$1[getDemand$1];
 
+    commandNames$1[getDemandParameters];
+
     const id$27 = getDeviceId$1;
     commandNames$1[getDeviceId$1];
     const maxSize$1M = 0;
@@ -1994,9 +2012,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$26 = getDeviceType$1;
     commandNames$1[getDeviceType$1];
     const maxSize$1L = 0;
-    const fromBytes$28 = (data) => {
-        if (data.length !== maxSize$1L) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$28 = (bytes) => {
+        if (bytes.length !== maxSize$1L) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         return {};
     };
@@ -2147,6 +2165,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         getDayMaxPower: getDayMaxPower,
         getDayProfile: getDayProfile$1,
         getDemand: getDemand$1,
+        getDemandParameters: getDemandParameters,
         getDeviceId: getDeviceId$1,
         getDeviceType: getDeviceType$1,
         getDisplayParam: getDisplayParam$1,
@@ -2186,6 +2205,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         setCorrectTime: setCorrectTime$1,
         setDateTime: setDateTime$1,
         setDayProfile: setDayProfile$1,
+        setDemandParameters: setDemandParameters,
         setDisplayParam: setDisplayParam$1,
         setOperatorParameters: setOperatorParameters$1,
         setOperatorParametersExtended3: setOperatorParametersExtended3$1,
@@ -2675,8 +2695,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
     const toBytes$1X = ({ year, month }) => (toBytes$2j(id$1V, [year, month]));
 
-    const id$1U = getOperatorParametersExtended3$1;
-    commandNames$1[getOperatorParametersExtended3$1];
+    const id$1U = getOperatorParameters$1;
+    commandNames$1[getOperatorParameters$1];
     const maxSize$1z = 0;
     const fromBytes$1W = (bytes) => {
         if (bytes.length !== maxSize$1z) {
@@ -2686,8 +2706,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
     const toBytes$1W = () => toBytes$2j(id$1U);
 
-    const id$1T = getOperatorParameters$1;
-    commandNames$1[getOperatorParameters$1];
+    const id$1T = getOperatorParametersExtended3$1;
+    commandNames$1[getOperatorParametersExtended3$1];
     const maxSize$1y = 0;
     const fromBytes$1V = (bytes) => {
         if (bytes.length !== maxSize$1y) {
@@ -2895,7 +2915,11 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         return toBytes$2j(id$1E, buffer.data);
     };
 
+    commandNames$1[setDemandParameters];
+
     commandNames$1[setDisplayParam$1];
+
+    commandNames$1[setOperatorParameters$1];
 
     const id$1D = setOperatorParametersExtended3$1;
     commandNames$1[setOperatorParametersExtended3$1];
@@ -2909,8 +2933,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         buffer.setOperatorParametersExtended3(parameters);
         return toBytes$2j(id$1D, buffer.data);
     };
-
-    commandNames$1[setOperatorParameters$1];
 
     const id$1C = setSaldo$1;
     commandNames$1[setSaldo$1];
@@ -4990,8 +5012,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     toBytesMap$1[id$1X] = toBytes$1Z;
     toBytesMap$1[id$1W] = toBytes$1Y;
     toBytesMap$1[id$1V] = toBytes$1X;
-    toBytesMap$1[id$1T] = toBytes$1V;
     toBytesMap$1[id$1U] = toBytes$1W;
+    toBytesMap$1[id$1T] = toBytes$1V;
     toBytesMap$1[id$1S] = toBytes$1U;
     toBytesMap$1[id$1R] = toBytes$1T;
     toBytesMap$1[id$1Q] = toBytes$1S;
@@ -5061,8 +5083,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     fromBytesMap$1[id$1X] = fromBytes$1Z;
     fromBytesMap$1[id$1W] = fromBytes$1Y;
     fromBytesMap$1[id$1V] = fromBytes$1X;
-    fromBytesMap$1[id$1T] = fromBytes$1V;
     fromBytesMap$1[id$1U] = fromBytes$1W;
+    fromBytesMap$1[id$1T] = fromBytes$1V;
     fromBytesMap$1[id$1S] = fromBytes$1U;
     fromBytesMap$1[id$1R] = fromBytes$1T;
     fromBytesMap$1[id$1Q] = fromBytes$1S;
@@ -5292,6 +5314,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     commandNames[getDemand$1];
 
+    commandNames[getDemandParameters];
+
     const id$12 = getDeviceId$1;
     commandNames[getDeviceId$1];
     const maxSize$P = 8;
@@ -5308,8 +5332,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$11 = getDeviceType$1;
     commandNames[getDeviceType$1];
     const maxSize$O = 9;
-    const fromBytes$13 = (data) => {
-        const buffer = new CommandBinaryBuffer$2(data);
+    const fromBytes$13 = (bytes) => {
+        const buffer = new CommandBinaryBuffer$2(bytes);
         return buffer.getDeviceType();
     };
     const toBytes$12 = (parameters) => {
@@ -5479,6 +5503,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     commandNames[getMonthMaxDemandExport$1];
 
+    commandNames[getOperatorParameters$1];
+
     const id$W = getOperatorParametersExtended3$1;
     commandNames[getOperatorParametersExtended3$1];
     const maxSize$J = 17;
@@ -5491,8 +5517,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         buffer.setOperatorParametersExtended3(parameters);
         return toBytes$2j(id$W, buffer.data);
     };
-
-    commandNames[getOperatorParameters$1];
 
     const id$V = getRatePlanInfo$1;
     commandNames[getRatePlanInfo$1];
@@ -5699,6 +5723,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
     const toBytes$I = () => toBytes$2j(id$H);
 
+    commandNames[setDemandParameters];
+
     const id$G = setDisplayParam$1;
     commandNames[setDisplayParam$1];
     const maxSize$u = 0;
@@ -5710,8 +5736,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
     const toBytes$H = () => toBytes$2j(id$G);
 
-    const id$F = setOperatorParametersExtended3$1;
-    commandNames[setOperatorParametersExtended3$1];
+    const id$F = setOperatorParameters$1;
+    commandNames[setOperatorParameters$1];
     const maxSize$t = 0;
     const fromBytes$H = (bytes) => {
         if (bytes.length !== maxSize$t) {
@@ -5721,8 +5747,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
     const toBytes$G = () => toBytes$2j(id$F);
 
-    const id$E = setOperatorParameters$1;
-    commandNames[setOperatorParameters$1];
+    const id$E = setOperatorParametersExtended3$1;
+    commandNames[setOperatorParametersExtended3$1];
     const maxSize$s = 0;
     const fromBytes$G = (bytes) => {
         if (bytes.length !== maxSize$s) {
@@ -5868,8 +5894,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$u = getCurrentStatusMeter;
     uplinkNames[getCurrentStatusMeter];
     const maxSize$j = 41;
-    const fromBytes$w = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$w = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         const operatingSeconds = buffer.getUint32();
         const tbadVAAll = buffer.getUint32();
         const tbadVBAll = buffer.getUint32();
@@ -6139,8 +6165,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$i = getExtendedCurrentValues;
     uplinkNames[getExtendedCurrentValues];
     const maxSize$b = 38;
-    const fromBytes$k = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$k = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         return {
             temperature: buffer.getInt16(),
             frequency: buffer.getUint16(),
@@ -6561,8 +6587,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     toBytesMap[id$I] = toBytes$J;
     toBytesMap[id$H] = toBytes$I;
     toBytesMap[id$G] = toBytes$H;
-    toBytesMap[id$E] = toBytes$F;
     toBytesMap[id$F] = toBytes$G;
+    toBytesMap[id$E] = toBytes$F;
     toBytesMap[id$D] = toBytes$E;
     toBytesMap[id$C] = toBytes$D;
     toBytesMap[id$B] = toBytes$C;
@@ -6600,7 +6626,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     toBytesMap[id$5] = toBytes$6;
     toBytesMap[id$4] = toBytes$5;
     toBytesMap[id$3] = toBytes$4;
-    toBytesMap[id$E] = toBytes$F;
+    toBytesMap[id$F] = toBytes$G;
     toBytesMap[id$2] = toBytes$3;
     toBytesMap[id$1] = toBytes$2;
     toBytesMap[id] = toBytes$1;
@@ -6635,8 +6661,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     fromBytesMap[id$I] = fromBytes$K;
     fromBytesMap[id$H] = fromBytes$J;
     fromBytesMap[id$G] = fromBytes$I;
-    fromBytesMap[id$E] = fromBytes$G;
     fromBytesMap[id$F] = fromBytes$H;
+    fromBytesMap[id$E] = fromBytes$G;
     fromBytesMap[id$D] = fromBytes$F;
     fromBytesMap[id$C] = fromBytes$E;
     fromBytesMap[id$B] = fromBytes$D;
@@ -6674,7 +6700,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     fromBytesMap[id$5] = fromBytes$7;
     fromBytesMap[id$4] = fromBytes$6;
     fromBytesMap[id$3] = fromBytes$5;
-    fromBytesMap[id$E] = fromBytes$G;
+    fromBytesMap[id$F] = fromBytes$H;
     fromBytesMap[id$2] = fromBytes$4;
     fromBytesMap[id$1] = fromBytes$3;
     fromBytesMap[id] = fromBytes$2;

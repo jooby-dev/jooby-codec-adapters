@@ -294,38 +294,38 @@ var fromBytes, getBytesFromHex;
 
     const shortCommandMask = 0xe0;
     const extraCommandMask = 0x1f;
-    const fromBytes$E = (data) => {
-        if (data.length === 0) {
+    const fromBytes$E = (bytes) => {
+        if (bytes.length === 0) {
             throw new Error('Invalid buffer size');
         }
         const header = {
-            shortCode: data[0] & shortCommandMask,
-            extraCode: data[0] & extraCommandMask
+            shortCode: bytes[0] & shortCommandMask,
+            extraCode: bytes[0] & extraCommandMask
         };
         if (header.shortCode !== 0) {
             return {
                 headerSize: 1,
-                commandId: data[0] & (~header.extraCode),
+                commandId: bytes[0] & (~header.extraCode),
                 commandSize: header.extraCode
             };
         }
         if (header.extraCode === extraCommandMask) {
-            if (data.length < 3) {
+            if (bytes.length < 3) {
                 throw new Error('Invalid buffer size');
             }
             return {
                 headerSize: 3,
-                commandId: (data[1] << 8) | extraCommandMask,
-                commandSize: data[2]
+                commandId: (bytes[1] << 8) | extraCommandMask,
+                commandSize: bytes[2]
             };
         }
-        if (data.length < 2) {
+        if (bytes.length < 2) {
             throw new Error('Invalid buffer size');
         }
         return {
             headerSize: 2,
             commandId: header.extraCode,
-            commandSize: data[1]
+            commandSize: bytes[1]
         };
     };
 
@@ -423,11 +423,11 @@ var fromBytes, getBytesFromHex;
 
     const id$B = correctTime2000$1;
     const COMMAND_BODY_SIZE$8 = 1;
-    const fromBytes$D = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$8) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$D = (bytes) => {
+        if (bytes.length !== COMMAND_BODY_SIZE$8) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new BinaryBuffer(data, false);
+        const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
             status: buffer.getUint8()
         };
@@ -1808,22 +1808,22 @@ var fromBytes, getBytesFromHex;
 
     const id$A = current;
     const COMMAND_BODY_MAX_SIZE$9 = 4;
-    const fromBytes$C = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$9) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$C = (bytes) => {
+        if (bytes.length > COMMAND_BODY_MAX_SIZE$9) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getLegacyCounter();
     };
 
     const id$z = currentMc;
     const COMMAND_BODY_MAX_SIZE$8 = 37;
-    const fromBytes$B = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$8) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$B = (bytes) => {
+        if (bytes.length > COMMAND_BODY_MAX_SIZE$8) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         const parameters = { channelList: [] };
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         const channelList = buffer.getChannels();
         parameters.channelList = channelList.map(channelIndex => ({
             value: buffer.getExtendedValue(),
@@ -1896,14 +1896,14 @@ var fromBytes, getBytesFromHex;
     invertObject(downlinkIds);
 
     const id$y = dataSegment;
-    const fromBytes$A = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$A = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getDataSegment();
     };
 
     const id$x = day;
-    const fromBytes$z = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$z = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         const date = buffer.getDate();
         const byte = buffer.getUint8();
         const { hour } = buffer.getHours(byte);
@@ -1915,11 +1915,11 @@ var fromBytes, getBytesFromHex;
 
     const id$w = dayMc;
     const COMMAND_BODY_MAX_SIZE$7 = 32;
-    const fromBytes$y = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$7) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$y = (bytes) => {
+        if (bytes.length > COMMAND_BODY_MAX_SIZE$7) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         const date = buffer.getDate();
         const channels = buffer.getChannels();
         const channelList = channels.map(channelIndex => ({
@@ -1930,18 +1930,18 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$v = exAbsCurrentMc;
-    const fromBytes$x = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$x = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         return { channelList: buffer.getChannelsWithAbsoluteValues() };
     };
 
     const id$u = exAbsDayMc;
     const COMMAND_BODY_MAX_SIZE$6 = 89;
-    const fromBytes$w = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$6) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$w = (bytes) => {
+        if (bytes.length > COMMAND_BODY_MAX_SIZE$6) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         const date = buffer.getDate();
         const channelList = buffer.getChannelsWithAbsoluteValues();
         return { startTime2000: getTime2000FromDate(date), channelList };
@@ -1949,11 +1949,11 @@ var fromBytes, getBytesFromHex;
 
     const id$t = exAbsHourMc;
     const COMMAND_BODY_MAX_SIZE$5 = 168;
-    const fromBytes$v = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$5) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$v = (bytes) => {
+        if (bytes.length > COMMAND_BODY_MAX_SIZE$5) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         const date = buffer.getDate();
         const { hour, hours } = buffer.getHours();
         const channelList = buffer.getChannelsAbsoluteValuesWithHourDiff(hours);
@@ -1962,8 +1962,8 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$s = getArchiveDays$1;
-    const fromBytes$u = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$u = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         const date = buffer.getDate();
         const dayList = [];
         while (buffer.offset < buffer.data.length) {
@@ -1973,8 +1973,8 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$r = getArchiveDaysMc$1;
-    const fromBytes$t = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$t = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         const date = buffer.getDate();
         const channels = buffer.getChannels();
         const days = buffer.getUint8();
@@ -2061,8 +2061,8 @@ var fromBytes, getBytesFromHex;
             sequenceNumber
         };
     };
-    const fromBytes$s = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$s = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         const eventList = [];
         while (buffer.bytesLeft > 0) {
             eventList.push(getEvent(buffer));
@@ -2071,34 +2071,34 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$p = getArchiveHours$1;
-    const fromBytes$r = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$r = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getLegacyHourCounterWithDiff(true);
     };
 
     const id$o = getArchiveHoursMc$1;
     const COMMAND_BODY_MAX_SIZE$4 = 164;
-    const fromBytes$q = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$4) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$q = (bytes) => {
+        if (bytes.length > COMMAND_BODY_MAX_SIZE$4) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getChannelsValuesWithHourDiff(true);
     };
 
     const id$n = getArchiveHoursMcEx$1;
     const COMMAND_BODY_MAX_SIZE$3 = 255;
-    const fromBytes$p = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$3) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$p = (bytes) => {
+        if (bytes.length > COMMAND_BODY_MAX_SIZE$3) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getChannelsValuesWithHourDiffExtended(true);
     };
 
     const id$m = getBatteryStatus$1;
-    const fromBytes$o = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$o = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         return {
             voltageUnderLowLoad: buffer.getUint16(),
             voltageUnderHighLoad: buffer.getUint16(),
@@ -2120,8 +2120,8 @@ var fromBytes, getBytesFromHex;
         temperature: buffer.getInt8(),
         time2000: buffer.getTime()
     });
-    const fromBytes$n = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$n = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         const result = [];
         while (buffer.bytesLeft !== 0) {
             const type = buffer.getUint8();
@@ -2144,13 +2144,13 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$k = getChannelsTypes$1;
-    const fromBytes$m = (data) => ({
-        channels: data.map(type => ({ type, typeName: channelNames[type] }))
+    const fromBytes$m = (bytes) => ({
+        channels: bytes.map(type => ({ type, typeName: channelNames[type] }))
     });
 
     const id$j = getExAbsArchiveDaysMc$1;
-    const fromBytes$l = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$l = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         const date = buffer.getDate();
         const channels = buffer.getChannels();
         const days = buffer.getUint8();
@@ -2172,8 +2172,8 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$i = getExAbsArchiveHoursMc$1;
-    const fromBytes$k = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$k = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getChannelsValuesWithHourDiff(true);
     };
 
@@ -2183,11 +2183,11 @@ var fromBytes, getBytesFromHex;
         isMulticastSupported: 1 << 0,
         isFragmentedDataSupported: 1 << 1
     };
-    const fromBytes$j = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$7) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$j = (bytes) => {
+        if (bytes.length !== COMMAND_BODY_SIZE$7) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new BinaryBuffer(data);
+        const buffer = new BinaryBuffer(bytes);
         const capabilities = toObject(lmicCapabilitiesBitMask, buffer.getUint8());
         const version = buffer.getUint8();
         if (!buffer.isEmpty) {
@@ -2197,18 +2197,18 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$g = getParameter$1;
-    const fromBytes$i = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$i = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getResponseParameter();
     };
 
     const id$f = signalQuality;
     const COMMAND_BODY_SIZE$6 = 6;
-    const fromBytes$h = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$6) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$h = (bytes) => {
+        if (bytes.length !== COMMAND_BODY_SIZE$6) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new BinaryBuffer(data, false);
+        const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
             rssi: buffer.getInt8(),
             rsrp: buffer.getInt8(),
@@ -2224,37 +2224,37 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$e = hour;
-    const fromBytes$g = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$g = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getLegacyHourCounterWithDiff();
     };
 
     const id$d = hourMc;
     const COMMAND_BODY_MAX_SIZE$2 = 164;
-    const fromBytes$f = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$2) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$f = (bytes) => {
+        if (bytes.length > COMMAND_BODY_MAX_SIZE$2) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getChannelsValuesWithHourDiff();
     };
 
     const id$c = hourMcEx;
     const COMMAND_BODY_MAX_SIZE$1 = 255;
-    const fromBytes$e = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE$1) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$e = (bytes) => {
+        if (bytes.length > COMMAND_BODY_MAX_SIZE$1) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         return buffer.getChannelsValuesWithHourDiffExtended();
     };
 
     const id$b = lastEvent;
-    const fromBytes$d = (data, config) => {
+    const fromBytes$d = (bytes, config) => {
         if (!config.hardwareType) {
             throw new Error('hardwareType in config is mandatory');
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         const sequenceNumber = buffer.getUint8();
         const status = buffer.getEventStatus(config.hardwareType);
         return { sequenceNumber, status };
@@ -2265,11 +2265,11 @@ var fromBytes, getBytesFromHex;
     const MTX_ADDRESS_SIZE = 8;
     const getVoltage = (buffer) => buffer.getUint16();
     const getDeviceId = (buffer) => (getHexFromBytes(buffer.getBytes(MTX_ADDRESS_SIZE)));
-    const fromBytes$c = (data) => {
-        if (data.length > COMMAND_BODY_MAX_SIZE) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$c = (bytes) => {
+        if (bytes.length > COMMAND_BODY_MAX_SIZE) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         const eventId = buffer.getUint8();
         const eventName = eventNames[eventId];
         const sequenceNumber = buffer.getUint8();
@@ -2324,11 +2324,11 @@ var fromBytes, getBytesFromHex;
 
     const id$9 = setParameter$1;
     const COMMAND_BODY_SIZE$5 = 2;
-    const fromBytes$b = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$5) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$b = (bytes) => {
+        if (bytes.length !== COMMAND_BODY_SIZE$5) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         const parameters = {
             id: buffer.getUint8(),
             status: buffer.getUint8()
@@ -2341,11 +2341,11 @@ var fromBytes, getBytesFromHex;
 
     const id$8 = setTime2000$1;
     const COMMAND_BODY_SIZE$4 = 1;
-    const fromBytes$a = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$4) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$a = (bytes) => {
+        if (bytes.length !== COMMAND_BODY_SIZE$4) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new BinaryBuffer(data, false);
+        const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
             status: buffer.getUint8()
         };
@@ -2357,9 +2357,9 @@ var fromBytes, getBytesFromHex;
 
     const id$7 = softRestart$1;
     const COMMAND_BODY_SIZE$3 = 0;
-    const fromBytes$9 = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$3) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$9 = (bytes) => {
+        if (bytes.length !== COMMAND_BODY_SIZE$3) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         return {};
     };
@@ -2436,11 +2436,11 @@ var fromBytes, getBytesFromHex;
 
     const id$5 = time2000;
     const COMMAND_BODY_SIZE$2 = 5;
-    const fromBytes$7 = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$2) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$7 = (bytes) => {
+        if (bytes.length !== COMMAND_BODY_SIZE$2) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         const parameters = {
             sequenceNumber: buffer.getUint8(),
             time2000: buffer.getTime()
@@ -2453,16 +2453,16 @@ var fromBytes, getBytesFromHex;
 
     const id$4 = updateRun$1;
     const COMMAND_BODY_SIZE$1 = 0;
-    const fromBytes$6 = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE$1) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$6 = (bytes) => {
+        if (bytes.length !== COMMAND_BODY_SIZE$1) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         return {};
     };
 
     const id$3 = usWaterMeterBatteryStatus;
-    const fromBytes$5 = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$5 = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         return {
             voltage: buffer.getBatteryVoltage(),
             internalResistance: buffer.getUint16(),
@@ -2471,25 +2471,25 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$2 = usWaterMeterCommand$1;
-    const fromBytes$4 = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$4 = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         const length = buffer.getUint8();
-        return { length, data: data.slice(1) };
+        return { length, data: bytes.slice(1) };
     };
 
     const id$1 = verifyImage$1;
     const COMMAND_BODY_SIZE = 1;
-    const fromBytes$3 = (data) => {
-        if (data.length !== COMMAND_BODY_SIZE) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$3 = (bytes) => {
+        if (bytes.length !== COMMAND_BODY_SIZE) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer(data);
+        const buffer = new CommandBinaryBuffer(bytes);
         return { status: buffer.getUint8() };
     };
 
     const id = writeImage$1;
-    const fromBytes$2 = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$2 = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         return {
             offset: buffer.getUint32(),
             status: buffer.getUint8()

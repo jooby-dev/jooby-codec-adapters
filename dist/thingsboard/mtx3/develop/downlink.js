@@ -1112,7 +1112,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var extendedCurrentValues2RelayStatus2Mask = {
     RELAY_COSFI: 2 ** 0,
     RELAY_SALDO_OFF_FLAG: 2 ** 1,
-    RELAY_UNEQUIL_CURRENT_OFF: 2 ** 2,
+    RELAY_UNEQUAL_CURRENT_OFF: 2 ** 2,
     RELAY_BIPOLAR_POWER_OFF: 2 ** 3,
     RELAY_SALDO_OFF_ON_MAX_POWER: 2 ** 4,
     RELAY_HARD_ST1: 2 ** 5
@@ -1134,7 +1134,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     MIN_COS_FI: 2 ** 5
   };
   var extendedCurrentValues2Status3Mask = {
-    UNEQUIL_CURRENT: 2 ** 0,
+    UNEQUAL_CURRENT: 2 ** 0,
     BIPOLAR_POWER: 2 ** 1,
     POWER_A_NEGATIVE: 2 ** 6,
     POWER_B_NEGATIVE: 2 ** 7
@@ -1735,6 +1735,22 @@ var toBytes, setDataSegment, getBase64FromBytes;
     this.setUint8(parameters.count);
     this.setUint8(parameters.period);
   };
+  CommandBinaryBuffer$2.prototype.getDemandParameters = function () {
+    var channelParam1 = this.getUint8();
+    var counterInterval = this.getUint8();
+    var channelParam2 = this.getUint8();
+    return {
+      channelParam1: channelParam1,
+      counterInterval: counterInterval,
+      channelParam2: channelParam2
+    };
+  };
+  CommandBinaryBuffer$2.prototype.setDemandParameters = function (parameters) {
+    this.setUint8(parameters.channelParam1);
+    this.setUint8(parameters.counterInterval);
+    this.setUint8(parameters.channelParam2);
+    this.setUint8(0);
+  };
   CommandBinaryBuffer$2.prototype.getDayMaxDemandResponse = function () {
     var _this0 = this;
     var date = this.getDate();
@@ -1876,6 +1892,8 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var getBuildVersion$1 = 0x70;
   var getOperatorParametersExtended3$1 = 0x71;
   var setOperatorParametersExtended3$1 = 0x72;
+  var setDemandParameters = 0x74;
+  var getDemandParameters = 0x75;
   var getDemand$1 = 0x76;
   var getMeterInfo$1 = 0x7a;
 
@@ -1895,6 +1913,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getDayMaxDemandPrevious: getDayMaxDemandPrevious,
     getDayProfile: getDayProfile$1,
     getDemand: getDemand$1,
+    getDemandParameters: getDemandParameters,
     getDeviceId: getDeviceId$1,
     getDeviceType: getDeviceType$1,
     getDisplayParam: getDisplayParam$1,
@@ -1934,6 +1953,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     setCorrectTime: setCorrectTime$1,
     setDateTime: setDateTime$1,
     setDayProfile: setDayProfile$1,
+    setDemandParameters: setDemandParameters,
     setDisplayParam: setDisplayParam$1,
     setOperatorParameters: setOperatorParameters$1,
     setOperatorParametersExtended3: setOperatorParametersExtended3$1,
@@ -2200,6 +2220,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getDayMaxPower: getDayMaxPower,
     getDayProfile: getDayProfile$1,
     getDemand: getDemand$1,
+    getDemandParameters: getDemandParameters,
     getDeviceId: getDeviceId$1,
     getDeviceType: getDeviceType$1,
     getDisplayParam: getDisplayParam$1,
@@ -2239,6 +2260,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     setCorrectTime: setCorrectTime$1,
     setDateTime: setDateTime$1,
     setDayProfile: setDayProfile$1,
+    setDemandParameters: setDemandParameters,
     setDisplayParam: setDisplayParam$1,
     setOperatorParameters: setOperatorParameters$1,
     setOperatorParametersExtended3: setOperatorParametersExtended3$1,
@@ -2671,12 +2693,12 @@ var toBytes, setDataSegment, getBase64FromBytes;
     return toBytes$19(id$L, [year, month]);
   };
 
-  var id$K = getOperatorParametersExtended3$1;
+  var id$K = getOperatorParameters$1;
   var toBytes$M = function () {
     return toBytes$19(id$K);
   };
 
-  var id$J = getOperatorParameters$1;
+  var id$J = getOperatorParametersExtended3$1;
   var toBytes$L = function () {
     return toBytes$19(id$J);
   };
@@ -4632,8 +4654,8 @@ var toBytes, setDataSegment, getBase64FromBytes;
   toBytesMap[id$N] = toBytes$P;
   toBytesMap[id$M] = toBytes$O;
   toBytesMap[id$L] = toBytes$N;
-  toBytesMap[id$J] = toBytes$L;
   toBytesMap[id$K] = toBytes$M;
+  toBytesMap[id$J] = toBytes$L;
   toBytesMap[id$I] = toBytes$K;
   toBytesMap[id$H] = toBytes$J;
   toBytesMap[id$G] = toBytes$I;

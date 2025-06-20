@@ -1011,7 +1011,7 @@
     const extendedCurrentValues2RelayStatus2Mask = {
         RELAY_COSFI: 2 ** 0,
         RELAY_SALDO_OFF_FLAG: 2 ** 1,
-        RELAY_UNEQUIL_CURRENT_OFF: 2 ** 2,
+        RELAY_UNEQUAL_CURRENT_OFF: 2 ** 2,
         RELAY_BIPOLAR_POWER_OFF: 2 ** 3,
         RELAY_SALDO_OFF_ON_MAX_POWER: 2 ** 4,
         RELAY_HARD_ST1: 2 ** 5
@@ -1033,7 +1033,7 @@
         MIN_COS_FI: 2 ** 5
     };
     const extendedCurrentValues2Status3Mask = {
-        UNEQUIL_CURRENT: 2 ** 0,
+        UNEQUAL_CURRENT: 2 ** 0,
         BIPOLAR_POWER: 2 ** 1,
         POWER_A_NEGATIVE: 2 ** 6,
         POWER_B_NEGATIVE: 2 ** 7
@@ -1573,6 +1573,18 @@
         this.setUint8(parameters.count);
         this.setUint8(parameters.period);
     };
+    CommandBinaryBuffer$2.prototype.getDemandParameters = function () {
+        const channelParam1 = this.getUint8();
+        const counterInterval = this.getUint8();
+        const channelParam2 = this.getUint8();
+        return { channelParam1, counterInterval, channelParam2 };
+    };
+    CommandBinaryBuffer$2.prototype.setDemandParameters = function (parameters) {
+        this.setUint8(parameters.channelParam1);
+        this.setUint8(parameters.counterInterval);
+        this.setUint8(parameters.channelParam2);
+        this.setUint8(0);
+    };
     CommandBinaryBuffer$2.prototype.getDayMaxDemandResponse = function () {
         const date = this.getDate();
         const power = new Array(TARIFF_NUMBER$1).fill(0).map(() => ({
@@ -1702,6 +1714,8 @@
     const getBuildVersion$3 = 0x70;
     const getOperatorParametersExtended3$3 = 0x71;
     const setOperatorParametersExtended3$3 = 0x72;
+    const setDemandParameters = 0x74;
+    const getDemandParameters = 0x75;
     const getDemand$3 = 0x76;
     const getMeterInfo$3 = 0x7a;
 
@@ -1721,6 +1735,7 @@
         getDayMaxDemandPrevious: getDayMaxDemandPrevious,
         getDayProfile: getDayProfile$3,
         getDemand: getDemand$3,
+        getDemandParameters: getDemandParameters,
         getDeviceId: getDeviceId$3,
         getDeviceType: getDeviceType$3,
         getDisplayParam: getDisplayParam$3,
@@ -1760,6 +1775,7 @@
         setCorrectTime: setCorrectTime$3,
         setDateTime: setDateTime$3,
         setDayProfile: setDayProfile$3,
+        setDemandParameters: setDemandParameters,
         setDisplayParam: setDisplayParam$3,
         setOperatorParameters: setOperatorParameters$3,
         setOperatorParametersExtended3: setOperatorParametersExtended3$3,
@@ -2236,9 +2252,9 @@
             ]
         }
     };
-    const fromBytes$26 = (data) => {
-        if (data.length !== maxSize$26) {
-            throw new Error(`Wrong buffer size: ${data.length}.`);
+    const fromBytes$26 = (bytes) => {
+        if (bytes.length !== maxSize$26) {
+            throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
         return {};
     };
@@ -4868,6 +4884,7 @@
         getDayMaxPower: getDayMaxPower,
         getDayProfile: getDayProfile$3,
         getDemand: getDemand$3,
+        getDemandParameters: getDemandParameters,
         getDeviceId: getDeviceId$3,
         getDeviceType: getDeviceType$3,
         getDisplayParam: getDisplayParam$3,
@@ -4907,6 +4924,7 @@
         setCorrectTime: setCorrectTime$3,
         setDateTime: setDateTime$3,
         setDayProfile: setDayProfile$3,
+        setDemandParameters: setDemandParameters,
         setDisplayParam: setDisplayParam$3,
         setOperatorParameters: setOperatorParameters$3,
         setOperatorParametersExtended3: setOperatorParametersExtended3$3,
@@ -8426,8 +8444,8 @@
             ]
         }
     };
-    const fromBytes$12 = (data) => {
-        const buffer = new CommandBinaryBuffer$2(data);
+    const fromBytes$12 = (bytes) => {
+        const buffer = new CommandBinaryBuffer$2(bytes);
         return buffer.getDeviceType();
     };
     const toBytes$12 = (parameters) => {
@@ -10250,8 +10268,8 @@
             ]
         }
     };
-    const fromBytes$v = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$v = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         const operatingSeconds = buffer.getUint32();
         const tbadVAAll = buffer.getUint32();
         const tbadVBAll = buffer.getUint32();
@@ -11315,8 +11333,8 @@
             ]
         }
     };
-    const fromBytes$j = (data) => {
-        const buffer = new CommandBinaryBuffer(data);
+    const fromBytes$j = (bytes) => {
+        const buffer = new CommandBinaryBuffer(bytes);
         return {
             temperature: buffer.getInt16(),
             frequency: buffer.getUint16(),

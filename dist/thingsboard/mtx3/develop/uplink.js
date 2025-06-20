@@ -194,6 +194,8 @@ var fromBytes, getDataSegment;
   var getBuildVersion$1 = 0x70;
   var getOperatorParametersExtended3$1 = 0x71;
   var setOperatorParametersExtended3$1 = 0x72;
+  var setDemandParameters = 0x74;
+  var getDemandParameters = 0x75;
   var getDemand$1 = 0x76;
   var getMeterInfo$1 = 0x7a;
 
@@ -213,6 +215,7 @@ var fromBytes, getDataSegment;
     getDayMaxDemandPrevious: getDayMaxDemandPrevious,
     getDayProfile: getDayProfile$1,
     getDemand: getDemand$1,
+    getDemandParameters: getDemandParameters,
     getDeviceId: getDeviceId$1,
     getDeviceType: getDeviceType$1,
     getDisplayParam: getDisplayParam$1,
@@ -252,6 +255,7 @@ var fromBytes, getDataSegment;
     setCorrectTime: setCorrectTime$1,
     setDateTime: setDateTime$1,
     setDayProfile: setDayProfile$1,
+    setDemandParameters: setDemandParameters,
     setDisplayParam: setDisplayParam$1,
     setOperatorParameters: setOperatorParameters$1,
     setOperatorParametersExtended3: setOperatorParametersExtended3$1,
@@ -287,6 +291,7 @@ var fromBytes, getDataSegment;
     getDayMaxPower: getDayMaxPower,
     getDayProfile: getDayProfile$1,
     getDemand: getDemand$1,
+    getDemandParameters: getDemandParameters,
     getDeviceId: getDeviceId$1,
     getDeviceType: getDeviceType$1,
     getDisplayParam: getDisplayParam$1,
@@ -326,6 +331,7 @@ var fromBytes, getDataSegment;
     setCorrectTime: setCorrectTime$1,
     setDateTime: setDateTime$1,
     setDayProfile: setDayProfile$1,
+    setDemandParameters: setDemandParameters,
     setDisplayParam: setDisplayParam$1,
     setOperatorParameters: setOperatorParameters$1,
     setOperatorParametersExtended3: setOperatorParametersExtended3$1,
@@ -1356,7 +1362,7 @@ var fromBytes, getDataSegment;
   var extendedCurrentValues2RelayStatus2Mask = {
     RELAY_COSFI: 2 ** 0,
     RELAY_SALDO_OFF_FLAG: 2 ** 1,
-    RELAY_UNEQUIL_CURRENT_OFF: 2 ** 2,
+    RELAY_UNEQUAL_CURRENT_OFF: 2 ** 2,
     RELAY_BIPOLAR_POWER_OFF: 2 ** 3,
     RELAY_SALDO_OFF_ON_MAX_POWER: 2 ** 4,
     RELAY_HARD_ST1: 2 ** 5
@@ -1378,7 +1384,7 @@ var fromBytes, getDataSegment;
     MIN_COS_FI: 2 ** 5
   };
   var extendedCurrentValues2Status3Mask = {
-    UNEQUIL_CURRENT: 2 ** 0,
+    UNEQUAL_CURRENT: 2 ** 0,
     BIPOLAR_POWER: 2 ** 1,
     POWER_A_NEGATIVE: 2 ** 6,
     POWER_B_NEGATIVE: 2 ** 7
@@ -1979,6 +1985,22 @@ var fromBytes, getDataSegment;
     this.setUint8(parameters.count);
     this.setUint8(parameters.period);
   };
+  CommandBinaryBuffer$2.prototype.getDemandParameters = function () {
+    var channelParam1 = this.getUint8();
+    var counterInterval = this.getUint8();
+    var channelParam2 = this.getUint8();
+    return {
+      channelParam1: channelParam1,
+      counterInterval: counterInterval,
+      channelParam2: channelParam2
+    };
+  };
+  CommandBinaryBuffer$2.prototype.setDemandParameters = function (parameters) {
+    this.setUint8(parameters.channelParam1);
+    this.setUint8(parameters.counterInterval);
+    this.setUint8(parameters.channelParam2);
+    this.setUint8(0);
+  };
   CommandBinaryBuffer$2.prototype.getDayMaxDemandResponse = function () {
     var _this0 = this;
     var date = this.getDate();
@@ -2542,8 +2564,8 @@ var fromBytes, getDataSegment;
   };
 
   var id$11 = getDeviceType$1;
-  var fromBytes$13 = function (data) {
-    var buffer = new CommandBinaryBuffer$2(data);
+  var fromBytes$13 = function (bytes) {
+    var buffer = new CommandBinaryBuffer$2(bytes);
     return buffer.getDeviceType();
   };
 
@@ -2866,7 +2888,7 @@ var fromBytes, getDataSegment;
     return {};
   };
 
-  var id$F = setOperatorParametersExtended3$1;
+  var id$F = setOperatorParameters$1;
   var maxSize$c = 0;
   var fromBytes$H = function (bytes) {
     if (bytes.length !== maxSize$c) {
@@ -2875,7 +2897,7 @@ var fromBytes, getDataSegment;
     return {};
   };
 
-  var id$E = setOperatorParameters$1;
+  var id$E = setOperatorParametersExtended3$1;
   var maxSize$b = 0;
   var fromBytes$G = function (bytes) {
     if (bytes.length !== maxSize$b) {
@@ -4603,8 +4625,8 @@ var fromBytes, getDataSegment;
   };
 
   var id$u = getCurrentStatusMeter;
-  var fromBytes$w = function (data) {
-    var buffer = new CommandBinaryBuffer(data);
+  var fromBytes$w = function (bytes) {
+    var buffer = new CommandBinaryBuffer(bytes);
     var operatingSeconds = buffer.getUint32();
     var tbadVAAll = buffer.getUint32();
     var tbadVBAll = buffer.getUint32();
@@ -4793,8 +4815,8 @@ var fromBytes, getDataSegment;
   };
 
   var id$i = getExtendedCurrentValues;
-  var fromBytes$k = function (data) {
-    var buffer = new CommandBinaryBuffer(data);
+  var fromBytes$k = function (bytes) {
+    var buffer = new CommandBinaryBuffer(bytes);
     return {
       temperature: buffer.getInt16(),
       frequency: buffer.getUint16(),
@@ -5069,8 +5091,8 @@ var fromBytes, getDataSegment;
   fromBytesMap[id$I] = fromBytes$K;
   fromBytesMap[id$H] = fromBytes$J;
   fromBytesMap[id$G] = fromBytes$I;
-  fromBytesMap[id$E] = fromBytes$G;
   fromBytesMap[id$F] = fromBytes$H;
+  fromBytesMap[id$E] = fromBytes$G;
   fromBytesMap[id$D] = fromBytes$F;
   fromBytesMap[id$C] = fromBytes$E;
   fromBytesMap[id$B] = fromBytes$D;
@@ -5108,7 +5130,7 @@ var fromBytes, getDataSegment;
   fromBytesMap[id$5] = fromBytes$7;
   fromBytesMap[id$4] = fromBytes$6;
   fromBytesMap[id$3] = fromBytes$5;
-  fromBytesMap[id$E] = fromBytes$G;
+  fromBytesMap[id$F] = fromBytes$H;
   fromBytesMap[id$2] = fromBytes$4;
   fromBytesMap[id$1] = fromBytes$3;
   fromBytesMap[id] = fromBytes$2;

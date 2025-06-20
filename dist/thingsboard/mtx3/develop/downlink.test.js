@@ -1205,7 +1205,7 @@ var logs = '';
   var extendedCurrentValues2RelayStatus2Mask = {
     RELAY_COSFI: Math.pow(2, 0),
     RELAY_SALDO_OFF_FLAG: Math.pow(2, 1),
-    RELAY_UNEQUIL_CURRENT_OFF: Math.pow(2, 2),
+    RELAY_UNEQUAL_CURRENT_OFF: Math.pow(2, 2),
     RELAY_BIPOLAR_POWER_OFF: Math.pow(2, 3),
     RELAY_SALDO_OFF_ON_MAX_POWER: Math.pow(2, 4),
     RELAY_HARD_ST1: Math.pow(2, 5)
@@ -1227,7 +1227,7 @@ var logs = '';
     MIN_COS_FI: Math.pow(2, 5)
   };
   var extendedCurrentValues2Status3Mask = {
-    UNEQUIL_CURRENT: Math.pow(2, 0),
+    UNEQUAL_CURRENT: Math.pow(2, 0),
     BIPOLAR_POWER: Math.pow(2, 1),
     POWER_A_NEGATIVE: Math.pow(2, 6),
     POWER_B_NEGATIVE: Math.pow(2, 7)
@@ -1837,6 +1837,22 @@ var logs = '';
     this.setUint8(parameters.count);
     this.setUint8(parameters.period);
   };
+  CommandBinaryBuffer$2.prototype.getDemandParameters = function () {
+    var channelParam1 = this.getUint8();
+    var counterInterval = this.getUint8();
+    var channelParam2 = this.getUint8();
+    return {
+      channelParam1: channelParam1,
+      counterInterval: counterInterval,
+      channelParam2: channelParam2
+    };
+  };
+  CommandBinaryBuffer$2.prototype.setDemandParameters = function (parameters) {
+    this.setUint8(parameters.channelParam1);
+    this.setUint8(parameters.counterInterval);
+    this.setUint8(parameters.channelParam2);
+    this.setUint8(0);
+  };
   CommandBinaryBuffer$2.prototype.getDayMaxDemandResponse = function () {
     var _this0 = this;
     var date = this.getDate();
@@ -1983,6 +1999,8 @@ var logs = '';
   var getBuildVersion$2 = 0x70;
   var getOperatorParametersExtended3$2 = 0x71;
   var setOperatorParametersExtended3$2 = 0x72;
+  var setDemandParameters = 0x74;
+  var getDemandParameters = 0x75;
   var getDemand$2 = 0x76;
   var getMeterInfo$2 = 0x7a;
 
@@ -2002,6 +2020,7 @@ var logs = '';
     getDayMaxDemandPrevious: getDayMaxDemandPrevious,
     getDayProfile: getDayProfile$2,
     getDemand: getDemand$2,
+    getDemandParameters: getDemandParameters,
     getDeviceId: getDeviceId$2,
     getDeviceType: getDeviceType$2,
     getDisplayParam: getDisplayParam$2,
@@ -2041,6 +2060,7 @@ var logs = '';
     setCorrectTime: setCorrectTime$2,
     setDateTime: setDateTime$2,
     setDayProfile: setDayProfile$2,
+    setDemandParameters: setDemandParameters,
     setDisplayParam: setDisplayParam$2,
     setOperatorParameters: setOperatorParameters$2,
     setOperatorParametersExtended3: setOperatorParametersExtended3$2,
@@ -2517,9 +2537,9 @@ var logs = '';
       bytes: [0x04, 0x00]
     }
   };
-  var fromBytes$Y = function fromBytes(data) {
-    if (data.length !== maxSize$Y) {
-      throw new Error("Wrong buffer size: ".concat(data.length, "."));
+  var fromBytes$Y = function fromBytes(bytes) {
+    if (bytes.length !== maxSize$Y) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
     return {};
   };
@@ -5179,6 +5199,7 @@ var logs = '';
     getDayMaxPower: getDayMaxPower,
     getDayProfile: getDayProfile$2,
     getDemand: getDemand$2,
+    getDemandParameters: getDemandParameters,
     getDeviceId: getDeviceId$2,
     getDeviceType: getDeviceType$2,
     getDisplayParam: getDisplayParam$2,
@@ -5218,6 +5239,7 @@ var logs = '';
     setCorrectTime: setCorrectTime$2,
     setDateTime: setDateTime$2,
     setDayProfile: setDayProfile$2,
+    setDemandParameters: setDemandParameters,
     setDisplayParam: setDisplayParam$2,
     setOperatorParameters: setOperatorParameters$2,
     setOperatorParametersExtended3: setOperatorParametersExtended3$2,

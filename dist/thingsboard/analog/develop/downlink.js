@@ -396,9 +396,9 @@ var toBytes, getBase64FromBytes;
   };
 
   var toBytes$u = function (commandId) {
-    var commandData = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    var headerData = toBytes$v(commandId, commandData.length);
-    return [].concat(_toConsumableArray(headerData), _toConsumableArray(commandData));
+    var commandBytes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+    var headerData = toBytes$v(commandId, commandBytes.length);
+    return [].concat(_toConsumableArray(headerData), _toConsumableArray(commandBytes));
   };
 
   var setTime2000 = 0x02;
