@@ -550,15 +550,6 @@ var fromBytes, getBytesFromHex;
   var extractBits = function (value, bitsNumber, startIndex) {
     return (1 << bitsNumber) - 1 & value >> startIndex - 1;
   };
-  var fillBits = function (value, bitsNumber, startIndex, valueToSet) {
-    var mask = (1 << bitsNumber) - 1 << startIndex - 1;
-    var newValueToSet = valueToSet;
-    var result = value;
-    result &= ~mask;
-    newValueToSet <<= startIndex - 1;
-    result |= newValueToSet;
-    return result;
-  };
 
   var getHexFromBytes = (function (bytes) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -597,9 +588,6 @@ var fromBytes, getBytesFromHex;
 
   var INITIAL_YEAR_TIMESTAMP = 946684800000;
   var MILLISECONDS_IN_SECONDS = 1000;
-  var getDateFromTime2000 = function (time2000) {
-    return new Date(INITIAL_YEAR_TIMESTAMP + time2000 * MILLISECONDS_IN_SECONDS);
-  };
   var getTime2000FromDate = function (date) {
     return (date.getTime() - INITIAL_YEAR_TIMESTAMP) / MILLISECONDS_IN_SECONDS;
   };
@@ -772,8 +760,6 @@ var fromBytes, getBytesFromHex;
   var PARAMETER_RX2_FREQUENCY_COEFFICIENT = 100;
   var SERIAL_NUMBER_SIZE = 6;
   var MAGNETIC_INFLUENCE_BIT_INDEX = 8;
-  var LEGACY_HOUR_COUNTER_SIZE = 2 + 4;
-  var LEGACY_HOUR_DIFF_SIZE = 2;
   var GAS_HARDWARE_TYPES = [GASI2, GASI3, GASI1, GASIC, NBIOT];
   var TWO_CHANNELS_HARDWARE_TYPES = [IMP2AS, IMP2EU, IMP2IN, NOVATOR];
   var ELIMP_HARDWARE_TYPES = [ELIMP];
@@ -1001,13 +987,13 @@ var fromBytes, getBytesFromHex;
     get: function (buffer) {
       return {
         meterValue: buffer.getUint32(),
-        pulseCoefficient: buffer.getPulseCoefficient(),
+        pulseCoefficient: getPulseCoefficient(buffer),
         value: buffer.getUint32()
       };
     },
     set: function (buffer, parameter) {
       buffer.setUint32(parameter.meterValue);
-      buffer.setPulseCoefficient(parameter.pulseCoefficient);
+      setPulseCoefficient(buffer, parameter.pulseCoefficient);
       buffer.setUint32(parameter.value);
     }
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, ABSOLUTE_DATA_ENABLE, {
@@ -1055,33 +1041,33 @@ var fromBytes, getBytesFromHex;
   }), ABSOLUTE_DATA_MULTI_CHANNEL, {
     get: function (buffer) {
       return {
-        channel: buffer.getChannelValue(),
+        channel: getChannelValue(buffer),
         meterValue: buffer.getUint32(),
-        pulseCoefficient: buffer.getPulseCoefficient(),
+        pulseCoefficient: getPulseCoefficient(buffer),
         value: buffer.getUint32()
       };
     },
     set: function (buffer, parameter) {
-      buffer.setChannelValue(parameter.channel);
+      setChannelValue(buffer, parameter.channel);
       buffer.setUint32(parameter.meterValue);
-      buffer.setPulseCoefficient(parameter.pulseCoefficient);
+      setPulseCoefficient(buffer, parameter.pulseCoefficient);
       buffer.setUint32(parameter.value);
     }
   }), ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL, {
     get: function (buffer) {
       return {
-        channel: buffer.getChannelValue(),
+        channel: getChannelValue(buffer),
         state: buffer.getUint8()
       };
     },
     set: function (buffer, parameter) {
-      buffer.setChannelValue(parameter.channel);
+      setChannelValue(buffer, parameter.channel);
       buffer.setUint8(parameter.state);
     }
   }), PULSE_CHANNELS_SCAN_CONFIG, {
     get: function (buffer) {
       return {
-        channelList: buffer.getChannels(),
+        channelList: getChannels(buffer),
         pullUpTime: buffer.getUint8(),
         scanTime: buffer.getUint8()
       };
@@ -1093,7 +1079,7 @@ var fromBytes, getBytesFromHex;
       if (parameter.scanTime < 15) {
         throw new Error('minimal value for scanTime - 15');
       }
-      buffer.setChannels(parameter.channelList.map(function (index) {
+      setChannels(buffer, parameter.channelList.map(function (index) {
         return {
           index: index
         };
@@ -1319,10 +1305,10 @@ var fromBytes, getBytesFromHex;
     }
   }), CHANNEL_TYPE, {
     get: function (buffer) {
-      return buffer.getChannelType();
+      return getChannelType(buffer);
     },
     set: function (buffer, parameter) {
-      return buffer.setChannelType(parameter);
+      return setChannelType(buffer, parameter);
     }
   }), EXTRA_PAYLOAD_ENABLE, {
     get: function (buffer) {
@@ -1372,69 +1358,28 @@ var fromBytes, getBytesFromHex;
       buffer.setUint8(parameter.enable);
     }
   }));
-  function CommandBinaryBuffer(dataOrLength) {
-    var isLittleEndian = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-    BinaryBuffer.call(this, dataOrLength, isLittleEndian);
-  }
-  CommandBinaryBuffer.prototype = Object.create(BinaryBuffer.prototype);
-  CommandBinaryBuffer.prototype.constructor = CommandBinaryBuffer;
-  CommandBinaryBuffer.getMagneticInfluenceBit = function (byte) {
+  var getMagneticInfluenceBit = function (byte) {
     return !!extractBits(byte, 1, MAGNETIC_INFLUENCE_BIT_INDEX);
   };
-  CommandBinaryBuffer.setMagneticInfluenceBit = function (byte, value) {
-    return fillBits(byte, 1, MAGNETIC_INFLUENCE_BIT_INDEX, +value);
-  };
-  CommandBinaryBuffer.getLegacyHourCounterSize = function (hourCounter) {
-    return LEGACY_HOUR_COUNTER_SIZE + hourCounter.diff.length * LEGACY_HOUR_DIFF_SIZE;
-  };
-  CommandBinaryBuffer.prototype.getExtendedValue = function () {
+  var getExtendedValue = function (buffer) {
     var value = 0;
     var isByteExtended = true;
     var position = 0;
-    while (isByteExtended && this.offset <= this.data.length) {
-      var byte = this.getUint8();
+    while (isByteExtended && buffer.offset <= buffer.data.length) {
+      var byte = buffer.getUint8();
       isByteExtended = !!(byte & EXTEND_BIT_MASK);
       value += (byte & 0x7f) << 7 * position >>> 0;
       ++position;
     }
     return value;
   };
-  CommandBinaryBuffer.prototype.setExtendedValue = function (value) {
-    var _this = this;
-    if (value === 0) {
-      this.setUint8(0);
-      return;
-    }
-    var data = [];
-    var encodedValue = value;
-    while (encodedValue) {
-      data.push(EXTEND_BIT_MASK | encodedValue & 0x7f);
-      encodedValue >>>= 7;
-    }
-    var lastByte = data.pop();
-    if (lastByte) {
-      data.push(lastByte & 0x7f);
-    }
-    data.forEach(function (extendedValue) {
-      return _this.setUint8(extendedValue);
-    });
+  var getTime = function (buffer) {
+    return buffer.getUint32();
   };
-  CommandBinaryBuffer.prototype.getExtendedValueSize = function (bits) {
-    var extBits = Math.ceil(bits / 7);
-    var totalBits = bits + extBits;
-    var extBytes = Math.ceil(totalBits / 8);
-    return extBytes;
-  };
-  CommandBinaryBuffer.prototype.getTime = function () {
-    return this.getUint32();
-  };
-  CommandBinaryBuffer.prototype.setTime = function (value) {
-    this.setUint32(value);
-  };
-  CommandBinaryBuffer.prototype.getBatteryVoltage = function () {
-    var lowVoltageByte = this.getUint8();
-    var lowAndHightVoltageByte = this.getUint8();
-    var highVoltageByte = this.getUint8();
+  var getBatteryVoltage = function (buffer) {
+    var lowVoltageByte = buffer.getUint8();
+    var lowAndHightVoltageByte = buffer.getUint8();
+    var highVoltageByte = buffer.getUint8();
     var underLowLoad = lowVoltageByte << 4;
     underLowLoad |= (lowAndHightVoltageByte & 0xf0) >> 4;
     var underHighLoad = (lowAndHightVoltageByte & 0x0f) << 8 | highVoltageByte;
@@ -1449,50 +1394,24 @@ var fromBytes, getBytesFromHex;
       underHighLoad: underHighLoad
     };
   };
-  CommandBinaryBuffer.prototype.setBatteryVoltage = function (batteryVoltage) {
-    var _this2 = this;
-    var underLowLoad = batteryVoltage.underLowLoad,
-      underHighLoad = batteryVoltage.underHighLoad;
-    if (underLowLoad === undefined) {
-      underLowLoad = UNKNOWN_BATTERY_VOLTAGE;
-    }
-    if (underHighLoad === undefined) {
-      underHighLoad = UNKNOWN_BATTERY_VOLTAGE;
-    }
-    var lowVoltageByte = underLowLoad >> 4 & 0xff;
-    var lowAndHighVoltageByte = (underLowLoad & 0x0f) << 4 | underHighLoad >> 8 & 0x0f;
-    var highVoltageByte = underHighLoad & 0xff;
-    [lowVoltageByte, lowAndHighVoltageByte, highVoltageByte].forEach(function (byte) {
-      return _this2.setUint8(byte);
-    });
+  var getLegacyCounterValue = function (buffer) {
+    return buffer.getUint24();
   };
-  CommandBinaryBuffer.prototype.getLegacyCounterValue = function () {
-    return this.getUint24();
-  };
-  CommandBinaryBuffer.prototype.setLegacyCounterValue = function (value) {
-    this.setUint24(value);
-  };
-  CommandBinaryBuffer.prototype.getLegacyCounter = function () {
-    var byte = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getUint8();
-    var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-    var value = this.getLegacyCounterValue();
+  var getLegacyCounter = function (buffer) {
+    var byte = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : buffer.getUint8();
+    var isArchiveValue = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+    var value = getLegacyCounterValue(buffer);
     return {
-      isMagneticInfluence: CommandBinaryBuffer.getMagneticInfluenceBit(byte),
+      isMagneticInfluence: getMagneticInfluenceBit(byte),
       value: isArchiveValue && value === EMPTY_VALUE ? 0 : value
     };
   };
-  CommandBinaryBuffer.prototype.setLegacyCounter = function (counter) {
-    var byte = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-    var isArchiveValue = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-    this.setUint8(CommandBinaryBuffer.setMagneticInfluenceBit(byte, counter.isMagneticInfluence));
-    this.setLegacyCounterValue(isArchiveValue && counter.value === 0 ? EMPTY_VALUE : counter.value);
-  };
-  CommandBinaryBuffer.prototype.getChannels = function () {
+  var getChannels = function (buffer) {
     var channelList = [];
     var extended = true;
     var channelIndex = 1;
     while (extended) {
-      var byte = this.getUint8();
+      var byte = buffer.getUint8();
       var bits = byte.toString(2).padStart(LAST_BIT_INDEX + 1, '0').split('').reverse();
       bits.forEach(function (bit, index) {
         var value = Number(bit);
@@ -1508,10 +1427,9 @@ var fromBytes, getBytesFromHex;
     }
     return channelList;
   };
-  CommandBinaryBuffer.prototype.setChannels = function (channelList) {
-    var _this3 = this;
+  var setChannels = function (buffer, channelList) {
     if (channelList.length === 0) {
-      this.setUint8(0);
+      buffer.setUint8(0);
       return;
     }
     channelList.sort(function (a, b) {
@@ -1543,36 +1461,35 @@ var fromBytes, getBytesFromHex;
       byte = 0;
     });
     data.forEach(function (value) {
-      return _this3.setUint8(value);
+      return buffer.setUint8(value);
     });
   };
-  CommandBinaryBuffer.prototype.getChannelValue = function () {
-    return this.getUint8() + 1;
+  var getChannelValue = function (buffer) {
+    return buffer.getUint8() + 1;
   };
-  CommandBinaryBuffer.prototype.setChannelValue = function (value) {
+  var setChannelValue = function (buffer, value) {
     if (value < 1) {
       throw new Error('channel must be 1 or greater');
     }
-    this.setUint8(value - 1);
+    buffer.setUint8(value - 1);
   };
-  CommandBinaryBuffer.prototype.getChannelsValuesWithHourDiff = function () {
-    var _this4 = this;
-    var isArchiveValue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-    var date = this.getDate();
-    var _this$getHours = this.getHours(),
-      hour = _this$getHours.hour,
-      hours = _this$getHours.hours;
-    var channels = this.getChannels();
+  var getChannelsValuesWithHourDiff = function (buffer) {
+    var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    var date = getDate(buffer);
+    var _getHours = getHours(buffer),
+      hour = _getHours.hour,
+      hours = _getHours.hours;
+    var channels = getChannels(buffer);
     var channelList = [];
     date.setUTCHours(hour);
     channels.forEach(function (channelIndex) {
       var diff = [];
-      var value = _this4.getExtendedValue();
+      var value = getExtendedValue(buffer);
       for (var diffHour = 1; diffHour < hours; ++diffHour) {
-        diff.push(_this4.getExtendedValue());
+        diff.push(getExtendedValue(buffer));
       }
       channelList.push({
-        value: value === isArchiveValue && EMPTY_VALUE ? 0 : value,
+        value: isArchiveValue && value === EMPTY_VALUE ? 0 : value,
         diff: diff,
         index: channelIndex
       });
@@ -1583,25 +1500,8 @@ var fromBytes, getBytesFromHex;
       channelList: channelList
     };
   };
-  CommandBinaryBuffer.prototype.setChannelsValuesWithHourDiff = function (hours, startTime2000, channelList) {
-    var _this5 = this;
-    var isArchiveValue = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-    var date = getDateFromTime2000(startTime2000);
-    var hour = date.getUTCHours();
-    this.setDate(date);
-    this.setHours(hour, hours);
-    this.setChannels(channelList);
-    channelList.forEach(function (_ref3) {
-      var value = _ref3.value,
-        diff = _ref3.diff;
-      _this5.setExtendedValue(isArchiveValue && value === 0 ? EMPTY_VALUE : value);
-      diff.forEach(function (diffValue) {
-        return _this5.setExtendedValue(diffValue);
-      });
-    });
-  };
-  CommandBinaryBuffer.prototype.getHours = function () {
-    var byte = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.getUint8();
+  var getHours = function (buffer) {
+    var byte = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : buffer.getUint8();
     if (byte === 0) {
       return {
         hours: 0,
@@ -1615,40 +1515,16 @@ var fromBytes, getBytesFromHex;
       hour: hour
     };
   };
-  CommandBinaryBuffer.prototype.setHours = function (hour, hours) {
-    if (hour === 0 && hours === 0) {
-      this.setUint8(0);
-      return;
-    }
-    this.setUint8((hours - 1 & 0x07) << 5 | hour & 0x1f);
-  };
-  CommandBinaryBuffer.prototype.getDate = function () {
-    var yearMonthByte = this.getUint8();
-    var monthDateByte = this.getUint8();
+  var getDate = function (buffer) {
+    var yearMonthByte = buffer.getUint8();
+    var monthDateByte = buffer.getUint8();
     var year = yearMonthByte >> YEAR_START_INDEX;
     var month = (yearMonthByte & 0x01) << MONTH_BIT_SIZE - YEAR_START_INDEX | monthDateByte >> DATE_BIT_SIZE;
     var monthDay = monthDateByte & 0x1f;
     return new Date(Date.UTC(year + INITIAL_YEAR, month - 1, monthDay, 0, 0, 0, 0));
   };
-  CommandBinaryBuffer.prototype.setDate = function (dateOrTime) {
-    var _this6 = this;
-    var date;
-    if (dateOrTime instanceof Date) {
-      date = dateOrTime;
-    } else {
-      date = getDateFromTime2000(dateOrTime);
-    }
-    var year = date.getUTCFullYear() - INITIAL_YEAR;
-    var month = date.getUTCMonth() + 1;
-    var day = date.getUTCDate();
-    var yearMonthByte = year << YEAR_START_INDEX | month >> MONTH_BIT_SIZE - YEAR_START_INDEX;
-    var monthDateByte = (month & 0x07) << DATE_BIT_SIZE | day;
-    [yearMonthByte, monthDateByte].forEach(function (byte) {
-      return _this6.setUint8(byte);
-    });
-  };
-  CommandBinaryBuffer.prototype.getPulseCoefficient = function () {
-    var pulseCoefficient = this.getUint8();
+  var getPulseCoefficient = function (buffer) {
+    var pulseCoefficient = buffer.getUint8();
     if (isMSBSet(pulseCoefficient)) {
       var value = byteToPulseCoefficientMap[pulseCoefficient];
       if (value) {
@@ -1658,51 +1534,39 @@ var fromBytes, getBytesFromHex;
     }
     return pulseCoefficient;
   };
-  CommandBinaryBuffer.prototype.setPulseCoefficient = function (value) {
+  var setPulseCoefficient = function (buffer, value) {
     if (value in pulseCoefficientToByteMap) {
       var byte = pulseCoefficientToByteMap[value];
       if (byte) {
-        this.setUint8(byte);
+        buffer.setUint8(byte);
       } else {
         throw new Error('pulseCoefficient MSB is set, but value unknown');
       }
     } else {
-      this.setUint8(value);
+      buffer.setUint8(value);
     }
   };
-  CommandBinaryBuffer.prototype.getChannelsWithAbsoluteValues = function () {
-    var _this7 = this;
-    var channels = this.getChannels();
+  var getChannelsWithAbsoluteValues = function (buffer) {
+    var channels = getChannels(buffer);
     var channelList = [];
     channels.forEach(function (channelIndex) {
       channelList.push({
-        pulseCoefficient: _this7.getPulseCoefficient(),
-        value: _this7.getExtendedValue(),
+        pulseCoefficient: getPulseCoefficient(buffer),
+        value: getExtendedValue(buffer),
         index: channelIndex
       });
     });
     return channelList;
   };
-  CommandBinaryBuffer.prototype.setChannelsWithAbsoluteValues = function (channelList) {
-    var _this8 = this;
-    this.setChannels(channelList);
-    channelList.forEach(function (_ref4) {
-      var value = _ref4.value,
-        pulseCoefficient = _ref4.pulseCoefficient;
-      _this8.setPulseCoefficient(pulseCoefficient);
-      _this8.setExtendedValue(value);
-    });
-  };
-  CommandBinaryBuffer.prototype.getChannelsAbsoluteValuesWithHourDiff = function (hours) {
-    var _this9 = this;
-    var channels = this.getChannels();
+  var getChannelsAbsoluteValuesWithHourDiff = function (buffer, hours) {
+    var channels = getChannels(buffer);
     var channelList = [];
     channels.forEach(function (channelIndex) {
-      var pulseCoefficient = _this9.getPulseCoefficient();
-      var value = _this9.getExtendedValue();
+      var pulseCoefficient = getPulseCoefficient(buffer);
+      var value = getExtendedValue(buffer);
       var diff = [];
       for (var hourIndex = 1; hourIndex < hours; ++hourIndex) {
-        diff.push(_this9.getExtendedValue());
+        diff.push(getExtendedValue(buffer));
       }
       channelList.push({
         diff: diff,
@@ -1713,137 +1577,31 @@ var fromBytes, getBytesFromHex;
     });
     return channelList;
   };
-  CommandBinaryBuffer.prototype.setChannelsAbsoluteValuesWithHourDiff = function (channelList) {
-    var _this0 = this;
-    this.setChannels(channelList);
-    channelList.forEach(function (_ref5) {
-      var value = _ref5.value,
-        diff = _ref5.diff,
-        pulseCoefficient = _ref5.pulseCoefficient;
-      _this0.setPulseCoefficient(pulseCoefficient);
-      _this0.setExtendedValue(value);
-      diff.forEach(function (diffValue) {
-        return _this0.setExtendedValue(diffValue);
-      });
-    });
-  };
-  CommandBinaryBuffer.prototype.getEventStatus = function (hardwareType) {
+  var getEventStatus = function (buffer, hardwareType) {
     var status;
     if (GAS_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-      status = toObject(gasBitMask, this.getUint8());
+      status = toObject(gasBitMask, buffer.getUint8());
     } else if (TWO_CHANNELS_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-      status = toObject(twoChannelBitMask, this.getUint8());
+      status = toObject(twoChannelBitMask, buffer.getUint8());
     } else if (ELIMP_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-      status = toObject(elimpBitMask, this.getUint8());
+      status = toObject(elimpBitMask, buffer.getUint8());
     } else if (FOUR_CHANNELS_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-      status = toObject(fourChannelBitMask, this.getUint16(true));
+      status = toObject(fourChannelBitMask, buffer.getUint16(true));
     } else if (MTX_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-      status = toObject(mtxBitMask, this.getUint16(true));
+      status = toObject(mtxBitMask, buffer.getUint16(true));
     } else if (hardwareType === US_WATER) {
-      var event = toObject(usWaterMeterEventBitMask, this.getUint8());
+      var event = toObject(usWaterMeterEventBitMask, buffer.getUint8());
       status = {
         event: event,
-        error: this.getUint8()
+        error: buffer.getUint8()
       };
     } else {
       throw new Error('wrong hardwareType');
     }
     return status;
   };
-  CommandBinaryBuffer.prototype.setEventStatus = function (hardwareType, status) {
-    if (GAS_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-      this.setUint8(fromObject(gasBitMask, status));
-    } else if (TWO_CHANNELS_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-      this.setUint8(fromObject(twoChannelBitMask, status));
-    } else if (ELIMP_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-      this.setUint8(fromObject(elimpBitMask, status));
-    } else if (FOUR_CHANNELS_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-      this.setUint16(fromObject(fourChannelBitMask, status) | 1 << 7, true);
-    } else if (MTX_HARDWARE_TYPES.indexOf(hardwareType) !== -1) {
-      this.setUint16(fromObject(mtxBitMask, status), true);
-    } else if (hardwareType === US_WATER) {
-      var data = status;
-      this.setUint8(fromObject(usWaterMeterEventBitMask, data.event));
-      this.setUint8(data.error);
-    } else {
-      throw new Error('wrong hardwareType');
-    }
-  };
-  CommandBinaryBuffer.prototype.getParameter = function () {
-    var id = this.getUint8();
-    var name = deviceParameterNames[id];
-    if (!deviceParameterConvertersMap[id] || !deviceParameterConvertersMap[id].get) {
-      throw new Error("parameter ".concat(id, " is not supported"));
-    }
-    var data = deviceParameterConvertersMap[id].get(this);
-    return {
-      id: id,
-      name: name,
-      data: data
-    };
-  };
-  CommandBinaryBuffer.prototype.setParameter = function (parameter) {
-    var id = parameter.id,
-      data = parameter.data;
-    if (!deviceParameterConvertersMap[id] || !deviceParameterConvertersMap[id].set) {
-      throw new Error("parameter ".concat(id, " is not supported"));
-    }
-    this.setUint8(id);
-    deviceParameterConvertersMap[id].set(this, data);
-  };
-  CommandBinaryBuffer.prototype.getRequestParameter = function () {
-    var id = this.getUint8();
-    var name = deviceParameterNames[id];
-    var data = null;
-    switch (id) {
-      case ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL:
-      case ABSOLUTE_DATA_MULTI_CHANNEL:
-      case CHANNEL_TYPE:
-        data = {
-          channel: this.getChannelValue()
-        };
-        break;
-      case REPORTING_DATA_CONFIG:
-        data = {
-          dataType: this.getUint8()
-        };
-        break;
-      case EVENTS_CONFIG:
-        data = {
-          eventId: this.getUint8()
-        };
-        break;
-    }
-    return {
-      id: id,
-      name: name,
-      data: data
-    };
-  };
-  CommandBinaryBuffer.prototype.setRequestParameter = function (parameter) {
-    var id = parameter.id,
-      parameterData = parameter.data;
-    var data;
-    this.setUint8(id);
-    switch (id) {
-      case ABSOLUTE_DATA_MULTI_CHANNEL:
-      case ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL:
-      case CHANNEL_TYPE:
-        data = parameterData;
-        this.setChannelValue(data.channel);
-        break;
-      case REPORTING_DATA_CONFIG:
-        data = parameterData;
-        this.setUint8(data.dataType);
-        break;
-      case EVENTS_CONFIG:
-        data = parameterData;
-        this.setUint8(data.eventId);
-        break;
-    }
-  };
-  CommandBinaryBuffer.prototype.getResponseParameter = function () {
-    var id = this.getUint8();
+  var getResponseParameter = function (buffer) {
+    var id = buffer.getUint8();
     var name = deviceParameterNames[id];
     var data;
     if (!deviceParameterConvertersMap[id] || !deviceParameterConvertersMap[id].get) {
@@ -1862,7 +1620,7 @@ var fromBytes, getBytesFromHex;
         data = null;
         break;
       default:
-        data = deviceParameterConvertersMap[id].get(this);
+        data = deviceParameterConvertersMap[id].get(buffer);
     }
     return {
       id: id,
@@ -1870,58 +1628,28 @@ var fromBytes, getBytesFromHex;
       data: data
     };
   };
-  CommandBinaryBuffer.prototype.setResponseParameter = function (parameter) {
-    var id = parameter.id,
-      data = parameter.data;
-    if (!deviceParameterConvertersMap[id] || !deviceParameterConvertersMap[id].set) {
-      throw new Error("parameter ".concat(id, " is not supported"));
-    }
-    this.setUint8(id);
-    switch (id) {
-      case MQTT_SESSION_CONFIG:
-      case NBIOT_SSL_CACERT_WRITE:
-      case NBIOT_SSL_CLIENT_CERT_WRITE:
-      case NBIOT_SSL_CLIENT_KEY_WRITE:
-      case NBIOT_SSL_CACERT_SET:
-      case NBIOT_SSL_CLIENT_CERT_SET:
-      case NBIOT_SSL_CLIENT_KEY_SET:
-      case NBIOT_DEVICE_SOFTWARE_UPDATE:
-      case NBIOT_MODULE_FIRMWARE_UPDATE:
-        break;
-      default:
-        deviceParameterConvertersMap[id].set(this, data);
-    }
-  };
-  CommandBinaryBuffer.prototype.getLegacyHourDiff = function () {
-    var stateWithValueByte = this.getUint8();
-    var valueLowerByte = this.getUint8();
+  var getLegacyHourDiff = function (buffer) {
+    var stateWithValueByte = buffer.getUint8();
+    var valueLowerByte = buffer.getUint8();
     return {
-      isMagneticInfluence: CommandBinaryBuffer.getMagneticInfluenceBit(stateWithValueByte),
+      isMagneticInfluence: getMagneticInfluenceBit(stateWithValueByte),
       value: (stateWithValueByte & 0x1f) << 8 | valueLowerByte
     };
   };
-  CommandBinaryBuffer.prototype.setLegacyHourDiff = function (diff) {
-    var _this1 = this;
-    var bytes = [diff.value >> 8, diff.value & 0xff];
-    bytes[0] = CommandBinaryBuffer.setMagneticInfluenceBit(bytes[0], diff.isMagneticInfluence);
-    bytes.forEach(function (byte) {
-      return _this1.setUint8(byte);
-    });
-  };
-  CommandBinaryBuffer.prototype.getLegacyHourCounterWithDiff = function () {
-    var isArchiveValue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-    var date = this.getDate();
-    var byte = this.getUint8();
-    var _this$getHours2 = this.getHours(byte),
-      hour = _this$getHours2.hour;
-    var value = this.getLegacyCounterValue();
+  var getLegacyHourCounterWithDiff = function (buffer) {
+    var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    var date = getDate(buffer);
+    var byte = buffer.getUint8();
+    var _getHours2 = getHours(buffer, byte),
+      hour = _getHours2.hour;
+    var value = getLegacyCounterValue(buffer);
     var counter = {
-      isMagneticInfluence: CommandBinaryBuffer.getMagneticInfluenceBit(byte),
+      isMagneticInfluence: getMagneticInfluenceBit(byte),
       value: isArchiveValue && value === EMPTY_VALUE ? 0 : value
     };
     var diff = [];
-    while (this.offset < this.data.length) {
-      diff.push(this.getLegacyHourDiff());
+    while (buffer.offset < buffer.data.length) {
+      diff.push(getLegacyHourDiff(buffer));
     }
     date.setUTCHours(hour);
     return {
@@ -1930,40 +1658,22 @@ var fromBytes, getBytesFromHex;
       diff: diff
     };
   };
-  CommandBinaryBuffer.prototype.setLegacyHourCounterWithDiff = function (hourCounter) {
-    var _this10 = this;
+  var getChannelsValuesWithHourDiffExtended = function (buffer) {
     var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-    var date = getDateFromTime2000(hourCounter.startTime2000);
-    var hour = date.getUTCHours();
-    var value = hourCounter.counter.value;
-    this.setDate(date);
-    this.setHours(hour, 1);
-    this.seek(this.offset - 1);
-    var byte = this.getUint8();
-    this.seek(this.offset - 1);
-    this.setUint8(CommandBinaryBuffer.setMagneticInfluenceBit(byte, hourCounter.counter.isMagneticInfluence));
-    this.setLegacyCounterValue(isArchiveValue && value === 0 ? EMPTY_VALUE : value);
-    hourCounter.diff.forEach(function (diffItem) {
-      return _this10.setLegacyHourDiff(diffItem);
-    });
-  };
-  CommandBinaryBuffer.prototype.getChannelsValuesWithHourDiffExtended = function () {
-    var _this11 = this;
-    var isArchiveValue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-    var date = this.getDate();
-    var hour = this.getUint8();
-    var hours = this.getUint8();
-    var channels = this.getChannels();
+    var date = getDate(buffer);
+    var hour = buffer.getUint8();
+    var hours = buffer.getUint8();
+    var channels = getChannels(buffer);
     var channelList = [];
     date.setUTCHours(hour);
     channels.forEach(function (channelIndex) {
       var diff = [];
-      var value = _this11.getExtendedValue();
+      var value = getExtendedValue(buffer);
       for (var diffHour = 0; diffHour < hours; ++diffHour) {
-        diff.push(_this11.getExtendedValue());
+        diff.push(getExtendedValue(buffer));
       }
       channelList.push({
-        value: value === isArchiveValue && EMPTY_VALUE ? 0 : value,
+        value: isArchiveValue && value === EMPTY_VALUE ? 0 : value,
         diff: diff,
         index: channelIndex
       });
@@ -1975,56 +1685,31 @@ var fromBytes, getBytesFromHex;
       channelList: channelList
     };
   };
-  CommandBinaryBuffer.prototype.setChannelsValuesWithHourDiffExtended = function (parameters) {
-    var _this12 = this;
-    var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-    var date = getDateFromTime2000(parameters.startTime2000);
-    this.setDate(date);
-    this.setUint8(parameters.hour);
-    this.setUint8(parameters.hours);
-    this.setChannels(parameters.channelList);
-    parameters.channelList.forEach(function (_ref6) {
-      var value = _ref6.value,
-        diff = _ref6.diff;
-      _this12.setExtendedValue(isArchiveValue && value === 0 ? EMPTY_VALUE : value);
-      diff.forEach(function (diffValue) {
-        return _this12.setExtendedValue(diffValue);
-      });
-    });
-  };
-  CommandBinaryBuffer.prototype.getDataSegment = function () {
-    var segmentationSessionId = this.getUint8();
-    var flag = this.getUint8();
+  var getDataSegment = function (buffer) {
+    var segmentationSessionId = buffer.getUint8();
+    var flag = buffer.getUint8();
     return {
       segmentationSessionId: segmentationSessionId,
       segmentIndex: extractBits(flag, 3, 1),
       segmentsNumber: extractBits(flag, 3, 5),
       isLast: Boolean(extractBits(flag, 1, 8)),
-      data: this.getBytesLeft()
+      data: buffer.getBytesLeft()
     };
   };
-  CommandBinaryBuffer.prototype.setDataSegment = function (parameters) {
-    var flag = fillBits(0, 3, 1, parameters.segmentIndex);
-    flag = fillBits(flag, 3, 5, parameters.segmentsNumber);
-    flag = fillBits(flag, 1, 8, +parameters.isLast);
-    this.setUint8(parameters.segmentationSessionId);
-    this.setUint8(flag);
-    this.setBytes(parameters.data);
-  };
-  CommandBinaryBuffer.prototype.getBinarySensor = function () {
-    var activeStateTimeMs = this.getUint16();
+  var getBinarySensor = function (buffer) {
+    var activeStateTimeMs = buffer.getUint16();
     return {
       activeStateTimeMs: activeStateTimeMs
     };
   };
-  CommandBinaryBuffer.prototype.setBinarySensor = function (parameters) {
-    this.setUint16(parameters.activeStateTimeMs);
+  var setBinarySensor = function (buffer, parameters) {
+    buffer.setUint16(parameters.activeStateTimeMs);
   };
-  CommandBinaryBuffer.prototype.getTemperatureSensor = function () {
-    var measurementPeriod = this.getUint16();
-    var hysteresisSec = this.getUint8();
-    var highTemperatureThreshold = this.getInt8();
-    var lowTemperatureThreshold = this.getInt8();
+  var getTemperatureSensor = function (buffer) {
+    var measurementPeriod = buffer.getUint16();
+    var hysteresisSec = buffer.getUint8();
+    var highTemperatureThreshold = buffer.getInt8();
+    var lowTemperatureThreshold = buffer.getInt8();
     return {
       measurementPeriod: measurementPeriod,
       hysteresisSec: hysteresisSec,
@@ -2032,22 +1717,22 @@ var fromBytes, getBytesFromHex;
       lowTemperatureThreshold: lowTemperatureThreshold
     };
   };
-  CommandBinaryBuffer.prototype.setTemperatureSensor = function (parameters) {
-    this.setInt16(parameters.measurementPeriod);
-    this.setInt8(parameters.hysteresisSec);
-    this.setInt8(parameters.highTemperatureThreshold);
-    this.setInt8(parameters.lowTemperatureThreshold);
+  var setTemperatureSensor = function (buffer, parameters) {
+    buffer.setUint16(parameters.measurementPeriod);
+    buffer.setUint8(parameters.hysteresisSec);
+    buffer.setInt8(parameters.highTemperatureThreshold);
+    buffer.setInt8(parameters.lowTemperatureThreshold);
   };
-  CommandBinaryBuffer.prototype.getChannelType = function () {
-    var channel = this.getChannelValue();
-    var type = this.getUint8();
+  var getChannelType = function (buffer) {
+    var channel = getChannelValue(buffer);
+    var type = buffer.getUint8();
     var parameters = {};
     switch (type) {
       case BINARY_SENSOR:
-        parameters = this.getBinarySensor();
+        parameters = getBinarySensor(buffer);
         break;
       case TEMPERATURE_SENSOR:
-        parameters = this.getTemperatureSensor();
+        parameters = getTemperatureSensor(buffer);
         break;
     }
     return {
@@ -2056,18 +1741,18 @@ var fromBytes, getBytesFromHex;
       parameters: parameters
     };
   };
-  CommandBinaryBuffer.prototype.setChannelType = function (_ref7) {
+  var setChannelType = function (buffer, _ref7) {
     var type = _ref7.type,
       channel = _ref7.channel,
       parameters = _ref7.parameters;
-    this.setChannelValue(channel);
-    this.setUint8(type);
+    setChannelValue(buffer, channel);
+    buffer.setUint8(type);
     switch (type) {
       case BINARY_SENSOR:
-        this.setBinarySensor(parameters);
+        setBinarySensor(buffer, parameters);
         break;
       case TEMPERATURE_SENSOR:
-        this.setTemperatureSensor(parameters);
+        setTemperatureSensor(buffer, parameters);
         break;
     }
   };
@@ -2078,8 +1763,8 @@ var fromBytes, getBytesFromHex;
     if (bytes.length > COMMAND_BODY_MAX_SIZE$9) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer(bytes);
-    return buffer.getLegacyCounter();
+    var buffer = new BinaryBuffer(bytes, false);
+    return getLegacyCounter(buffer);
   };
 
   var id$z = currentMc;
@@ -2091,11 +1776,11 @@ var fromBytes, getBytesFromHex;
     var parameters = {
       channelList: []
     };
-    var buffer = new CommandBinaryBuffer(bytes);
-    var channelList = buffer.getChannels();
+    var buffer = new BinaryBuffer(bytes, false);
+    var channelList = getChannels(buffer);
     parameters.channelList = channelList.map(function (channelIndex) {
       return {
-        value: buffer.getExtendedValue(),
+        value: getExtendedValue(buffer),
         index: channelIndex
       };
     });
@@ -2167,19 +1852,19 @@ var fromBytes, getBytesFromHex;
 
   var id$y = dataSegment;
   var fromBytes$A = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
-    return buffer.getDataSegment();
+    var buffer = new BinaryBuffer(bytes, false);
+    return getDataSegment(buffer);
   };
 
   var id$x = day;
   var fromBytes$z = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
-    var date = buffer.getDate();
+    var buffer = new BinaryBuffer(bytes, false);
+    var date = getDate(buffer);
     var byte = buffer.getUint8();
-    var _buffer$getHours = buffer.getHours(byte),
-      hour = _buffer$getHours.hour;
-    var isMagneticInfluence = CommandBinaryBuffer.getMagneticInfluenceBit(byte);
-    var value = buffer.getLegacyCounterValue();
+    var _getHours = getHours(buffer, byte),
+      hour = _getHours.hour;
+    var isMagneticInfluence = getMagneticInfluenceBit(byte);
+    var value = getLegacyCounterValue(buffer);
     date.setUTCHours(hour);
     return {
       value: value,
@@ -2194,12 +1879,12 @@ var fromBytes, getBytesFromHex;
     if (bytes.length > COMMAND_BODY_MAX_SIZE$7) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer(bytes);
-    var date = buffer.getDate();
-    var channels = buffer.getChannels();
+    var buffer = new BinaryBuffer(bytes, false);
+    var date = getDate(buffer);
+    var channels = getChannels(buffer);
     var channelList = channels.map(function (channelIndex) {
       return {
-        value: buffer.getExtendedValue(),
+        value: getExtendedValue(buffer),
         index: channelIndex
       };
     });
@@ -2211,9 +1896,9 @@ var fromBytes, getBytesFromHex;
 
   var id$v = exAbsCurrentMc;
   var fromBytes$x = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     return {
-      channelList: buffer.getChannelsWithAbsoluteValues()
+      channelList: getChannelsWithAbsoluteValues(buffer)
     };
   };
 
@@ -2223,9 +1908,9 @@ var fromBytes, getBytesFromHex;
     if (bytes.length > COMMAND_BODY_MAX_SIZE$6) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer(bytes);
-    var date = buffer.getDate();
-    var channelList = buffer.getChannelsWithAbsoluteValues();
+    var buffer = new BinaryBuffer(bytes, false);
+    var date = getDate(buffer);
+    var channelList = getChannelsWithAbsoluteValues(buffer);
     return {
       startTime2000: getTime2000FromDate(date),
       channelList: channelList
@@ -2238,12 +1923,12 @@ var fromBytes, getBytesFromHex;
     if (bytes.length > COMMAND_BODY_MAX_SIZE$5) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer(bytes);
-    var date = buffer.getDate();
-    var _buffer$getHours = buffer.getHours(),
-      hour = _buffer$getHours.hour,
-      hours = _buffer$getHours.hours;
-    var channelList = buffer.getChannelsAbsoluteValuesWithHourDiff(hours);
+    var buffer = new BinaryBuffer(bytes, false);
+    var date = getDate(buffer);
+    var _getHours = getHours(buffer),
+      hour = _getHours.hour,
+      hours = _getHours.hours;
+    var channelList = getChannelsAbsoluteValuesWithHourDiff(buffer, hours);
     date.setUTCHours(hour);
     return {
       startTime2000: getTime2000FromDate(date),
@@ -2254,11 +1939,11 @@ var fromBytes, getBytesFromHex;
 
   var id$s = getArchiveDays$1;
   var fromBytes$u = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
-    var date = buffer.getDate();
+    var buffer = new BinaryBuffer(bytes, false);
+    var date = getDate(buffer);
     var dayList = [];
     while (buffer.offset < buffer.data.length) {
-      dayList.push(buffer.getLegacyCounter(undefined, true));
+      dayList.push(getLegacyCounter(buffer, undefined, true));
     }
     return {
       startTime2000: getTime2000FromDate(date),
@@ -2268,9 +1953,9 @@ var fromBytes, getBytesFromHex;
 
   var id$r = getArchiveDaysMc$1;
   var fromBytes$t = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
-    var date = buffer.getDate();
-    var channels = buffer.getChannels();
+    var buffer = new BinaryBuffer(bytes, false);
+    var date = getDate(buffer);
+    var channels = getChannels(buffer);
     var days = buffer.getUint8();
     var channelList = [];
     channels.forEach(function (channelIndex) {
@@ -2280,7 +1965,7 @@ var fromBytes, getBytesFromHex;
         index: channelIndex
       });
       for (var day = 0; day < days; ++day) {
-        var value = buffer.getExtendedValue();
+        var value = getExtendedValue(buffer);
         dayList.push(value === EMPTY_VALUE ? 0 : value);
       }
     });
@@ -2352,7 +2037,7 @@ var fromBytes, getBytesFromHex;
 
   var id$q = getArchiveEvents$1;
   var getEvent = function (buffer) {
-    var time2000 = buffer.getTime();
+    var time2000 = getTime(buffer);
     var eventId = buffer.getUint8();
     var sequenceNumber = buffer.getUint8();
     return {
@@ -2363,7 +2048,7 @@ var fromBytes, getBytesFromHex;
     };
   };
   var fromBytes$s = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     var eventList = [];
     while (buffer.bytesLeft > 0) {
       eventList.push(getEvent(buffer));
@@ -2375,8 +2060,8 @@ var fromBytes, getBytesFromHex;
 
   var id$p = getArchiveHours$1;
   var fromBytes$r = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
-    return buffer.getLegacyHourCounterWithDiff(true);
+    var buffer = new BinaryBuffer(bytes, false);
+    return getLegacyHourCounterWithDiff(buffer, true);
   };
 
   var id$o = getArchiveHoursMc$1;
@@ -2385,8 +2070,8 @@ var fromBytes, getBytesFromHex;
     if (bytes.length > COMMAND_BODY_MAX_SIZE$4) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer(bytes);
-    return buffer.getChannelsValuesWithHourDiff(true);
+    var buffer = new BinaryBuffer(bytes, false);
+    return getChannelsValuesWithHourDiff(buffer, true);
   };
 
   var id$n = getArchiveHoursMcEx$1;
@@ -2395,13 +2080,13 @@ var fromBytes, getBytesFromHex;
     if (bytes.length > COMMAND_BODY_MAX_SIZE$3) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer(bytes);
-    return buffer.getChannelsValuesWithHourDiffExtended(true);
+    var buffer = new BinaryBuffer(bytes, false);
+    return getChannelsValuesWithHourDiffExtended(buffer, true);
   };
 
   var id$m = getBatteryStatus$1;
   var fromBytes$o = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     return {
       voltageUnderLowLoad: buffer.getUint16(),
       voltageUnderHighLoad: buffer.getUint16(),
@@ -2424,18 +2109,18 @@ var fromBytes, getBytesFromHex;
   var getTemperatureSensorStatus = function (buffer) {
     return {
       temperature: buffer.getInt8(),
-      time2000: buffer.getTime()
+      time2000: getTime(buffer)
     };
   };
   var fromBytes$n = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     var result = [];
     while (buffer.bytesLeft !== 0) {
       var type = buffer.getUint8();
       var channelStatus = {
         type: type,
         typeName: channelNames[type],
-        channel: buffer.getChannelValue()
+        channel: getChannelValue(buffer)
       };
       switch (channelStatus.type) {
         case BINARY_SENSOR:
@@ -2464,21 +2149,21 @@ var fromBytes, getBytesFromHex;
 
   var id$j = getExAbsArchiveDaysMc$1;
   var fromBytes$l = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
-    var date = buffer.getDate();
-    var channels = buffer.getChannels();
+    var buffer = new BinaryBuffer(bytes, false);
+    var date = getDate(buffer);
+    var channels = getChannels(buffer);
     var days = buffer.getUint8();
     var channelList = [];
     channels.forEach(function (channelIndex) {
       var dayList = [];
-      var pulseCoefficient = buffer.getPulseCoefficient();
+      var pulseCoefficient = getPulseCoefficient(buffer);
       channelList.push({
         pulseCoefficient: pulseCoefficient,
         dayList: dayList,
         index: channelIndex
       });
       for (var day = 0; day < days; ++day) {
-        var value = buffer.getExtendedValue();
+        var value = getExtendedValue(buffer);
         dayList.push(value === EMPTY_VALUE ? 0 : value);
       }
     });
@@ -2491,8 +2176,8 @@ var fromBytes, getBytesFromHex;
 
   var id$i = getExAbsArchiveHoursMc$1;
   var fromBytes$k = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
-    return buffer.getChannelsValuesWithHourDiff(true);
+    var buffer = new BinaryBuffer(bytes, false);
+    return getChannelsValuesWithHourDiff(buffer, true);
   };
 
   var id$h = getLmicInfo$1;
@@ -2519,8 +2204,8 @@ var fromBytes, getBytesFromHex;
 
   var id$g = getParameter$1;
   var fromBytes$i = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
-    return buffer.getResponseParameter();
+    var buffer = new BinaryBuffer(bytes, false);
+    return getResponseParameter(buffer);
   };
 
   var id$f = signalQuality;
@@ -2546,8 +2231,8 @@ var fromBytes, getBytesFromHex;
 
   var id$e = hour;
   var fromBytes$g = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
-    return buffer.getLegacyHourCounterWithDiff();
+    var buffer = new BinaryBuffer(bytes, false);
+    return getLegacyHourCounterWithDiff(buffer);
   };
 
   var id$d = hourMc;
@@ -2556,8 +2241,8 @@ var fromBytes, getBytesFromHex;
     if (bytes.length > COMMAND_BODY_MAX_SIZE$2) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer(bytes);
-    return buffer.getChannelsValuesWithHourDiff();
+    var buffer = new BinaryBuffer(bytes, false);
+    return getChannelsValuesWithHourDiff(buffer);
   };
 
   var id$c = hourMcEx;
@@ -2566,8 +2251,8 @@ var fromBytes, getBytesFromHex;
     if (bytes.length > COMMAND_BODY_MAX_SIZE$1) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer(bytes);
-    return buffer.getChannelsValuesWithHourDiffExtended();
+    var buffer = new BinaryBuffer(bytes, false);
+    return getChannelsValuesWithHourDiffExtended(buffer);
   };
 
   var id$b = lastEvent;
@@ -2575,9 +2260,9 @@ var fromBytes, getBytesFromHex;
     if (!config.hardwareType) {
       throw new Error('hardwareType in config is mandatory');
     }
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     var sequenceNumber = buffer.getUint8();
-    var status = buffer.getEventStatus(config.hardwareType);
+    var status = getEventStatus(buffer, config.hardwareType);
     return {
       sequenceNumber: sequenceNumber,
       status: status
@@ -2597,7 +2282,7 @@ var fromBytes, getBytesFromHex;
     if (bytes.length > COMMAND_BODY_MAX_SIZE) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     var eventId = buffer.getUint8();
     var eventName = eventNames[eventId];
     var sequenceNumber = buffer.getUint8();
@@ -2618,7 +2303,7 @@ var fromBytes, getBytesFromHex;
       case WATER_NO_RESPONSE:
       case OPTOSENSOR_ERROR:
         eventData = {
-          time2000: buffer.getTime()
+          time2000: getTime(buffer)
         };
         break;
       case BATTERY_ALARM:
@@ -2628,7 +2313,7 @@ var fromBytes, getBytesFromHex;
         break;
       case ACTIVATE_MTX:
         eventData = {
-          time2000: buffer.getTime(),
+          time2000: getTime(buffer),
           deviceId: getDeviceId(buffer)
         };
         break;
@@ -2636,34 +2321,34 @@ var fromBytes, getBytesFromHex;
       case DISCONNECT:
         eventData = {
           channel: buffer.getUint8() + 1,
-          value: buffer.getExtendedValue()
+          value: getExtendedValue(buffer)
         };
         break;
       case MTX:
         eventData = {
-          status: buffer.getEventStatus(MTXLORA)
+          status: getEventStatus(buffer, MTXLORA)
         };
         break;
       case BINARY_SENSOR_ON:
       case BINARY_SENSOR_OFF:
         eventData = {
-          time2000: buffer.getTime(),
-          channel: buffer.getChannelValue()
+          time2000: getTime(buffer),
+          channel: getChannelValue(buffer)
         };
         break;
       case TEMPERATURE_SENSOR_HYSTERESIS:
       case TEMPERATURE_SENSOR_LOW_TEMPERATURE:
       case TEMPERATURE_SENSOR_HIGH_TEMPERATURE:
         eventData = {
-          time2000: buffer.getTime(),
-          channel: buffer.getChannelValue(),
+          time2000: getTime(buffer),
+          channel: getChannelValue(buffer),
           temperature: buffer.getInt8()
         };
         break;
       case WATER_EVENT:
         eventData = {
-          time2000: buffer.getTime(),
-          status: buffer.getEventStatus(US_WATER)
+          time2000: getTime(buffer),
+          status: getEventStatus(buffer, US_WATER)
         };
         break;
       default:
@@ -2683,7 +2368,7 @@ var fromBytes, getBytesFromHex;
     if (bytes.length !== COMMAND_BODY_SIZE$5) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     var parameters = {
       id: buffer.getUint8(),
       status: buffer.getUint8()
@@ -2723,7 +2408,7 @@ var fromBytes, getBytesFromHex;
   var UNKNOWN_BATTERY_RESISTANCE = 65535;
   var UNKNOWN_BATTERY_CAPACITY = 255;
   var fromBytes$8 = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     var software = {
       type: buffer.getUint8(),
       version: buffer.getUint8()
@@ -2748,7 +2433,7 @@ var fromBytes, getBytesFromHex;
       case US_WATER:
         {
           var statusData = {
-            batteryVoltage: buffer.getBatteryVoltage(),
+            batteryVoltage: getBatteryVoltage(buffer),
             batteryInternalResistance: buffer.getUint16(),
             temperature: buffer.getUint8(),
             remainingBatteryCapacity: buffer.getUint8(),
@@ -2804,10 +2489,10 @@ var fromBytes, getBytesFromHex;
     if (bytes.length !== COMMAND_BODY_SIZE$2) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     var parameters = {
       sequenceNumber: buffer.getUint8(),
-      time2000: buffer.getTime()
+      time2000: getTime(buffer)
     };
     if (!buffer.isEmpty) {
       throw new Error('BinaryBuffer is not empty.');
@@ -2826,9 +2511,9 @@ var fromBytes, getBytesFromHex;
 
   var id$3 = usWaterMeterBatteryStatus;
   var fromBytes$5 = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     return {
-      voltage: buffer.getBatteryVoltage(),
+      voltage: getBatteryVoltage(buffer),
       internalResistance: buffer.getUint16(),
       lastDepassivationTime: buffer.getUint16()
     };
@@ -2836,7 +2521,7 @@ var fromBytes, getBytesFromHex;
 
   var id$2 = usWaterMeterCommand$1;
   var fromBytes$4 = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     var length = buffer.getUint8();
     return {
       length: length,
@@ -2850,7 +2535,7 @@ var fromBytes, getBytesFromHex;
     if (bytes.length !== COMMAND_BODY_SIZE) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     return {
       status: buffer.getUint8()
     };
@@ -2858,7 +2543,7 @@ var fromBytes, getBytesFromHex;
 
   var id = writeImage$1;
   var fromBytes$2 = function (bytes) {
-    var buffer = new CommandBinaryBuffer(bytes);
+    var buffer = new BinaryBuffer(bytes, false);
     return {
       offset: buffer.getUint32(),
       status: buffer.getUint8()

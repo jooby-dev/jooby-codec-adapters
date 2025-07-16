@@ -707,7 +707,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         return target;
     };
 
-    var frameNames = invertObject(frameTypes);
+    invertObject(frameTypes);
 
     const ENERGY_REGISTER_FAULT = 0x01;
     const VENDOR_PAR_FAULT = 0x02;
@@ -944,11 +944,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     var eventNames = invertObject(events);
 
-    const defaultFrameHeader = {
-        type: DATA_REQUEST,
-        destination: 0xffff,
-        source: 0xfffe
-    };
     const TARIFF_PLAN_SIZE = 11;
     const OPERATOR_PARAMETERS_SIZE = 74;
     const SEASON_PROFILE_DAYS_NUMBER = 7;
@@ -1113,7 +1108,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         energies.forEach((energy, index) => {
             const isTariffExists = !!extractBits(byte, 1, index + 1);
             if (isTariffExists) {
-                energies[index] = buffer.getUint32();
+                energies[index] = buffer.getInt32();
             }
             else {
                 energies[index] = null;
@@ -1149,406 +1144,321 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
             buffer.setUint16(0xffff);
         }
     }
-    function CommandBinaryBuffer$1(dataOrLength, isLittleEndian = false) {
-        BinaryBuffer.call(this, dataOrLength, isLittleEndian);
-    }
-    CommandBinaryBuffer$1.prototype = Object.create(BinaryBuffer.prototype);
-    CommandBinaryBuffer$1.prototype.constructor = CommandBinaryBuffer$1;
-    CommandBinaryBuffer$1.getDayProfileFromByte = (value) => ({
+    const getDayProfileFromByte = (value) => ({
         tariff: extractBits(value, 2, 1),
         isFirstHalfHour: !extractBits(value, 1, 3),
         hour: extractBits(value, 5, 4)
     });
-    CommandBinaryBuffer$1.getByteFromDayProfile = (dayProfile) => {
+    const getByteFromDayProfile = (dayProfile) => {
         let value = 0;
         value = fillBits(value, 2, 1, dayProfile.tariff);
         value = fillBits(value, 1, 3, +!dayProfile.isFirstHalfHour);
         value = fillBits(value, 5, 4, dayProfile.hour);
         return value;
     };
-    CommandBinaryBuffer$1.getDefaultSeasonProfile = () => ({
-        month: 1,
-        date: 1,
-        dayIndexes: [0, 0, 0, 0, 0, 0, 0]
-    });
-    CommandBinaryBuffer$1.getDefaultOperatorParameters = () => ({
-        vpThreshold: 265000,
-        vThreshold: 156000,
-        ipThreshold: 120000,
-        pmaxThreshold0: 31800,
-        pmaxThreshold1: 31800,
-        pmaxThreshold2: 31800,
-        pmaxThreshold3: 31800,
-        speedOptoPort: 0,
-        tint: 30,
-        calcPeriodDate: 1,
-        timeoutDisplay: 127,
-        timeoutScreen: 7,
-        displaySet: toObject(displaySetMask, 0x80003184),
-        relaySet4: toObject(relaySet4Mask, 0),
-        relaySet3: toObject(relaySet3Mask, 0),
-        relaySet2: toObject(relaySet2Mask, 3),
-        relaySet1: toObject(relaySet1Mask, 3),
-        displayType: 0,
-        ten: 0,
-        timeoutRefresh: 240,
-        deltaCorMin: 15,
-        timeoutMagnetOff: 5,
-        timeoutMagnetOn: 5,
-        define1: toObject(define1Mask, 0),
-        timeoutRelayOn: 1,
-        timeoutRelayKey: 0,
-        timeoutRelayAuto: 5,
-        timeoutBadVAVB: 5,
-        freqMax: 55,
-        freqMin: 45,
-        phMin: 0,
-        year: 0,
-        month: 0,
-        date: 0,
-        energyDecimalPoint: 2,
-        typeMeter: 0,
-        timeoutIMax: 5,
-        timeoutPMax: 5,
-        timeoutCos: 5,
-        pMaxDef: 1,
-        displaySetExt: toObject(displaySetExtMask, 0x8383fff),
-        timeoutUneqCurrent: 5,
-        timeoutBipolarPower: 5,
-        relaySet5: toObject(relaySet5Mask, 0),
-        timeCorrectPeriod: 24,
-        timeCorrectPassHalfhour: false
-    });
-    CommandBinaryBuffer$1.getDefaultOperatorParametersExtended3 = () => ({
-        pmaxMinusThreshold0: 0,
-        pmaxMinusThreshold1: 0,
-        pmaxMinusThreshold2: 0,
-        pmaxMinusThreshold3: 0,
-        relaySet: toObject(operatorParametersExtended3RelaySetMask, 0)
-    });
-    CommandBinaryBuffer$1.prototype.getFrameHeader = function () {
-        const type = this.getUint8();
-        const typeName = frameNames[type];
-        const destination = this.getUint16();
-        const source = this.getUint16();
-        return {
-            type,
-            typeName,
-            destination,
-            source
-        };
-    };
-    CommandBinaryBuffer$1.prototype.setFrameHeader = function ({ type = defaultFrameHeader.type, destination = defaultFrameHeader.destination, source = defaultFrameHeader.source }) {
-        this.setUint8(type);
-        this.setUint16(destination);
-        this.setUint16(source);
-    };
-    CommandBinaryBuffer$1.prototype.getDeviceId = function () {
-        const manufacturer = getHexFromBytes(this.getBytes(3), { separator: '' });
-        const type = this.getUint8();
-        const year = this.getUint8();
-        const serial = getHexFromBytes(this.getBytes(3), { separator: '' });
+    const getDeviceId$1 = function (buffer) {
+        const manufacturer = getHexFromBytes(buffer.getBytes(3), { separator: '' });
+        const type = buffer.getUint8();
+        const year = buffer.getUint8();
+        const serial = getHexFromBytes(buffer.getBytes(3), { separator: '' });
         return { manufacturer, type, year, serial };
     };
-    CommandBinaryBuffer$1.prototype.setDeviceId = function ({ manufacturer, type, year, serial }) {
-        this.setBytes(getBytesFromHex(manufacturer));
-        this.setUint8(type);
-        this.setUint8(year);
-        this.setBytes(getBytesFromHex(serial));
+    const setDeviceId = function (buffer, { manufacturer, type, year, serial }) {
+        buffer.setBytes(getBytesFromHex(manufacturer));
+        buffer.setUint8(type);
+        buffer.setUint8(year);
+        buffer.setBytes(getBytesFromHex(serial));
     };
-    CommandBinaryBuffer$1.prototype.getDateTime = function () {
+    const getDateTime$1 = function (buffer) {
         return {
-            isSummerTime: !!this.getUint8(),
-            seconds: this.getUint8(),
-            minutes: this.getUint8(),
-            hours: this.getUint8(),
-            day: this.getUint8(),
-            date: this.getUint8(),
-            month: this.getUint8(),
-            year: this.getUint8()
+            isSummerTime: !!buffer.getUint8(),
+            seconds: buffer.getUint8(),
+            minutes: buffer.getUint8(),
+            hours: buffer.getUint8(),
+            day: buffer.getUint8(),
+            date: buffer.getUint8(),
+            month: buffer.getUint8(),
+            year: buffer.getUint8()
         };
     };
-    CommandBinaryBuffer$1.prototype.setDateTime = function (dateTime) {
-        this.setUint8(dateTime.isSummerTime ? 1 : 0);
-        this.setUint8(dateTime.seconds);
-        this.setUint8(dateTime.minutes);
-        this.setUint8(dateTime.hours);
-        this.setUint8(dateTime.day || 0);
-        this.setUint8(dateTime.date);
-        this.setUint8(dateTime.month);
-        this.setUint8(dateTime.year);
+    const setDateTime$1 = function (buffer, dateTime) {
+        buffer.setUint8(dateTime.isSummerTime ? 1 : 0);
+        buffer.setUint8(dateTime.seconds);
+        buffer.setUint8(dateTime.minutes);
+        buffer.setUint8(dateTime.hours);
+        buffer.setUint8((dateTime.day || 0));
+        buffer.setUint8(dateTime.date);
+        buffer.setUint8(dateTime.month);
+        buffer.setUint8(dateTime.year);
     };
-    CommandBinaryBuffer$1.prototype.getTariffPlan = function () {
+    const getTariffPlan = function (buffer) {
         return {
-            id: this.getUint32(),
-            tariffSet: this.getUint8(),
-            activateYear: this.getUint8(),
-            activateMonth: this.getUint8(),
-            activateDay: this.getUint8(),
-            specialProfilesArraySize: this.getUint8(),
-            seasonProfilesArraySize: this.getUint8(),
-            dayProfilesArraySize: this.getUint8()
+            id: buffer.getUint32(),
+            tariffSet: buffer.getUint8(),
+            activateYear: buffer.getUint8(),
+            activateMonth: buffer.getUint8(),
+            activateDay: buffer.getUint8(),
+            specialProfilesArraySize: buffer.getUint8(),
+            seasonProfilesArraySize: buffer.getUint8(),
+            dayProfilesArraySize: buffer.getUint8()
         };
     };
-    CommandBinaryBuffer$1.prototype.setTariffPlan = function (tariffPlan) {
-        this.setUint32(tariffPlan.id);
-        this.setUint8(tariffPlan.tariffSet);
-        this.setUint8(tariffPlan.activateYear);
-        this.setUint8(tariffPlan.activateMonth);
-        this.setUint8(tariffPlan.activateDay);
-        this.setUint8(tariffPlan.specialProfilesArraySize);
-        this.setUint8(tariffPlan.seasonProfilesArraySize);
-        this.setUint8(tariffPlan.dayProfilesArraySize);
+    const setTariffPlan = function (buffer, tariffPlan) {
+        buffer.setUint32(tariffPlan.id);
+        buffer.setUint8(tariffPlan.tariffSet);
+        buffer.setUint8(tariffPlan.activateYear);
+        buffer.setUint8(tariffPlan.activateMonth);
+        buffer.setUint8(tariffPlan.activateDay);
+        buffer.setUint8(tariffPlan.specialProfilesArraySize);
+        buffer.setUint8(tariffPlan.seasonProfilesArraySize);
+        buffer.setUint8(tariffPlan.dayProfilesArraySize);
     };
-    CommandBinaryBuffer$1.prototype.getTimeCorrectionParameters = function () {
+    const getTimeCorrectionParameters = function (buffer) {
         return {
-            monthTransitionSummer: this.getUint8(),
-            dateTransitionSummer: this.getUint8(),
-            hoursTransitionSummer: this.getUint8(),
-            hoursCorrectSummer: this.getUint8(),
-            monthTransitionWinter: this.getUint8(),
-            dateTransitionWinter: this.getUint8(),
-            hoursTransitionWinter: this.getUint8(),
-            hoursCorrectWinter: this.getUint8(),
-            isCorrectionNeeded: this.getUint8() === 1
+            monthTransitionSummer: buffer.getUint8(),
+            dateTransitionSummer: buffer.getUint8(),
+            hoursTransitionSummer: buffer.getUint8(),
+            hoursCorrectSummer: buffer.getUint8(),
+            monthTransitionWinter: buffer.getUint8(),
+            dateTransitionWinter: buffer.getUint8(),
+            hoursTransitionWinter: buffer.getUint8(),
+            hoursCorrectWinter: buffer.getUint8(),
+            isCorrectionNeeded: buffer.getUint8() === 1
         };
     };
-    CommandBinaryBuffer$1.prototype.setTimeCorrectionParameters = function (parameters) {
-        this.setUint8(parameters.monthTransitionSummer);
-        this.setUint8(parameters.dateTransitionSummer);
-        this.setUint8(parameters.hoursTransitionSummer);
-        this.setUint8(parameters.hoursCorrectSummer);
-        this.setUint8(parameters.monthTransitionWinter);
-        this.setUint8(parameters.dateTransitionWinter);
-        this.setUint8(parameters.hoursTransitionWinter);
-        this.setUint8(parameters.hoursCorrectWinter);
-        this.setUint8(+parameters.isCorrectionNeeded);
+    const setTimeCorrectionParameters = function (buffer, parameters) {
+        buffer.setUint8(parameters.monthTransitionSummer);
+        buffer.setUint8(parameters.dateTransitionSummer);
+        buffer.setUint8(parameters.hoursTransitionSummer);
+        buffer.setUint8(parameters.hoursCorrectSummer);
+        buffer.setUint8(parameters.monthTransitionWinter);
+        buffer.setUint8(parameters.dateTransitionWinter);
+        buffer.setUint8(parameters.hoursTransitionWinter);
+        buffer.setUint8(parameters.hoursCorrectWinter);
+        buffer.setUint8(+parameters.isCorrectionNeeded);
     };
-    CommandBinaryBuffer$1.prototype.getDayProfile = function () {
-        return CommandBinaryBuffer$1.getDayProfileFromByte(this.getUint8());
+    const setDayProfile$1 = function (buffer, dayProfile) {
+        buffer.setUint8(getByteFromDayProfile(dayProfile));
     };
-    CommandBinaryBuffer$1.prototype.setDayProfile = function (dayProfile) {
-        this.setUint8(CommandBinaryBuffer$1.getByteFromDayProfile(dayProfile));
-    };
-    CommandBinaryBuffer$1.prototype.getSeasonProfile = function () {
+    const getSeasonProfile$1 = function (buffer) {
         return {
-            month: this.getUint8(),
-            date: this.getUint8(),
-            dayIndexes: new Array(SEASON_PROFILE_DAYS_NUMBER).fill(0).map(() => this.getUint8())
+            month: buffer.getUint8(),
+            date: buffer.getUint8(),
+            dayIndexes: new Array(SEASON_PROFILE_DAYS_NUMBER).fill(0).map(() => buffer.getUint8())
         };
     };
-    CommandBinaryBuffer$1.prototype.setSeasonProfile = function (seasonProfile) {
-        this.setUint8(seasonProfile.month);
-        this.setUint8(seasonProfile.date);
-        seasonProfile.dayIndexes.forEach(value => this.setUint8(value));
+    const setSeasonProfile$1 = function (buffer, seasonProfile) {
+        buffer.setUint8(seasonProfile.month);
+        buffer.setUint8(seasonProfile.date);
+        seasonProfile.dayIndexes.forEach(value => buffer.setUint8(value));
     };
-    CommandBinaryBuffer$1.prototype.getSpecialDay = function () {
+    const getSpecialDay$1 = function (buffer) {
         return {
-            month: this.getUint8(),
-            date: this.getUint8(),
-            dayIndex: this.getUint8(),
-            isPeriodic: this.getUint8() === 0
+            month: buffer.getUint8(),
+            date: buffer.getUint8(),
+            dayIndex: buffer.getUint8(),
+            isPeriodic: buffer.getUint8() === 0
         };
     };
-    CommandBinaryBuffer$1.prototype.setSpecialDay = function (specialDay) {
-        this.setUint8(specialDay.month);
-        this.setUint8(specialDay.date);
-        this.setUint8(specialDay.dayIndex);
-        this.setUint8(+!specialDay.isPeriodic);
+    const setSpecialDay$1 = function (buffer, specialDay) {
+        buffer.setUint8(specialDay.month);
+        buffer.setUint8(specialDay.date);
+        buffer.setUint8(specialDay.dayIndex);
+        buffer.setUint8(+!specialDay.isPeriodic);
     };
-    CommandBinaryBuffer$1.prototype.getDeviceType = function () {
-        return fromBytes$27(this.getBytes(9));
+    const getDeviceType$1 = function (buffer) {
+        return fromBytes$27(buffer.getBytes(9));
     };
-    CommandBinaryBuffer$1.prototype.setDeviceType = function (deviceType) {
-        this.setBytes(toBytes$28(deviceType));
+    const setDeviceType = function (buffer, deviceType) {
+        buffer.setBytes(toBytes$28(deviceType));
     };
-    CommandBinaryBuffer$1.prototype.getOperatorParameters = function () {
+    const getOperatorParameters$1 = function (buffer) {
         const operatorParameters = {
-            vpThreshold: this.getUint32(),
-            vThreshold: this.getUint32(),
-            ipThreshold: this.getUint32(),
-            pmaxThreshold0: this.getUint32(),
-            pmaxThreshold1: this.getUint32(),
-            pmaxThreshold2: this.getUint32(),
-            pmaxThreshold3: this.getUint32(),
-            speedOptoPort: this.getUint8(),
-            tint: this.getUint8(),
-            calcPeriodDate: this.getUint8(),
-            timeoutDisplay: this.getUint8(),
-            timeoutScreen: this.getUint8(),
-            displaySet: toObject(displaySetMask, this.getUint32()),
-            relaySet4: toObject(relaySet4Mask, this.getUint8()),
-            relaySet3: toObject(relaySet3Mask, this.getUint8()),
-            relaySet2: toObject(relaySet2Mask, this.getUint8()),
-            relaySet1: toObject(relaySet1Mask, this.getUint8()),
-            displayType: this.getUint8(),
-            ten: this.getUint8(),
-            timeoutRefresh: this.getUint16(),
-            deltaCorMin: this.getUint8(),
-            timeoutMagnetOff: this.getUint8(),
-            timeoutMagnetOn: this.getUint8(),
-            define1: toObject(define1Mask, this.getUint8()),
-            timeoutRelayOn: this.getUint8(),
-            timeoutRelayKey: this.getUint8(),
-            timeoutRelayAuto: this.getUint8(),
-            timeoutBadVAVB: this.getUint8(),
-            freqMax: this.getUint8(),
-            freqMin: this.getUint8(),
-            phMin: this.getUint16(),
-            year: this.getUint8(),
-            month: this.getUint8(),
-            date: this.getUint8(),
-            energyDecimalPoint: this.getUint8(),
-            typeMeter: this.getUint8(),
-            timeoutIMax: this.getUint8(),
-            timeoutPMax: this.getUint8(),
-            timeoutCos: this.getUint8(),
-            pMaxDef: this.getUint8(),
-            displaySetExt: toObject(displaySetExtMask, this.getUint32()),
-            timeoutUneqCurrent: this.getUint8(),
-            timeoutBipolarPower: this.getUint8(),
-            relaySet5: toObject(relaySet5Mask, this.getUint8()),
+            vpThreshold: buffer.getUint32(),
+            vThreshold: buffer.getUint32(),
+            ipThreshold: buffer.getUint32(),
+            pmaxThreshold0: buffer.getUint32(),
+            pmaxThreshold1: buffer.getUint32(),
+            pmaxThreshold2: buffer.getUint32(),
+            pmaxThreshold3: buffer.getUint32(),
+            speedOptoPort: buffer.getUint8(),
+            tint: buffer.getUint8(),
+            calcPeriodDate: buffer.getUint8(),
+            timeoutDisplay: buffer.getUint8(),
+            timeoutScreen: buffer.getUint8(),
+            displaySet: toObject(displaySetMask, buffer.getUint32()),
+            relaySet4: toObject(relaySet4Mask, buffer.getUint8()),
+            relaySet3: toObject(relaySet3Mask, buffer.getUint8()),
+            relaySet2: toObject(relaySet2Mask, buffer.getUint8()),
+            relaySet1: toObject(relaySet1Mask, buffer.getUint8()),
+            displayType: buffer.getUint8(),
+            ten: buffer.getUint8(),
+            timeoutRefresh: buffer.getUint16(),
+            deltaCorMin: buffer.getUint8(),
+            timeoutMagnetOff: buffer.getUint8(),
+            timeoutMagnetOn: buffer.getUint8(),
+            define1: toObject(define1Mask, buffer.getUint8()),
+            timeoutRelayOn: buffer.getUint8(),
+            timeoutRelayKey: buffer.getUint8(),
+            timeoutRelayAuto: buffer.getUint8(),
+            timeoutBadVAVB: buffer.getUint8(),
+            freqMax: buffer.getUint8(),
+            freqMin: buffer.getUint8(),
+            phMin: buffer.getUint16(),
+            year: buffer.getUint8(),
+            month: buffer.getUint8(),
+            date: buffer.getUint8(),
+            energyDecimalPoint: buffer.getUint8(),
+            typeMeter: buffer.getUint8(),
+            timeoutIMax: buffer.getUint8(),
+            timeoutPMax: buffer.getUint8(),
+            timeoutCos: buffer.getUint8(),
+            pMaxDef: buffer.getUint8(),
+            displaySetExt: toObject(displaySetExtMask, buffer.getUint32()),
+            timeoutUneqCurrent: buffer.getUint8(),
+            timeoutBipolarPower: buffer.getUint8(),
+            relaySet5: toObject(relaySet5Mask, buffer.getUint8()),
             timeCorrectPeriod: 0,
             timeCorrectPassHalfhour: false
         };
-        const timeCorrectPeriod = this.getUint8();
+        const timeCorrectPeriod = buffer.getUint8();
         operatorParameters.timeCorrectPeriod = timeCorrectPeriod & 0x7f;
         operatorParameters.timeCorrectPassHalfhour = !!(timeCorrectPeriod & 0x80);
         return operatorParameters;
     };
-    CommandBinaryBuffer$1.prototype.setOperatorParameters = function (operatorParameters) {
+    const setOperatorParameters$1 = function (buffer, operatorParameters) {
         const timeCorrectPeriod = operatorParameters.timeCorrectPeriod
             | (operatorParameters.timeCorrectPassHalfhour ? 0x80 : 0);
-        this.setUint32(operatorParameters.vpThreshold);
-        this.setUint32(operatorParameters.vThreshold);
-        this.setUint32(operatorParameters.ipThreshold);
-        this.setUint32(operatorParameters.pmaxThreshold0);
-        this.setUint32(operatorParameters.pmaxThreshold1);
-        this.setUint32(operatorParameters.pmaxThreshold2);
-        this.setUint32(operatorParameters.pmaxThreshold3);
-        this.setUint8(operatorParameters.speedOptoPort);
-        this.setUint8(operatorParameters.tint);
-        this.setUint8(operatorParameters.calcPeriodDate);
-        this.setUint8(operatorParameters.timeoutDisplay);
-        this.setUint8(operatorParameters.timeoutScreen);
-        this.setUint32(fromObject(displaySetMask, operatorParameters.displaySet));
-        this.setUint8(fromObject(relaySet4Mask, operatorParameters.relaySet4));
-        this.setUint8(fromObject(relaySet3Mask, operatorParameters.relaySet3));
-        this.setUint8(fromObject(relaySet2Mask, operatorParameters.relaySet2));
-        this.setUint8(fromObject(relaySet1Mask, operatorParameters.relaySet1));
-        this.setUint8(operatorParameters.displayType);
-        this.setUint8(operatorParameters.ten);
-        this.setUint16(operatorParameters.timeoutRefresh);
-        this.setUint8(operatorParameters.deltaCorMin);
-        this.setUint8(operatorParameters.timeoutMagnetOff);
-        this.setUint8(operatorParameters.timeoutMagnetOn);
-        this.setUint8(fromObject(define1Mask, operatorParameters.define1));
-        this.setUint8(operatorParameters.timeoutRelayOn);
-        this.setUint8(operatorParameters.timeoutRelayKey);
-        this.setUint8(operatorParameters.timeoutRelayAuto);
-        this.setUint8(operatorParameters.timeoutBadVAVB);
-        this.setUint8(operatorParameters.freqMax);
-        this.setUint8(operatorParameters.freqMin);
-        this.setUint16(operatorParameters.phMin);
-        this.setUint8(operatorParameters.year);
-        this.setUint8(operatorParameters.month);
-        this.setUint8(operatorParameters.date);
-        this.setUint8(operatorParameters.energyDecimalPoint);
-        this.setUint8(operatorParameters.typeMeter);
-        this.setUint8(operatorParameters.timeoutIMax);
-        this.setUint8(operatorParameters.timeoutPMax);
-        this.setUint8(operatorParameters.timeoutCos);
-        this.setUint8(operatorParameters.pMaxDef);
-        this.setUint32(fromObject(displaySetExtMask, operatorParameters.displaySetExt));
-        this.setUint8(operatorParameters.timeoutUneqCurrent);
-        this.setUint8(operatorParameters.timeoutBipolarPower);
-        this.setUint8(fromObject(relaySet5Mask, operatorParameters.relaySet5));
-        this.setUint8(timeCorrectPeriod);
+        buffer.setUint32(operatorParameters.vpThreshold);
+        buffer.setUint32(operatorParameters.vThreshold);
+        buffer.setUint32(operatorParameters.ipThreshold);
+        buffer.setUint32(operatorParameters.pmaxThreshold0);
+        buffer.setUint32(operatorParameters.pmaxThreshold1);
+        buffer.setUint32(operatorParameters.pmaxThreshold2);
+        buffer.setUint32(operatorParameters.pmaxThreshold3);
+        buffer.setUint8(operatorParameters.speedOptoPort);
+        buffer.setUint8(operatorParameters.tint);
+        buffer.setUint8(operatorParameters.calcPeriodDate);
+        buffer.setUint8(operatorParameters.timeoutDisplay);
+        buffer.setUint8(operatorParameters.timeoutScreen);
+        buffer.setUint32(fromObject(displaySetMask, operatorParameters.displaySet));
+        buffer.setUint8(fromObject(relaySet4Mask, operatorParameters.relaySet4));
+        buffer.setUint8(fromObject(relaySet3Mask, operatorParameters.relaySet3));
+        buffer.setUint8(fromObject(relaySet2Mask, operatorParameters.relaySet2));
+        buffer.setUint8(fromObject(relaySet1Mask, operatorParameters.relaySet1));
+        buffer.setUint8(operatorParameters.displayType);
+        buffer.setUint8(operatorParameters.ten);
+        buffer.setUint16(operatorParameters.timeoutRefresh);
+        buffer.setUint8(operatorParameters.deltaCorMin);
+        buffer.setUint8(operatorParameters.timeoutMagnetOff);
+        buffer.setUint8(operatorParameters.timeoutMagnetOn);
+        buffer.setUint8(fromObject(define1Mask, operatorParameters.define1));
+        buffer.setUint8(operatorParameters.timeoutRelayOn);
+        buffer.setUint8(operatorParameters.timeoutRelayKey);
+        buffer.setUint8(operatorParameters.timeoutRelayAuto);
+        buffer.setUint8(operatorParameters.timeoutBadVAVB);
+        buffer.setUint8(operatorParameters.freqMax);
+        buffer.setUint8(operatorParameters.freqMin);
+        buffer.setUint16(operatorParameters.phMin);
+        buffer.setUint8(operatorParameters.year);
+        buffer.setUint8(operatorParameters.month);
+        buffer.setUint8(operatorParameters.date);
+        buffer.setUint8(operatorParameters.energyDecimalPoint);
+        buffer.setUint8(operatorParameters.typeMeter);
+        buffer.setUint8(operatorParameters.timeoutIMax);
+        buffer.setUint8(operatorParameters.timeoutPMax);
+        buffer.setUint8(operatorParameters.timeoutCos);
+        buffer.setUint8(operatorParameters.pMaxDef);
+        buffer.setUint32(fromObject(displaySetExtMask, operatorParameters.displaySetExt));
+        buffer.setUint8(operatorParameters.timeoutUneqCurrent);
+        buffer.setUint8(operatorParameters.timeoutBipolarPower);
+        buffer.setUint8(fromObject(relaySet5Mask, operatorParameters.relaySet5));
+        buffer.setUint8(timeCorrectPeriod);
     };
-    CommandBinaryBuffer$1.prototype.getPackedEnergyWithType = function () {
-        const byte = this.getUint8();
+    const getPackedEnergyWithType = function (buffer) {
+        const byte = buffer.getUint8();
         const energyType = extractBits(byte, TARIFF_NUMBER$1, 1);
-        const energies = getPackedEnergies(this, energyType, byte);
+        const energies = getPackedEnergies(buffer, energyType, byte);
         return {
             energyType,
             energies
         };
     };
-    CommandBinaryBuffer$1.prototype.setPackedEnergyWithType = function ({ energyType, energies }) {
+    const setPackedEnergyWithType = function (buffer, { energyType, energies }) {
         if (energyType) {
-            setPackedEnergyType(this, energyType, energies);
+            setPackedEnergyType(buffer, energyType, energies);
         }
         energies.forEach(energy => {
             if (energy !== null) {
-                this.setUint32(energy);
+                buffer.setInt32(energy);
             }
         });
     };
-    CommandBinaryBuffer$1.prototype.getEnergies = function () {
-        return new Array(TARIFF_NUMBER$1).fill(0).map(() => this.getInt32());
+    const getEnergies = function (buffer) {
+        return new Array(TARIFF_NUMBER$1).fill(0).map(() => buffer.getInt32());
     };
-    CommandBinaryBuffer$1.prototype.setEnergies = function (energies) {
-        energies.forEach(value => this.setUint32(value));
+    const setEnergies = function (buffer, energies) {
+        energies.forEach(value => buffer.setInt32(value));
     };
-    CommandBinaryBuffer$1.prototype.getDate = function () {
+    const getDate$1 = function (buffer) {
         return {
-            year: this.getUint8(),
-            month: this.getUint8(),
-            date: this.getUint8()
+            year: buffer.getUint8(),
+            month: buffer.getUint8(),
+            date: buffer.getUint8()
         };
     };
-    CommandBinaryBuffer$1.prototype.setDate = function (date) {
-        this.setUint8(date.year);
-        this.setUint8(date.month);
-        this.setUint8(date.date);
+    const setDate$1 = function (buffer, date) {
+        buffer.setUint8(date.year);
+        buffer.setUint8(date.month);
+        buffer.setUint8(date.date);
     };
-    CommandBinaryBuffer$1.prototype.getSaldoParameters = function () {
+    const getSaldoParameters$1 = function (buffer) {
         return {
-            coefficients: new Array(4).fill(0).map(() => this.getUint32()),
-            decimalPointTariff: this.getUint8(),
-            indicationThreshold: this.getInt32(),
-            relayThreshold: this.getInt32(),
-            mode: this.getUint8(),
-            saldoOffTimeBegin: this.getUint8(),
-            saldoOffTimeEnd: this.getUint8(),
-            decimalPointIndication: this.getUint8(),
-            powerThreshold: this.getUint32(),
-            creditThreshold: this.getInt32()
+            coefficients: new Array(4).fill(0).map(() => buffer.getUint32()),
+            decimalPointTariff: buffer.getUint8(),
+            indicationThreshold: buffer.getInt32(),
+            relayThreshold: buffer.getInt32(),
+            mode: buffer.getUint8(),
+            saldoOffTimeBegin: buffer.getUint8(),
+            saldoOffTimeEnd: buffer.getUint8(),
+            decimalPointIndication: buffer.getUint8(),
+            powerThreshold: buffer.getUint32(),
+            creditThreshold: buffer.getInt32()
         };
     };
-    CommandBinaryBuffer$1.prototype.setSaldoParameters = function (saldoParameters) {
-        saldoParameters.coefficients.forEach(value => this.setUint32(value));
-        this.setUint8(saldoParameters.decimalPointTariff);
-        this.setInt32(saldoParameters.indicationThreshold);
-        this.setInt32(saldoParameters.relayThreshold);
-        this.setUint8(saldoParameters.mode);
-        this.setUint8(saldoParameters.saldoOffTimeBegin);
-        this.setUint8(saldoParameters.saldoOffTimeEnd);
-        this.setUint8(saldoParameters.decimalPointIndication);
-        this.setUint32(saldoParameters.powerThreshold);
-        this.setInt32(saldoParameters.creditThreshold);
+    const setSaldoParameters$1 = function (buffer, saldoParameters) {
+        saldoParameters.coefficients.forEach(value => buffer.setUint32(value));
+        buffer.setUint8(saldoParameters.decimalPointTariff);
+        buffer.setInt32(saldoParameters.indicationThreshold);
+        buffer.setInt32(saldoParameters.relayThreshold);
+        buffer.setUint8(saldoParameters.mode);
+        buffer.setUint8(saldoParameters.saldoOffTimeBegin);
+        buffer.setUint8(saldoParameters.saldoOffTimeEnd);
+        buffer.setUint8(saldoParameters.decimalPointIndication);
+        buffer.setUint32(saldoParameters.powerThreshold);
+        buffer.setInt32(saldoParameters.creditThreshold);
     };
-    CommandBinaryBuffer$1.prototype.getEnergyPeriods = function (periodsNumber) {
-        const periods = new Array(periodsNumber).fill(0).map(() => this.getUint16());
+    const getEnergyPeriods = function (buffer, periodsNumber) {
+        const periods = new Array(periodsNumber).fill(0).map(() => buffer.getUint16());
         return periods.map(period => getEnergyPeriod(period));
     };
-    CommandBinaryBuffer$1.prototype.setEnergyPeriods = function (periods) {
-        periods.forEach(period => setEnergyPeriod(this, period));
+    const setEnergyPeriods = function (buffer, periods) {
+        periods.forEach(period => setEnergyPeriod(buffer, period));
     };
-    CommandBinaryBuffer$1.prototype.getEventStatus = function () {
-        const eventStatus = this.getUint16();
+    const getEventStatus$1 = function (buffer) {
+        const eventStatus = buffer.getUint16();
         return toObject(eventStatusMask, eventStatus);
     };
-    CommandBinaryBuffer$1.prototype.setEventStatus = function (parameters) {
-        this.setUint16(fromObject(eventStatusMask, parameters));
+    const setEventStatus = function (buffer, parameters) {
+        buffer.setUint16(fromObject(eventStatusMask, parameters));
     };
-    CommandBinaryBuffer$1.prototype.getExtendedCurrentValues2 = function () {
-        const uBattery = this.getUint16();
-        const relayStatus = toObject(extendedCurrentValues2RelayStatusMask, this.getUint8());
-        const relayStatus2 = toObject(extendedCurrentValues2RelayStatus2Mask, this.getUint8());
-        const status1 = toObject(extendedCurrentValues2Status1Mask, this.getUint8());
-        const status2 = toObject(extendedCurrentValues2Status2Mask, this.getUint8());
-        const status3 = toObject(extendedCurrentValues2Status3Mask, this.getUint8());
+    const getExtendedCurrentValues2$1 = function (buffer) {
+        const uBattery = buffer.getUint16();
+        const relayStatus = toObject(extendedCurrentValues2RelayStatusMask, buffer.getUint8());
+        const relayStatus2 = toObject(extendedCurrentValues2RelayStatus2Mask, buffer.getUint8());
+        const status1 = toObject(extendedCurrentValues2Status1Mask, buffer.getUint8());
+        const status2 = toObject(extendedCurrentValues2Status2Mask, buffer.getUint8());
+        const status3 = toObject(extendedCurrentValues2Status3Mask, buffer.getUint8());
         return {
             uBattery,
             relayStatus,
@@ -1558,144 +1468,144 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
             status3
         };
     };
-    CommandBinaryBuffer$1.prototype.setExtendedCurrentValues2 = function (parameters) {
+    const setExtendedCurrentValues2 = function (buffer, parameters) {
         const { uBattery, relayStatus, relayStatus2, status1, status2, status3 } = parameters;
-        this.setUint16(uBattery);
-        this.setUint8(fromObject(extendedCurrentValues2RelayStatusMask, relayStatus));
-        this.setUint8(fromObject(extendedCurrentValues2RelayStatus2Mask, relayStatus2));
-        this.setUint8(fromObject(extendedCurrentValues2Status1Mask, status1));
-        this.setUint8(fromObject(extendedCurrentValues2Status2Mask, status2));
-        this.setUint8(fromObject(extendedCurrentValues2Status3Mask, status3));
+        buffer.setUint16(uBattery);
+        buffer.setUint8(fromObject(extendedCurrentValues2RelayStatusMask, relayStatus));
+        buffer.setUint8(fromObject(extendedCurrentValues2RelayStatus2Mask, relayStatus2));
+        buffer.setUint8(fromObject(extendedCurrentValues2Status1Mask, status1));
+        buffer.setUint8(fromObject(extendedCurrentValues2Status2Mask, status2));
+        buffer.setUint8(fromObject(extendedCurrentValues2Status3Mask, status3));
     };
-    CommandBinaryBuffer$1.prototype.getEvent = function () {
+    const getEvent = function (buffer) {
         const data = {
-            hours: this.getUint8(),
-            minutes: this.getUint8(),
-            seconds: this.getUint8(),
-            event: this.getUint8()
+            hours: buffer.getUint8(),
+            minutes: buffer.getUint8(),
+            seconds: buffer.getUint8(),
+            event: buffer.getUint8()
         };
         const { event } = data;
-        const { bytesLeft } = this;
+        const { bytesLeft } = buffer;
         data.eventName = eventNames[event];
         switch (event) {
             case POWER_OVER_RELAY_OFF:
                 if (bytesLeft < 4) {
                     return data;
                 }
-                data.power = [this.getUint8(), this.getUint8(), this.getUint8(), this.getUint8()];
+                data.power = [buffer.getUint8(), buffer.getUint8(), buffer.getUint8(), buffer.getUint8()];
                 break;
             case CMD_CHANGE_TIME:
             case TIME_CORRECT$1:
                 if (bytesLeft < 8) {
                     return data;
                 }
-                data.newDate = this.getDateTime();
+                data.newDate = getDateTime$1(buffer);
                 break;
         }
         return data;
     };
-    CommandBinaryBuffer$1.prototype.setEvent = function (event) {
-        this.setUint8(event.hours);
-        this.setUint8(event.minutes);
-        this.setUint8(event.seconds);
-        this.setUint8(event.event);
+    const setEvent = function (buffer, event) {
+        buffer.setUint8(event.hours);
+        buffer.setUint8(event.minutes);
+        buffer.setUint8(event.seconds);
+        buffer.setUint8(event.event);
         switch (event.event) {
             case POWER_OVER_RELAY_OFF:
                 for (const item of event.power) {
-                    this.setUint8(item);
+                    buffer.setUint8(item);
                 }
                 break;
             case CMD_CHANGE_TIME:
             case TIME_CORRECT$1:
-                this.setDateTime(event.newDate);
+                setDateTime$1(buffer, event.newDate);
                 break;
         }
     };
-    CommandBinaryBuffer$1.prototype.getDemand = function () {
-        const date0 = this.getUint8();
-        const date1 = this.getUint8();
+    const getDemand$1 = function (buffer) {
+        const date0 = buffer.getUint8();
+        const date1 = buffer.getUint8();
         return {
             date: {
                 year: date0 >> 1,
                 month: ((date0 << 3) & 0x0f) | (date1 >> 5),
                 date: date1 & 0x1f
             },
-            energyType: this.getUint8(),
-            firstIndex: this.getUint16(),
-            count: this.getUint8(),
-            period: this.getUint8()
+            energyType: buffer.getUint8(),
+            firstIndex: buffer.getUint16(),
+            count: buffer.getUint8(),
+            period: buffer.getUint8()
         };
     };
-    CommandBinaryBuffer$1.prototype.setDemand = function (parameters) {
+    const setDemand = function (buffer, parameters) {
         const date0 = (parameters.date.year << 1) | ((parameters.date.month >> 3) & 0x01);
         const date1 = ((parameters.date.month << 5) & 0xe0) | (parameters.date.date & 0x1f);
-        this.setUint8(date0);
-        this.setUint8(date1);
-        this.setUint8(parameters.energyType);
-        this.setUint16(parameters.firstIndex);
-        this.setUint8(parameters.count);
-        this.setUint8(parameters.period);
+        buffer.setUint8(date0);
+        buffer.setUint8(date1);
+        buffer.setUint8(parameters.energyType);
+        buffer.setUint16(parameters.firstIndex);
+        buffer.setUint8(parameters.count);
+        buffer.setUint8(parameters.period);
     };
-    CommandBinaryBuffer$1.prototype.getDemandParameters = function () {
-        const channelParam1 = this.getUint8();
-        const counterInterval = this.getUint8();
-        const channelParam2 = this.getUint8();
+    const getDemandParameters$1 = function (buffer) {
+        const channelParam1 = buffer.getUint8();
+        const counterInterval = buffer.getUint8();
+        const channelParam2 = buffer.getUint8();
         return { channelParam1, counterInterval, channelParam2 };
     };
-    CommandBinaryBuffer$1.prototype.setDemandParameters = function (parameters) {
-        this.setUint8(parameters.channelParam1);
-        this.setUint8(parameters.counterInterval);
-        this.setUint8(parameters.channelParam2);
-        this.setUint8(0);
+    const setDemandParameters$1 = function (buffer, parameters) {
+        buffer.setUint8(parameters.channelParam1);
+        buffer.setUint8(parameters.counterInterval);
+        buffer.setUint8(parameters.channelParam2);
+        buffer.setUint8(0);
     };
-    CommandBinaryBuffer$1.prototype.getDayMaxDemandResponse = function () {
-        const date = this.getDate();
+    const getDayMaxDemandResponse = function (buffer) {
+        const date = getDate$1(buffer);
         const power = new Array(TARIFF_NUMBER$1).fill(0).map(() => ({
-            hours: this.getUint8(),
-            minutes: this.getUint8(),
-            power: this.getUint32()
+            hours: buffer.getUint8(),
+            minutes: buffer.getUint8(),
+            power: buffer.getUint32()
         }));
         return { date, power };
     };
-    CommandBinaryBuffer$1.prototype.setDayMaxDemandResponse = function (parameters) {
-        this.setDate(parameters.date);
+    const setDayMaxDemandResponse = function (buffer, parameters) {
+        setDate$1(buffer, parameters.date);
         parameters.power.forEach(value => {
-            this.setUint8(value.hours);
-            this.setUint8(value.minutes);
-            this.setUint32(value.power);
+            buffer.setUint8(value.hours);
+            buffer.setUint8(value.minutes);
+            buffer.setUint32(value.power);
         });
     };
-    CommandBinaryBuffer$1.prototype.getOperatorParametersExtended3 = function () {
+    const getOperatorParametersExtended3$1 = function (buffer) {
         return {
-            pmaxMinusThreshold0: this.getUint32(),
-            pmaxMinusThreshold1: this.getUint32(),
-            pmaxMinusThreshold2: this.getUint32(),
-            pmaxMinusThreshold3: this.getUint32(),
-            relaySet: toObject(operatorParametersExtended3RelaySetMask, this.getUint8())
+            pmaxMinusThreshold0: buffer.getUint32(),
+            pmaxMinusThreshold1: buffer.getUint32(),
+            pmaxMinusThreshold2: buffer.getUint32(),
+            pmaxMinusThreshold3: buffer.getUint32(),
+            relaySet: toObject(operatorParametersExtended3RelaySetMask, buffer.getUint8())
         };
     };
-    CommandBinaryBuffer$1.prototype.setOperatorParametersExtended3 = function (parameters) {
+    const setOperatorParametersExtended3$1 = function (buffer, parameters) {
         const { pmaxMinusThreshold0, pmaxMinusThreshold1, pmaxMinusThreshold2, pmaxMinusThreshold3, relaySet } = parameters;
-        this.setUint32(pmaxMinusThreshold0);
-        this.setUint32(pmaxMinusThreshold1);
-        this.setUint32(pmaxMinusThreshold2);
-        this.setUint32(pmaxMinusThreshold3);
-        this.setUint8(fromObject(operatorParametersExtended3RelaySetMask, relaySet));
+        buffer.setUint32(pmaxMinusThreshold0);
+        buffer.setUint32(pmaxMinusThreshold1);
+        buffer.setUint32(pmaxMinusThreshold2);
+        buffer.setUint32(pmaxMinusThreshold3);
+        buffer.setUint8(fromObject(operatorParametersExtended3RelaySetMask, relaySet));
     };
-    CommandBinaryBuffer$1.prototype.getMonthMaxPowerByTariffs = function () {
+    const getMonthMaxPowerByTariffs = function (buffer) {
         return new Array(TARIFF_NUMBER$1).fill(0).map(() => ({
-            date: this.getUint8(),
-            hours: this.getUint8(),
-            minutes: this.getUint8(),
-            power: this.getUint32()
+            date: buffer.getUint8(),
+            hours: buffer.getUint8(),
+            minutes: buffer.getUint8(),
+            power: buffer.getUint32()
         }));
     };
-    CommandBinaryBuffer$1.prototype.setMonthMaxPowerByTariffs = function (tariffs) {
+    const setMonthMaxPowerByTariffs = function (buffer, tariffs) {
         tariffs.forEach(tariff => {
-            this.setUint8(tariff.date);
-            this.setUint8(tariff.hours);
-            this.setUint8(tariff.minutes);
-            this.setUint32(tariff.power);
+            buffer.setUint8(tariff.date);
+            buffer.setUint8(tariff.hours);
+            buffer.setUint8(tariff.minutes);
+            buffer.setUint32(tariff.power);
         });
     };
     const getPackedEnergiesWithDateSize = (parameters) => {
@@ -1851,16 +1761,16 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$24 = activateRatePlan;
     const maxSize$1G = 1 + TARIFF_PLAN_SIZE;
     const fromBytes$26 = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             tariffTable: buffer.getUint8(),
-            tariffPlan: buffer.getTariffPlan()
+            tariffPlan: getTariffPlan(buffer)
         };
     };
     const toBytes$26 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1G);
+        const buffer = new BinaryBuffer(maxSize$1G, false);
         buffer.setUint8(parameters.tariffTable);
-        buffer.setTariffPlan(parameters.tariffPlan);
+        setTariffPlan(buffer, parameters.tariffPlan);
         return toBytes$27(id$24, buffer.data);
     };
 
@@ -1970,18 +1880,18 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const MAX_COMMAND_SIZE$5 = 4;
     const id$1Z = getDayDemand;
     const fromBytes$1$ = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes);
         if (bytes.length === MAX_COMMAND_SIZE$5) {
             return {
-                date: buffer.getDate(),
+                date: getDate$1(buffer),
                 energyType: buffer.getUint8()
             };
         }
-        return { date: buffer.getDate() };
+        return { date: getDate$1(buffer) };
     };
     const toBytes$1$ = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(parameters?.energyType ? MAX_COMMAND_SIZE$5 : MIN_COMMAND_SIZE$5);
-        buffer.setDate(parameters?.date);
+        const buffer = new BinaryBuffer(parameters?.energyType ? MAX_COMMAND_SIZE$5 : MIN_COMMAND_SIZE$5);
+        setDate$1(buffer, parameters?.date);
         if (parameters?.energyType) {
             buffer.setUint8(parameters.energyType);
         }
@@ -1992,18 +1902,18 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const MAX_COMMAND_SIZE$4 = 4;
     const id$1Y = getDayDemandExport;
     const fromBytes$1_ = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         if (bytes.length === MAX_COMMAND_SIZE$4) {
             return {
-                date: buffer.getDate(),
+                date: getDate$1(buffer),
                 energyType: buffer.getUint8()
             };
         }
-        return { date: buffer.getDate() };
+        return { date: getDate$1(buffer) };
     };
     const toBytes$1_ = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(parameters?.energyType ? MAX_COMMAND_SIZE$4 : MIN_COMMAND_SIZE$4);
-        buffer.setDate(parameters?.date);
+        const buffer = new BinaryBuffer(parameters?.energyType ? MAX_COMMAND_SIZE$4 : MIN_COMMAND_SIZE$4, false);
+        setDate$1(buffer, parameters?.date);
         if (parameters?.energyType) {
             buffer.setUint8(parameters.energyType);
         }
@@ -2013,24 +1923,24 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$1X = getDayMaxDemand;
     const maxSize$1z = 3;
     const fromBytes$1Z = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return { date: buffer.getDate() };
+        const buffer = new BinaryBuffer(bytes, false);
+        return { date: getDate$1(buffer) };
     };
     const toBytes$1Z = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1z);
-        buffer.setDate(parameters.date);
+        const buffer = new BinaryBuffer(maxSize$1z, false);
+        setDate$1(buffer, parameters.date);
         return toBytes$27(id$1X, buffer.data);
     };
 
     const id$1W = getDayMaxDemandExport;
     const maxSize$1y = 3;
     const fromBytes$1Y = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return { date: buffer.getDate() };
+        const buffer = new BinaryBuffer(bytes, false);
+        return { date: getDate$1(buffer) };
     };
     const toBytes$1Y = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1y);
-        buffer.setDate(parameters.date);
+        const buffer = new BinaryBuffer(maxSize$1y, false);
+        setDate$1(buffer, parameters.date);
         return toBytes$27(id$1W, buffer.data);
     };
 
@@ -2048,7 +1958,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const maxSize$1w = 3;
     const fromBytes$1W = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
     const toBytes$1W = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1w);
+        const buffer = new BinaryBuffer(maxSize$1w, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
         buffer.setUint8(parameters.isActive ? 0 : 1);
@@ -2061,12 +1971,12 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$1T = getDemand;
     const maxSize$1v = 7;
     const fromBytes$1V = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getDemand();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getDemand$1(buffer);
     };
     const toBytes$1V = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1v);
-        buffer.setDemand(parameters);
+        const buffer = new BinaryBuffer(maxSize$1v, false);
+        setDemand(buffer, parameters);
         return toBytes$27(id$1T, buffer.data);
     };
 
@@ -2316,7 +2226,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const maxSize$1r = 1;
     const fromBytes$1R = ([displayMode]) => ({ displayMode });
     const toBytes$1R = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1r);
+        const buffer = new BinaryBuffer(maxSize$1r, false);
         buffer.setUint8(parameters.displayMode);
         return toBytes$27(id$1P, buffer.data);
     };
@@ -2331,7 +2241,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         return {};
     };
     const toBytes$1Q = (parameters = {}) => {
-        const buffer = new CommandBinaryBuffer$1(parameters?.energyType ? MAX_COMMAND_SIZE$3 : MIN_COMMAND_SIZE$3);
+        const buffer = new BinaryBuffer(parameters?.energyType ? MAX_COMMAND_SIZE$3 : MIN_COMMAND_SIZE$3, false);
         if (parameters?.energyType) {
             buffer.setUint8(parameters.energyType);
         }
@@ -2368,7 +2278,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         return {};
     };
     const toBytes$1O = (parameters = {}) => {
-        const buffer = new CommandBinaryBuffer$1(parameters?.energyType ? MAX_COMMAND_SIZE$1 : MIN_COMMAND_SIZE$1);
+        const buffer = new BinaryBuffer(parameters?.energyType ? MAX_COMMAND_SIZE$1 : MIN_COMMAND_SIZE$1, false);
         if (parameters?.energyType) {
             buffer.setUint8(parameters.energyType);
         }
@@ -2401,14 +2311,14 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if (bytes.length !== maxSize$1q) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        const date = buffer.getDate();
+        const buffer = new BinaryBuffer(bytes, false);
+        const date = getDate$1(buffer);
         const offset = buffer.getUint8();
         return { date, offset };
     };
     const toBytes$1M = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1q);
-        buffer.setDate(parameters.date);
+        const buffer = new BinaryBuffer(maxSize$1q, false);
+        setDate$1(buffer, parameters.date);
         buffer.setUint8(parameters.offset);
         return toBytes$27(id$1K, buffer.data);
     };
@@ -2456,24 +2366,24 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$1F = getHalfHourDemand;
     const maxSize$1l = 3;
     const fromBytes$1H = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return { date: buffer.getDate() };
+        const buffer = new BinaryBuffer(bytes, false);
+        return { date: getDate$1(buffer) };
     };
     const toBytes$1H = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1l);
-        buffer.setDate(parameters.date);
+        const buffer = new BinaryBuffer(maxSize$1l, false);
+        setDate$1(buffer, parameters.date);
         return toBytes$27(id$1F, buffer.data);
     };
 
     const id$1E = getHalfHourDemandExport;
     const maxSize$1k = 3;
     const fromBytes$1G = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return { date: buffer.getDate() };
+        const buffer = new BinaryBuffer(bytes, false);
+        return { date: getDate$1(buffer) };
     };
     const toBytes$1G = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1k);
-        buffer.setDate(parameters.date);
+        const buffer = new BinaryBuffer(maxSize$1k, false);
+        setDate$1(buffer, parameters.date);
         return toBytes$27(id$1E, buffer.data);
     };
 
@@ -2498,7 +2408,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         'A-R+': 0x10,
         'A-R-': 0x20
     };
-    const getEnergiesFlags = (energies) => {
+    const getEnergiesFlagsLocal = (energies) => {
         const booleanObject = {};
         Object.keys(energies).forEach(name => {
             booleanObject[name] = !!energies[name];
@@ -2519,279 +2429,244 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         }
         return flag;
     };
-    function CommandBinaryBuffer(dataOrLength, isLittleEndian = false) {
-        BinaryBuffer.call(this, dataOrLength, isLittleEndian);
-    }
-    CommandBinaryBuffer.prototype = Object.create(BinaryBuffer.prototype);
-    CommandBinaryBuffer.prototype.constructor = CommandBinaryBuffer;
-    CommandBinaryBuffer.prototype.getDate = function () {
-        const date0 = this.getUint8();
-        const date1 = this.getUint8();
+    const getDate = function (buffer) {
+        const date0 = buffer.getUint8();
+        const date1 = buffer.getUint8();
         return {
             year: date0 >> 1,
             month: ((date0 << 3) & 0x0f) | (date1 >> 5),
             date: date1 & 0x1f
         };
     };
-    CommandBinaryBuffer.prototype.setDate = function ({ year, month, date }) {
+    const setDate = function (buffer, { year, month, date }) {
         const date0 = (year << 1) | ((month >> 3) & 0x01);
         const date1 = ((month << 5) & 0xe0) | (date & 0x1f);
-        this.setUint8(date0);
-        this.setUint8(date1);
+        buffer.setUint8(date0);
+        buffer.setUint8(date1);
     };
-    CommandBinaryBuffer.prototype.getEnergiesFlags = function () {
-        const byte = this.getUint8();
+    const getEnergiesFlags = function (buffer) {
+        const byte = buffer.getUint8();
         return toObject(energiesMask, byte);
     };
-    CommandBinaryBuffer.prototype.setEnergiesFlags = function (energies) {
-        this.setUint8(getEnergiesFlags(energies));
+    const setEnergiesFlags = function (buffer, energies) {
+        buffer.setUint8(getEnergiesFlagsLocal(energies));
     };
-    CommandBinaryBuffer.prototype.getHalfHourEnergy1 = function (halfhoursNumber) {
+    const getHalfHourEnergy1 = function (buffer, halfhoursNumber) {
         const halfhours = [];
         for (let index = 0; index < halfhoursNumber; index++) {
-            const value = this.getUint16();
+            const value = buffer.getUint16();
             const tariff = (value >> 14) & 0b11;
             const energy = value & 16383;
             halfhours.push(value === UNDEFINED_ENERGY_VALUE ? undefined : { tariff, energy });
         }
         return halfhours;
     };
-    CommandBinaryBuffer.prototype.setHalfHourEnergy1 = function (halfhours) {
+    const setHalfHourEnergy1 = function (buffer, halfhours) {
         if (halfhours) {
             for (let index = 0; index < halfhours.length; index++) {
                 const { tariff, energy } = halfhours[index];
                 const value = (tariff << 14) | energy;
-                this.setUint16(value === undefined ? UNDEFINED_ENERGY_VALUE : value);
+                buffer.setUint16(value === undefined ? UNDEFINED_ENERGY_VALUE : value);
             }
         }
     };
-    CommandBinaryBuffer.prototype.getHalfHourEnergy3 = function (halfhoursNumber) {
-        const halfhours = [];
-        for (let index = 0; index < halfhoursNumber; index++) {
-            const value = this.getUint16();
-            halfhours.push(value === UNDEFINED_ENERGY_VALUE ? undefined : value);
-        }
-        return halfhours;
-    };
-    CommandBinaryBuffer.prototype.setHalfHourEnergy3 = function (halfhours) {
-        if (halfhours) {
-            for (let index = 0; index < halfhours.length; index++) {
-                const value = halfhours[index];
-                this.setUint16(value === undefined ? UNDEFINED_ENERGY_VALUE : value);
-            }
-        }
-    };
-    CommandBinaryBuffer.prototype.getHalfHourEnergies1 = function (energiesFlags, halfhoursNumber) {
+    const getHalfHourEnergies1 = function (buffer, energiesFlags, halfhoursNumber) {
         const energies = {};
         ENERGY_NAMES.forEach(energyName => {
             if (energiesFlags[energyName]) {
-                energies[energyName] = this.getHalfHourEnergy1(halfhoursNumber);
+                energies[energyName] = getHalfHourEnergy1(buffer, halfhoursNumber);
             }
         });
         return energies;
     };
-    CommandBinaryBuffer.prototype.getHalfHourEnergies3 = function (energiesFlags, halfhoursNumber) {
-        const energies = {};
+    const setHalfHourEnergies1 = function (buffer, energies) {
         ENERGY_NAMES.forEach(energyName => {
-            if (energiesFlags[energyName]) {
-                energies[energyName] = this.getHalfHourEnergy3(halfhoursNumber);
-            }
-        });
-        return energies;
-    };
-    CommandBinaryBuffer.prototype.setHalfHourEnergies1 = function (energies) {
-        ENERGY_NAMES.forEach(energyName => {
-            this.setHalfHourEnergy1(energies[energyName]);
+            setHalfHourEnergy1(buffer, energies[energyName]);
         });
     };
-    CommandBinaryBuffer.prototype.setHalfHourEnergies3 = function (energies) {
-        ENERGY_NAMES.forEach(energyName => {
-            this.setHalfHourEnergy3(energies[energyName]);
-        });
-    };
-    CommandBinaryBuffer.prototype.getAPlusTariffEnergies = function (energyFlags) {
+    const getAPlusTariffEnergies = function (buffer, energyFlags) {
         const energies = {};
         if (energyFlags & energiesMask['A+']) {
-            energies['A+'] = this.getUint32();
+            energies['A+'] = buffer.getUint32();
         }
         if (energyFlags & energiesMask['A+R+']) {
-            energies['A+R+'] = this.getUint32();
+            energies['A+R+'] = buffer.getUint32();
         }
         if (energyFlags & energiesMask['A+R-']) {
-            energies['A+R-'] = this.getUint32();
+            energies['A+R-'] = buffer.getUint32();
         }
         return energies;
     };
-    CommandBinaryBuffer.prototype.setAPlusTariffEnergies = function (energies) {
+    const setAPlusTariffEnergies = function (buffer, energies) {
         if (energies) {
             if (energies['A+']) {
-                this.setUint32(energies['A+']);
+                buffer.setUint32(energies['A+']);
             }
             if (energies['A+R+']) {
-                this.setUint32(energies['A+R+']);
+                buffer.setUint32(energies['A+R+']);
             }
             if (energies['A+R-']) {
-                this.setUint32(energies['A+R-']);
+                buffer.setUint32(energies['A+R-']);
             }
         }
     };
-    CommandBinaryBuffer.prototype.getAMinusTariffEnergies = function (energyFlags) {
+    const getAMinusTariffEnergies = function (buffer, energyFlags) {
         const energies = {};
         if (energyFlags & energiesMask['A-']) {
-            energies['A-'] = this.getUint32();
+            energies['A-'] = buffer.getUint32();
         }
         if (energyFlags & energiesMask['A-R+']) {
-            energies['A-R+'] = this.getUint32();
+            energies['A-R+'] = buffer.getUint32();
         }
         if (energyFlags & energiesMask['A-R-']) {
-            energies['A-R-'] = this.getUint32();
+            energies['A-R-'] = buffer.getUint32();
         }
         return energies;
     };
-    CommandBinaryBuffer.prototype.setAMinusTariffEnergies = function (energies) {
+    const setAMinusTariffEnergies = function (buffer, energies) {
         if (energies) {
             if (energies['A-']) {
-                this.setUint32(energies['A-']);
+                buffer.setUint32(energies['A-']);
             }
             if (energies['A-R+']) {
-                this.setUint32(energies['A-R+']);
+                buffer.setUint32(energies['A-R+']);
             }
             if (energies['A-R-']) {
-                this.setUint32(energies['A-R-']);
+                buffer.setUint32(energies['A-R-']);
             }
         }
     };
-    CommandBinaryBuffer.prototype.getTariffsEnergies = function () {
-        const energyFlags = this.getUint8();
-        const tariffFlags = this.getUint8();
+    const getTariffsEnergies = function (buffer) {
+        const energyFlags = buffer.getUint8();
+        const tariffFlags = buffer.getUint8();
         const tariffs = new Array(TARIFF_NUMBER).fill(null);
         for (let index = 0; index < TARIFF_NUMBER; index++) {
             if (tariffFlags & getAPlusTariffBit(index)) {
-                tariffs[index] = this.getAPlusTariffEnergies(energyFlags);
+                tariffs[index] = getAPlusTariffEnergies(buffer, energyFlags);
             }
         }
         for (let index = 0; index < TARIFF_NUMBER; index++) {
             if (tariffFlags & getAMinusTariffBit(index)) {
-                tariffs[index] = { ...tariffs[index], ...this.getAMinusTariffEnergies(energyFlags) };
+                tariffs[index] = { ...tariffs[index], ...getAMinusTariffEnergies(buffer, energyFlags) };
             }
         }
         return tariffs;
     };
-    CommandBinaryBuffer.prototype.setTariffsEnergies = function (tariffs) {
+    const setTariffsEnergies = function (buffer, tariffs) {
         let energiesFlags = 0;
         let tariffsFlags = 0;
         tariffs.forEach((tariff, index) => {
             if (tariff) {
-                energiesFlags |= getEnergiesFlags(tariff);
+                energiesFlags |= getEnergiesFlagsLocal(tariff);
                 tariffsFlags |= getTariffEnergiesFlag(index, tariff);
             }
         });
-        this.setUint8(energiesFlags);
-        this.setUint8(tariffsFlags);
-        tariffs.forEach(tariff => this.setAPlusTariffEnergies(tariff));
-        tariffs.forEach(tariff => this.setAMinusTariffEnergies(tariff));
+        buffer.setUint8(energiesFlags);
+        buffer.setUint8(tariffsFlags);
+        tariffs.forEach(tariff => setAPlusTariffEnergies(buffer, tariff));
+        tariffs.forEach(tariff => setAMinusTariffEnergies(buffer, tariff));
     };
-    CommandBinaryBuffer.prototype.getPowerMax = function () {
+    const getPowerMax = function (buffer) {
         return {
-            hours: this.getUint8(),
-            minutes: this.getUint8(),
-            power: this.getUint32()
+            hours: buffer.getUint8(),
+            minutes: buffer.getUint8(),
+            power: buffer.getUint32()
         };
     };
-    CommandBinaryBuffer.prototype.setPowerMax = function (value) {
+    const setPowerMax = function (buffer, value) {
         if (value) {
             const { hours, minutes, power } = value;
-            this.setUint8(hours);
-            this.setUint8(minutes);
-            this.setUint32(power);
+            buffer.setUint8(hours);
+            buffer.setUint8(minutes);
+            buffer.setUint32(power);
         }
     };
-    CommandBinaryBuffer.prototype.getAPlusTariffPowerMax = function (energyFlags) {
+    const getAPlusTariffPowerMax = function (buffer, energyFlags) {
         const energies = {};
         if (energyFlags & energiesMask['A+']) {
-            energies['A+'] = this.getPowerMax();
+            energies['A+'] = getPowerMax(buffer);
         }
         if (energyFlags & energiesMask['A+R+']) {
-            energies['A+R+'] = this.getPowerMax();
+            energies['A+R+'] = getPowerMax(buffer);
         }
         if (energyFlags & energiesMask['A+R-']) {
-            energies['A+R-'] = this.getPowerMax();
+            energies['A+R-'] = getPowerMax(buffer);
         }
         return energies;
     };
-    CommandBinaryBuffer.prototype.setAPlusTariffPowerMax = function (energies) {
+    const setAPlusTariffPowerMax = function (buffer, energies) {
         if (energies) {
-            this.setPowerMax(energies['A+']);
-            this.setPowerMax(energies['A+R+']);
-            this.setPowerMax(energies['A+R+']);
+            setPowerMax(buffer, energies['A+']);
+            setPowerMax(buffer, energies['A+R+']);
+            setPowerMax(buffer, energies['A+R+']);
         }
     };
-    CommandBinaryBuffer.prototype.getAMinusTariffPowerMax = function (energyFlags) {
+    const getAMinusTariffPowerMax = function (buffer, energyFlags) {
         const energies = {};
         if (energyFlags & energiesMask['A-']) {
-            energies['A-'] = this.getPowerMax();
+            energies['A-'] = getPowerMax(buffer);
         }
         if (energyFlags & energiesMask['A-R+']) {
-            energies['A-R+'] = this.getPowerMax();
+            energies['A-R+'] = getPowerMax(buffer);
         }
         if (energyFlags & energiesMask['A-R-']) {
-            energies['A-R-'] = this.getPowerMax();
+            energies['A-R-'] = getPowerMax(buffer);
         }
         return energies;
     };
-    CommandBinaryBuffer.prototype.setAMinusTariffPowerMax = function (energies) {
+    const setAMinusTariffPowerMax = function (buffer, energies) {
         if (energies) {
-            this.setPowerMax(energies['A-']);
-            this.setPowerMax(energies['A-R+']);
-            this.setPowerMax(energies['A-R-']);
+            setPowerMax(buffer, energies['A-']);
+            setPowerMax(buffer, energies['A-R+']);
+            setPowerMax(buffer, energies['A-R-']);
         }
     };
-    CommandBinaryBuffer.prototype.getTariffsPowerMax = function () {
-        const energyFlags = this.getUint8();
-        const tariffFlags = this.getUint8();
+    const getTariffsPowerMax = function (buffer) {
+        const energyFlags = buffer.getUint8();
+        const tariffFlags = buffer.getUint8();
         const tariffs = new Array(TARIFF_NUMBER).fill(null);
         for (let index = 0; index < TARIFF_NUMBER; index++) {
             if (tariffFlags & getAPlusTariffBit(index)) {
-                tariffs[index] = this.getAPlusTariffPowerMax(energyFlags);
+                tariffs[index] = getAPlusTariffPowerMax(buffer, energyFlags);
             }
         }
         for (let index = 0; index < TARIFF_NUMBER; index++) {
             if (tariffFlags & getAMinusTariffBit(index)) {
-                tariffs[index] = { ...tariffs[index], ...this.getAMinusTariffPowerMax(energyFlags) };
+                tariffs[index] = { ...tariffs[index], ...getAMinusTariffPowerMax(buffer, energyFlags) };
             }
         }
         return tariffs;
     };
-    CommandBinaryBuffer.prototype.setTariffsPowerMax = function (tariffs) {
+    const setTariffsPowerMax = function (buffer, tariffs) {
         let energiesFlags = 0;
         let tariffsFlags = 0;
         tariffs.forEach((tariff, index) => {
             if (tariff) {
-                energiesFlags |= getEnergiesFlags(tariff);
+                energiesFlags |= getEnergiesFlagsLocal(tariff);
                 tariffsFlags |= getTariffEnergiesFlag(index, tariff);
             }
         });
-        this.setUint8(energiesFlags);
-        this.setUint8(tariffsFlags);
-        tariffs.forEach(tariff => this.setAPlusTariffPowerMax(tariff));
-        tariffs.forEach(tariff => this.setAMinusTariffPowerMax(tariff));
+        buffer.setUint8(energiesFlags);
+        buffer.setUint8(tariffsFlags);
+        tariffs.forEach(tariff => setAPlusTariffPowerMax(buffer, tariff));
+        tariffs.forEach(tariff => setAMinusTariffPowerMax(buffer, tariff));
     };
 
     const id$1C = getHalfHourEnergies;
     const maxSize$1i = 5;
     const fromBytes$1E = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
-            date: buffer.getDate(),
-            energies: buffer.getEnergiesFlags(),
+            date: getDate(buffer),
+            energies: getEnergiesFlags(buffer),
             firstHalfhour: buffer.getUint8(),
             halfhoursNumber: buffer.getUint8()
         };
     };
     const toBytes$1E = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$1i);
-        buffer.setDate(parameters.date);
-        buffer.setEnergiesFlags(parameters.energies);
+        const buffer = new BinaryBuffer(maxSize$1i, false);
+        setDate(buffer, parameters.date);
+        setEnergiesFlags(buffer, parameters.energies);
         buffer.setUint8(parameters.firstHalfhour);
         buffer.setUint8(parameters.halfhoursNumber);
         return toBytes$27(id$1C, buffer.data);
@@ -2820,14 +2695,14 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$1z = getMonthDemand;
     const maxSize$1f = 2;
     const fromBytes$1B = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             year: buffer.getUint8(),
             month: buffer.getUint8()
         };
     };
     const toBytes$1B = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1f);
+        const buffer = new BinaryBuffer(maxSize$1f, false);
         buffer.setUint8(parameters.year);
         buffer.setUint8(parameters.month);
         return toBytes$27(id$1z, buffer.data);
@@ -2836,14 +2711,14 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$1y = getMonthDemandExport;
     const maxSize$1e = 2;
     const fromBytes$1A = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             year: buffer.getUint8(),
             month: buffer.getUint8()
         };
     };
     const toBytes$1A = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1e);
+        const buffer = new BinaryBuffer(maxSize$1e, false);
         buffer.setUint8(parameters.year);
         buffer.setUint8(parameters.month);
         return toBytes$27(id$1y, buffer.data);
@@ -2911,7 +2786,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const maxSize$19 = 3;
     const fromBytes$1s = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
     const toBytes$1s = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$19);
+        const buffer = new BinaryBuffer(maxSize$19, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
         buffer.setUint8(parameters.isActive ? 0 : 1);
@@ -2922,7 +2797,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const maxSize$18 = 3;
     const fromBytes$1r = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
     const toBytes$1r = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$18);
+        const buffer = new BinaryBuffer(maxSize$18, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
         buffer.setUint8(parameters.isActive ? 0 : 1);
@@ -2942,14 +2817,14 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$1n = prepareRatePlan;
     const maxSize$16 = 5;
     const fromBytes$1p = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             tariffTable: buffer.getUint8(),
             id: buffer.getUint32()
         };
     };
     const toBytes$1p = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$16);
+        const buffer = new BinaryBuffer(maxSize$16, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint32(parameters.id);
         return toBytes$27(id$1n, buffer.data);
@@ -2983,14 +2858,14 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$1j = setAccessKey;
     const maxSize$13 = 1 + KEY_SIZE;
     const fromBytes$1l = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             accessLevel: buffer.getUint8(),
             key: buffer.getBytes(KEY_SIZE)
         };
     };
     const toBytes$1l = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$13);
+        const buffer = new BinaryBuffer(maxSize$13, false);
         buffer.setUint8(parameters.accessLevel);
         buffer.setBytes(parameters.key);
         return toBytes$27(id$1j, buffer.data);
@@ -3002,11 +2877,11 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if (bytes.length !== maxSize$12) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return { seconds: buffer.getInt16() };
     };
     const toBytes$1k = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$12);
+        const buffer = new BinaryBuffer(maxSize$12, false);
         buffer.setInt16(parameters.seconds);
         return toBytes$27(id$1i, buffer.data);
     };
@@ -3017,24 +2892,24 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if (bytes.length !== maxSize$11) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getTimeCorrectionParameters();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getTimeCorrectionParameters(buffer);
     };
     const toBytes$1j = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$11);
-        buffer.setTimeCorrectionParameters(parameters);
+        const buffer = new BinaryBuffer(maxSize$11, false);
+        setTimeCorrectionParameters(buffer, parameters);
         return toBytes$27(id$1h, buffer.data);
     };
 
     const id$1g = setDateTime;
     const maxSize$10 = 8;
     const fromBytes$1i = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getDateTime();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getDateTime$1(buffer);
     };
     const toBytes$1i = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$10);
-        buffer.setDateTime(parameters);
+        const buffer = new BinaryBuffer(maxSize$10, false);
+        setDateTime$1(buffer, parameters);
         return toBytes$27(id$1g, buffer.data);
     };
 
@@ -3044,21 +2919,21 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const fromBytes$1h = (bytes) => {
         const finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE$1);
         const cleanBytes = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
-        const buffer = new CommandBinaryBuffer$1(cleanBytes);
+        const buffer = new BinaryBuffer(cleanBytes, false);
         return {
             tariffTable: buffer.getUint8(),
             index: buffer.getUint8(),
-            periods: [...cleanBytes.slice(buffer.offset)].map(CommandBinaryBuffer$1.getDayProfileFromByte)
+            periods: [...cleanBytes.slice(buffer.offset)].map(getDayProfileFromByte)
         };
     };
     const toBytes$1h = (parameters) => {
         const hasPeriodsFinalByte = parameters.periods.length < MAX_PERIODS_NUMBER$1;
         const size = 2 + parameters.periods.length + +hasPeriodsFinalByte;
-        const buffer = new CommandBinaryBuffer$1(size);
+        const buffer = new BinaryBuffer(size, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
         parameters.periods.forEach(period => {
-            buffer.setDayProfile(period);
+            setDayProfile$1(buffer, period);
         });
         if (hasPeriodsFinalByte) {
             buffer.setUint8(PERIODS_FINAL_BYTE$1);
@@ -3071,12 +2946,12 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const maxSize$ = 4;
     const fromBytes$1g = (bytes) => {
         validateCommandPayload(name$2, bytes, maxSize$);
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getDemandParameters();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getDemandParameters$1(buffer);
     };
     const toBytes$1g = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$);
-        buffer.setDemandParameters(parameters);
+        const buffer = new BinaryBuffer(maxSize$, false);
+        setDemandParameters$1(buffer, parameters);
         return toBytes$27(id$1e, buffer.data);
     };
 
@@ -3100,31 +2975,31 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if (bytes.length !== maxSize$Z) {
             throw new Error('Invalid SetOpParams data size.');
         }
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getOperatorParameters();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getOperatorParameters$1(buffer);
     };
     const toBytes$1e = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$Z);
-        buffer.setOperatorParameters(parameters);
+        const buffer = new BinaryBuffer(maxSize$Z, false);
+        setOperatorParameters$1(buffer, parameters);
         return toBytes$27(id$1c, buffer.data);
     };
 
     const id$1b = setOperatorParametersExtended3;
     const maxSize$Y = 17;
     const fromBytes$1d = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getOperatorParametersExtended3();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getOperatorParametersExtended3$1(buffer);
     };
     const toBytes$1d = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$Y);
-        buffer.setOperatorParametersExtended3(parameters);
+        const buffer = new BinaryBuffer(maxSize$Y, false);
+        setOperatorParametersExtended3$1(buffer, parameters);
         return toBytes$27(id$1b, buffer.data);
     };
 
     const id$1a = setSaldo;
     const maxSize$X = 12;
     const fromBytes$1c = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             date: {
                 month: buffer.getUint8(),
@@ -3137,7 +3012,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         };
     };
     const toBytes$1c = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$X);
+        const buffer = new BinaryBuffer(maxSize$X, false);
         buffer.setUint8(parameters.date.month);
         buffer.setUint8(parameters.date.date);
         buffer.setUint8(parameters.date.hours);
@@ -3150,55 +3025,55 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$19 = setSaldoParameters;
     const maxSize$W = 37;
     const fromBytes$1b = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getSaldoParameters();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getSaldoParameters$1(buffer);
     };
     const toBytes$1b = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$W);
-        buffer.setSaldoParameters(parameters);
+        const buffer = new BinaryBuffer(maxSize$W, false);
+        setSaldoParameters$1(buffer, parameters);
         return toBytes$27(id$19, buffer.data);
     };
 
     const id$18 = setSeasonProfile;
     const maxSize$V = SEASON_PROFILE_SIZE;
     const fromBytes$1a = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             tariffTable: buffer.getUint8(),
             index: buffer.getUint8(),
-            ...buffer.getSeasonProfile()
+            ...getSeasonProfile$1(buffer)
         };
     };
     const toBytes$1a = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$V);
+        const buffer = new BinaryBuffer(maxSize$V, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
-        buffer.setSeasonProfile(parameters);
+        setSeasonProfile$1(buffer, parameters);
         return toBytes$27(id$18, buffer.data);
     };
 
     const id$17 = setSpecialDay;
     const maxSize$U = 6;
     const fromBytes$19 = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             tariffTable: buffer.getUint8(),
             index: buffer.getUint8(),
-            ...buffer.getSpecialDay()
+            ...getSpecialDay$1(buffer)
         };
     };
     const toBytes$19 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$U);
+        const buffer = new BinaryBuffer(maxSize$U, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
-        buffer.setSpecialDay(parameters);
+        setSpecialDay$1(buffer, parameters);
         return toBytes$27(id$17, buffer.data);
     };
 
     const id$16 = setSpecialOperation;
     const maxSize$T = 2;
     const fromBytes$18 = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         const type = buffer.getUint8();
         const flags = buffer.getUint8();
         const readScreensInfo = !!(flags & 0x80);
@@ -3212,7 +3087,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         };
     };
     const toBytes$18 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$T);
+        const buffer = new BinaryBuffer(maxSize$T, false);
         let flags = 0;
         if (parameters.readScreensInfo) {
             flags |= 0x80;
@@ -3510,7 +3385,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$12 = errorResponse;
     const maxSize$P = 2;
     const getFromBytes$1 = (commandNamesParameter) => ((bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         const errorCommandId = buffer.getUint8();
         const errorCode = buffer.getUint8();
         return {
@@ -3522,7 +3397,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     });
     const fromBytes$14 = getFromBytes$1(uplinkNames);
     const toBytes$13 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$P);
+        const buffer = new BinaryBuffer(maxSize$P, false);
         buffer.setUint8(parameters.commandId);
         buffer.setUint8(parameters.errorCode);
         return toBytes$27(id$12, buffer.data);
@@ -3553,12 +3428,12 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$10 = getCorrectTime;
     const maxSize$N = 9;
     const fromBytes$12 = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getTimeCorrectionParameters();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getTimeCorrectionParameters(buffer);
     };
     const toBytes$11 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$N);
-        buffer.setTimeCorrectionParameters(parameters);
+        const buffer = new BinaryBuffer(maxSize$N, false);
+        setTimeCorrectionParameters(buffer, parameters);
         return toBytes$27(id$10, buffer.data);
     };
 
@@ -3612,7 +3487,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         keyPress2Test: 0x80
     };
     const fromBytes$10 = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         const operatingSeconds = buffer.getUint32();
         const tbadVAVB = buffer.getUint32();
         const tbadImaxAll = buffer.getUint32();
@@ -3643,7 +3518,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         };
     };
     const toBytes$ = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$L);
+        const buffer = new BinaryBuffer(maxSize$L, false);
         const statusEventValue = fromObject(eventStatusMask, parameters.statusEvent);
         buffer.setUint32(parameters.operatingSeconds);
         buffer.setUint32(parameters.tbadVAVB);
@@ -3664,7 +3539,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$Z = getCurrentValues;
     const maxSize$K = 32;
     const fromBytes$ = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             powerA: buffer.getInt32(),
             iaRms: buffer.getInt32(),
@@ -3678,7 +3553,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         };
     };
     const toBytes$_ = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$K);
+        const buffer = new BinaryBuffer(maxSize$K, false);
         buffer.setInt32(parameters.powerA);
         buffer.setInt32(parameters.iaRms);
         buffer.setInt32(parameters.vavbRms);
@@ -3694,30 +3569,30 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$Y = getDateTime;
     const maxSize$J = 8;
     const fromBytes$_ = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getDateTime();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getDateTime$1(buffer);
     };
     const toBytes$Z = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$J);
-        buffer.setDateTime(parameters);
+        const buffer = new BinaryBuffer(maxSize$J, false);
+        setDateTime$1(buffer, parameters);
         return toBytes$27(id$Y, buffer.data);
     };
 
     const COMMAND_SIZE$5 = 19;
     const id$X = getDayDemand;
     const fromBytes$Z = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         let parameters;
         if (bytes.length === COMMAND_SIZE$5) {
             parameters = {
-                date: buffer.getDate(),
-                energies: buffer.getEnergies()
+                date: getDate$1(buffer),
+                energies: getEnergies(buffer)
             };
         }
         else {
             parameters = {
-                date: buffer.getDate(),
-                ...buffer.getPackedEnergyWithType()
+                date: getDate$1(buffer),
+                ...getPackedEnergyWithType(buffer)
             };
         }
         return parameters;
@@ -3728,27 +3603,27 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
             const energiesNumber = parameters.energies.filter(energy => energy !== null).length;
             size = DATE_SIZE$3 + PACKED_ENERGY_TYPE_SIZE + (energiesNumber * ENERGY_SIZE);
         }
-        const buffer = new CommandBinaryBuffer$1(size);
-        buffer.setDate(parameters.date);
-        buffer.setPackedEnergyWithType(parameters);
+        const buffer = new BinaryBuffer(size, false);
+        setDate$1(buffer, parameters.date);
+        setPackedEnergyWithType(buffer, parameters);
         return toBytes$27(id$X, buffer.data);
     };
 
     const COMMAND_SIZE$4 = 19;
     const id$W = getDayDemandExport;
     const fromBytes$Y = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         let parameters;
         if (bytes.length === COMMAND_SIZE$4) {
             parameters = {
-                date: buffer.getDate(),
-                energies: buffer.getEnergies()
+                date: getDate$1(buffer),
+                energies: getEnergies(buffer)
             };
         }
         else {
             parameters = {
-                date: buffer.getDate(),
-                ...buffer.getPackedEnergyWithType()
+                date: getDate$1(buffer),
+                ...getPackedEnergyWithType(buffer)
             };
         }
         return parameters;
@@ -3759,9 +3634,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
             const energiesNumber = parameters.energies.filter(energy => energy !== null).length;
             size = DATE_SIZE$3 + PACKED_ENERGY_TYPE_SIZE + (energiesNumber * ENERGY_SIZE);
         }
-        const buffer = new CommandBinaryBuffer$1(size);
-        buffer.setDate(parameters.date);
-        buffer.setPackedEnergyWithType(parameters);
+        const buffer = new BinaryBuffer(size, false);
+        setDate$1(buffer, parameters.date);
+        setPackedEnergyWithType(buffer, parameters);
         return toBytes$27(id$W, buffer.data);
     };
 
@@ -3772,52 +3647,52 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$V = getDayEnergies;
     const maxSize$I = DATE_SIZE$2 + ENERGY_FLAGS_SIZE$2 + TARIFF_FLAGS_SIZE$1 + MAX_TARIFFS_ENERGIES_SIZE$1;
     const fromBytes$X = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
-            date: buffer.getDate(),
-            energies: buffer.getTariffsEnergies()
+            date: getDate(buffer),
+            energies: getTariffsEnergies(buffer)
         };
     };
     const toBytes$W = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$I);
-        buffer.setDate(parameters.date);
-        buffer.setTariffsEnergies(parameters.energies);
+        const buffer = new BinaryBuffer(maxSize$I, false);
+        setDate(buffer, parameters.date);
+        setTariffsEnergies(buffer, parameters.energies);
         return toBytes$27(id$V, buffer.getBytesToOffset());
     };
 
     const id$U = getDayMaxDemand;
     const maxSize$H = 27;
     const fromBytes$W = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getDayMaxDemandResponse();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getDayMaxDemandResponse(buffer);
     };
     const toBytes$V = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$H);
-        buffer.setDayMaxDemandResponse(parameters);
+        const buffer = new BinaryBuffer(maxSize$H, false);
+        setDayMaxDemandResponse(buffer, parameters);
         return toBytes$27(id$U, buffer.getBytesToOffset());
     };
 
     const id$T = getDayMaxDemandExport;
     const maxSize$G = 27;
     const fromBytes$V = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getDayMaxDemandResponse();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getDayMaxDemandResponse(buffer);
     };
     const toBytes$U = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$G);
-        buffer.setDayMaxDemandResponse(parameters);
+        const buffer = new BinaryBuffer(maxSize$G, false);
+        setDayMaxDemandResponse(buffer, parameters);
         return toBytes$27(id$T, buffer.getBytesToOffset());
     };
 
     const id$S = getDayMaxDemandPrevious;
     const maxSize$F = 27;
     const fromBytes$U = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getDayMaxDemandResponse();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getDayMaxDemandResponse(buffer);
     };
     const toBytes$T = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$F);
-        buffer.setDayMaxDemandResponse(parameters);
+        const buffer = new BinaryBuffer(maxSize$F, false);
+        setDayMaxDemandResponse(buffer, parameters);
         return toBytes$27(id$S, buffer.getBytesToOffset());
     };
 
@@ -3828,16 +3703,16 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$R = getDayMaxPower;
     const maxSize$E = DATE_SIZE$1 + ENERGY_FLAGS_SIZE$1 + TARIFF_FLAGS_SIZE + MAX_TARIFFS_ENERGIES_SIZE;
     const fromBytes$T = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
-            date: buffer.getDate(),
-            tariffs: buffer.getTariffsPowerMax()
+            date: getDate(buffer),
+            tariffs: getTariffsPowerMax(buffer)
         };
     };
     const toBytes$S = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$E);
-        buffer.setDate(parameters.date);
-        buffer.setTariffsPowerMax(parameters.tariffs);
+        const buffer = new BinaryBuffer(maxSize$E, false);
+        setDate(buffer, parameters.date);
+        setTariffsPowerMax(buffer, parameters.tariffs);
         return toBytes$27(id$R, buffer.getBytesToOffset());
     };
 
@@ -3848,15 +3723,15 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         const finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE);
         const cleanData = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
         return {
-            periods: [...cleanData].map(CommandBinaryBuffer$1.getDayProfileFromByte)
+            periods: [...cleanData].map(getDayProfileFromByte)
         };
     };
     const toBytes$R = (parameters) => {
         const hasPeriodsFinalByte = parameters.periods.length < MAX_PERIODS_NUMBER;
         const size = parameters.periods.length + +hasPeriodsFinalByte;
-        const buffer = new CommandBinaryBuffer$1(size);
+        const buffer = new BinaryBuffer(size, false);
         parameters.periods.forEach(period => {
-            buffer.setDayProfile(period);
+            setDayProfile$1(buffer, period);
         });
         if (hasPeriodsFinalByte) {
             buffer.setUint8(PERIODS_FINAL_BYTE);
@@ -3930,8 +3805,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if (!bytes || bytes.length < maxSize$1v) {
             throw new Error('Invalid uplink GetDemand byte length.');
         }
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        const parameters = buffer.getDemand();
+        const buffer = new BinaryBuffer(bytes, false);
+        const parameters = getDemand$1(buffer);
         if (bytes.length !== maxSize$1v + (2 * parameters.count)) {
             throw new Error('Invalid uplink GetDemand demands byte length.');
         }
@@ -3943,8 +3818,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         return parameters;
     };
     const toBytes$Q = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$1v + parameters.count * 2);
-        buffer.setDemand(parameters);
+        const buffer = new BinaryBuffer(maxSize$1v + parameters.count * 2, false);
+        setDemand(buffer, parameters);
         if (parameters.energyType === A_PLUS || parameters.energyType === A_MINUS) {
             energyToBinary(parameters.demands).forEach((value) => buffer.setUint16(value));
         }
@@ -3959,36 +3834,36 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const maxSize$D = 4;
     const fromBytes$Q = (bytes) => {
         validateCommandPayload(name$1, bytes, maxSize$D);
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getDemandParameters();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getDemandParameters$1(buffer);
     };
     const toBytes$P = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$D);
-        buffer.setDemandParameters(parameters);
+        const buffer = new BinaryBuffer(maxSize$D, false);
+        setDemandParameters$1(buffer, parameters);
         return toBytes$27(id$O, buffer.data);
     };
 
     const id$N = getDeviceId;
     const maxSize$C = 8;
     const fromBytes$P = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getDeviceId();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getDeviceId$1(buffer);
     };
     const toBytes$O = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$C);
-        buffer.setDeviceId(parameters);
+        const buffer = new BinaryBuffer(maxSize$C, false);
+        setDeviceId(buffer, parameters);
         return toBytes$27(id$N, buffer.data);
     };
 
     const id$M = getDeviceType;
     const maxSize$B = 9;
     const fromBytes$O = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getDeviceType();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getDeviceType$1(buffer);
     };
     const toBytes$N = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$B);
-        buffer.setDeviceType(parameters);
+        const buffer = new BinaryBuffer(maxSize$B, false);
+        setDeviceType(buffer, parameters);
         return toBytes$27(id$M, buffer.data);
     };
 
@@ -4002,15 +3877,15 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const COMMAND_SIZE$3 = 16;
     const id$K = getEnergy;
     const fromBytes$M = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         let parameters;
         if (bytes.length === COMMAND_SIZE$3) {
             parameters = {
-                energies: buffer.getEnergies()
+                energies: getEnergies(buffer)
             };
         }
         else {
-            parameters = buffer.getPackedEnergyWithType();
+            parameters = getPackedEnergyWithType(buffer);
         }
         return parameters;
     };
@@ -4020,49 +3895,49 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
             const energiesNumber = parameters.energies.filter(energy => energy !== null).length;
             size = PACKED_ENERGY_TYPE_SIZE + (energiesNumber * ENERGY_SIZE);
         }
-        const buffer = new CommandBinaryBuffer$1(size);
-        buffer.setPackedEnergyWithType(parameters);
+        const buffer = new BinaryBuffer(size, false);
+        setPackedEnergyWithType(buffer, parameters);
         return toBytes$27(id$K, buffer.data);
     };
 
     const COMMAND_SIZE$2 = 19;
     const id$J = getEnergyDayPrevious;
     const fromBytes$L = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         let parameters;
         if (bytes.length === COMMAND_SIZE$2) {
             parameters = {
-                date: buffer.getDate(),
-                energies: buffer.getEnergies()
+                date: getDate$1(buffer),
+                energies: getEnergies(buffer)
             };
         }
         else {
             parameters = {
-                date: buffer.getDate(),
-                ...buffer.getPackedEnergyWithType()
+                date: getDate$1(buffer),
+                ...getPackedEnergyWithType(buffer)
             };
         }
         return parameters;
     };
     const toBytes$K = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(getPackedEnergiesWithDateSize(parameters));
-        buffer.setDate(parameters.date);
-        buffer.setPackedEnergyWithType(parameters);
+        const buffer = new BinaryBuffer(getPackedEnergiesWithDateSize(parameters), false);
+        setDate$1(buffer, parameters.date);
+        setPackedEnergyWithType(buffer, parameters);
         return toBytes$27(id$J, buffer.data);
     };
 
     const COMMAND_SIZE$1 = 16;
     const id$I = getEnergyExport;
     const fromBytes$K = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         let parameters;
         if (bytes.length === COMMAND_SIZE$1) {
             parameters = {
-                energies: buffer.getEnergies()
+                energies: getEnergies(buffer)
             };
         }
         else {
-            parameters = buffer.getPackedEnergyWithType();
+            parameters = getPackedEnergyWithType(buffer);
         }
         return parameters;
     };
@@ -4072,34 +3947,34 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
             const energiesNumber = parameters.energies.filter(energy => energy !== null).length;
             size = PACKED_ENERGY_TYPE_SIZE + (energiesNumber * ENERGY_SIZE);
         }
-        const buffer = new CommandBinaryBuffer$1(size);
-        buffer.setPackedEnergyWithType(parameters);
+        const buffer = new BinaryBuffer(size, false);
+        setPackedEnergyWithType(buffer, parameters);
         return toBytes$27(id$I, buffer.data);
     };
 
     const COMMAND_SIZE = 19;
     const id$H = getEnergyExportDayPrevious;
     const fromBytes$J = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         let parameters;
         if (bytes.length === COMMAND_SIZE) {
             parameters = {
-                date: buffer.getDate(),
-                energies: buffer.getEnergies()
+                date: getDate$1(buffer),
+                energies: getEnergies(buffer)
             };
         }
         else {
             parameters = {
-                date: buffer.getDate(),
-                ...buffer.getPackedEnergyWithType()
+                date: getDate$1(buffer),
+                ...getPackedEnergyWithType(buffer)
             };
         }
         return parameters;
     };
     const toBytes$I = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(getPackedEnergiesWithDateSize(parameters));
-        buffer.setDate(parameters.date);
-        buffer.setPackedEnergyWithType(parameters);
+        const buffer = new BinaryBuffer(getPackedEnergiesWithDateSize(parameters), false);
+        setDate$1(buffer, parameters.date);
+        setPackedEnergyWithType(buffer, parameters);
         return toBytes$27(id$H, buffer.data);
     };
 
@@ -4111,26 +3986,26 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if (bytes.length > maxSize$A) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new BinaryBufferConstructor(bytes);
-        const date = buffer.getDate();
+        const buffer = new BinaryBufferConstructor(bytes, false);
+        const date = getDate$1(buffer);
         const eventsNumber = buffer.getUint8();
         const events = [];
         while (!buffer.isEmpty) {
-            events.push(buffer.getEvent());
+            events.push(getEvent(buffer));
         }
         return { date, eventsNumber, events };
     });
     const getToBytes = BinaryBufferConstructor => ((parameters) => {
-        const buffer = new BinaryBufferConstructor(maxSize$A);
-        buffer.setDate(parameters.date);
+        const buffer = new BinaryBufferConstructor(maxSize$A, false);
+        setDate$1(buffer, parameters.date);
         buffer.setUint8(parameters.eventsNumber);
         for (const event of parameters.events) {
-            buffer.setEvent(event);
+            setEvent(buffer, event);
         }
         return toBytes$27(id$G, buffer.getBytesToOffset());
     });
-    const fromBytes$I = getFromBytes(CommandBinaryBuffer$1);
-    const toBytes$H = getToBytes(CommandBinaryBuffer$1);
+    const fromBytes$I = getFromBytes(BinaryBuffer);
+    const toBytes$H = getToBytes(BinaryBuffer);
 
     const COMMAND_BODY_SIZE = 14;
     const OLD_COMMAND_BODY_SIZE = 20;
@@ -4139,7 +4014,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if ((bytes.length !== COMMAND_BODY_SIZE && bytes.length !== OLD_COMMAND_BODY_SIZE)) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         const restart = buffer.getUint16();
         const powerOff = buffer.getUint16();
         const localParametersChange = buffer.getUint16();
@@ -4152,7 +4027,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         };
     };
     const toBytes$G = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(COMMAND_BODY_SIZE);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE, false);
         buffer.setUint16(parameters.restart);
         buffer.setUint16(parameters.powerOff);
         buffer.setUint16(parameters.localParametersChange);
@@ -4166,26 +4041,26 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$E = getEventStatus;
     const maxSize$z = 2;
     const fromBytes$G = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes, true);
-        return buffer.getEventStatus();
+        const buffer = new BinaryBuffer(bytes, true);
+        return getEventStatus$1(buffer);
     };
     const toBytes$F = (eventStatus) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$z, true);
-        buffer.setEventStatus(eventStatus);
+        const buffer = new BinaryBuffer(maxSize$z, true);
+        setEventStatus(buffer, eventStatus);
         return toBytes$27(id$E, buffer.data);
     };
 
     const id$D = getExtendedCurrentValues;
     const maxSize$y = 4;
     const fromBytes$F = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             temperature: buffer.getInt16(),
             frequency: buffer.getInt16()
         };
     };
     const toBytes$E = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$y);
+        const buffer = new BinaryBuffer(maxSize$y, false);
         buffer.setInt16(parameters.temperature);
         buffer.setInt16(parameters.frequency);
         return toBytes$27(id$D, buffer.data);
@@ -4194,21 +4069,21 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$C = getExtendedCurrentValues2;
     const maxSize$x = 7;
     const fromBytes$E = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getExtendedCurrentValues2();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getExtendedCurrentValues2$1(buffer);
     };
     const toBytes$D = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$x);
-        buffer.setExtendedCurrentValues2(parameters);
+        const buffer = new BinaryBuffer(maxSize$x, false);
+        setExtendedCurrentValues2(buffer, parameters);
         return toBytes$27(id$C, buffer.data);
     };
 
     const id$B = getHalfHourDemand;
     const fromBytes$D = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
-        const date = buffer.getDate();
-        const periods = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
+        const date = getDate$1(buffer);
+        const periods = getEnergyPeriods(buffer, hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
         if (hasDst) {
             return {
                 date,
@@ -4219,9 +4094,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         return { date, periods };
     };
     const toBytes$C = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(parameters.periods.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE);
-        buffer.setDate(parameters.date);
-        buffer.setEnergyPeriods(parameters.periods);
+        const buffer = new BinaryBuffer(parameters.periods.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE, false);
+        setDate$1(buffer, parameters.date);
+        setEnergyPeriods(buffer, parameters.periods);
         if (parameters.dstHour) {
             buffer.setUint8(parameters.dstHour);
         }
@@ -4230,10 +4105,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const id$A = getHalfHourDemandExport;
     const fromBytes$C = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
-        const date = buffer.getDate();
-        const periods = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
+        const date = getDate$1(buffer);
+        const periods = getEnergyPeriods(buffer, hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
         if (hasDst) {
             return {
                 date,
@@ -4244,9 +4119,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         return { date, periods };
     };
     const toBytes$B = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(parameters.periods.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE);
-        buffer.setDate(parameters.date);
-        buffer.setEnergyPeriods(parameters.periods);
+        const buffer = new BinaryBuffer(parameters.periods.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE, false);
+        setDate$1(buffer, parameters.date);
+        setEnergyPeriods(buffer, parameters.periods);
         if (parameters.dstHour) {
             buffer.setUint8(parameters.dstHour);
         }
@@ -4255,10 +4130,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const id$z = getHalfHourDemandPrevious;
     const fromBytes$B = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         const hasDst = bytes.length > MIN_HALF_HOUR_COMMAND_SIZE;
-        const date = buffer.getDate();
-        const periods = buffer.getEnergyPeriods(hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
+        const date = getDate$1(buffer);
+        const periods = getEnergyPeriods(buffer, hasDst ? MAX_HALF_HOUR_PERIODS : MIN_HALF_HOUR_PERIODS);
         if (hasDst) {
             return {
                 date,
@@ -4269,9 +4144,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         return { date, periods };
     };
     const toBytes$A = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(parameters.periods.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE);
-        buffer.setDate(parameters.date);
-        buffer.setEnergyPeriods(parameters.periods);
+        const buffer = new BinaryBuffer(parameters.periods.length > MIN_HALF_HOUR_PERIODS ? MAX_HALF_HOUR_COMMAND_SIZE : MIN_HALF_HOUR_COMMAND_SIZE, false);
+        setDate$1(buffer, parameters.date);
+        setEnergyPeriods(buffer, parameters.periods);
         if (parameters.dstHour) {
             buffer.setUint8(parameters.dstHour);
         }
@@ -4286,33 +4161,33 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$y = getHalfHourEnergies;
     const maxSize$w = DATE_SIZE + ENERGY_FLAGS_SIZE + START_HALFHOUR_SIZE + HALFHOURS_NUMBER_SIZE + MAX_HALFHOURS_ENERGY_SIZE;
     const fromBytes$A = (bytes) => {
-        const buffer = new CommandBinaryBuffer(bytes);
-        const date = buffer.getDate();
-        const energiesFlags = buffer.getEnergiesFlags();
+        const buffer = new BinaryBuffer(bytes, false);
+        const date = getDate(buffer);
+        const energiesFlags = getEnergiesFlags(buffer);
         const firstHalfhour = buffer.getUint8();
         const halfhoursNumber = buffer.getUint8();
         return {
             date,
             firstHalfhour,
             halfhoursNumber,
-            energies: buffer.getHalfHourEnergies1(energiesFlags, halfhoursNumber)
+            energies: getHalfHourEnergies1(buffer, energiesFlags, halfhoursNumber)
         };
     };
     const toBytes$z = (parameters) => {
-        const buffer = new CommandBinaryBuffer(maxSize$w);
+        const buffer = new BinaryBuffer(maxSize$w, false);
         const { date, firstHalfhour, halfhoursNumber, energies } = parameters;
-        buffer.setDate(date);
-        buffer.setEnergiesFlags(energies);
+        setDate(buffer, date);
+        setEnergiesFlags(buffer, energies);
         buffer.setUint8(firstHalfhour);
         buffer.setUint8(halfhoursNumber);
-        buffer.setHalfHourEnergies1(energies);
+        setHalfHourEnergies1(buffer, energies);
         return toBytes$27(id$y, buffer.getBytesToOffset());
     };
 
     const id$x = getMagneticFieldThreshold;
     const maxSize$v = 10;
     const fromBytes$z = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             induction: buffer.getUint16(),
             threshold: buffer.getUint16(),
@@ -4321,7 +4196,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         };
     };
     const toBytes$y = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$v);
+        const buffer = new BinaryBuffer(maxSize$v, false);
         buffer.setUint16(parameters.induction);
         buffer.setUint16(parameters.threshold);
         buffer.setUint16(parameters.inductionCoefficient * 100);
@@ -4336,96 +4211,96 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$v = getMonthDemand;
     const maxSize$u = 18;
     const fromBytes$x = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             year: buffer.getUint8(),
             month: buffer.getUint8(),
-            energies: buffer.getEnergies()
+            energies: getEnergies(buffer)
         };
     };
     const toBytes$w = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$u);
+        const buffer = new BinaryBuffer(maxSize$u, false);
         buffer.setUint8(parameters.year);
         buffer.setUint8(parameters.month);
-        buffer.setEnergies(parameters.energies);
+        setEnergies(buffer, parameters.energies);
         return toBytes$27(id$v, buffer.data);
     };
 
     const id$u = getMonthDemandExport;
     const maxSize$t = 18;
     const fromBytes$w = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             year: buffer.getUint8(),
             month: buffer.getUint8(),
-            energies: buffer.getEnergies()
+            energies: getEnergies(buffer)
         };
     };
     const toBytes$v = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$t);
+        const buffer = new BinaryBuffer(maxSize$t, false);
         buffer.setUint8(parameters.year);
         buffer.setUint8(parameters.month);
-        buffer.setEnergies(parameters.energies);
+        setEnergies(buffer, parameters.energies);
         return toBytes$27(id$u, buffer.data);
     };
 
     const id$t = getMonthMaxDemand;
     const maxSize$s = 2 + TARIFF_NUMBER$1 * 7;
     const fromBytes$v = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             year: buffer.getUint8(),
             month: buffer.getUint8(),
-            tariffs: buffer.getMonthMaxPowerByTariffs()
+            tariffs: getMonthMaxPowerByTariffs(buffer)
         };
     };
     const toBytes$u = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$s);
+        const buffer = new BinaryBuffer(maxSize$s, false);
         buffer.setUint8(parameters.year);
         buffer.setUint8(parameters.month);
-        buffer.setMonthMaxPowerByTariffs(parameters.tariffs);
+        setMonthMaxPowerByTariffs(buffer, parameters.tariffs);
         return toBytes$27(id$t, buffer.data);
     };
 
     const id$s = getMonthMaxDemandExport;
     const maxSize$r = 2 + TARIFF_NUMBER$1 * 7;
     const fromBytes$u = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             year: buffer.getUint8(),
             month: buffer.getUint8(),
-            tariffs: buffer.getMonthMaxPowerByTariffs()
+            tariffs: getMonthMaxPowerByTariffs(buffer)
         };
     };
     const toBytes$t = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$r);
+        const buffer = new BinaryBuffer(maxSize$r, false);
         buffer.setUint8(parameters.year);
         buffer.setUint8(parameters.month);
-        buffer.setMonthMaxPowerByTariffs(parameters.tariffs);
+        setMonthMaxPowerByTariffs(buffer, parameters.tariffs);
         return toBytes$27(id$s, buffer.data);
     };
 
     const id$r = getOperatorParameters;
     const maxSize$q = OPERATOR_PARAMETERS_SIZE;
     const fromBytes$t = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getOperatorParameters();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getOperatorParameters$1(buffer);
     };
     const toBytes$s = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$q);
-        buffer.setOperatorParameters(parameters);
+        const buffer = new BinaryBuffer(maxSize$q, false);
+        setOperatorParameters$1(buffer, parameters);
         return toBytes$27(id$r, buffer.data);
     };
 
     const id$q = getOperatorParametersExtended3;
     const maxSize$p = 17;
     const fromBytes$s = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getOperatorParametersExtended3();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getOperatorParametersExtended3$1(buffer);
     };
     const toBytes$r = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$p);
-        buffer.setOperatorParametersExtended3(parameters);
+        const buffer = new BinaryBuffer(maxSize$p, false);
+        setOperatorParametersExtended3$1(buffer, parameters);
         return toBytes$27(id$q, buffer.data);
     };
 
@@ -4435,18 +4310,18 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if (bytes.length !== maxSize$o) {
             throw new Error('Invalid getRatePlanInfo data size.');
         }
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             tariffTable: buffer.getUint8(),
-            activePlan: buffer.getTariffPlan(),
-            passivePlan: buffer.getTariffPlan()
+            activePlan: getTariffPlan(buffer),
+            passivePlan: getTariffPlan(buffer)
         };
     };
     const toBytes$q = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$o);
+        const buffer = new BinaryBuffer(maxSize$o, false);
         buffer.setUint8(parameters.tariffTable);
-        buffer.setTariffPlan(parameters.activePlan);
-        buffer.setTariffPlan(parameters.passivePlan);
+        setTariffPlan(buffer, parameters.activePlan);
+        setTariffPlan(buffer, parameters.passivePlan);
         return toBytes$27(id$p, buffer.data);
     };
 
@@ -4456,7 +4331,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if (bytes.length !== maxSize$n) {
             throw new Error('Invalid getSaldo data size.');
         }
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         return {
             currentSaldo: buffer.getInt32(),
             count: buffer.getUint8(),
@@ -4471,7 +4346,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         };
     };
     const toBytes$p = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$n);
+        const buffer = new BinaryBuffer(maxSize$n, false);
         buffer.setInt32(parameters.currentSaldo);
         buffer.setUint8(parameters.count);
         parameters.energy.forEach(value => buffer.setInt32(value));
@@ -4489,36 +4364,36 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if (bytes.length !== maxSize$m) {
             throw new Error('Invalid getSaldoParameters data size.');
         }
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getSaldoParameters();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getSaldoParameters$1(buffer);
     };
     const toBytes$o = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$m);
-        buffer.setSaldoParameters(parameters);
+        const buffer = new BinaryBuffer(maxSize$m, false);
+        setSaldoParameters$1(buffer, parameters);
         return toBytes$27(id$n, buffer.data);
     };
 
     const id$m = getSeasonProfile;
     const maxSize$l = 9;
     const fromBytes$o = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getSeasonProfile();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getSeasonProfile$1(buffer);
     };
     const toBytes$n = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$l);
-        buffer.setSeasonProfile(parameters);
+        const buffer = new BinaryBuffer(maxSize$l, false);
+        setSeasonProfile$1(buffer, parameters);
         return toBytes$27(id$m, buffer.data);
     };
 
     const id$l = getSpecialDay;
     const maxSize$k = 4;
     const fromBytes$n = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
-        return buffer.getSpecialDay();
+        const buffer = new BinaryBuffer(bytes, false);
+        return getSpecialDay$1(buffer);
     };
     const toBytes$m = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$k);
-        buffer.setSpecialDay(parameters);
+        const buffer = new BinaryBuffer(maxSize$k, false);
+        setSpecialDay$1(buffer, parameters);
         return toBytes$27(id$l, buffer.data);
     };
 
@@ -4701,7 +4576,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const id$2 = setSpecialOperation;
     const maxSize$2 = 1;
     const fromBytes$4 = (bytes) => {
-        const buffer = new CommandBinaryBuffer$1(bytes);
+        const buffer = new BinaryBuffer(bytes, false);
         const flags = buffer.getUint8();
         const electroMagneticIndication = !!(flags & 1);
         const magneticIndication = !!(flags & 2);
@@ -4711,7 +4586,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         };
     };
     const toBytes$3 = (parameters) => {
-        const buffer = new CommandBinaryBuffer$1(maxSize$2);
+        const buffer = new BinaryBuffer(maxSize$2, false);
         let flags = 0;
         if (parameters.electroMagneticIndication) {
             flags |= 1;
