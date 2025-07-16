@@ -7,50 +7,13 @@ var config = {
 };
 
 
-/*
-  Get bytes from message.
-
-  Input is an object with the following fields:
-    * data - object, must contain "commands" field
-    * fPort - downlink fPort
-
-  Output must be an object with the following fields:
-    * bytes - byte array containing the downlink payload
-*/
+// https://www.thethingsindustries.com/docs/integrations/payload-formatters/javascript/downlink/
 function encodeDownlink ( input ) {
-    // input has the following structure:
-    // {
-    //     field: "value"
-    // }
     return {
-        bytes: toBytes(input.data.commands), // FRMPayload (byte array)
+        bytes: toBytes(input.data.commands),
         fPort: 1,
-        warnings: [], // optional
-        errors: [], // optional (if set, the encoding failed)
-    };
-}
-
-
-/*
-  Get message from bytes.
-
-  Input is an object with the following fields:
-    * bytes - byte array containing the uplink payload, e.g. [255, 230, 255, 0]
-    * fPort - downlink fPort
-
-  Output must be an object with the following fields:
-    * data - object representing the decoded payload
-*/
-function decodeDownlink ( input ) {
-    var message = fromBytes(input.bytes, config);
-
-    return {
-        data: {
-            bytes: input.bytes,
-            message
-        },
-        warnings: [], // optional
-        errors: [] // optional (if set, the decoding failed)
+        warnings: [],
+        errors: [],
     };
 }
 

@@ -29,13 +29,19 @@ const thingsboardTerserOptions = {
 };
 
 const ttnTerserOptions = {
-    ecma: 5,
+    ecma: 2020,
     //mangle: false,
     compress: {
-        arrows: true
+        arrows: true,
+        //toplevel: true,
+        passes: 2
     },
     parse: {bare_returns: true},
     //format: {braces: true}
+    mangle: {
+        //toplevel: true,
+        //properties: {keep_quoted: false}
+    }
 };
 
 const thingsboardBabelPlugin = babel({
@@ -333,7 +339,7 @@ export default [
             // commonjs(),
             nodeResolve()
         ]
-    },
+    }, /**/
 
 
     // TagoIO analog uplink
@@ -341,12 +347,12 @@ export default [
         input: './src/targets/tago.io/analog/uplink/index.js',
         output: [
             {
-                file: './dist/tago.io/analog/uplink/develop/full.js',
+                file: './dist/tago.io/analog/develop/uplink.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/tago.io/analog/uplink/init.js', 'utf8')
             },
             {
-                file: './dist/tago.io/analog/uplink/full.min.js',
+                file: './dist/tago.io/analog/uplink.min.js',
                 format: 'iife',
                 banner: readFileSync('./src/targets/tago.io/analog/uplink/init.js', 'utf8'),
                 plugins: [terser()]
@@ -357,7 +363,7 @@ export default [
             //babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/tago.io/analog/uplink/template.js')
         ]
-    },
+    }, /**/
 
 
     // ThingPark analog uplink+downlink
@@ -381,7 +387,7 @@ export default [
             //babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/thingpark/analog/template.js')
         ]
-    },
+    }, /**/
 
 
     // ThingsBoard analog downlink
@@ -694,7 +700,7 @@ export default [
             babel({babelHelpers: 'bundled'}),
             processTemplate('./src/targets/thingsboard/mtx3/uplink/template.test.js')
         ]
-    },
+    }, /**/
 
 
     // The Things Network analog downlink
@@ -741,5 +747,61 @@ export default [
             thingsboardBabelPlugin,
             processTemplate('./src/targets/ttn/analog/uplink/template.js')
         ]
-    }
+    }, /**/
+
+    // The Things Network MTX3 downlink
+    /* {
+        input: './src/targets/ttn/mtx3/downlink/index.js',
+        output: [
+            {
+                file: './dist/ttn/mtx3/develop/downlink.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/mtx3/downlink/init.js', 'utf8')
+            },
+            {
+                file: './dist/ttn/mtx3/downlink.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/mtx3/downlink/init.js', 'utf8'),
+                plugins: [terser(ttnTerserOptions)]
+            }
+        ],
+        plugins: [
+            alias({
+                entries: [
+                    {find: '../utils/crypto.js', replacement: path.resolve('./src/utils/crypto.js')}
+                ]
+            }),
+            nodeResolve(),
+            thingsboardBabelPlugin,
+            processTemplate('./src/targets/ttn/mtx3/downlink/template.js')
+        ]
+    },
+
+    // The Things Network MTX3 uplink
+    {
+        input: './src/targets/ttn/mtx3/uplink/index.js',
+        output: [
+            {
+                file: './dist/ttn/mtx3/develop/uplink.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/mtx3/uplink/init.js', 'utf8')
+            },
+            {
+                file: './dist/ttn/mtx3/uplink.min.js',
+                format: 'iife',
+                banner: readFileSync('./src/targets/ttn/mtx3/uplink/init.js', 'utf8'),
+                plugins: [terser(ttnTerserOptions)]
+            }
+        ],
+        plugins: [
+            alias({
+                entries: [
+                    {find: '../utils/crypto.js', replacement: path.resolve('./src/utils/crypto.js')}
+                ]
+            }),
+            nodeResolve(),
+            thingsboardBabelPlugin,
+            processTemplate('./src/targets/ttn/mtx3/uplink/template.js')
+        ]
+    } /**/
 ];
