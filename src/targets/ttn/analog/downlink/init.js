@@ -1,1 +1,1 @@
-var toBytes, fromBytes;
+var toBytes;

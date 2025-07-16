@@ -7,17 +7,8 @@ var config = {
 };
 
 
-/*
-  Get message from bytes.
-
-  Input is an object with the following fields:
-    * bytes - byte array containing the uplink payload, e.g. [255, 230, 255, 0]
-    * fPort - uplink fPort
-
-  Output must be an object with the following fields:
-    * data - object representing the decoded payload
-*/
-function decodeUplink( input ) {
+// https://www.thethingsindustries.com/docs/integrations/payload-formatters/javascript/uplink/
+function decodeUplink ( input ) {
     var message = fromBytes(input.bytes, config);
 
     return {
@@ -25,8 +16,8 @@ function decodeUplink( input ) {
             bytes: input.bytes,
             message
         },
-        warnings: [], // optional
-        errors: [] // optional (if set, the decoding failed)
+        warnings: [],
+        errors: []
     };
 }
 
