@@ -1011,7 +1011,9 @@
         RELAY_UNEQUAL_CURRENT_OFF: 2 ** 2,
         RELAY_BIPOLAR_POWER_OFF: 2 ** 3,
         RELAY_SALDO_OFF_ON_MAX_POWER: 2 ** 4,
-        RELAY_HARD_ST1: 2 ** 5
+        RELAY_HARD_ST1: 2 ** 5,
+        RELAY_MAGNET_OFF: 2 ** 6,
+        RELAY_P_MINUS_MAX_OFF: 2 ** 7
     };
     const extendedCurrentValues2Status1Mask = {
         MAXVA: 2 ** 0,
@@ -8404,7 +8406,9 @@
                     RELAY_UNEQUAL_CURRENT_OFF: false,
                     RELAY_BIPOLAR_POWER_OFF: false,
                     RELAY_SALDO_OFF_ON_MAX_POWER: false,
-                    RELAY_HARD_ST1: true
+                    RELAY_HARD_ST1: true,
+                    RELAY_MAGNET_OFF: false,
+                    RELAY_P_MINUS_MAX_OFF: false
                 },
                 status1: {
                     MAXVA: true,

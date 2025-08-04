@@ -1279,7 +1279,9 @@ var fromBytes, getDataSegment;
     RELAY_UNEQUAL_CURRENT_OFF: 2 ** 2,
     RELAY_BIPOLAR_POWER_OFF: 2 ** 3,
     RELAY_SALDO_OFF_ON_MAX_POWER: 2 ** 4,
-    RELAY_HARD_ST1: 2 ** 5
+    RELAY_HARD_ST1: 2 ** 5,
+    RELAY_MAGNET_OFF: 2 ** 6,
+    RELAY_P_MINUS_MAX_OFF: 2 ** 7
   };
   var extendedCurrentValues2Status1Mask = {
     MAXVA: 2 ** 0,
