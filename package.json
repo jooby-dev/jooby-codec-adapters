@@ -23,7 +23,7 @@
         "@rollup/plugin-commonjs": "^28.0.1",
         "@rollup/plugin-node-resolve": "^16.0.0",
         "@rollup/plugin-terser": "^0.4.4",
-        "jooby-codec": "file:../jooby-codec-v4",
+        "jooby-codec": "^6.5.0",
         "nodemon": "^3.1.0",
         "rollup": "^4.13.0"
     }
