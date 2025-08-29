@@ -2,7 +2,8 @@ import {describe, it} from 'node:test';
 import assert from 'node:assert';
 
 import {getHexFromBytes, getBytesFromHex} from 'jooby-codec/utils';
-import {commands} from 'jooby-codec/analog/index.js';
+import {commands} from 'jooby-codec/mtx3/index.js';
+import * as accessLevels from 'jooby-codec/mtx1/constants/accessLevels.js';
 import './index.js';
 
 
@@ -28,7 +29,7 @@ const processExamples = ( commandMap ) => {
         // each command should export at least 1 example
         assert.equal(Object.keys(commandImplementation.examples).length > 0, true);
 
-        describe(`${commandName} 0x${getHexFromBytes([commandImplementation.id])}/${commandImplementation.id}`, () => {
+        describe(`${commandName} ${getHexFromBytes([commandImplementation.id])}/${commandImplementation.id}`, () => {
             for ( const [exampleName, example] of Object.entries(commandImplementation.examples) ) {
                 it(exampleName, () => checkExample(commandImplementation, example));
             }
@@ -37,23 +38,31 @@ const processExamples = ( commandMap ) => {
 };
 
 
-describe('analog downlink commands', () => {
+describe('mtx3 downlink commands', () => {
     processExamples(downlink);
 });
 
-describe('analog uplink commands', () => {
+describe('mtx3 uplink commands', () => {
     processExamples(uplink);
 });
 
 describe('analog encodeDownlink/decodeDownlink functions', () => {
     const commands = [
-        {id: 0x02, name: 'setTime2000', parameters: {sequenceNumber: 78, seconds: 733845677}},
-        {id: 0x09, name: 'getTime2000'},
-        {id: 0x051f, name: 'getBatteryStatus'},
-        {id: 0x19, name: 'softRestart'}
+        {id: 0x07, name: 'getDateTime'},
+        {id: 0x3e, name: 'getCorrectTime'},
+        {id: 0x5d, name: 'setDisplayParam', parameters: {displayMode: 1, order: [4, 5, 6, 7]}},
+        {id: 0x19, name: 'turnRelayOff'}
     ];
-    const hex = '02 05 4e 2b bd 98 ad 09 00 1f 05 00 19 00 b5';
-    const result = encodeDownlink({data: {commands}});
+    const hex = '1e 14 00 91 da 10 10 07 00 3e 00 5d 05 01 04 05 06 07 19 00 00 3c 51';
+    const result = encodeDownlink({
+        data: {
+            commands,
+            config: {
+                messageId: 218,
+                accessLevel: accessLevels.UNENCRYPTED
+            }
+        }
+    });
 
     assert.equal(getHexFromBytes(result.bytes), hex);
 
@@ -73,32 +82,30 @@ describe('analog encodeDownlink/decodeDownlink functions', () => {
 describe('analog decodeUplink function', () => {
     const commands = [
         {
-            id: 0x04,
-            name: 'getParameter',
+            id: 0x6f,
+            name: 'getHalfHourEnergies',
             parameters: {
-                id: 1,
-                name: 'REPORTING_DATA_INTERVAL',
-                data: {
-                    firstDaysSpecialSchedule: 0,
-                    lastDaysSpecialSchedule: 0,
-                    period: 2400,
-                    specialSchedulePeriod: 0
-                }
+                date: {year: 24, month: 8, date: 27},
+                firstHalfhour: 27,
+                halfhoursNumber: 3,
+                energies: {'A+': [92, 98, 77]}
             }
-        },
-        {id: 0x07, name: 'current', parameters: {isMagneticInfluence: true, value: 342}},
-        {id: 0x09, name: 'time2000', parameters: {sequenceNumber: 77, time2000: 733845677}},
-        {id: 0x19, name: 'softRestart'}
+        }
     ];
-    const hex = '04 05 01 00 00 00 04 07 04 80 00 01 56 09 05 4d 2b bd 98 ad 19 00 7e';
+    const hex = '1e 14 dd 91 d9 10 10 6f 0b 31 1b 01 1b 03 00 5c 00 62 00 4d 00 00 63 fd ad 55 88';
     const bytes = getBytesFromHex(hex);
     const result = decodeUplink({bytes});
 
     assert.deepEqual(result.errors, []);
+    assert.deepEqual(result.warnings, []);
     assert.deepEqual(result.data.bytes, bytes);
 
     result.data.message.commands.forEach(({id, name, parameters}, index) => {
         const command = commands[index];
+
+        console.log('command:', command);
+        console.log('command.parameters:', command.parameters);
+        console.log('parameters:', parameters);
 
         assert.equal(command.id, id);
         assert.equal(command.name, name);

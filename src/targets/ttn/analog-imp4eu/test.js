@@ -72,7 +72,20 @@ describe('analog encodeDownlink/decodeDownlink functions', () => {
 
 describe('analog decodeUplink function', () => {
     const commands = [
-        {id: 0x04, name: 'getParameter', parameters: {id: 1, name: 'REPORTING_DATA_INTERVAL', data: {value: 2400}}},
+        {
+            id: 0x04,
+            name: 'getParameter',
+            parameters: {
+                id: 1,
+                name: 'REPORTING_DATA_INTERVAL',
+                data: {
+                    firstDaysSpecialSchedule: 0,
+                    lastDaysSpecialSchedule: 0,
+                    period: 2400,
+                    specialSchedulePeriod: 0
+                }
+            }
+        },
         {id: 0x07, name: 'current', parameters: {isMagneticInfluence: true, value: 342}},
         {id: 0x09, name: 'time2000', parameters: {sequenceNumber: 77, time2000: 733845677}},
         {id: 0x19, name: 'softRestart'}

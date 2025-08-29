@@ -83,12 +83,18 @@ describe('analog decodeUplink function', () => {
     const commands = [
         {
             id: 0x6f,
-            name: 'getHalfhoursEnergies',
+            name: 'getHalfHourEnergies',
             parameters: {
                 date: {year: 24, month: 8, date: 27},
                 firstHalfhour: 27,
                 halfhoursNumber: 3,
-                energies: {'A+': [92, 98, 77]}
+                energies: {
+                    'A+': [
+                        {energy: 92, tariff: 0 },
+                        {energy: 98, tariff: 0 },
+                        {energy: 77, tariff: 0 }
+                    ]
+                }
             }
         }
     ];

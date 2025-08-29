@@ -860,21 +860,21 @@ export default [
         external: ['node:test', 'node:assert']
     },
 
-    /* // The Things Network MTX3 downlink
+    // The Things Network MTX3
     {
-        input: './src/targets/ttn/mtx3/downlink/index.js',
+        input: './src/targets/ttn/mtx3/index.js',
         output: [
             {
-                file: './dist/ttn/mtx3/downlink.js',
+                file: './dist/ttn/mtx3.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/ttn/mtx3/downlink/init.js', 'utf8')
-            },
+                //banner: readFileSync('./src/targets/ttn/mtx3/init.js', 'utf8')
+            }/* ,
             {
-                file: './dist/ttn/mtx3/downlink.min.js',
+                file: './dist/ttn/mtx3/full.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/ttn/mtx3/downlink/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/ttn/mtx3/init.js', 'utf8'),
                 plugins: [terser(ttnTerserOptions)]
-            }
+            } */
         ],
         plugins: [
             alias({
@@ -883,26 +883,26 @@ export default [
                 ]
             }),
             nodeResolve(),
-            thingsboardBabelPlugin,
-            processTemplate('./src/targets/ttn/mtx3/downlink/template.js')
+            ttnBabelPlugin,
+            processTemplate('./src/targets/ttn/mtx3/template.js')
         ]
     },
 
-    // The Things Network MTX3 uplink
+    // The Things Network MTX3 test
     {
-        input: './src/targets/ttn/mtx3/uplink/index.js',
+        input: './src/targets/ttn/mtx3/test.js',
         output: [
             {
-                file: './dist/ttn/mtx3/uplink.js',
-                format: 'iife',
-                banner: readFileSync('./src/targets/ttn/mtx3/uplink/init.js', 'utf8')
-            },
+                file: './dist/ttn/mtx3.test.js',
+                //format: 'iife',
+                //banner: readFileSync('./src/targets/ttn/mtx3/init.js', 'utf8')
+            }/* ,
             {
-                file: './dist/ttn/mtx3/uplink.min.js',
+                file: './dist/ttn/mtx3/full.min.js',
                 format: 'iife',
-                banner: readFileSync('./src/targets/ttn/mtx3/uplink/init.js', 'utf8'),
+                banner: readFileSync('./src/targets/ttn/mtx3/init.js', 'utf8'),
                 plugins: [terser(ttnTerserOptions)]
-            }
+            } */
         ],
         plugins: [
             alias({
@@ -910,9 +910,11 @@ export default [
                     {find: '../utils/crypto.js', replacement: path.resolve('./src/utils/crypto.js')}
                 ]
             }),
+            commonjs(),
             nodeResolve(),
-            thingsboardBabelPlugin,
-            processTemplate('./src/targets/ttn/mtx3/uplink/template.js')
-        ]
-    } /**/
+            ttnBabelPlugin,
+            processTemplate('./src/targets/ttn/mtx3/template.js')
+        ],
+        external: ['node:test', 'node:assert']
+    }
 ];

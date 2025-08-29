@@ -6899,10 +6899,10 @@ const examples$2 = {
     name: name$2,
     headerSize: headerSize$2,
     parameters: {
-      length: 4,
-      data: [0x04, 0x22, 0x35, 0x28]
+      length: 11,
+      data: [0x21, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04]
     },
-    bytes: [0x1f, 0x07, 0x05, 0x04, 0x04, 0x22, 0x35, 0x28]
+    bytes: [0x1f, 0x07, 0x0b, 0x0b, 0x21, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04]
   }
 };
 const fromBytes$4 = bytes => {
@@ -7438,7 +7438,10 @@ describe('analog decodeUplink function', () => {
       id: 1,
       name: 'REPORTING_DATA_INTERVAL',
       data: {
-        value: 2400
+        firstDaysSpecialSchedule: 0,
+        lastDaysSpecialSchedule: 0,
+        period: 2400,
+        specialSchedulePeriod: 0
       }
     }
   }, {
