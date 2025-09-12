@@ -1,0 +1,35 @@
+name: update codec and rebuild
+
+on:
+    # run only manually
+    workflow_dispatch:
+
+# allow only one concurrent run
+concurrency: "rebuild"
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: write
+
+        steps:
+          - uses: actions/checkout@v5
+
+          - uses: actions/setup-node@v5
+            with:
+                node-version: '22.x'
+                cache: npm
+                registry-url: https://registry.npmjs.org
+
+          - run: npm install jooby-codec@latest --save
+          - run: npm run build:clean
+
+          - name: Commit and push changes
+            run: |
+              git config user.name "github-actions[bot]"
+              git config user.email "github-actions[bot]@users.noreply.github.com"
+              git add package.json package-lock.json
+              git commit -m "automatic rebuild with latest jooby-codec"
+              git push
