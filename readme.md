@@ -46,11 +46,14 @@ function decodeUplink ( input ) {
 ```
 
 
-# Development
+# Custom builds for special list of commands
 
 ```sh
 git clone git@github.com:jooby-dev/jooby-codec-adapters.git
 cd jooby-codec-adapters
 npm ci
-npm run build
+# edit src/target/%TARGET% files
+# to change command list edit src/target/%TARGET%/full.js like src/targets/thingpark/analog/partial.js
+npm run build:clean
+# use files from dist/%TARGET%
 ```
