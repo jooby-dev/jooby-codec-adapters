@@ -14,12 +14,13 @@
     },
     "license": "MIT",
     "dependencies": {
+        "@babel/plugin-transform-computed-properties": "^7.24.1",
         "@babel/preset-env": "^7.24.3",
+        "@rollup/plugin-alias": "^5.1.0",
         "@rollup/plugin-babel": "^6.0.4",
-        "@rollup/plugin-commonjs": "^25.0.7",
-        "@rollup/plugin-node-resolve": "^15.2.3",
+        "@rollup/plugin-node-resolve": "^16.0.0",
         "@rollup/plugin-terser": "^0.4.4",
-        "jooby-codec": "file:../jooby-codec-v4",
+        "jooby-codec": "^7.0.1",
         "nodemon": "^3.1.0",
         "rollup": "^4.13.0"
     }
