@@ -834,7 +834,9 @@ const mtxBitMask = {
   isMeterTerminalBoxOpen: Math.pow(2, 9),
   isModuleCompartmentOpen: Math.pow(2, 10),
   isTariffPlanChanged: Math.pow(2, 11),
-  isNewTariffPlanReceived: Math.pow(2, 12)
+  isNewTariffPlanReceived: Math.pow(2, 12),
+  isElectromagneticInfluenceReset: Math.pow(2, 13),
+  isMagneticInfluenceReset: Math.pow(2, 14)
 };
 const usWaterMeterEventBitMask = {
   transportMode: 0x01,
@@ -6016,7 +6018,9 @@ const examples$b = {
         isMeterTerminalBoxOpen: true,
         isModuleCompartmentOpen: false,
         isTariffPlanChanged: true,
-        isNewTariffPlanReceived: false
+        isNewTariffPlanReceived: false,
+        isElectromagneticInfluenceReset: false,
+        isMagneticInfluenceReset: false
       }
     },
     config: {
@@ -6214,7 +6218,9 @@ const examples$a = {
           isMeterTerminalBoxOpen: true,
           isModuleCompartmentOpen: false,
           isTariffPlanChanged: true,
-          isNewTariffPlanReceived: false
+          isNewTariffPlanReceived: false,
+          isElectromagneticInfluenceReset: false,
+          isMagneticInfluenceReset: false
         }
       }
     },
@@ -7345,6 +7351,25 @@ var analogMessage = /*#__PURE__*/Object.freeze({
     downlink: downlink$1,
     uplink: uplink$1
 });
+
+var Crc16Type;
+(function (Crc16Type) {
+  Crc16Type[Crc16Type["X25"] = 0] = "X25";
+})(Crc16Type || (Crc16Type = {}));
+
+const byteStuffMap = {
+  0x13: 0x33,
+  0x11: 0x31,
+  0x7d: 0x5d,
+  0x7e: 0x5e
+};
+invertObject(byteStuffMap);
+const byteStuffMap7thBitSize = {
+  ...byteStuffMap,
+  0x7c: 0x5c,
+  0xfe: 0x5f
+};
+invertObject(byteStuffMap7thBitSize);
 
 // export
 message = analogMessage;
