@@ -215,14 +215,23 @@ var logs = '';
   var defaultDlmsJsonOptions = _objectSpread2(_objectSpread2({}, defaultFormatOptions), {}, {
     dlms: false
   });
-  var toBytes$15 = function toBytes(commandId) {
+  var toBytes$16 = function toBytes(commandId) {
     var commandBytes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
     return [commandId, commandBytes.length].concat(_toConsumableArray(commandBytes));
   };
 
   var UNENCRYPTED = 0x00;
+  var ROOT = 0x01;
   var READ_WRITE = 0x02;
   var READ_ONLY = 0x03;
+
+  var accessLevels = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    READ_ONLY: READ_ONLY,
+    READ_WRITE: READ_WRITE,
+    ROOT: ROOT,
+    UNENCRYPTED: UNENCRYPTED
+  });
 
   var getEventStatus$2 = 0x01;
   var getEnergyDayPrevious$1 = 0x03;
@@ -362,10 +371,12 @@ var logs = '';
   var getDayEnergies$1 = 0x78;
   var getDayMaxPower$1 = 0x79;
   var errorResponse$1 = 0xfe;
+  var errorDataFrameResponse$1 = 0xff;
 
   var uplinkIds = /*#__PURE__*/Object.freeze({
     __proto__: null,
     activateRatePlan: activateRatePlan$1,
+    errorDataFrameResponse: errorDataFrameResponse$1,
     errorResponse: errorResponse$1,
     getBv: getBv$1,
     getCorrectTime: getCorrectTime$1,
@@ -446,11 +457,108 @@ var logs = '';
 
   var commandNames$1 = invertObject(uplinkIds);
 
-  var id$13 = activateRatePlan$1;
-  var name$13 = commandNames$1[activateRatePlan$1];
+  var id$14 = activateRatePlan$1;
+  var name$14 = commandNames$1[activateRatePlan$1];
+  var headerSize$14 = 2;
+  var maxSize$15 = 0;
+  var accessLevel$14 = READ_WRITE;
+  var isLoraOnly$14 = false;
+  var examples$14 = {
+    'simple response': {
+      id: id$14,
+      name: name$14,
+      headerSize: headerSize$14,
+      maxSize: maxSize$15,
+      accessLevel: accessLevel$14,
+      parameters: {},
+      bytes: [0x13, 0x00]
+    }
+  };
+  var fromBytes$15 = function fromBytes(bytes) {
+    if (bytes.length !== maxSize$15) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    return {};
+  };
+  var toBytes$15 = function toBytes() {
+    return toBytes$16(id$14);
+  };
+
+  var activateRatePlan = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    accessLevel: accessLevel$14,
+    examples: examples$14,
+    fromBytes: fromBytes$15,
+    headerSize: headerSize$14,
+    id: id$14,
+    isLoraOnly: isLoraOnly$14,
+    maxSize: maxSize$15,
+    name: name$14,
+    toBytes: toBytes$15
+  });
+
+  var OK = 0;
+  var UNKNOWN_COMMAND = 0x80;
+  var NOT_ALIGNED_DATA = 0x81;
+  var DECRYPTION_FAILURE = 0x82;
+  var UNKNOWN_PROTOCOL = 0x83;
+  var BAD_MESSAGE = 0x84;
+  var BAD_DATA_LENGTH = 0x85;
+  var BAD_ARRAY_INDEX = 0x86;
+  var NOT_PREPARED_RATE_PLAN = 0x87;
+  var BAD_RATE_PLAN_ID = 0x88;
+  var BAD_RATE_PLAN_SIZE = 0x89;
+  var BAD_RESPONSE_LENGTH = 0x90;
+  var NO_DATA_FOR_DATE = 0x91;
+  var CALIBRATION_DISABLED = 0x92;
+  var ACCESS_DENIED = 0x93;
+  var BAD_SALDO_WRITE = 0x95;
+  var BLOCKED_METER = 0x97;
+  var UNENCRYPTED_COMMAND_DISABLED = 0x98;
+  var TIME_CORRECTION_FAILURE = 0x99;
+  var INVALID_CORRECTION_INTERVAL = 0x9a;
+  var TIME_CORRECTION_OUT_HALF_HOUR_DISABLED = 0x9b;
+  var BAD_BLOCK_NUMBER = 0x9c;
+  var OUT_OFF_RANGE = 0x9f;
+  var SET_METER_TYPE_FAILURE = 0xa0;
+  var INTERNAL = 0xf0;
+
+  var resultCodes = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ACCESS_DENIED: ACCESS_DENIED,
+    BAD_ARRAY_INDEX: BAD_ARRAY_INDEX,
+    BAD_BLOCK_NUMBER: BAD_BLOCK_NUMBER,
+    BAD_DATA_LENGTH: BAD_DATA_LENGTH,
+    BAD_MESSAGE: BAD_MESSAGE,
+    BAD_RATE_PLAN_ID: BAD_RATE_PLAN_ID,
+    BAD_RATE_PLAN_SIZE: BAD_RATE_PLAN_SIZE,
+    BAD_RESPONSE_LENGTH: BAD_RESPONSE_LENGTH,
+    BAD_SALDO_WRITE: BAD_SALDO_WRITE,
+    BLOCKED_METER: BLOCKED_METER,
+    CALIBRATION_DISABLED: CALIBRATION_DISABLED,
+    DECRYPTION_FAILURE: DECRYPTION_FAILURE,
+    INTERNAL: INTERNAL,
+    INVALID_CORRECTION_INTERVAL: INVALID_CORRECTION_INTERVAL,
+    NOT_ALIGNED_DATA: NOT_ALIGNED_DATA,
+    NOT_PREPARED_RATE_PLAN: NOT_PREPARED_RATE_PLAN,
+    NO_DATA_FOR_DATE: NO_DATA_FOR_DATE,
+    OK: OK,
+    OUT_OFF_RANGE: OUT_OFF_RANGE,
+    SET_METER_TYPE_FAILURE: SET_METER_TYPE_FAILURE,
+    TIME_CORRECTION_FAILURE: TIME_CORRECTION_FAILURE,
+    TIME_CORRECTION_OUT_HALF_HOUR_DISABLED: TIME_CORRECTION_OUT_HALF_HOUR_DISABLED,
+    UNENCRYPTED_COMMAND_DISABLED: UNENCRYPTED_COMMAND_DISABLED,
+    UNKNOWN_COMMAND: UNKNOWN_COMMAND,
+    UNKNOWN_PROTOCOL: UNKNOWN_PROTOCOL
+  });
+
+  var resultNames = invertObject(resultCodes);
+
+  var id$13 = errorDataFrameResponse$1;
+  var name$13 = commandNames$1[errorDataFrameResponse$1];
   var headerSize$13 = 2;
-  var maxSize$14 = 0;
-  var accessLevel$13 = READ_WRITE;
+  var maxSize$14 = 1;
+  var accessLevel$13 = UNENCRYPTED;
   var isLoraOnly$13 = false;
   var examples$13 = {
     'simple response': {
@@ -458,22 +566,30 @@ var logs = '';
       name: name$13,
       headerSize: headerSize$13,
       maxSize: maxSize$14,
-      accessLevel: accessLevel$13,
-      parameters: {},
-      bytes: [0x13, 0x00]
+      parameters: {
+        errorCode: 130,
+        errorName: 'DECRYPTION_FAILURE'
+      },
+      bytes: [0xff, 0x01, 0x82]
     }
   };
   var fromBytes$14 = function fromBytes(bytes) {
     if (bytes.length !== maxSize$14) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    return {};
+    var _bytes = _slicedToArray(bytes, 1),
+      errorCode = _bytes[0];
+    return {
+      errorCode: errorCode,
+      errorName: resultNames[errorCode]
+    };
   };
-  var toBytes$14 = function toBytes() {
-    return toBytes$15(id$13);
+  var toBytes$14 = function toBytes(parameters) {
+    var errorCode = parameters.errorCode;
+    return toBytes$16(id$13, [errorCode]);
   };
 
-  var activateRatePlan = /*#__PURE__*/Object.freeze({
+  var errorDataFrameResponse = /*#__PURE__*/Object.freeze({
     __proto__: null,
     accessLevel: accessLevel$13,
     examples: examples$13,
@@ -797,63 +913,6 @@ var logs = '';
     }
   });
 
-  var OK = 0;
-  var UNKNOWN_COMMAND = 0x80;
-  var NOT_ALIGNED_DATA = 0x81;
-  var DECRYPTION_FAILURE = 0x82;
-  var UNKNOWN_PROTOCOL = 0x83;
-  var BAD_MESSAGE = 0x84;
-  var BAD_DATA_LENGTH = 0x85;
-  var BAD_ARRAY_INDEX = 0x86;
-  var NOT_PREPARED_RATE_PLAN = 0x87;
-  var BAD_RATE_PLAN_ID = 0x88;
-  var BAD_RATE_PLAN_SIZE = 0x89;
-  var BAD_RESPONSE_LENGTH = 0x90;
-  var NO_DATA_FOR_DATE = 0x91;
-  var CALIBRATION_DISABLED = 0x92;
-  var ACCESS_DENIED = 0x93;
-  var BAD_SALDO_WRITE = 0x95;
-  var BLOCKED_METER = 0x97;
-  var UNENCRYPTED_COMMAND_DISABLED = 0x98;
-  var TIME_CORRECTION_FAILURE = 0x99;
-  var INVALID_CORRECTION_INTERVAL = 0x9a;
-  var TIME_CORRECTION_OUT_HALF_HOUR_DISABLED = 0x9b;
-  var BAD_BLOCK_NUMBER = 0x9c;
-  var OUT_OFF_RANGE = 0x9f;
-  var SET_METER_TYPE_FAILURE = 0xa0;
-  var INTERNAL = 0xf0;
-
-  var resultCodes = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    ACCESS_DENIED: ACCESS_DENIED,
-    BAD_ARRAY_INDEX: BAD_ARRAY_INDEX,
-    BAD_BLOCK_NUMBER: BAD_BLOCK_NUMBER,
-    BAD_DATA_LENGTH: BAD_DATA_LENGTH,
-    BAD_MESSAGE: BAD_MESSAGE,
-    BAD_RATE_PLAN_ID: BAD_RATE_PLAN_ID,
-    BAD_RATE_PLAN_SIZE: BAD_RATE_PLAN_SIZE,
-    BAD_RESPONSE_LENGTH: BAD_RESPONSE_LENGTH,
-    BAD_SALDO_WRITE: BAD_SALDO_WRITE,
-    BLOCKED_METER: BLOCKED_METER,
-    CALIBRATION_DISABLED: CALIBRATION_DISABLED,
-    DECRYPTION_FAILURE: DECRYPTION_FAILURE,
-    INTERNAL: INTERNAL,
-    INVALID_CORRECTION_INTERVAL: INVALID_CORRECTION_INTERVAL,
-    NOT_ALIGNED_DATA: NOT_ALIGNED_DATA,
-    NOT_PREPARED_RATE_PLAN: NOT_PREPARED_RATE_PLAN,
-    NO_DATA_FOR_DATE: NO_DATA_FOR_DATE,
-    OK: OK,
-    OUT_OFF_RANGE: OUT_OFF_RANGE,
-    SET_METER_TYPE_FAILURE: SET_METER_TYPE_FAILURE,
-    TIME_CORRECTION_FAILURE: TIME_CORRECTION_FAILURE,
-    TIME_CORRECTION_OUT_HALF_HOUR_DISABLED: TIME_CORRECTION_OUT_HALF_HOUR_DISABLED,
-    UNENCRYPTED_COMMAND_DISABLED: UNENCRYPTED_COMMAND_DISABLED,
-    UNKNOWN_COMMAND: UNKNOWN_COMMAND,
-    UNKNOWN_PROTOCOL: UNKNOWN_PROTOCOL
-  });
-
-  var resultNames = invertObject(resultCodes);
-
   var id$12 = errorResponse$1;
   var name$12 = commandNames$1[errorResponse$1];
   var headerSize$12 = 2;
@@ -894,7 +953,7 @@ var logs = '';
     var buffer = new BinaryBuffer(maxSize$13, false);
     buffer.setUint8(parameters.commandId);
     buffer.setUint8(parameters.errorCode);
-    return toBytes$15(id$12, buffer.data);
+    return toBytes$16(id$12, buffer.data);
   };
 
   var errorResponse = /*#__PURE__*/Object.freeze({
@@ -940,7 +999,7 @@ var logs = '';
   };
   var toBytes$12 = function toBytes(parameters) {
     var vector = parameters.vector;
-    return toBytes$15(id$11, vector);
+    return toBytes$16(id$11, vector);
   };
 
   var getBv = /*#__PURE__*/Object.freeze({
@@ -1290,14 +1349,55 @@ var logs = '';
 
   invertObject(frameTypes);
 
+  invertObject(accessLevels);
+
+  var CASE_OPEN$1 = 0;
+  var MAGNETIC_ON$1 = 1;
+  var PARAMETERS_UPDATE_REMOTE = 2;
+  var PARAMETERS_UPDATE_LOCAL = 3;
+  var RESTART$1 = 4;
+  var ERROR_ACCESS = 5;
+  var TIME_SET = 6;
+  var TIME_CORRECT$1 = 7;
+  var DEVICE_FAILURE = 8;
+  var CASE_TERMINAL_OPEN = 9;
+  var CASE_MODULE_OPEN$1 = 10;
+  var TARIFF_TABLE_SET = 11;
+  var TARIFF_TABLE_GET = 12;
+  var PROTECTION_RESET_EM = 13;
+  var PROTECTION_RESET_MAGNETIC = 14;
+
+  var criticalEvents = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    CASE_MODULE_OPEN: CASE_MODULE_OPEN$1,
+    CASE_OPEN: CASE_OPEN$1,
+    CASE_TERMINAL_OPEN: CASE_TERMINAL_OPEN,
+    DEVICE_FAILURE: DEVICE_FAILURE,
+    ERROR_ACCESS: ERROR_ACCESS,
+    MAGNETIC_ON: MAGNETIC_ON$1,
+    PARAMETERS_UPDATE_LOCAL: PARAMETERS_UPDATE_LOCAL,
+    PARAMETERS_UPDATE_REMOTE: PARAMETERS_UPDATE_REMOTE,
+    PROTECTION_RESET_EM: PROTECTION_RESET_EM,
+    PROTECTION_RESET_MAGNETIC: PROTECTION_RESET_MAGNETIC,
+    RESTART: RESTART$1,
+    TARIFF_TABLE_GET: TARIFF_TABLE_GET,
+    TARIFF_TABLE_SET: TARIFF_TABLE_SET,
+    TIME_CORRECT: TIME_CORRECT$1,
+    TIME_SET: TIME_SET
+  });
+
+  var criticalEventNames = invertObject(criticalEvents);
+
+  var commandNames = invertObject(downlinkIds);
+
   var ENERGY_REGISTER_FAULT = 0x01;
   var VENDOR_PAR_FAULT = 0x02;
   var OP_PAR_FAULT = 0x03;
   var ACCESS_LOCKED = 0x10;
   var ERR_ACCESS = 0x11;
-  var CASE_OPEN$1 = 0x12;
+  var CASE_OPEN = 0x12;
   var CASE_CLOSE = 0x13;
-  var MAGNETIC_ON$1 = 0x14;
+  var MAGNETIC_ON = 0x14;
   var MAGNETIC_OFF = 0x15;
   var CHANGE_ACCESS_KEY0 = 0x20;
   var CHANGE_ACCESS_KEY1 = 0x21;
@@ -1316,7 +1416,7 @@ var logs = '';
   var WINTER_TIME = 0x35;
   var RELAY_ON = 0x36;
   var RELAY_OFF = 0x37;
-  var RESTART$1 = 0x38;
+  var RESTART = 0x38;
   var WD_RESTART = 0x39;
   var POWER_B_ON = 0x3c;
   var POWER_B_OFF = 0x3d;
@@ -1367,10 +1467,10 @@ var logs = '';
   var CALIBRATION_PARAM_BAD = 0x76;
   var WINTER_SUMMER_BAD = 0x77;
   var SALDO_EN_BAD = 0x78;
-  var TIME_CORRECT$1 = 0x79;
+  var TIME_CORRECT = 0x79;
   var CASE_KLEMA_OPEN = 0x7a;
   var CASE_KLEMA_CLOSE = 0x7b;
-  var CASE_MODULE_OPEN$1 = 0x7c;
+  var CASE_MODULE_OPEN = 0x7c;
   var CASE_MODULE_CLOSE = 0x7d;
   var POWER_GOOD_DIO = 0x7e;
   var RELAY_HARD_BAD_OFF = 0x90;
@@ -1427,8 +1527,8 @@ var logs = '';
     CASE_KLEMA_CLOSE: CASE_KLEMA_CLOSE,
     CASE_KLEMA_OPEN: CASE_KLEMA_OPEN,
     CASE_MODULE_CLOSE: CASE_MODULE_CLOSE,
-    CASE_MODULE_OPEN: CASE_MODULE_OPEN$1,
-    CASE_OPEN: CASE_OPEN$1,
+    CASE_MODULE_OPEN: CASE_MODULE_OPEN,
+    CASE_OPEN: CASE_OPEN,
     CHANGE_ACCESS_KEY0: CHANGE_ACCESS_KEY0,
     CHANGE_ACCESS_KEY1: CHANGE_ACCESS_KEY1,
     CHANGE_ACCESS_KEY2: CHANGE_ACCESS_KEY2,
@@ -1468,7 +1568,7 @@ var logs = '';
     I_MAX_OK: I_MAX_OK,
     I_MAX_OVER: I_MAX_OVER,
     MAGNETIC_OFF: MAGNETIC_OFF,
-    MAGNETIC_ON: MAGNETIC_ON$1,
+    MAGNETIC_ON: MAGNETIC_ON,
     OP_PAR_FAULT: OP_PAR_FAULT,
     POWER_A_OFF: POWER_A_OFF,
     POWER_A_ON: POWER_A_ON,
@@ -1493,7 +1593,7 @@ var logs = '';
     RELAY_ON: RELAY_ON,
     RESET_EM_FLAG: RESET_EM_FLAG,
     RESET_MAGNET_FLAG: RESET_MAGNET_FLAG,
-    RESTART: RESTART$1,
+    RESTART: RESTART,
     SALDO_EN_BAD: SALDO_EN_BAD,
     SALDO_PARAM_BAD: SALDO_PARAM_BAD,
     SET_DEMAND_EN_10MIN: SET_DEMAND_EN_10MIN,
@@ -1507,7 +1607,7 @@ var logs = '';
     SET_SALDO_PARAM: SET_SALDO_PARAM,
     SET_TARIFF_TABLE: SET_TARIFF_TABLE,
     SUMMER_TIME: SUMMER_TIME,
-    TIME_CORRECT: TIME_CORRECT$1,
+    TIME_CORRECT: TIME_CORRECT,
     TIME_CORRECT_NEW: TIME_CORRECT_NEW,
     T_MAX_OK: T_MAX_OK,
     T_MAX_OVER: T_MAX_OVER,
@@ -1524,6 +1624,100 @@ var logs = '';
   });
 
   var eventNames = invertObject(events);
+
+  var SET_ALL_SEGMENT_DISPLAY = 1;
+  var SOFTWARE_VERSION = 2;
+  var TOTAL_ACTIVE_ENERGY = 3;
+  var ACTIVE_ENERGY_T1 = 4;
+  var ACTIVE_ENERGY_T2 = 5;
+  var ACTIVE_ENERGY_T3 = 6;
+  var ACTIVE_ENERGY_T4 = 7;
+  var ACTIVE_POWER_PER_PHASE = 8;
+  var ACTIVE_POWER_IN_NEUTRAL = 9;
+  var CURRENT_IN_PHASE = 10;
+  var CURRENT_IN_NEUTRAL = 11;
+  var VOLTAGE$1 = 12;
+  var HOUR_MINUTE_SECOND = 13;
+  var DATE_MONTH_YEAR = 14;
+  var TOTAL_EXPORTED_ACTIVE_ENERGY = 15;
+  var EXPORTED_ACTIVE_ENERGY_T1 = 16;
+  var EXPORTED_ACTIVE_ENERGY_T2 = 17;
+  var EXPORTED_ACTIVE_ENERGY_T3 = 18;
+  var EXPORTED_ACTIVE_ENERGY_T4 = 19;
+  var POWER_FACTOR_PHASE_A = 20;
+  var POWER_FACTOR_PHASE_B = 21;
+  var BATTERY_VOLTAGE = 22;
+  var POWER_THRESHOLD_T1 = 23;
+  var POWER_THRESHOLD_T2 = 24;
+  var POWER_THRESHOLD_T3 = 25;
+  var POWER_THRESHOLD_T4 = 26;
+  var MAGNET_INDUCTION = 28;
+  var CURRENT_BALANCE = 30;
+  var OPTOPORT_SPEED = 31;
+
+  var screenIds = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ACTIVE_ENERGY_T1: ACTIVE_ENERGY_T1,
+    ACTIVE_ENERGY_T2: ACTIVE_ENERGY_T2,
+    ACTIVE_ENERGY_T3: ACTIVE_ENERGY_T3,
+    ACTIVE_ENERGY_T4: ACTIVE_ENERGY_T4,
+    ACTIVE_POWER_IN_NEUTRAL: ACTIVE_POWER_IN_NEUTRAL,
+    ACTIVE_POWER_PER_PHASE: ACTIVE_POWER_PER_PHASE,
+    BATTERY_VOLTAGE: BATTERY_VOLTAGE,
+    CURRENT_BALANCE: CURRENT_BALANCE,
+    CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL,
+    CURRENT_IN_PHASE: CURRENT_IN_PHASE,
+    DATE_MONTH_YEAR: DATE_MONTH_YEAR,
+    EXPORTED_ACTIVE_ENERGY_T1: EXPORTED_ACTIVE_ENERGY_T1,
+    EXPORTED_ACTIVE_ENERGY_T2: EXPORTED_ACTIVE_ENERGY_T2,
+    EXPORTED_ACTIVE_ENERGY_T3: EXPORTED_ACTIVE_ENERGY_T3,
+    EXPORTED_ACTIVE_ENERGY_T4: EXPORTED_ACTIVE_ENERGY_T4,
+    HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND,
+    MAGNET_INDUCTION: MAGNET_INDUCTION,
+    OPTOPORT_SPEED: OPTOPORT_SPEED,
+    POWER_FACTOR_PHASE_A: POWER_FACTOR_PHASE_A,
+    POWER_FACTOR_PHASE_B: POWER_FACTOR_PHASE_B,
+    POWER_THRESHOLD_T1: POWER_THRESHOLD_T1,
+    POWER_THRESHOLD_T2: POWER_THRESHOLD_T2,
+    POWER_THRESHOLD_T3: POWER_THRESHOLD_T3,
+    POWER_THRESHOLD_T4: POWER_THRESHOLD_T4,
+    SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY,
+    SOFTWARE_VERSION: SOFTWARE_VERSION,
+    TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY,
+    TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY,
+    VOLTAGE: VOLTAGE$1
+  });
+
+  invertObject(screenIds);
+
+  var RATE_2400 = 2400;
+  var RATE_9600 = 9600;
+  var valueToRate = {
+    rs485orTwi: {
+      0: RATE_9600,
+      2: RATE_2400,
+      4: RATE_9600
+    },
+    optoport: {
+      0: RATE_2400,
+      2: RATE_2400,
+      4: RATE_9600
+    }
+  };
+  var rateToValue = {
+    rs485orTwi: invertObject(valueToRate.rs485orTwi),
+    optoport: invertObject(valueToRate.optoport)
+  };
+
+  var A_PLUS = 0x01;
+  var A_MINUS$1 = 0x02;
+  var VOLTAGE_10 = 0x40;
+  var VOLTAGE = 0xa0;
+
+  var MAIN = 0;
+  var ADDITIONAL = 1;
+
+  var A_MINUS = 2;
 
   var TARIFF_PLAN_SIZE = 11;
   var OPERATOR_PARAMETERS_SIZE = 74;
@@ -1681,6 +1875,18 @@ var logs = '';
     RELAY_OFF_LIMIT_P_MINUS_T2: 0x10,
     RELAY_OFF_LIMIT_P_MINUS_T3: 0x20,
     RELAY_OFF_LIMIT_P_MINUS_T4: 0x40
+  };
+  var getSerialPortsSpeed = function getSerialPortsSpeed(value) {
+    return {
+      rs485orTwi: valueToRate.rs485orTwi[extractBits(value, 4, 1)],
+      optoport: valueToRate.optoport[extractBits(value, 4, 5)]
+    };
+  };
+  var setSerialPortsSpeed = function setSerialPortsSpeed(serialPortsSpeed) {
+    var result = 0;
+    result = fillBits(result, 4, 1, Number(rateToValue.rs485orTwi[serialPortsSpeed.rs485orTwi]));
+    result = fillBits(result, 4, 5, Number(rateToValue.optoport[serialPortsSpeed.optoport]));
+    return result;
   };
   function getPackedEnergies(buffer, energyType, tariffMapByte) {
     var _byte = tariffMapByte >> TARIFF_NUMBER$1;
@@ -1880,7 +2086,7 @@ var logs = '';
       pmaxThreshold1: buffer.getUint32(),
       pmaxThreshold2: buffer.getUint32(),
       pmaxThreshold3: buffer.getUint32(),
-      speedOptoPort: buffer.getUint8(),
+      serialPortsSpeed: getSerialPortsSpeed(buffer.getUint8()),
       tint: buffer.getUint8(),
       calcPeriodDate: buffer.getUint8(),
       timeoutDisplay: buffer.getUint8(),
@@ -1934,7 +2140,7 @@ var logs = '';
     buffer.setUint32(operatorParameters.pmaxThreshold1);
     buffer.setUint32(operatorParameters.pmaxThreshold2);
     buffer.setUint32(operatorParameters.pmaxThreshold3);
-    buffer.setUint8(operatorParameters.speedOptoPort);
+    buffer.setUint8(setSerialPortsSpeed(operatorParameters.serialPortsSpeed));
     buffer.setUint8(operatorParameters.tint);
     buffer.setUint8(operatorParameters.calcPeriodDate);
     buffer.setUint8(operatorParameters.timeoutDisplay);
@@ -2114,7 +2320,7 @@ var logs = '';
         data.power = [buffer.getUint8(), buffer.getUint8(), buffer.getUint8(), buffer.getUint8()];
         break;
       case CMD_CHANGE_TIME:
-      case TIME_CORRECT$1:
+      case TIME_CORRECT:
         if (bytesLeft < 8) {
           return data;
         }
@@ -2144,7 +2350,7 @@ var logs = '';
         }
         break;
       case CMD_CHANGE_TIME:
-      case TIME_CORRECT$1:
+      case TIME_CORRECT:
         setDateTime$1(buffer, event.newDate);
         break;
     }
@@ -2295,7 +2501,7 @@ var logs = '';
   var toBytes$10 = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$11, false);
     setTimeCorrectionParameters(buffer, parameters);
-    return toBytes$15(id$10, buffer.data);
+    return toBytes$16(id$10, buffer.data);
   };
 
   var getCorrectTime = /*#__PURE__*/Object.freeze({
@@ -2310,43 +2516,6 @@ var logs = '';
     name: name$10,
     toBytes: toBytes$10
   });
-
-  var CASE_OPEN = 0;
-  var MAGNETIC_ON = 1;
-  var PARAMETERS_UPDATE_REMOTE = 2;
-  var PARAMETERS_UPDATE_LOCAL = 3;
-  var RESTART = 4;
-  var ERROR_ACCESS = 5;
-  var TIME_SET = 6;
-  var TIME_CORRECT = 7;
-  var DEVICE_FAILURE = 8;
-  var CASE_TERMINAL_OPEN = 9;
-  var CASE_MODULE_OPEN = 10;
-  var TARIFF_TABLE_SET = 11;
-  var TARIFF_TABLE_GET = 12;
-  var PROTECTION_RESET_EM = 13;
-  var PROTECTION_RESET_MAGNETIC = 14;
-
-  var criticalEvents = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    CASE_MODULE_OPEN: CASE_MODULE_OPEN,
-    CASE_OPEN: CASE_OPEN,
-    CASE_TERMINAL_OPEN: CASE_TERMINAL_OPEN,
-    DEVICE_FAILURE: DEVICE_FAILURE,
-    ERROR_ACCESS: ERROR_ACCESS,
-    MAGNETIC_ON: MAGNETIC_ON,
-    PARAMETERS_UPDATE_LOCAL: PARAMETERS_UPDATE_LOCAL,
-    PARAMETERS_UPDATE_REMOTE: PARAMETERS_UPDATE_REMOTE,
-    PROTECTION_RESET_EM: PROTECTION_RESET_EM,
-    PROTECTION_RESET_MAGNETIC: PROTECTION_RESET_MAGNETIC,
-    RESTART: RESTART,
-    TARIFF_TABLE_GET: TARIFF_TABLE_GET,
-    TARIFF_TABLE_SET: TARIFF_TABLE_SET,
-    TIME_CORRECT: TIME_CORRECT,
-    TIME_SET: TIME_SET
-  });
-
-  var criticalEventNames = invertObject(criticalEvents);
 
   var id$ = getCriticalEvent$1;
   var name$ = commandNames$1[getCriticalEvent$1];
@@ -2412,7 +2581,7 @@ var logs = '';
       index = parameters.index,
       date = parameters.date,
       count = parameters.count;
-    return toBytes$15(id$, [event, index, date.year, date.month, date.date, date.hours, date.minutes, date.seconds, count]);
+    return toBytes$16(id$, [event, index, date.year, date.month, date.date, date.hours, date.minutes, date.seconds, count]);
   };
 
   var getCriticalEvent = /*#__PURE__*/Object.freeze({
@@ -2548,7 +2717,7 @@ var logs = '';
     buffer.setUint8(parameters.currentTariffs['A+']);
     buffer.setUint8(parameters.currentTariffs['A-']);
     buffer.setUint8(parameters.isSummerTime ? 1 : 0);
-    return toBytes$15(id$_, buffer.data);
+    return toBytes$16(id$_, buffer.data);
   };
 
   var getCurrentStatusMeter = /*#__PURE__*/Object.freeze({
@@ -2616,7 +2785,7 @@ var logs = '';
     buffer.setInt32(parameters.powerB);
     buffer.setInt32(parameters.varB);
     buffer.setInt16(parameters.pfB * 1000);
-    return toBytes$15(id$Z, buffer.data);
+    return toBytes$16(id$Z, buffer.data);
   };
   var toJson$a = function toJson(parameters) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDlmsJsonOptions,
@@ -2687,7 +2856,7 @@ var logs = '';
   var toBytes$Y = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$Z, false);
     setDateTime$1(buffer, parameters);
-    return toBytes$15(id$Y, buffer.data);
+    return toBytes$16(id$Y, buffer.data);
   };
 
   var getDateTime = /*#__PURE__*/Object.freeze({
@@ -2703,11 +2872,9 @@ var logs = '';
     toBytes: toBytes$Y
   });
 
-  var A_MINUS$1 = 2;
-
   var getObisByEnergy = (function (energy) {
     var tariff = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-    var obis = energy === A_MINUS$1 ? '2.8.x' : '1.8.x';
+    var obis = energy === A_MINUS ? '2.8.x' : '1.8.x';
     return obis.replace('x', tariff.toString(10));
   });
 
@@ -2748,7 +2915,7 @@ var logs = '';
           month: 3,
           date: 22
         },
-        energyType: A_MINUS$1,
+        energyType: A_MINUS,
         energies: [40301230, null, 2333, 2145623]
       },
       bytes: [0x16, 0x10, 0x18, 0x03, 0x16, 0xd2, 0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x09, 0x1d, 0x00, 0x20, 0xbd, 0x57]
@@ -2780,7 +2947,7 @@ var logs = '';
     var buffer = new BinaryBuffer(size, false);
     setDate$1(buffer, parameters.date);
     setPackedEnergyWithType(buffer, parameters);
-    return toBytes$15(id$X, buffer.data);
+    return toBytes$16(id$X, buffer.data);
   };
   var toJson$9 = function toJson(parameters) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDlmsJsonOptions,
@@ -2885,7 +3052,7 @@ var logs = '';
     var buffer = new BinaryBuffer(size, false);
     setDate$1(buffer, parameters.date);
     setPackedEnergyWithType(buffer, parameters);
-    return toBytes$15(id$W, buffer.data);
+    return toBytes$16(id$W, buffer.data);
   };
   var toJson$8 = function toJson(parameters) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDlmsJsonOptions,
@@ -3270,7 +3437,7 @@ var logs = '';
     var buffer = new BinaryBuffer(maxSize$W, false);
     setDate(buffer, parameters.date);
     setTariffsEnergies(buffer, parameters.energies);
-    return toBytes$15(id$V, buffer.getBytesToOffset());
+    return toBytes$16(id$V, buffer.getBytesToOffset());
   };
   var toJson$7 = function toJson(parameters) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDlmsJsonOptions,
@@ -3344,7 +3511,7 @@ var logs = '';
   var toBytes$U = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$V, false);
     setDayMaxDemandResponse(buffer, parameters);
-    return toBytes$15(id$U, buffer.getBytesToOffset());
+    return toBytes$16(id$U, buffer.getBytesToOffset());
   };
 
   var getDayMaxDemand = /*#__PURE__*/Object.freeze({
@@ -3407,7 +3574,7 @@ var logs = '';
   var toBytes$T = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$U, false);
     setDayMaxDemandResponse(buffer, parameters);
-    return toBytes$15(id$T, buffer.getBytesToOffset());
+    return toBytes$16(id$T, buffer.getBytesToOffset());
   };
 
   var getDayMaxDemandExport = /*#__PURE__*/Object.freeze({
@@ -3470,7 +3637,7 @@ var logs = '';
   var toBytes$S = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$T, false);
     setDayMaxDemandResponse(buffer, parameters);
-    return toBytes$15(id$S, buffer.getBytesToOffset());
+    return toBytes$16(id$S, buffer.getBytesToOffset());
   };
 
   var getDayMaxDemandPrevious = /*#__PURE__*/Object.freeze({
@@ -3566,7 +3733,7 @@ var logs = '';
     var buffer = new BinaryBuffer(maxSize$S, false);
     setDate(buffer, parameters.date);
     setTariffsPowerMax(buffer, parameters.tariffs);
-    return toBytes$15(id$R, buffer.getBytesToOffset());
+    return toBytes$16(id$R, buffer.getBytesToOffset());
   };
   var toJson$6 = function toJson(parameters) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDlmsJsonOptions,
@@ -3690,7 +3857,7 @@ var logs = '';
     if (hasPeriodsFinalByte) {
       buffer.setUint8(PERIODS_FINAL_BYTE);
     }
-    return toBytes$15(id$Q, buffer.data);
+    return toBytes$16(id$Q, buffer.data);
   };
 
   var getDayProfile = /*#__PURE__*/Object.freeze({
@@ -3705,13 +3872,6 @@ var logs = '';
     name: name$Q,
     toBytes: toBytes$Q
   });
-
-  var A_PLUS = 0x01;
-  var A_MINUS = 0x02;
-  var VOLTAGE_10 = 0x40;
-  var VOLTAGE$1 = 0xa0;
-
-  var commandNames = invertObject(downlinkIds);
 
   commandNames[getDemand$2];
   var maxSize$Q = 7;
@@ -3920,7 +4080,7 @@ var logs = '';
           month: 10,
           date: 2
         },
-        demandType: VOLTAGE$1,
+        demandType: VOLTAGE,
         firstIndex: 0,
         count: 1,
         period: 60,
@@ -3941,7 +4101,7 @@ var logs = '';
           month: 10,
           date: 2
         },
-        demandType: VOLTAGE$1,
+        demandType: VOLTAGE,
         firstIndex: 25,
         count: 1,
         period: 60,
@@ -3997,14 +4157,14 @@ var logs = '';
     var demandsBytes = new Array(parameters.count).fill(0).map(function () {
       return buffer.getUint16();
     });
-    var isEnergiesDemand = parameters.demandType === A_PLUS || parameters.demandType === A_MINUS;
+    var isEnergiesDemand = parameters.demandType === A_PLUS || parameters.demandType === A_MINUS$1;
     parameters.demands = isEnergiesDemand ? energyFromBinary(demandsBytes, parameters.firstIndex, parameters.period) : voltageFromBinary(demandsBytes, parameters.firstIndex, parameters.period);
     return parameters;
   };
   var toBytes$P = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$Q + parameters.count * 2, false);
     setDemand(buffer, parameters);
-    if (parameters.demandType === A_PLUS || parameters.demandType === A_MINUS) {
+    if (parameters.demandType === A_PLUS || parameters.demandType === A_MINUS$1) {
       energyToBinary(parameters.demands).forEach(function (value) {
         return buffer.setUint16(value);
       });
@@ -4013,7 +4173,7 @@ var logs = '';
         return buffer.setUint16(value);
       });
     }
-    return toBytes$15(id$P, buffer.data);
+    return toBytes$16(id$P, buffer.data);
   };
 
   var getDemand = /*#__PURE__*/Object.freeze({
@@ -4072,7 +4232,7 @@ var logs = '';
   var toBytes$O = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$O, false);
     setDemandParameters$1(buffer, parameters);
-    return toBytes$15(id$O, buffer.data);
+    return toBytes$16(id$O, buffer.data);
   };
 
   var getDemandParameters = /*#__PURE__*/Object.freeze({
@@ -4117,7 +4277,7 @@ var logs = '';
   var toBytes$N = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$N, false);
     setDeviceId(buffer, parameters);
-    return toBytes$15(id$N, buffer.data);
+    return toBytes$16(id$N, buffer.data);
   };
 
   var getDeviceId = /*#__PURE__*/Object.freeze({
@@ -4184,7 +4344,7 @@ var logs = '';
   var toBytes$M = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$M, false);
     setDeviceType(buffer, parameters);
-    return toBytes$15(id$M, buffer.data);
+    return toBytes$16(id$M, buffer.data);
   };
 
   var getDeviceType = /*#__PURE__*/Object.freeze({
@@ -4199,74 +4359,6 @@ var logs = '';
     name: name$M,
     toBytes: toBytes$M
   });
-
-  var SET_ALL_SEGMENT_DISPLAY = 1;
-  var SOFTWARE_VERSION = 2;
-  var TOTAL_ACTIVE_ENERGY = 3;
-  var ACTIVE_ENERGY_T1 = 4;
-  var ACTIVE_ENERGY_T2 = 5;
-  var ACTIVE_ENERGY_T3 = 6;
-  var ACTIVE_ENERGY_T4 = 7;
-  var ACTIVE_POWER_PER_PHASE = 8;
-  var ACTIVE_POWER_IN_NEUTRAL = 9;
-  var CURRENT_IN_PHASE = 10;
-  var CURRENT_IN_NEUTRAL = 11;
-  var VOLTAGE = 12;
-  var HOUR_MINUTE_SECOND = 13;
-  var DATE_MONTH_YEAR = 14;
-  var TOTAL_EXPORTED_ACTIVE_ENERGY = 15;
-  var EXPORTED_ACTIVE_ENERGY_T1 = 16;
-  var EXPORTED_ACTIVE_ENERGY_T2 = 17;
-  var EXPORTED_ACTIVE_ENERGY_T3 = 18;
-  var EXPORTED_ACTIVE_ENERGY_T4 = 19;
-  var POWER_FACTOR_PHASE_A = 20;
-  var POWER_FACTOR_PHASE_B = 21;
-  var BATTERY_VOLTAGE = 22;
-  var POWER_THRESHOLD_T1 = 23;
-  var POWER_THRESHOLD_T2 = 24;
-  var POWER_THRESHOLD_T3 = 25;
-  var POWER_THRESHOLD_T4 = 26;
-  var MAGNET_INDUCTION = 28;
-  var CURRENT_BALANCE = 30;
-  var OPTOPORT_SPEED = 31;
-
-  var screenIds = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    ACTIVE_ENERGY_T1: ACTIVE_ENERGY_T1,
-    ACTIVE_ENERGY_T2: ACTIVE_ENERGY_T2,
-    ACTIVE_ENERGY_T3: ACTIVE_ENERGY_T3,
-    ACTIVE_ENERGY_T4: ACTIVE_ENERGY_T4,
-    ACTIVE_POWER_IN_NEUTRAL: ACTIVE_POWER_IN_NEUTRAL,
-    ACTIVE_POWER_PER_PHASE: ACTIVE_POWER_PER_PHASE,
-    BATTERY_VOLTAGE: BATTERY_VOLTAGE,
-    CURRENT_BALANCE: CURRENT_BALANCE,
-    CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL,
-    CURRENT_IN_PHASE: CURRENT_IN_PHASE,
-    DATE_MONTH_YEAR: DATE_MONTH_YEAR,
-    EXPORTED_ACTIVE_ENERGY_T1: EXPORTED_ACTIVE_ENERGY_T1,
-    EXPORTED_ACTIVE_ENERGY_T2: EXPORTED_ACTIVE_ENERGY_T2,
-    EXPORTED_ACTIVE_ENERGY_T3: EXPORTED_ACTIVE_ENERGY_T3,
-    EXPORTED_ACTIVE_ENERGY_T4: EXPORTED_ACTIVE_ENERGY_T4,
-    HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND,
-    MAGNET_INDUCTION: MAGNET_INDUCTION,
-    OPTOPORT_SPEED: OPTOPORT_SPEED,
-    POWER_FACTOR_PHASE_A: POWER_FACTOR_PHASE_A,
-    POWER_FACTOR_PHASE_B: POWER_FACTOR_PHASE_B,
-    POWER_THRESHOLD_T1: POWER_THRESHOLD_T1,
-    POWER_THRESHOLD_T2: POWER_THRESHOLD_T2,
-    POWER_THRESHOLD_T3: POWER_THRESHOLD_T3,
-    POWER_THRESHOLD_T4: POWER_THRESHOLD_T4,
-    SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY,
-    SOFTWARE_VERSION: SOFTWARE_VERSION,
-    TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY,
-    TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY,
-    VOLTAGE: VOLTAGE
-  });
-
-  invertObject(screenIds);
-
-  var MAIN = 0;
-  var ADDITIONAL = 1;
 
   var id$L = getDisplayParam$1;
   var name$L = commandNames$1[getDisplayParam$1];
@@ -4309,7 +4401,7 @@ var logs = '';
     };
   };
   var toBytes$L = function toBytes(parameters) {
-    return toBytes$15(id$L, [parameters.displayMode].concat(_toConsumableArray(parameters.order)));
+    return toBytes$16(id$L, [parameters.displayMode].concat(_toConsumableArray(parameters.order)));
   };
 
   var getDisplayParam = /*#__PURE__*/Object.freeze({
@@ -4380,7 +4472,7 @@ var logs = '';
     }
     var buffer = new BinaryBuffer(size, false);
     setPackedEnergyWithType(buffer, parameters);
-    return toBytes$15(id$K, buffer.data);
+    return toBytes$16(id$K, buffer.data);
   };
   var toJson$5 = function toJson(parameters) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDlmsJsonOptions,
@@ -4489,7 +4581,7 @@ var logs = '';
     var buffer = new BinaryBuffer(getPackedEnergiesWithDateSize(parameters), false);
     setDate$1(buffer, parameters.date);
     setPackedEnergyWithType(buffer, parameters);
-    return toBytes$15(id$J, buffer.data);
+    return toBytes$16(id$J, buffer.data);
   };
   var toJson$4 = function toJson(parameters) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDlmsJsonOptions,
@@ -4571,7 +4663,7 @@ var logs = '';
     }
     var buffer = new BinaryBuffer(size, false);
     setPackedEnergyWithType(buffer, parameters);
-    return toBytes$15(id$I, buffer.data);
+    return toBytes$16(id$I, buffer.data);
   };
   var toJson$3 = function toJson(parameters) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDlmsJsonOptions,
@@ -4680,7 +4772,7 @@ var logs = '';
     var buffer = new BinaryBuffer(getPackedEnergiesWithDateSize(parameters), false);
     setDate$1(buffer, parameters.date);
     setPackedEnergyWithType(buffer, parameters);
-    return toBytes$15(id$H, buffer.data);
+    return toBytes$16(id$H, buffer.data);
   };
   var toJson$2 = function toJson(parameters) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDlmsJsonOptions,
@@ -4793,7 +4885,7 @@ var logs = '';
       } finally {
         _iterator.f();
       }
-      return toBytes$15(id$G, buffer.getBytesToOffset());
+      return toBytes$16(id$G, buffer.getBytesToOffset());
     };
   };
   var fromBytes$G = getFromBytes(BinaryBuffer);
@@ -4872,7 +4964,7 @@ var logs = '';
     buffer.setUint16(parameters.accessError);
     buffer.setUint16(parameters.accessClosed);
     buffer.setUint16(parameters.setClock);
-    return toBytes$15(id$F, buffer.data);
+    return toBytes$16(id$F, buffer.data);
   };
 
   var getEventsCounters = /*#__PURE__*/Object.freeze({
@@ -4928,7 +5020,7 @@ var logs = '';
   var toBytes$E = function toBytes(eventStatus) {
     var buffer = new BinaryBuffer(maxSize$E, true);
     setEventStatus(buffer, eventStatus);
-    return toBytes$15(id$E, buffer.data);
+    return toBytes$16(id$E, buffer.data);
   };
 
   var getEventStatus = /*#__PURE__*/Object.freeze({
@@ -4975,7 +5067,7 @@ var logs = '';
     var buffer = new BinaryBuffer(maxSize$D, false);
     buffer.setInt16(parameters.temperature);
     buffer.setInt16(parameters.frequency);
-    return toBytes$15(id$D, buffer.data);
+    return toBytes$16(id$D, buffer.data);
   };
   var toJson$1 = function toJson(parameters) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDlmsJsonOptions,
@@ -5069,7 +5161,7 @@ var logs = '';
   var toBytes$C = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$C, false);
     setExtendedCurrentValues2(buffer, parameters);
-    return toBytes$15(id$C, buffer.data);
+    return toBytes$16(id$C, buffer.data);
   };
 
   var getExtendedCurrentValues2 = /*#__PURE__*/Object.freeze({
@@ -5604,7 +5696,7 @@ var logs = '';
     if (parameters.dstHour) {
       buffer.setUint8(parameters.dstHour);
     }
-    return toBytes$15(id$B, buffer.data);
+    return toBytes$16(id$B, buffer.data);
   };
 
   var getHalfHourDemand = /*#__PURE__*/Object.freeze({
@@ -6139,7 +6231,7 @@ var logs = '';
     if (parameters.dstHour) {
       buffer.setUint8(parameters.dstHour);
     }
-    return toBytes$15(id$A, buffer.data);
+    return toBytes$16(id$A, buffer.data);
   };
 
   var getHalfHourDemandExport = /*#__PURE__*/Object.freeze({
@@ -6674,7 +6766,7 @@ var logs = '';
     if (parameters.dstHour) {
       buffer.setUint8(parameters.dstHour);
     }
-    return toBytes$15(id$z, buffer.data);
+    return toBytes$16(id$z, buffer.data);
   };
 
   var getHalfHourDemandPrevious = /*#__PURE__*/Object.freeze({
@@ -6785,7 +6877,7 @@ var logs = '';
     buffer.setUint8(firstHalfhour);
     buffer.setUint8(halfhoursNumber);
     setHalfHourEnergies1(buffer, energies);
-    return toBytes$15(id$y, buffer.getBytesToOffset());
+    return toBytes$16(id$y, buffer.getBytesToOffset());
   };
   var toJson = function toJson(parameters) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDlmsJsonOptions,
@@ -6853,7 +6945,7 @@ var logs = '';
     buffer.setUint16(parameters.threshold);
     buffer.setUint16(parameters.inductionCoefficient * 100);
     buffer.setUint32(parameters.reserved);
-    return toBytes$15(id$x, buffer.data);
+    return toBytes$16(id$x, buffer.data);
   };
 
   var getMagneticFieldThreshold = /*#__PURE__*/Object.freeze({
@@ -6897,7 +6989,7 @@ var logs = '';
   };
   var toBytes$w = function toBytes(_ref3) {
     var ten = _ref3.ten;
-    return toBytes$15(id$w, [ten]);
+    return toBytes$16(id$w, [ten]);
   };
 
   var getMeterInfo = /*#__PURE__*/Object.freeze({
@@ -6947,7 +7039,7 @@ var logs = '';
     buffer.setUint8(parameters.year);
     buffer.setUint8(parameters.month);
     setEnergies(buffer, parameters.energies);
-    return toBytes$15(id$v, buffer.data);
+    return toBytes$16(id$v, buffer.data);
   };
 
   var getMonthDemand = /*#__PURE__*/Object.freeze({
@@ -6997,7 +7089,7 @@ var logs = '';
     buffer.setUint8(parameters.year);
     buffer.setUint8(parameters.month);
     setEnergies(buffer, parameters.energies);
-    return toBytes$15(id$u, buffer.data);
+    return toBytes$16(id$u, buffer.data);
   };
 
   var getMonthDemandExport = /*#__PURE__*/Object.freeze({
@@ -7067,7 +7159,7 @@ var logs = '';
     buffer.setUint8(parameters.year);
     buffer.setUint8(parameters.month);
     setMonthMaxPowerByTariffs(buffer, parameters.tariffs);
-    return toBytes$15(id$t, buffer.data);
+    return toBytes$16(id$t, buffer.data);
   };
 
   var getMonthMaxDemand = /*#__PURE__*/Object.freeze({
@@ -7137,7 +7229,7 @@ var logs = '';
     buffer.setUint8(parameters.year);
     buffer.setUint8(parameters.month);
     setMonthMaxPowerByTariffs(buffer, parameters.tariffs);
-    return toBytes$15(id$s, buffer.data);
+    return toBytes$16(id$s, buffer.data);
   };
 
   var getMonthMaxDemandExport = /*#__PURE__*/Object.freeze({
@@ -7174,7 +7266,10 @@ var logs = '';
         pmaxThreshold1: 31800,
         pmaxThreshold2: 31800,
         pmaxThreshold3: 31800,
-        speedOptoPort: 0,
+        serialPortsSpeed: {
+          rs485orTwi: 9600,
+          optoport: 2400
+        },
         tint: 30,
         calcPeriodDate: 1,
         timeoutDisplay: 127,
@@ -7314,7 +7409,7 @@ var logs = '';
         timeCorrectPeriod: 24,
         timeCorrectPassHalfhour: false
       },
-      bytes: [0x1e, 0x4a, 0x00, 0x04, 0x0b, 0x28, 0x00, 0x02, 0x61, 0x60, 0x00, 0x01, 0xd4, 0xc0, 0x00, 0x00, 0x7c, 0x38, 0x00, 0x00, 0x7c, 0x38, 0x00, 0x00, 0x7c, 0x38, 0x00, 0x00, 0x7c, 0x38, 0x00, 0x1e, 0x01, 0x7f, 0x07, 0x80, 0x00, 0x31, 0x84, 0x00, 0x00, 0x03, 0x03, 0x00, 0x00, 0x00, 0xf0, 0x0f, 0x05, 0x05, 0x00, 0x01, 0x00, 0x05, 0x05, 0x37, 0x2d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x05, 0x05, 0x05, 0x01, 0x08, 0x38, 0x3f, 0xff, 0x05, 0x05, 0x00, 0x18]
+      bytes: [0x1e, 0x4a, 0x00, 0x04, 0x0b, 0x28, 0x00, 0x02, 0x61, 0x60, 0x00, 0x01, 0xd4, 0xc0, 0x00, 0x00, 0x7c, 0x38, 0x00, 0x00, 0x7c, 0x38, 0x00, 0x00, 0x7c, 0x38, 0x00, 0x00, 0x7c, 0x38, 0x24, 0x1e, 0x01, 0x7f, 0x07, 0x80, 0x00, 0x31, 0x84, 0x00, 0x00, 0x03, 0x03, 0x00, 0x00, 0x00, 0xf0, 0x0f, 0x05, 0x05, 0x00, 0x01, 0x00, 0x05, 0x05, 0x37, 0x2d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x05, 0x05, 0x05, 0x01, 0x08, 0x38, 0x3f, 0xff, 0x05, 0x05, 0x00, 0x18]
     }
   };
   var fromBytes$r = function fromBytes(bytes) {
@@ -7324,7 +7419,7 @@ var logs = '';
   var toBytes$r = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$r, false);
     setOperatorParameters$1(buffer, parameters);
-    return toBytes$15(id$r, buffer.data);
+    return toBytes$16(id$r, buffer.data);
   };
 
   var getOperatorParameters = /*#__PURE__*/Object.freeze({
@@ -7375,7 +7470,7 @@ var logs = '';
   var toBytes$q = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$q, false);
     setOperatorParametersExtended3$1(buffer, parameters);
-    return toBytes$15(id$q, buffer.data);
+    return toBytes$16(id$q, buffer.data);
   };
 
   var getOperatorParametersExtended3 = /*#__PURE__*/Object.freeze({
@@ -7446,7 +7541,7 @@ var logs = '';
     buffer.setUint8(parameters.tariffTable);
     setTariffPlan(buffer, parameters.activePlan);
     setTariffPlan(buffer, parameters.passivePlan);
-    return toBytes$15(id$p, buffer.data);
+    return toBytes$16(id$p, buffer.data);
   };
 
   var getRatePlanInfo = /*#__PURE__*/Object.freeze({
@@ -7522,7 +7617,7 @@ var logs = '';
     buffer.setUint8(parameters.date.date);
     buffer.setUint8(parameters.date.hours);
     buffer.setUint8(parameters.date.minutes);
-    return toBytes$15(id$o, buffer.data);
+    return toBytes$16(id$o, buffer.data);
   };
 
   var getSaldo = /*#__PURE__*/Object.freeze({
@@ -7596,7 +7691,7 @@ var logs = '';
   var toBytes$n = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$n, false);
     setSaldoParameters$1(buffer, parameters);
-    return toBytes$15(id$n, buffer.data);
+    return toBytes$16(id$n, buffer.data);
   };
 
   var getSaldoParameters = /*#__PURE__*/Object.freeze({
@@ -7640,7 +7735,7 @@ var logs = '';
   var toBytes$m = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$m, false);
     setSeasonProfile$1(buffer, parameters);
-    return toBytes$15(id$m, buffer.data);
+    return toBytes$16(id$m, buffer.data);
   };
 
   var getSeasonProfile = /*#__PURE__*/Object.freeze({
@@ -7685,7 +7780,7 @@ var logs = '';
   var toBytes$l = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$l, false);
     setSpecialDay$1(buffer, parameters);
-    return toBytes$15(id$l, buffer.data);
+    return toBytes$16(id$l, buffer.data);
   };
 
   var getSpecialDay = /*#__PURE__*/Object.freeze({
@@ -7729,7 +7824,7 @@ var logs = '';
     var version = parameters.version.split('').map(function (_char) {
       return _char.charCodeAt(0);
     });
-    return toBytes$15(id$k, version);
+    return toBytes$16(id$k, version);
   };
 
   var getVersion = /*#__PURE__*/Object.freeze({
@@ -7769,7 +7864,7 @@ var logs = '';
     return {};
   };
   var toBytes$j = function toBytes() {
-    return toBytes$15(id$j);
+    return toBytes$16(id$j);
   };
 
   var prepareRatePlan = /*#__PURE__*/Object.freeze({
@@ -7809,7 +7904,7 @@ var logs = '';
     return {};
   };
   var toBytes$i = function toBytes() {
-    return toBytes$15(id$i);
+    return toBytes$16(id$i);
   };
 
   var resetPowerMaxDay = /*#__PURE__*/Object.freeze({
@@ -7849,7 +7944,7 @@ var logs = '';
     return {};
   };
   var toBytes$h = function toBytes() {
-    return toBytes$15(id$h);
+    return toBytes$16(id$h);
   };
 
   var resetPowerMaxMonth = /*#__PURE__*/Object.freeze({
@@ -7889,7 +7984,7 @@ var logs = '';
     return {};
   };
   var toBytes$g = function toBytes() {
-    return toBytes$15(id$g);
+    return toBytes$16(id$g);
   };
 
   var runTariffPlan = /*#__PURE__*/Object.freeze({
@@ -7929,7 +8024,7 @@ var logs = '';
     return {};
   };
   var toBytes$f = function toBytes() {
-    return toBytes$15(id$f);
+    return toBytes$16(id$f);
   };
 
   var setAccessKey = /*#__PURE__*/Object.freeze({
@@ -7969,7 +8064,7 @@ var logs = '';
     return {};
   };
   var toBytes$e = function toBytes() {
-    return toBytes$15(id$e);
+    return toBytes$16(id$e);
   };
 
   var setCorrectDateTime = /*#__PURE__*/Object.freeze({
@@ -8009,7 +8104,7 @@ var logs = '';
     return {};
   };
   var toBytes$d = function toBytes() {
-    return toBytes$15(id$d);
+    return toBytes$16(id$d);
   };
 
   var setCorrectTime = /*#__PURE__*/Object.freeze({
@@ -8049,7 +8144,7 @@ var logs = '';
     return {};
   };
   var toBytes$c = function toBytes() {
-    return toBytes$15(id$c);
+    return toBytes$16(id$c);
   };
 
   var setDateTime = /*#__PURE__*/Object.freeze({
@@ -8089,7 +8184,7 @@ var logs = '';
     return {};
   };
   var toBytes$b = function toBytes() {
-    return toBytes$15(id$b);
+    return toBytes$16(id$b);
   };
 
   var setDayProfile = /*#__PURE__*/Object.freeze({
@@ -8127,7 +8222,7 @@ var logs = '';
     return {};
   };
   var toBytes$a = function toBytes() {
-    return toBytes$15(id$a);
+    return toBytes$16(id$a);
   };
 
   var setDemandParameters = /*#__PURE__*/Object.freeze({
@@ -8167,7 +8262,7 @@ var logs = '';
     return {};
   };
   var toBytes$9 = function toBytes() {
-    return toBytes$15(id$9);
+    return toBytes$16(id$9);
   };
 
   var setDisplayParam = /*#__PURE__*/Object.freeze({
@@ -8207,7 +8302,7 @@ var logs = '';
     return {};
   };
   var toBytes$8 = function toBytes() {
-    return toBytes$15(id$8);
+    return toBytes$16(id$8);
   };
 
   var setOperatorParameters = /*#__PURE__*/Object.freeze({
@@ -8247,7 +8342,7 @@ var logs = '';
     return {};
   };
   var toBytes$7 = function toBytes() {
-    return toBytes$15(id$7);
+    return toBytes$16(id$7);
   };
 
   var setOperatorParametersExtended3 = /*#__PURE__*/Object.freeze({
@@ -8287,7 +8382,7 @@ var logs = '';
     return {};
   };
   var toBytes$6 = function toBytes() {
-    return toBytes$15(id$6);
+    return toBytes$16(id$6);
   };
 
   var setSaldo = /*#__PURE__*/Object.freeze({
@@ -8327,7 +8422,7 @@ var logs = '';
     return {};
   };
   var toBytes$5 = function toBytes() {
-    return toBytes$15(id$5);
+    return toBytes$16(id$5);
   };
 
   var setSaldoParameters = /*#__PURE__*/Object.freeze({
@@ -8367,7 +8462,7 @@ var logs = '';
     return {};
   };
   var toBytes$4 = function toBytes() {
-    return toBytes$15(id$4);
+    return toBytes$16(id$4);
   };
 
   var setSeasonProfile = /*#__PURE__*/Object.freeze({
@@ -8407,7 +8502,7 @@ var logs = '';
     return {};
   };
   var toBytes$3 = function toBytes() {
-    return toBytes$15(id$3);
+    return toBytes$16(id$3);
   };
 
   var setSpecialDay = /*#__PURE__*/Object.freeze({
@@ -8487,7 +8582,7 @@ var logs = '';
       flags |= 2;
     }
     buffer.setUint8(flags);
-    return toBytes$15(id$2, buffer.data);
+    return toBytes$16(id$2, buffer.data);
   };
 
   var setSpecialOperation = /*#__PURE__*/Object.freeze({
@@ -8527,7 +8622,7 @@ var logs = '';
     return {};
   };
   var toBytes$1 = function toBytes() {
-    return toBytes$15(id$1);
+    return toBytes$16(id$1);
   };
 
   var turnRelayOff = /*#__PURE__*/Object.freeze({
@@ -8567,7 +8662,7 @@ var logs = '';
     return {};
   };
   var toBytes = function toBytes() {
-    return toBytes$15(id);
+    return toBytes$16(id);
   };
 
   var turnRelayOn = /*#__PURE__*/Object.freeze({
@@ -8586,6 +8681,7 @@ var logs = '';
   var commands = /*#__PURE__*/Object.freeze({
     __proto__: null,
     activateRatePlan: activateRatePlan,
+    errorDataFrameResponse: errorDataFrameResponse,
     errorResponse: errorResponse,
     getBv: getBv,
     getCorrectTime: getCorrectTime,

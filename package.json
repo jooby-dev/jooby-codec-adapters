@@ -16,11 +16,11 @@
     "dependencies": {
         "@babel/plugin-transform-computed-properties": "^7.24.1",
         "@babel/preset-env": "^7.24.3",
-        "@rollup/plugin-alias": "^5.1.0",
+        "@rollup/plugin-alias": "^6.0.0",
         "@rollup/plugin-babel": "^6.0.4",
         "@rollup/plugin-node-resolve": "^16.0.0",
         "@rollup/plugin-terser": "^0.4.4",
-        "jooby-codec": "^7.0.1",
+        "jooby-codec": "^7.1.0",
         "nodemon": "^3.1.0",
         "rollup": "^4.13.0"
     }

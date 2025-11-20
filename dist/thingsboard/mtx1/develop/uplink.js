@@ -91,6 +91,17 @@ var fromBytes, getDataSegment;
   });
 
   var UNENCRYPTED = 0x00;
+  var ROOT = 0x01;
+  var READ_WRITE = 0x02;
+  var READ_ONLY = 0x03;
+
+  var accessLevels = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    READ_ONLY: READ_ONLY,
+    READ_WRITE: READ_WRITE,
+    ROOT: ROOT,
+    UNENCRYPTED: UNENCRYPTED
+  });
 
   var getEventStatus$1 = 0x01;
   var getEnergyDayPrevious = 0x03;
@@ -230,10 +241,12 @@ var fromBytes, getDataSegment;
   var getDayEnergies = 0x78;
   var getDayMaxPower = 0x79;
   var errorResponse = 0xfe;
+  var errorDataFrameResponse = 0xff;
 
   var uplinkIds = /*#__PURE__*/Object.freeze({
     __proto__: null,
     activateRatePlan: activateRatePlan,
+    errorDataFrameResponse: errorDataFrameResponse,
     errorResponse: errorResponse,
     getBv: getBv,
     getCorrectTime: getCorrectTime,
@@ -314,13 +327,85 @@ var fromBytes, getDataSegment;
 
   var uplinkNames = invertObject(uplinkIds);
 
-  var id$13 = activateRatePlan;
-  var maxSize$r = 0;
+  var id$14 = activateRatePlan;
+  var maxSize$s = 0;
+  var fromBytes$17 = function (bytes) {
+    if (bytes.length !== maxSize$s) {
+      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
+    }
+    return {};
+  };
+
+  var OK = 0;
+  var UNKNOWN_COMMAND = 0x80;
+  var NOT_ALIGNED_DATA = 0x81;
+  var DECRYPTION_FAILURE = 0x82;
+  var UNKNOWN_PROTOCOL = 0x83;
+  var BAD_MESSAGE = 0x84;
+  var BAD_DATA_LENGTH = 0x85;
+  var BAD_ARRAY_INDEX = 0x86;
+  var NOT_PREPARED_RATE_PLAN = 0x87;
+  var BAD_RATE_PLAN_ID = 0x88;
+  var BAD_RATE_PLAN_SIZE = 0x89;
+  var BAD_RESPONSE_LENGTH = 0x90;
+  var NO_DATA_FOR_DATE = 0x91;
+  var CALIBRATION_DISABLED = 0x92;
+  var ACCESS_DENIED = 0x93;
+  var BAD_SALDO_WRITE = 0x95;
+  var BLOCKED_METER = 0x97;
+  var UNENCRYPTED_COMMAND_DISABLED = 0x98;
+  var TIME_CORRECTION_FAILURE = 0x99;
+  var INVALID_CORRECTION_INTERVAL = 0x9a;
+  var TIME_CORRECTION_OUT_HALF_HOUR_DISABLED = 0x9b;
+  var BAD_BLOCK_NUMBER = 0x9c;
+  var OUT_OFF_RANGE = 0x9f;
+  var SET_METER_TYPE_FAILURE = 0xa0;
+  var INTERNAL = 0xf0;
+
+  var resultCodes = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ACCESS_DENIED: ACCESS_DENIED,
+    BAD_ARRAY_INDEX: BAD_ARRAY_INDEX,
+    BAD_BLOCK_NUMBER: BAD_BLOCK_NUMBER,
+    BAD_DATA_LENGTH: BAD_DATA_LENGTH,
+    BAD_MESSAGE: BAD_MESSAGE,
+    BAD_RATE_PLAN_ID: BAD_RATE_PLAN_ID,
+    BAD_RATE_PLAN_SIZE: BAD_RATE_PLAN_SIZE,
+    BAD_RESPONSE_LENGTH: BAD_RESPONSE_LENGTH,
+    BAD_SALDO_WRITE: BAD_SALDO_WRITE,
+    BLOCKED_METER: BLOCKED_METER,
+    CALIBRATION_DISABLED: CALIBRATION_DISABLED,
+    DECRYPTION_FAILURE: DECRYPTION_FAILURE,
+    INTERNAL: INTERNAL,
+    INVALID_CORRECTION_INTERVAL: INVALID_CORRECTION_INTERVAL,
+    NOT_ALIGNED_DATA: NOT_ALIGNED_DATA,
+    NOT_PREPARED_RATE_PLAN: NOT_PREPARED_RATE_PLAN,
+    NO_DATA_FOR_DATE: NO_DATA_FOR_DATE,
+    OK: OK,
+    OUT_OFF_RANGE: OUT_OFF_RANGE,
+    SET_METER_TYPE_FAILURE: SET_METER_TYPE_FAILURE,
+    TIME_CORRECTION_FAILURE: TIME_CORRECTION_FAILURE,
+    TIME_CORRECTION_OUT_HALF_HOUR_DISABLED: TIME_CORRECTION_OUT_HALF_HOUR_DISABLED,
+    UNENCRYPTED_COMMAND_DISABLED: UNENCRYPTED_COMMAND_DISABLED,
+    UNKNOWN_COMMAND: UNKNOWN_COMMAND,
+    UNKNOWN_PROTOCOL: UNKNOWN_PROTOCOL
+  });
+
+  var resultNames = invertObject(resultCodes);
+
+  var id$13 = errorDataFrameResponse;
+  var name$2 = uplinkNames[errorDataFrameResponse];
+  var maxSize$r = 1;
   var fromBytes$16 = function (bytes) {
     if (bytes.length !== maxSize$r) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
     }
-    return {};
+    var _bytes = _slicedToArray(bytes, 1),
+      errorCode = _bytes[0];
+    return {
+      errorCode: errorCode,
+      errorName: resultNames[errorCode]
+    };
   };
 
   var INT8_SIZE = 1;
@@ -634,63 +719,6 @@ var fromBytes, getDataSegment;
     }
   });
 
-  var OK = 0;
-  var UNKNOWN_COMMAND = 0x80;
-  var NOT_ALIGNED_DATA = 0x81;
-  var DECRYPTION_FAILURE = 0x82;
-  var UNKNOWN_PROTOCOL = 0x83;
-  var BAD_MESSAGE = 0x84;
-  var BAD_DATA_LENGTH = 0x85;
-  var BAD_ARRAY_INDEX = 0x86;
-  var NOT_PREPARED_RATE_PLAN = 0x87;
-  var BAD_RATE_PLAN_ID = 0x88;
-  var BAD_RATE_PLAN_SIZE = 0x89;
-  var BAD_RESPONSE_LENGTH = 0x90;
-  var NO_DATA_FOR_DATE = 0x91;
-  var CALIBRATION_DISABLED = 0x92;
-  var ACCESS_DENIED = 0x93;
-  var BAD_SALDO_WRITE = 0x95;
-  var BLOCKED_METER = 0x97;
-  var UNENCRYPTED_COMMAND_DISABLED = 0x98;
-  var TIME_CORRECTION_FAILURE = 0x99;
-  var INVALID_CORRECTION_INTERVAL = 0x9a;
-  var TIME_CORRECTION_OUT_HALF_HOUR_DISABLED = 0x9b;
-  var BAD_BLOCK_NUMBER = 0x9c;
-  var OUT_OFF_RANGE = 0x9f;
-  var SET_METER_TYPE_FAILURE = 0xa0;
-  var INTERNAL = 0xf0;
-
-  var resultCodes = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    ACCESS_DENIED: ACCESS_DENIED,
-    BAD_ARRAY_INDEX: BAD_ARRAY_INDEX,
-    BAD_BLOCK_NUMBER: BAD_BLOCK_NUMBER,
-    BAD_DATA_LENGTH: BAD_DATA_LENGTH,
-    BAD_MESSAGE: BAD_MESSAGE,
-    BAD_RATE_PLAN_ID: BAD_RATE_PLAN_ID,
-    BAD_RATE_PLAN_SIZE: BAD_RATE_PLAN_SIZE,
-    BAD_RESPONSE_LENGTH: BAD_RESPONSE_LENGTH,
-    BAD_SALDO_WRITE: BAD_SALDO_WRITE,
-    BLOCKED_METER: BLOCKED_METER,
-    CALIBRATION_DISABLED: CALIBRATION_DISABLED,
-    DECRYPTION_FAILURE: DECRYPTION_FAILURE,
-    INTERNAL: INTERNAL,
-    INVALID_CORRECTION_INTERVAL: INVALID_CORRECTION_INTERVAL,
-    NOT_ALIGNED_DATA: NOT_ALIGNED_DATA,
-    NOT_PREPARED_RATE_PLAN: NOT_PREPARED_RATE_PLAN,
-    NO_DATA_FOR_DATE: NO_DATA_FOR_DATE,
-    OK: OK,
-    OUT_OFF_RANGE: OUT_OFF_RANGE,
-    SET_METER_TYPE_FAILURE: SET_METER_TYPE_FAILURE,
-    TIME_CORRECTION_FAILURE: TIME_CORRECTION_FAILURE,
-    TIME_CORRECTION_OUT_HALF_HOUR_DISABLED: TIME_CORRECTION_OUT_HALF_HOUR_DISABLED,
-    UNENCRYPTED_COMMAND_DISABLED: UNENCRYPTED_COMMAND_DISABLED,
-    UNKNOWN_COMMAND: UNKNOWN_COMMAND,
-    UNKNOWN_PROTOCOL: UNKNOWN_PROTOCOL
-  });
-
-  var resultNames = invertObject(resultCodes);
-
   var id$12 = errorResponse;
   var getFromBytes$2 = function (commandNamesParameter) {
     return function (bytes) {
@@ -910,14 +938,55 @@ var fromBytes, getDataSegment;
 
   invertObject(frameTypes);
 
+  invertObject(accessLevels);
+
+  var CASE_OPEN$1 = 0;
+  var MAGNETIC_ON$1 = 1;
+  var PARAMETERS_UPDATE_REMOTE = 2;
+  var PARAMETERS_UPDATE_LOCAL = 3;
+  var RESTART$1 = 4;
+  var ERROR_ACCESS = 5;
+  var TIME_SET = 6;
+  var TIME_CORRECT$1 = 7;
+  var DEVICE_FAILURE = 8;
+  var CASE_TERMINAL_OPEN = 9;
+  var CASE_MODULE_OPEN$1 = 10;
+  var TARIFF_TABLE_SET = 11;
+  var TARIFF_TABLE_GET = 12;
+  var PROTECTION_RESET_EM = 13;
+  var PROTECTION_RESET_MAGNETIC = 14;
+
+  var criticalEvents = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    CASE_MODULE_OPEN: CASE_MODULE_OPEN$1,
+    CASE_OPEN: CASE_OPEN$1,
+    CASE_TERMINAL_OPEN: CASE_TERMINAL_OPEN,
+    DEVICE_FAILURE: DEVICE_FAILURE,
+    ERROR_ACCESS: ERROR_ACCESS,
+    MAGNETIC_ON: MAGNETIC_ON$1,
+    PARAMETERS_UPDATE_LOCAL: PARAMETERS_UPDATE_LOCAL,
+    PARAMETERS_UPDATE_REMOTE: PARAMETERS_UPDATE_REMOTE,
+    PROTECTION_RESET_EM: PROTECTION_RESET_EM,
+    PROTECTION_RESET_MAGNETIC: PROTECTION_RESET_MAGNETIC,
+    RESTART: RESTART$1,
+    TARIFF_TABLE_GET: TARIFF_TABLE_GET,
+    TARIFF_TABLE_SET: TARIFF_TABLE_SET,
+    TIME_CORRECT: TIME_CORRECT$1,
+    TIME_SET: TIME_SET
+  });
+
+  var criticalEventNames = invertObject(criticalEvents);
+
+  invertObject(downlinkIds);
+
   var ENERGY_REGISTER_FAULT = 0x01;
   var VENDOR_PAR_FAULT = 0x02;
   var OP_PAR_FAULT = 0x03;
   var ACCESS_LOCKED = 0x10;
   var ERR_ACCESS = 0x11;
-  var CASE_OPEN$1 = 0x12;
+  var CASE_OPEN = 0x12;
   var CASE_CLOSE = 0x13;
-  var MAGNETIC_ON$1 = 0x14;
+  var MAGNETIC_ON = 0x14;
   var MAGNETIC_OFF = 0x15;
   var CHANGE_ACCESS_KEY0 = 0x20;
   var CHANGE_ACCESS_KEY1 = 0x21;
@@ -936,7 +1005,7 @@ var fromBytes, getDataSegment;
   var WINTER_TIME = 0x35;
   var RELAY_ON = 0x36;
   var RELAY_OFF = 0x37;
-  var RESTART$1 = 0x38;
+  var RESTART = 0x38;
   var WD_RESTART = 0x39;
   var POWER_B_ON = 0x3c;
   var POWER_B_OFF = 0x3d;
@@ -987,10 +1056,10 @@ var fromBytes, getDataSegment;
   var CALIBRATION_PARAM_BAD = 0x76;
   var WINTER_SUMMER_BAD = 0x77;
   var SALDO_EN_BAD = 0x78;
-  var TIME_CORRECT$1 = 0x79;
+  var TIME_CORRECT = 0x79;
   var CASE_KLEMA_OPEN = 0x7a;
   var CASE_KLEMA_CLOSE = 0x7b;
-  var CASE_MODULE_OPEN$1 = 0x7c;
+  var CASE_MODULE_OPEN = 0x7c;
   var CASE_MODULE_CLOSE = 0x7d;
   var POWER_GOOD_DIO = 0x7e;
   var RELAY_HARD_BAD_OFF = 0x90;
@@ -1047,8 +1116,8 @@ var fromBytes, getDataSegment;
     CASE_KLEMA_CLOSE: CASE_KLEMA_CLOSE,
     CASE_KLEMA_OPEN: CASE_KLEMA_OPEN,
     CASE_MODULE_CLOSE: CASE_MODULE_CLOSE,
-    CASE_MODULE_OPEN: CASE_MODULE_OPEN$1,
-    CASE_OPEN: CASE_OPEN$1,
+    CASE_MODULE_OPEN: CASE_MODULE_OPEN,
+    CASE_OPEN: CASE_OPEN,
     CHANGE_ACCESS_KEY0: CHANGE_ACCESS_KEY0,
     CHANGE_ACCESS_KEY1: CHANGE_ACCESS_KEY1,
     CHANGE_ACCESS_KEY2: CHANGE_ACCESS_KEY2,
@@ -1088,7 +1157,7 @@ var fromBytes, getDataSegment;
     I_MAX_OK: I_MAX_OK,
     I_MAX_OVER: I_MAX_OVER,
     MAGNETIC_OFF: MAGNETIC_OFF,
-    MAGNETIC_ON: MAGNETIC_ON$1,
+    MAGNETIC_ON: MAGNETIC_ON,
     OP_PAR_FAULT: OP_PAR_FAULT,
     POWER_A_OFF: POWER_A_OFF,
     POWER_A_ON: POWER_A_ON,
@@ -1113,7 +1182,7 @@ var fromBytes, getDataSegment;
     RELAY_ON: RELAY_ON,
     RESET_EM_FLAG: RESET_EM_FLAG,
     RESET_MAGNET_FLAG: RESET_MAGNET_FLAG,
-    RESTART: RESTART$1,
+    RESTART: RESTART,
     SALDO_EN_BAD: SALDO_EN_BAD,
     SALDO_PARAM_BAD: SALDO_PARAM_BAD,
     SET_DEMAND_EN_10MIN: SET_DEMAND_EN_10MIN,
@@ -1127,7 +1196,7 @@ var fromBytes, getDataSegment;
     SET_SALDO_PARAM: SET_SALDO_PARAM,
     SET_TARIFF_TABLE: SET_TARIFF_TABLE,
     SUMMER_TIME: SUMMER_TIME,
-    TIME_CORRECT: TIME_CORRECT$1,
+    TIME_CORRECT: TIME_CORRECT,
     TIME_CORRECT_NEW: TIME_CORRECT_NEW,
     T_MAX_OK: T_MAX_OK,
     T_MAX_OVER: T_MAX_OVER,
@@ -1144,6 +1213,93 @@ var fromBytes, getDataSegment;
   });
 
   var eventNames = invertObject(events);
+
+  var SET_ALL_SEGMENT_DISPLAY = 1;
+  var SOFTWARE_VERSION = 2;
+  var TOTAL_ACTIVE_ENERGY = 3;
+  var ACTIVE_ENERGY_T1 = 4;
+  var ACTIVE_ENERGY_T2 = 5;
+  var ACTIVE_ENERGY_T3 = 6;
+  var ACTIVE_ENERGY_T4 = 7;
+  var ACTIVE_POWER_PER_PHASE = 8;
+  var ACTIVE_POWER_IN_NEUTRAL = 9;
+  var CURRENT_IN_PHASE = 10;
+  var CURRENT_IN_NEUTRAL = 11;
+  var VOLTAGE = 12;
+  var HOUR_MINUTE_SECOND = 13;
+  var DATE_MONTH_YEAR = 14;
+  var TOTAL_EXPORTED_ACTIVE_ENERGY = 15;
+  var EXPORTED_ACTIVE_ENERGY_T1 = 16;
+  var EXPORTED_ACTIVE_ENERGY_T2 = 17;
+  var EXPORTED_ACTIVE_ENERGY_T3 = 18;
+  var EXPORTED_ACTIVE_ENERGY_T4 = 19;
+  var POWER_FACTOR_PHASE_A = 20;
+  var POWER_FACTOR_PHASE_B = 21;
+  var BATTERY_VOLTAGE = 22;
+  var POWER_THRESHOLD_T1 = 23;
+  var POWER_THRESHOLD_T2 = 24;
+  var POWER_THRESHOLD_T3 = 25;
+  var POWER_THRESHOLD_T4 = 26;
+  var MAGNET_INDUCTION = 28;
+  var CURRENT_BALANCE = 30;
+  var OPTOPORT_SPEED = 31;
+
+  var screenIds = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ACTIVE_ENERGY_T1: ACTIVE_ENERGY_T1,
+    ACTIVE_ENERGY_T2: ACTIVE_ENERGY_T2,
+    ACTIVE_ENERGY_T3: ACTIVE_ENERGY_T3,
+    ACTIVE_ENERGY_T4: ACTIVE_ENERGY_T4,
+    ACTIVE_POWER_IN_NEUTRAL: ACTIVE_POWER_IN_NEUTRAL,
+    ACTIVE_POWER_PER_PHASE: ACTIVE_POWER_PER_PHASE,
+    BATTERY_VOLTAGE: BATTERY_VOLTAGE,
+    CURRENT_BALANCE: CURRENT_BALANCE,
+    CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL,
+    CURRENT_IN_PHASE: CURRENT_IN_PHASE,
+    DATE_MONTH_YEAR: DATE_MONTH_YEAR,
+    EXPORTED_ACTIVE_ENERGY_T1: EXPORTED_ACTIVE_ENERGY_T1,
+    EXPORTED_ACTIVE_ENERGY_T2: EXPORTED_ACTIVE_ENERGY_T2,
+    EXPORTED_ACTIVE_ENERGY_T3: EXPORTED_ACTIVE_ENERGY_T3,
+    EXPORTED_ACTIVE_ENERGY_T4: EXPORTED_ACTIVE_ENERGY_T4,
+    HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND,
+    MAGNET_INDUCTION: MAGNET_INDUCTION,
+    OPTOPORT_SPEED: OPTOPORT_SPEED,
+    POWER_FACTOR_PHASE_A: POWER_FACTOR_PHASE_A,
+    POWER_FACTOR_PHASE_B: POWER_FACTOR_PHASE_B,
+    POWER_THRESHOLD_T1: POWER_THRESHOLD_T1,
+    POWER_THRESHOLD_T2: POWER_THRESHOLD_T2,
+    POWER_THRESHOLD_T3: POWER_THRESHOLD_T3,
+    POWER_THRESHOLD_T4: POWER_THRESHOLD_T4,
+    SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY,
+    SOFTWARE_VERSION: SOFTWARE_VERSION,
+    TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY,
+    TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY,
+    VOLTAGE: VOLTAGE
+  });
+
+  invertObject(screenIds);
+
+  var RATE_2400 = 2400;
+  var RATE_9600 = 9600;
+  var valueToRate = {
+    rs485orTwi: {
+      0: RATE_9600,
+      2: RATE_2400,
+      4: RATE_9600
+    },
+    optoport: {
+      0: RATE_2400,
+      2: RATE_2400,
+      4: RATE_9600
+    }
+  };
+  ({
+    rs485orTwi: invertObject(valueToRate.rs485orTwi),
+    optoport: invertObject(valueToRate.optoport)
+  });
+
+  var A_PLUS = 0x01;
+  var A_MINUS = 0x02;
 
   var TARIFF_PLAN_SIZE = 11;
   var SEASON_PROFILE_DAYS_NUMBER = 7;
@@ -1299,6 +1455,12 @@ var fromBytes, getDataSegment;
     RELAY_OFF_LIMIT_P_MINUS_T3: 0x20,
     RELAY_OFF_LIMIT_P_MINUS_T4: 0x40
   };
+  var getSerialPortsSpeed = function (value) {
+    return {
+      rs485orTwi: valueToRate.rs485orTwi[extractBits(value, 4, 1)],
+      optoport: valueToRate.optoport[extractBits(value, 4, 5)]
+    };
+  };
   function getPackedEnergies(buffer, energyType, tariffMapByte) {
     var byte = tariffMapByte >> TARIFF_NUMBER$1;
     var energies = new Array(TARIFF_NUMBER$1).fill(0);
@@ -1413,7 +1575,7 @@ var fromBytes, getDataSegment;
       pmaxThreshold1: buffer.getUint32(),
       pmaxThreshold2: buffer.getUint32(),
       pmaxThreshold3: buffer.getUint32(),
-      speedOptoPort: buffer.getUint8(),
+      serialPortsSpeed: getSerialPortsSpeed(buffer.getUint8()),
       tint: buffer.getUint8(),
       calcPeriodDate: buffer.getUint8(),
       timeoutDisplay: buffer.getUint8(),
@@ -1541,7 +1703,7 @@ var fromBytes, getDataSegment;
         data.power = [buffer.getUint8(), buffer.getUint8(), buffer.getUint8(), buffer.getUint8()];
         break;
       case CMD_CHANGE_TIME:
-      case TIME_CORRECT$1:
+      case TIME_CORRECT:
         if (bytesLeft < 8) {
           return data;
         }
@@ -1614,43 +1776,6 @@ var fromBytes, getDataSegment;
     var buffer = new BinaryBuffer(bytes, false);
     return getTimeCorrectionParameters(buffer);
   };
-
-  var CASE_OPEN = 0;
-  var MAGNETIC_ON = 1;
-  var PARAMETERS_UPDATE_REMOTE = 2;
-  var PARAMETERS_UPDATE_LOCAL = 3;
-  var RESTART = 4;
-  var ERROR_ACCESS = 5;
-  var TIME_SET = 6;
-  var TIME_CORRECT = 7;
-  var DEVICE_FAILURE = 8;
-  var CASE_TERMINAL_OPEN = 9;
-  var CASE_MODULE_OPEN = 10;
-  var TARIFF_TABLE_SET = 11;
-  var TARIFF_TABLE_GET = 12;
-  var PROTECTION_RESET_EM = 13;
-  var PROTECTION_RESET_MAGNETIC = 14;
-
-  var criticalEvents = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    CASE_MODULE_OPEN: CASE_MODULE_OPEN,
-    CASE_OPEN: CASE_OPEN,
-    CASE_TERMINAL_OPEN: CASE_TERMINAL_OPEN,
-    DEVICE_FAILURE: DEVICE_FAILURE,
-    ERROR_ACCESS: ERROR_ACCESS,
-    MAGNETIC_ON: MAGNETIC_ON,
-    PARAMETERS_UPDATE_LOCAL: PARAMETERS_UPDATE_LOCAL,
-    PARAMETERS_UPDATE_REMOTE: PARAMETERS_UPDATE_REMOTE,
-    PROTECTION_RESET_EM: PROTECTION_RESET_EM,
-    PROTECTION_RESET_MAGNETIC: PROTECTION_RESET_MAGNETIC,
-    RESTART: RESTART,
-    TARIFF_TABLE_GET: TARIFF_TABLE_GET,
-    TARIFF_TABLE_SET: TARIFF_TABLE_SET,
-    TIME_CORRECT: TIME_CORRECT,
-    TIME_SET: TIME_SET
-  });
-
-  var criticalEventNames = invertObject(criticalEvents);
 
   var id$ = getCriticalEvent;
   var maxSize$p = 9;
@@ -1983,11 +2108,6 @@ var fromBytes, getDataSegment;
     };
   };
 
-  var A_PLUS = 0x01;
-  var A_MINUS = 0x02;
-
-  invertObject(downlinkIds);
-
   var maxSize$o = 7;
 
   var ADDITIONAL_HOUR = 25;
@@ -2093,71 +2213,6 @@ var fromBytes, getDataSegment;
     var buffer = new BinaryBuffer(bytes, false);
     return getDeviceType(buffer);
   };
-
-  var SET_ALL_SEGMENT_DISPLAY = 1;
-  var SOFTWARE_VERSION = 2;
-  var TOTAL_ACTIVE_ENERGY = 3;
-  var ACTIVE_ENERGY_T1 = 4;
-  var ACTIVE_ENERGY_T2 = 5;
-  var ACTIVE_ENERGY_T3 = 6;
-  var ACTIVE_ENERGY_T4 = 7;
-  var ACTIVE_POWER_PER_PHASE = 8;
-  var ACTIVE_POWER_IN_NEUTRAL = 9;
-  var CURRENT_IN_PHASE = 10;
-  var CURRENT_IN_NEUTRAL = 11;
-  var VOLTAGE = 12;
-  var HOUR_MINUTE_SECOND = 13;
-  var DATE_MONTH_YEAR = 14;
-  var TOTAL_EXPORTED_ACTIVE_ENERGY = 15;
-  var EXPORTED_ACTIVE_ENERGY_T1 = 16;
-  var EXPORTED_ACTIVE_ENERGY_T2 = 17;
-  var EXPORTED_ACTIVE_ENERGY_T3 = 18;
-  var EXPORTED_ACTIVE_ENERGY_T4 = 19;
-  var POWER_FACTOR_PHASE_A = 20;
-  var POWER_FACTOR_PHASE_B = 21;
-  var BATTERY_VOLTAGE = 22;
-  var POWER_THRESHOLD_T1 = 23;
-  var POWER_THRESHOLD_T2 = 24;
-  var POWER_THRESHOLD_T3 = 25;
-  var POWER_THRESHOLD_T4 = 26;
-  var MAGNET_INDUCTION = 28;
-  var CURRENT_BALANCE = 30;
-  var OPTOPORT_SPEED = 31;
-
-  var screenIds = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    ACTIVE_ENERGY_T1: ACTIVE_ENERGY_T1,
-    ACTIVE_ENERGY_T2: ACTIVE_ENERGY_T2,
-    ACTIVE_ENERGY_T3: ACTIVE_ENERGY_T3,
-    ACTIVE_ENERGY_T4: ACTIVE_ENERGY_T4,
-    ACTIVE_POWER_IN_NEUTRAL: ACTIVE_POWER_IN_NEUTRAL,
-    ACTIVE_POWER_PER_PHASE: ACTIVE_POWER_PER_PHASE,
-    BATTERY_VOLTAGE: BATTERY_VOLTAGE,
-    CURRENT_BALANCE: CURRENT_BALANCE,
-    CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL,
-    CURRENT_IN_PHASE: CURRENT_IN_PHASE,
-    DATE_MONTH_YEAR: DATE_MONTH_YEAR,
-    EXPORTED_ACTIVE_ENERGY_T1: EXPORTED_ACTIVE_ENERGY_T1,
-    EXPORTED_ACTIVE_ENERGY_T2: EXPORTED_ACTIVE_ENERGY_T2,
-    EXPORTED_ACTIVE_ENERGY_T3: EXPORTED_ACTIVE_ENERGY_T3,
-    EXPORTED_ACTIVE_ENERGY_T4: EXPORTED_ACTIVE_ENERGY_T4,
-    HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND,
-    MAGNET_INDUCTION: MAGNET_INDUCTION,
-    OPTOPORT_SPEED: OPTOPORT_SPEED,
-    POWER_FACTOR_PHASE_A: POWER_FACTOR_PHASE_A,
-    POWER_FACTOR_PHASE_B: POWER_FACTOR_PHASE_B,
-    POWER_THRESHOLD_T1: POWER_THRESHOLD_T1,
-    POWER_THRESHOLD_T2: POWER_THRESHOLD_T2,
-    POWER_THRESHOLD_T3: POWER_THRESHOLD_T3,
-    POWER_THRESHOLD_T4: POWER_THRESHOLD_T4,
-    SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY,
-    SOFTWARE_VERSION: SOFTWARE_VERSION,
-    TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY,
-    TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY,
-    VOLTAGE: VOLTAGE
-  });
-
-  invertObject(screenIds);
 
   var id$L = getDisplayParam;
   var fromBytes$N = function (bytes) {
@@ -2717,6 +2772,53 @@ var fromBytes, getDataSegment;
     return lrc;
   });
 
+  var COMMAND_HEADER_SIZE$1 = 2;
+  var MESSAGE_HEADER_SIZE$1 = 2;
+  var tryToReadErrorDataFrameCommand = function (bytes) {
+    var _bytes = _slicedToArray(bytes, 1),
+      id = _bytes[0];
+    if (id === id$13) {
+      try {
+        var parameters = fromBytes$16(bytes.slice(COMMAND_HEADER_SIZE$1));
+        return {
+          id: id,
+          name: name$2,
+          headerSize: COMMAND_HEADER_SIZE$1,
+          bytes: bytes,
+          parameters: parameters
+        };
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+  var readErrorDataFrameResponse = (function (accessLevel, bytes) {
+    var _bytes2 = _slicedToArray(bytes, 1),
+      messageId = _bytes2[0];
+    var errorDataFrameCommand1 = tryToReadErrorDataFrameCommand(bytes.slice(MESSAGE_HEADER_SIZE$1 - 1));
+    var errorDataFrameCommand2 = tryToReadErrorDataFrameCommand(bytes.slice(MESSAGE_HEADER_SIZE$1));
+    var result = {
+      messageId: messageId,
+      bytes: bytes
+    };
+    if (errorDataFrameCommand1) {
+      return {
+        ...result,
+        accessLevel: UNENCRYPTED,
+        commands: [errorDataFrameCommand1]
+      };
+    }
+    if (errorDataFrameCommand2) {
+      return {
+        ...result,
+        accessLevel: accessLevel,
+        commands: [errorDataFrameCommand2]
+      };
+    }
+    return null;
+  });
+
   var ACCESS_LEVEL_MASK = 0x03;
   var MESSAGE_HEADER_SIZE = 2;
   var COMMAND_HEADER_SIZE = 2;
@@ -2730,6 +2832,7 @@ var fromBytes, getDataSegment;
         messageId = _bytes[0],
         maskedAccessLevel = _bytes[1];
       var accessLevel = maskedAccessLevel & ACCESS_LEVEL_MASK;
+      var errorDataFrameMessage = readErrorDataFrameResponse(accessLevel, bytes);
       var message = {
         messageId: messageId,
         accessLevel: accessLevel,
@@ -2742,6 +2845,9 @@ var fromBytes, getDataSegment;
       };
       var messageBody = bytes.slice(MESSAGE_HEADER_SIZE);
       var error;
+      if (errorDataFrameMessage) {
+        return errorDataFrameMessage;
+      }
       if (aesKey && accessLevel !== UNENCRYPTED) {
         messageBody = _toConsumableArray(aes.decrypt(aesKey, messageBody));
       }
@@ -2802,6 +2908,7 @@ var fromBytes, getDataSegment;
   var fromBytesMap = {};
   var nameMap = uplinkNames;
   var fromBytes$1 = getFromBytes(fromBytesMap, nameMap);
+  fromBytesMap[id$14] = fromBytes$17;
   fromBytesMap[id$13] = fromBytes$16;
   fromBytesMap[id$12] = fromBytes$15;
   fromBytesMap[id$11] = fromBytes$14;

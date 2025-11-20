@@ -62,71 +62,6 @@ var toBytes, setDataSegment, getBase64FromBytes;
     }
   }
 
-  // this is required to shadow crypto-js implementation
-  var aes = {
-    encrypt: function () {},
-    decrypt: function () {}
-  };
-
-  var UNENCRYPTED = 0x00;
-  var READ_ONLY = 0x03;
-
-  var calculateLrc = (function (data) {
-    var initialLrc = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0x55;
-    var lrc = initialLrc;
-    data.forEach(function (item) {
-      lrc ^= item;
-    });
-    return lrc;
-  });
-
-  var BLOCK_SIZE = 16;
-  var COMMANDS_END_MARK = [0];
-  var getToBytes = function (toBytesMap) {
-    return function (commands, _ref) {
-      var _ref2;
-      var _ref$messageId = _ref.messageId,
-        messageId = _ref$messageId === void 0 ? 1 : _ref$messageId,
-        _ref$accessLevel = _ref.accessLevel,
-        accessLevel = _ref$accessLevel === void 0 ? READ_ONLY : _ref$accessLevel,
-        aesKey = _ref.aesKey;
-      var commandBytes = commands.map(function (command) {
-        if ('id' in command) {
-          return toBytesMap[command.id](command.parameters || {});
-        }
-        if ('command' in command) {
-          return command.command.bytes;
-        }
-        throw new Error('wrong command format');
-      });
-      var maskedAccessLevel = accessLevel | 0x10;
-      var header = [messageId, maskedAccessLevel];
-      var body = (_ref2 = []).concat.apply(_ref2, [maskedAccessLevel].concat(_toConsumableArray(commandBytes), [COMMANDS_END_MARK]));
-      if (accessLevel !== UNENCRYPTED) {
-        var padding = (body.length + 1) % BLOCK_SIZE;
-        if (padding) {
-          body = body.concat(new Array(BLOCK_SIZE - padding).fill(0));
-        }
-      }
-      body = body.concat(calculateLrc(body));
-      if (aesKey && accessLevel !== UNENCRYPTED) {
-        body = _toConsumableArray(aes.encrypt(aesKey, body));
-      }
-      return header.concat(body);
-    };
-  };
-
-  var getBase64FromBytes$1 = (function (bytes) {
-    return btoa(bytes.map(function (byte) {
-      return String.fromCharCode(byte);
-    }).join(''));
-  });
-
-  var toBytes$d = function (commandId) {
-    var commandBytes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    return [commandId, commandBytes.length].concat(_toConsumableArray(commandBytes));
-  };
-
   var getEventStatus$1 = 0x01;
   var getEnergyDayPrevious$1 = 0x03;
   var getDeviceType$1 = 0x04;
@@ -262,6 +197,95 @@ var toBytes, setDataSegment, getBase64FromBytes;
     turnRelayOn: turnRelayOn$1
   });
 
+  var getDayEnergies$1 = 0x78;
+  var getDayMaxPower = 0x79;
+  var errorResponse$1 = 0xfe;
+  var errorDataFrameResponse$1 = 0xff;
+
+  var uplinkIds$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    activateRatePlan: activateRatePlan$1,
+    errorDataFrameResponse: errorDataFrameResponse$1,
+    errorResponse: errorResponse$1,
+    getBv: getBv$1,
+    getCorrectTime: getCorrectTime$1,
+    getCriticalEvent: getCriticalEvent$1,
+    getCurrentStatusMeter: getCurrentStatusMeter$1,
+    getCurrentValues: getCurrentValues$1,
+    getDateTime: getDateTime$1,
+    getDayDemand: getDayDemand$1,
+    getDayDemandExport: getDayDemandExport$1,
+    getDayEnergies: getDayEnergies$1,
+    getDayMaxDemand: getDayMaxDemand$1,
+    getDayMaxDemandExport: getDayMaxDemandExport$1,
+    getDayMaxDemandPrevious: getDayMaxDemandPrevious,
+    getDayMaxPower: getDayMaxPower,
+    getDayProfile: getDayProfile$1,
+    getDemand: getDemand$1,
+    getDemandParameters: getDemandParameters,
+    getDeviceId: getDeviceId$1,
+    getDeviceType: getDeviceType$1,
+    getDisplayParam: getDisplayParam$1,
+    getEnergy: getEnergy$1,
+    getEnergyDayPrevious: getEnergyDayPrevious$1,
+    getEnergyExport: getEnergyExport$1,
+    getEnergyExportDayPrevious: getEnergyExportDayPrevious$1,
+    getEventStatus: getEventStatus$1,
+    getEvents: getEvents$1,
+    getEventsCounters: getEventsCounters$1,
+    getExtendedCurrentValues: getExtendedCurrentValues$1,
+    getExtendedCurrentValues2: getExtendedCurrentValues2,
+    getHalfHourDemand: getHalfHourDemand$1,
+    getHalfHourDemandExport: getHalfHourDemandExport$1,
+    getHalfHourDemandPrevious: getHalfHourDemandPrevious,
+    getHalfHourEnergies: getHalfHourEnergies$1,
+    getMagneticFieldThreshold: getMagneticFieldThreshold$1,
+    getMeterInfo: getMeterInfo$1,
+    getMonthDemand: getMonthDemand$1,
+    getMonthDemandExport: getMonthDemandExport$1,
+    getMonthMaxDemand: getMonthMaxDemand$1,
+    getMonthMaxDemandExport: getMonthMaxDemandExport$1,
+    getOperatorParameters: getOperatorParameters$1,
+    getOperatorParametersExtended3: getOperatorParametersExtended3$1,
+    getRatePlanInfo: getRatePlanInfo$1,
+    getSaldo: getSaldo$1,
+    getSaldoParameters: getSaldoParameters$1,
+    getSeasonProfile: getSeasonProfile$1,
+    getSpecialDay: getSpecialDay$1,
+    getVersion: getVersion$1,
+    prepareRatePlan: prepareRatePlan$1,
+    resetPowerMaxDay: resetPowerMaxDay$1,
+    resetPowerMaxMonth: resetPowerMaxMonth$1,
+    runTariffPlan: runTariffPlan$1,
+    setAccessKey: setAccessKey$1,
+    setCorrectDateTime: setCorrectDateTime$1,
+    setCorrectTime: setCorrectTime$1,
+    setDateTime: setDateTime$2,
+    setDayProfile: setDayProfile$1,
+    setDemandParameters: setDemandParameters,
+    setDisplayParam: setDisplayParam$1,
+    setOperatorParameters: setOperatorParameters$1,
+    setOperatorParametersExtended3: setOperatorParametersExtended3$1,
+    setSaldo: setSaldo$1,
+    setSaldoParameters: setSaldoParameters$1,
+    setSeasonProfile: setSeasonProfile$1,
+    setSpecialDay: setSpecialDay$1,
+    setSpecialOperation: setSpecialOperation$1,
+    turnRelayOff: turnRelayOff$1,
+    turnRelayOn: turnRelayOn$1
+  });
+
+  var getBase64FromBytes$1 = (function (bytes) {
+    return btoa(bytes.map(function (byte) {
+      return String.fromCharCode(byte);
+    }).join(''));
+  });
+
+  var toBytes$d = function (commandId) {
+    var commandBytes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+    return [commandId, commandBytes.length].concat(_toConsumableArray(commandBytes));
+  };
+
   var invertObject = (function (source) {
     var target = {};
     for (var property in source) {
@@ -270,6 +294,134 @@ var toBytes, setDataSegment, getBase64FromBytes;
     }
     return target;
   });
+
+  invertObject(uplinkIds$1);
+
+  var OK = 0;
+  var UNKNOWN_COMMAND = 0x80;
+  var NOT_ALIGNED_DATA = 0x81;
+  var DECRYPTION_FAILURE = 0x82;
+  var UNKNOWN_PROTOCOL = 0x83;
+  var BAD_MESSAGE = 0x84;
+  var BAD_DATA_LENGTH = 0x85;
+  var BAD_ARRAY_INDEX = 0x86;
+  var NOT_PREPARED_RATE_PLAN = 0x87;
+  var BAD_RATE_PLAN_ID = 0x88;
+  var BAD_RATE_PLAN_SIZE = 0x89;
+  var BAD_RESPONSE_LENGTH = 0x90;
+  var NO_DATA_FOR_DATE = 0x91;
+  var CALIBRATION_DISABLED = 0x92;
+  var ACCESS_DENIED = 0x93;
+  var BAD_SALDO_WRITE = 0x95;
+  var BLOCKED_METER = 0x97;
+  var UNENCRYPTED_COMMAND_DISABLED = 0x98;
+  var TIME_CORRECTION_FAILURE = 0x99;
+  var INVALID_CORRECTION_INTERVAL = 0x9a;
+  var TIME_CORRECTION_OUT_HALF_HOUR_DISABLED = 0x9b;
+  var BAD_BLOCK_NUMBER = 0x9c;
+  var OUT_OFF_RANGE = 0x9f;
+  var SET_METER_TYPE_FAILURE = 0xa0;
+  var INTERNAL = 0xf0;
+
+  var resultCodes = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ACCESS_DENIED: ACCESS_DENIED,
+    BAD_ARRAY_INDEX: BAD_ARRAY_INDEX,
+    BAD_BLOCK_NUMBER: BAD_BLOCK_NUMBER,
+    BAD_DATA_LENGTH: BAD_DATA_LENGTH,
+    BAD_MESSAGE: BAD_MESSAGE,
+    BAD_RATE_PLAN_ID: BAD_RATE_PLAN_ID,
+    BAD_RATE_PLAN_SIZE: BAD_RATE_PLAN_SIZE,
+    BAD_RESPONSE_LENGTH: BAD_RESPONSE_LENGTH,
+    BAD_SALDO_WRITE: BAD_SALDO_WRITE,
+    BLOCKED_METER: BLOCKED_METER,
+    CALIBRATION_DISABLED: CALIBRATION_DISABLED,
+    DECRYPTION_FAILURE: DECRYPTION_FAILURE,
+    INTERNAL: INTERNAL,
+    INVALID_CORRECTION_INTERVAL: INVALID_CORRECTION_INTERVAL,
+    NOT_ALIGNED_DATA: NOT_ALIGNED_DATA,
+    NOT_PREPARED_RATE_PLAN: NOT_PREPARED_RATE_PLAN,
+    NO_DATA_FOR_DATE: NO_DATA_FOR_DATE,
+    OK: OK,
+    OUT_OFF_RANGE: OUT_OFF_RANGE,
+    SET_METER_TYPE_FAILURE: SET_METER_TYPE_FAILURE,
+    TIME_CORRECTION_FAILURE: TIME_CORRECTION_FAILURE,
+    TIME_CORRECTION_OUT_HALF_HOUR_DISABLED: TIME_CORRECTION_OUT_HALF_HOUR_DISABLED,
+    UNENCRYPTED_COMMAND_DISABLED: UNENCRYPTED_COMMAND_DISABLED,
+    UNKNOWN_COMMAND: UNKNOWN_COMMAND,
+    UNKNOWN_PROTOCOL: UNKNOWN_PROTOCOL
+  });
+
+  invertObject(resultCodes);
+
+  var UNENCRYPTED = 0x00;
+  var ROOT = 0x01;
+  var READ_WRITE = 0x02;
+  var READ_ONLY = 0x03;
+
+  var accessLevels = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    READ_ONLY: READ_ONLY,
+    READ_WRITE: READ_WRITE,
+    ROOT: ROOT,
+    UNENCRYPTED: UNENCRYPTED
+  });
+
+  var id$c = errorDataFrameResponse$1;
+
+  // this is required to shadow crypto-js implementation
+  var aes = {
+    encrypt: function () {},
+    decrypt: function () {}
+  };
+
+  var calculateLrc = (function (data) {
+    var initialLrc = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0x55;
+    var lrc = initialLrc;
+    data.forEach(function (item) {
+      lrc ^= item;
+    });
+    return lrc;
+  });
+
+  var BLOCK_SIZE = 16;
+  var COMMANDS_END_MARK = [0];
+  var getToBytes = function (toBytesMap) {
+    return function (commands, _ref) {
+      var _ref$messageId = _ref.messageId,
+        messageId = _ref$messageId === void 0 ? 1 : _ref$messageId,
+        _ref$accessLevel = _ref.accessLevel,
+        accessLevel = _ref$accessLevel === void 0 ? READ_ONLY : _ref$accessLevel,
+        aesKey = _ref.aesKey;
+      var commandBytes = commands.flatMap(function (command) {
+        if ('id' in command) {
+          return toBytesMap[command.id](command.parameters || {});
+        }
+        if ('command' in command) {
+          return command.command.bytes;
+        }
+        throw new Error('wrong command format');
+      });
+      var maskedAccessLevel = accessLevel | 0x10;
+      var header = [messageId, maskedAccessLevel];
+      var isItErrorDataFrameOnly = commands.length === 1 && 'id' in commands[0] && commands[0].id === id$c;
+      if (isItErrorDataFrameOnly) {
+        return header.concat(commandBytes);
+      }
+      var body = [].concat(maskedAccessLevel, commandBytes, COMMANDS_END_MARK);
+      if (accessLevel !== UNENCRYPTED) {
+        var padding = (body.length + 1) % BLOCK_SIZE;
+        if (padding) {
+          body = body.concat(new Array(BLOCK_SIZE - padding).fill(0));
+        }
+      }
+      body = body.concat(calculateLrc(body));
+      if (aesKey && accessLevel !== UNENCRYPTED) {
+        body = _toConsumableArray(aes.encrypt(aesKey, body));
+      }
+      return header.concat(body);
+    };
+  };
 
   invertObject(downlinkIds$1);
 
@@ -645,14 +797,53 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   invertObject(frameTypes);
 
+  invertObject(accessLevels);
+
+  var CASE_OPEN$2 = 0;
+  var MAGNETIC_ON$2 = 1;
+  var PARAMETERS_UPDATE_REMOTE = 2;
+  var PARAMETERS_UPDATE_LOCAL = 3;
+  var RESTART$2 = 4;
+  var ERROR_ACCESS = 5;
+  var TIME_SET = 6;
+  var TIME_CORRECT$2 = 7;
+  var DEVICE_FAILURE = 8;
+  var CASE_TERMINAL_OPEN = 9;
+  var CASE_MODULE_OPEN$2 = 10;
+  var TARIFF_TABLE_SET = 11;
+  var TARIFF_TABLE_GET = 12;
+  var PROTECTION_RESET_EM = 13;
+  var PROTECTION_RESET_MAGNETIC = 14;
+
+  var criticalEvents = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    CASE_MODULE_OPEN: CASE_MODULE_OPEN$2,
+    CASE_OPEN: CASE_OPEN$2,
+    CASE_TERMINAL_OPEN: CASE_TERMINAL_OPEN,
+    DEVICE_FAILURE: DEVICE_FAILURE,
+    ERROR_ACCESS: ERROR_ACCESS,
+    MAGNETIC_ON: MAGNETIC_ON$2,
+    PARAMETERS_UPDATE_LOCAL: PARAMETERS_UPDATE_LOCAL,
+    PARAMETERS_UPDATE_REMOTE: PARAMETERS_UPDATE_REMOTE,
+    PROTECTION_RESET_EM: PROTECTION_RESET_EM,
+    PROTECTION_RESET_MAGNETIC: PROTECTION_RESET_MAGNETIC,
+    RESTART: RESTART$2,
+    TARIFF_TABLE_GET: TARIFF_TABLE_GET,
+    TARIFF_TABLE_SET: TARIFF_TABLE_SET,
+    TIME_CORRECT: TIME_CORRECT$2,
+    TIME_SET: TIME_SET
+  });
+
+  invertObject(criticalEvents);
+
   var ENERGY_REGISTER_FAULT = 0x01;
   var VENDOR_PAR_FAULT = 0x02;
   var OP_PAR_FAULT = 0x03;
   var ACCESS_LOCKED$1 = 0x10;
   var ERR_ACCESS$1 = 0x11;
-  var CASE_OPEN$2 = 0x12;
+  var CASE_OPEN$1 = 0x12;
   var CASE_CLOSE$1 = 0x13;
-  var MAGNETIC_ON$2 = 0x14;
+  var MAGNETIC_ON$1 = 0x14;
   var MAGNETIC_OFF$1 = 0x15;
   var CHANGE_ACCESS_KEY0$1 = 0x20;
   var CHANGE_ACCESS_KEY1$1 = 0x21;
@@ -671,7 +862,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var WINTER_TIME$1 = 0x35;
   var RELAY_ON$1 = 0x36;
   var RELAY_OFF$1 = 0x37;
-  var RESTART$2 = 0x38;
+  var RESTART$1 = 0x38;
   var WD_RESTART$1 = 0x39;
   var POWER_B_ON$1 = 0x3c;
   var POWER_B_OFF$1 = 0x3d;
@@ -722,10 +913,10 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var CALIBRATION_PARAM_BAD$1 = 0x76;
   var WINTER_SUMMER_BAD$1 = 0x77;
   var SALDO_EN_BAD = 0x78;
-  var TIME_CORRECT$2 = 0x79;
+  var TIME_CORRECT$1 = 0x79;
   var CASE_KLEMA_OPEN$1 = 0x7a;
   var CASE_KLEMA_CLOSE$1 = 0x7b;
-  var CASE_MODULE_OPEN$2 = 0x7c;
+  var CASE_MODULE_OPEN$1 = 0x7c;
   var CASE_MODULE_CLOSE$1 = 0x7d;
   var POWER_GOOD_DIO = 0x7e;
   var RELAY_HARD_BAD_OFF$1 = 0x90;
@@ -782,8 +973,8 @@ var toBytes, setDataSegment, getBase64FromBytes;
     CASE_KLEMA_CLOSE: CASE_KLEMA_CLOSE$1,
     CASE_KLEMA_OPEN: CASE_KLEMA_OPEN$1,
     CASE_MODULE_CLOSE: CASE_MODULE_CLOSE$1,
-    CASE_MODULE_OPEN: CASE_MODULE_OPEN$2,
-    CASE_OPEN: CASE_OPEN$2,
+    CASE_MODULE_OPEN: CASE_MODULE_OPEN$1,
+    CASE_OPEN: CASE_OPEN$1,
     CHANGE_ACCESS_KEY0: CHANGE_ACCESS_KEY0$1,
     CHANGE_ACCESS_KEY1: CHANGE_ACCESS_KEY1$1,
     CHANGE_ACCESS_KEY2: CHANGE_ACCESS_KEY2$1,
@@ -823,7 +1014,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     I_MAX_OK: I_MAX_OK,
     I_MAX_OVER: I_MAX_OVER,
     MAGNETIC_OFF: MAGNETIC_OFF$1,
-    MAGNETIC_ON: MAGNETIC_ON$2,
+    MAGNETIC_ON: MAGNETIC_ON$1,
     OP_PAR_FAULT: OP_PAR_FAULT,
     POWER_A_OFF: POWER_A_OFF$1,
     POWER_A_ON: POWER_A_ON$1,
@@ -848,7 +1039,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     RELAY_ON: RELAY_ON$1,
     RESET_EM_FLAG: RESET_EM_FLAG$1,
     RESET_MAGNET_FLAG: RESET_MAGNET_FLAG,
-    RESTART: RESTART$2,
+    RESTART: RESTART$1,
     SALDO_EN_BAD: SALDO_EN_BAD,
     SALDO_PARAM_BAD: SALDO_PARAM_BAD$1,
     SET_DEMAND_EN_10MIN: SET_DEMAND_EN_10MIN,
@@ -862,7 +1053,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     SET_SALDO_PARAM: SET_SALDO_PARAM$1,
     SET_TARIFF_TABLE: SET_TARIFF_TABLE$1,
     SUMMER_TIME: SUMMER_TIME$1,
-    TIME_CORRECT: TIME_CORRECT$2,
+    TIME_CORRECT: TIME_CORRECT$1,
     TIME_CORRECT_NEW: TIME_CORRECT_NEW,
     T_MAX_OK: T_MAX_OK$1,
     T_MAX_OVER: T_MAX_OVER$1,
@@ -879,6 +1070,90 @@ var toBytes, setDataSegment, getBase64FromBytes;
   });
 
   invertObject(events$1);
+
+  var SET_ALL_SEGMENT_DISPLAY$1 = 1;
+  var SOFTWARE_VERSION$1 = 2;
+  var TOTAL_ACTIVE_ENERGY$1 = 3;
+  var ACTIVE_ENERGY_T1$1 = 4;
+  var ACTIVE_ENERGY_T2$1 = 5;
+  var ACTIVE_ENERGY_T3$1 = 6;
+  var ACTIVE_ENERGY_T4$1 = 7;
+  var ACTIVE_POWER_PER_PHASE = 8;
+  var ACTIVE_POWER_IN_NEUTRAL = 9;
+  var CURRENT_IN_PHASE = 10;
+  var CURRENT_IN_NEUTRAL$1 = 11;
+  var VOLTAGE = 12;
+  var HOUR_MINUTE_SECOND$1 = 13;
+  var DATE_MONTH_YEAR$1 = 14;
+  var TOTAL_EXPORTED_ACTIVE_ENERGY$1 = 15;
+  var EXPORTED_ACTIVE_ENERGY_T1$1 = 16;
+  var EXPORTED_ACTIVE_ENERGY_T2$1 = 17;
+  var EXPORTED_ACTIVE_ENERGY_T3$1 = 18;
+  var EXPORTED_ACTIVE_ENERGY_T4$1 = 19;
+  var POWER_FACTOR_PHASE_A$1 = 20;
+  var POWER_FACTOR_PHASE_B$1 = 21;
+  var BATTERY_VOLTAGE$1 = 22;
+  var POWER_THRESHOLD_T1$1 = 23;
+  var POWER_THRESHOLD_T2$1 = 24;
+  var POWER_THRESHOLD_T3$1 = 25;
+  var POWER_THRESHOLD_T4$1 = 26;
+  var MAGNET_INDUCTION$1 = 28;
+  var CURRENT_BALANCE$1 = 30;
+  var OPTOPORT_SPEED$1 = 31;
+
+  var screenIds$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ACTIVE_ENERGY_T1: ACTIVE_ENERGY_T1$1,
+    ACTIVE_ENERGY_T2: ACTIVE_ENERGY_T2$1,
+    ACTIVE_ENERGY_T3: ACTIVE_ENERGY_T3$1,
+    ACTIVE_ENERGY_T4: ACTIVE_ENERGY_T4$1,
+    ACTIVE_POWER_IN_NEUTRAL: ACTIVE_POWER_IN_NEUTRAL,
+    ACTIVE_POWER_PER_PHASE: ACTIVE_POWER_PER_PHASE,
+    BATTERY_VOLTAGE: BATTERY_VOLTAGE$1,
+    CURRENT_BALANCE: CURRENT_BALANCE$1,
+    CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL$1,
+    CURRENT_IN_PHASE: CURRENT_IN_PHASE,
+    DATE_MONTH_YEAR: DATE_MONTH_YEAR$1,
+    EXPORTED_ACTIVE_ENERGY_T1: EXPORTED_ACTIVE_ENERGY_T1$1,
+    EXPORTED_ACTIVE_ENERGY_T2: EXPORTED_ACTIVE_ENERGY_T2$1,
+    EXPORTED_ACTIVE_ENERGY_T3: EXPORTED_ACTIVE_ENERGY_T3$1,
+    EXPORTED_ACTIVE_ENERGY_T4: EXPORTED_ACTIVE_ENERGY_T4$1,
+    HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND$1,
+    MAGNET_INDUCTION: MAGNET_INDUCTION$1,
+    OPTOPORT_SPEED: OPTOPORT_SPEED$1,
+    POWER_FACTOR_PHASE_A: POWER_FACTOR_PHASE_A$1,
+    POWER_FACTOR_PHASE_B: POWER_FACTOR_PHASE_B$1,
+    POWER_THRESHOLD_T1: POWER_THRESHOLD_T1$1,
+    POWER_THRESHOLD_T2: POWER_THRESHOLD_T2$1,
+    POWER_THRESHOLD_T3: POWER_THRESHOLD_T3$1,
+    POWER_THRESHOLD_T4: POWER_THRESHOLD_T4$1,
+    SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY$1,
+    SOFTWARE_VERSION: SOFTWARE_VERSION$1,
+    TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY$1,
+    TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY$1,
+    VOLTAGE: VOLTAGE
+  });
+
+  invertObject(screenIds$1);
+
+  var RATE_2400$1 = 2400;
+  var RATE_9600$1 = 9600;
+  var valueToRate$1 = {
+    rs485orTwi: {
+      0: RATE_9600$1,
+      2: RATE_2400$1,
+      4: RATE_9600$1
+    },
+    optoport: {
+      0: RATE_2400$1,
+      2: RATE_2400$1,
+      4: RATE_9600$1
+    }
+  };
+  ({
+    rs485orTwi: invertObject(valueToRate$1.rs485orTwi),
+    optoport: invertObject(valueToRate$1.optoport)
+  });
 
   var setDateTime$1 = function (buffer, dateTime) {
     buffer.setUint8(dateTime.isSummerTime ? 1 : 0);
@@ -1090,247 +1365,10 @@ var toBytes, setDataSegment, getBase64FromBytes;
     return toBytes$d(id$2);
   };
 
-  var CASE_OPEN$1 = 0;
-  var MAGNETIC_ON$1 = 1;
-  var PARAMETERS_UPDATE_REMOTE = 2;
-  var PARAMETERS_UPDATE_LOCAL = 3;
-  var RESTART$1 = 4;
-  var ERROR_ACCESS = 5;
-  var TIME_SET = 6;
-  var TIME_CORRECT$1 = 7;
-  var DEVICE_FAILURE = 8;
-  var CASE_TERMINAL_OPEN = 9;
-  var CASE_MODULE_OPEN$1 = 10;
-  var TARIFF_TABLE_SET = 11;
-  var TARIFF_TABLE_GET = 12;
-  var PROTECTION_RESET_EM = 13;
-  var PROTECTION_RESET_MAGNETIC = 14;
-
-  var criticalEvents = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    CASE_MODULE_OPEN: CASE_MODULE_OPEN$1,
-    CASE_OPEN: CASE_OPEN$1,
-    CASE_TERMINAL_OPEN: CASE_TERMINAL_OPEN,
-    DEVICE_FAILURE: DEVICE_FAILURE,
-    ERROR_ACCESS: ERROR_ACCESS,
-    MAGNETIC_ON: MAGNETIC_ON$1,
-    PARAMETERS_UPDATE_LOCAL: PARAMETERS_UPDATE_LOCAL,
-    PARAMETERS_UPDATE_REMOTE: PARAMETERS_UPDATE_REMOTE,
-    PROTECTION_RESET_EM: PROTECTION_RESET_EM,
-    PROTECTION_RESET_MAGNETIC: PROTECTION_RESET_MAGNETIC,
-    RESTART: RESTART$1,
-    TARIFF_TABLE_GET: TARIFF_TABLE_GET,
-    TARIFF_TABLE_SET: TARIFF_TABLE_SET,
-    TIME_CORRECT: TIME_CORRECT$1,
-    TIME_SET: TIME_SET
-  });
-
-  invertObject(criticalEvents);
-
   var id$1 = getCriticalEvent;
   var toBytes$2 = function (parameters) {
     return toBytes$d(id$1, [parameters.event, parameters.index]);
   };
-
-  var OK = 0;
-  var UNKNOWN_COMMAND = 0x80;
-  var NOT_ALIGNED_DATA = 0x81;
-  var DECRYPTION_FAILURE = 0x82;
-  var UNKNOWN_PROTOCOL = 0x83;
-  var BAD_MESSAGE = 0x84;
-  var BAD_DATA_LENGTH = 0x85;
-  var BAD_ARRAY_INDEX = 0x86;
-  var NOT_PREPARED_RATE_PLAN = 0x87;
-  var BAD_RATE_PLAN_ID = 0x88;
-  var BAD_RATE_PLAN_SIZE = 0x89;
-  var BAD_RESPONSE_LENGTH = 0x90;
-  var NO_DATA_FOR_DATE = 0x91;
-  var CALIBRATION_DISABLED = 0x92;
-  var ACCESS_DENIED = 0x93;
-  var BAD_SALDO_WRITE = 0x95;
-  var BLOCKED_METER = 0x97;
-  var UNENCRYPTED_COMMAND_DISABLED = 0x98;
-  var TIME_CORRECTION_FAILURE = 0x99;
-  var INVALID_CORRECTION_INTERVAL = 0x9a;
-  var TIME_CORRECTION_OUT_HALF_HOUR_DISABLED = 0x9b;
-  var BAD_BLOCK_NUMBER = 0x9c;
-  var OUT_OFF_RANGE = 0x9f;
-  var SET_METER_TYPE_FAILURE = 0xa0;
-  var INTERNAL = 0xf0;
-
-  var resultCodes = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    ACCESS_DENIED: ACCESS_DENIED,
-    BAD_ARRAY_INDEX: BAD_ARRAY_INDEX,
-    BAD_BLOCK_NUMBER: BAD_BLOCK_NUMBER,
-    BAD_DATA_LENGTH: BAD_DATA_LENGTH,
-    BAD_MESSAGE: BAD_MESSAGE,
-    BAD_RATE_PLAN_ID: BAD_RATE_PLAN_ID,
-    BAD_RATE_PLAN_SIZE: BAD_RATE_PLAN_SIZE,
-    BAD_RESPONSE_LENGTH: BAD_RESPONSE_LENGTH,
-    BAD_SALDO_WRITE: BAD_SALDO_WRITE,
-    BLOCKED_METER: BLOCKED_METER,
-    CALIBRATION_DISABLED: CALIBRATION_DISABLED,
-    DECRYPTION_FAILURE: DECRYPTION_FAILURE,
-    INTERNAL: INTERNAL,
-    INVALID_CORRECTION_INTERVAL: INVALID_CORRECTION_INTERVAL,
-    NOT_ALIGNED_DATA: NOT_ALIGNED_DATA,
-    NOT_PREPARED_RATE_PLAN: NOT_PREPARED_RATE_PLAN,
-    NO_DATA_FOR_DATE: NO_DATA_FOR_DATE,
-    OK: OK,
-    OUT_OFF_RANGE: OUT_OFF_RANGE,
-    SET_METER_TYPE_FAILURE: SET_METER_TYPE_FAILURE,
-    TIME_CORRECTION_FAILURE: TIME_CORRECTION_FAILURE,
-    TIME_CORRECTION_OUT_HALF_HOUR_DISABLED: TIME_CORRECTION_OUT_HALF_HOUR_DISABLED,
-    UNENCRYPTED_COMMAND_DISABLED: UNENCRYPTED_COMMAND_DISABLED,
-    UNKNOWN_COMMAND: UNKNOWN_COMMAND,
-    UNKNOWN_PROTOCOL: UNKNOWN_PROTOCOL
-  });
-
-  invertObject(resultCodes);
-
-  var SET_ALL_SEGMENT_DISPLAY$1 = 1;
-  var SOFTWARE_VERSION$1 = 2;
-  var TOTAL_ACTIVE_ENERGY$1 = 3;
-  var ACTIVE_ENERGY_T1$1 = 4;
-  var ACTIVE_ENERGY_T2$1 = 5;
-  var ACTIVE_ENERGY_T3$1 = 6;
-  var ACTIVE_ENERGY_T4$1 = 7;
-  var ACTIVE_POWER_PER_PHASE = 8;
-  var ACTIVE_POWER_IN_NEUTRAL = 9;
-  var CURRENT_IN_PHASE = 10;
-  var CURRENT_IN_NEUTRAL$1 = 11;
-  var VOLTAGE = 12;
-  var HOUR_MINUTE_SECOND$1 = 13;
-  var DATE_MONTH_YEAR$1 = 14;
-  var TOTAL_EXPORTED_ACTIVE_ENERGY$1 = 15;
-  var EXPORTED_ACTIVE_ENERGY_T1$1 = 16;
-  var EXPORTED_ACTIVE_ENERGY_T2$1 = 17;
-  var EXPORTED_ACTIVE_ENERGY_T3$1 = 18;
-  var EXPORTED_ACTIVE_ENERGY_T4$1 = 19;
-  var POWER_FACTOR_PHASE_A$1 = 20;
-  var POWER_FACTOR_PHASE_B$1 = 21;
-  var BATTERY_VOLTAGE$1 = 22;
-  var POWER_THRESHOLD_T1$1 = 23;
-  var POWER_THRESHOLD_T2$1 = 24;
-  var POWER_THRESHOLD_T3$1 = 25;
-  var POWER_THRESHOLD_T4$1 = 26;
-  var MAGNET_INDUCTION$1 = 28;
-  var CURRENT_BALANCE$1 = 30;
-  var OPTOPORT_SPEED$1 = 31;
-
-  var screenIds$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    ACTIVE_ENERGY_T1: ACTIVE_ENERGY_T1$1,
-    ACTIVE_ENERGY_T2: ACTIVE_ENERGY_T2$1,
-    ACTIVE_ENERGY_T3: ACTIVE_ENERGY_T3$1,
-    ACTIVE_ENERGY_T4: ACTIVE_ENERGY_T4$1,
-    ACTIVE_POWER_IN_NEUTRAL: ACTIVE_POWER_IN_NEUTRAL,
-    ACTIVE_POWER_PER_PHASE: ACTIVE_POWER_PER_PHASE,
-    BATTERY_VOLTAGE: BATTERY_VOLTAGE$1,
-    CURRENT_BALANCE: CURRENT_BALANCE$1,
-    CURRENT_IN_NEUTRAL: CURRENT_IN_NEUTRAL$1,
-    CURRENT_IN_PHASE: CURRENT_IN_PHASE,
-    DATE_MONTH_YEAR: DATE_MONTH_YEAR$1,
-    EXPORTED_ACTIVE_ENERGY_T1: EXPORTED_ACTIVE_ENERGY_T1$1,
-    EXPORTED_ACTIVE_ENERGY_T2: EXPORTED_ACTIVE_ENERGY_T2$1,
-    EXPORTED_ACTIVE_ENERGY_T3: EXPORTED_ACTIVE_ENERGY_T3$1,
-    EXPORTED_ACTIVE_ENERGY_T4: EXPORTED_ACTIVE_ENERGY_T4$1,
-    HOUR_MINUTE_SECOND: HOUR_MINUTE_SECOND$1,
-    MAGNET_INDUCTION: MAGNET_INDUCTION$1,
-    OPTOPORT_SPEED: OPTOPORT_SPEED$1,
-    POWER_FACTOR_PHASE_A: POWER_FACTOR_PHASE_A$1,
-    POWER_FACTOR_PHASE_B: POWER_FACTOR_PHASE_B$1,
-    POWER_THRESHOLD_T1: POWER_THRESHOLD_T1$1,
-    POWER_THRESHOLD_T2: POWER_THRESHOLD_T2$1,
-    POWER_THRESHOLD_T3: POWER_THRESHOLD_T3$1,
-    POWER_THRESHOLD_T4: POWER_THRESHOLD_T4$1,
-    SET_ALL_SEGMENT_DISPLAY: SET_ALL_SEGMENT_DISPLAY$1,
-    SOFTWARE_VERSION: SOFTWARE_VERSION$1,
-    TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY$1,
-    TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY$1,
-    VOLTAGE: VOLTAGE
-  });
-
-  invertObject(screenIds$1);
-
-  var getDayEnergies$1 = 0x78;
-  var getDayMaxPower = 0x79;
-  var errorResponse$1 = 0xfe;
-
-  var uplinkIds$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    activateRatePlan: activateRatePlan$1,
-    errorResponse: errorResponse$1,
-    getBv: getBv$1,
-    getCorrectTime: getCorrectTime$1,
-    getCriticalEvent: getCriticalEvent$1,
-    getCurrentStatusMeter: getCurrentStatusMeter$1,
-    getCurrentValues: getCurrentValues$1,
-    getDateTime: getDateTime$1,
-    getDayDemand: getDayDemand$1,
-    getDayDemandExport: getDayDemandExport$1,
-    getDayEnergies: getDayEnergies$1,
-    getDayMaxDemand: getDayMaxDemand$1,
-    getDayMaxDemandExport: getDayMaxDemandExport$1,
-    getDayMaxDemandPrevious: getDayMaxDemandPrevious,
-    getDayMaxPower: getDayMaxPower,
-    getDayProfile: getDayProfile$1,
-    getDemand: getDemand$1,
-    getDemandParameters: getDemandParameters,
-    getDeviceId: getDeviceId$1,
-    getDeviceType: getDeviceType$1,
-    getDisplayParam: getDisplayParam$1,
-    getEnergy: getEnergy$1,
-    getEnergyDayPrevious: getEnergyDayPrevious$1,
-    getEnergyExport: getEnergyExport$1,
-    getEnergyExportDayPrevious: getEnergyExportDayPrevious$1,
-    getEventStatus: getEventStatus$1,
-    getEvents: getEvents$1,
-    getEventsCounters: getEventsCounters$1,
-    getExtendedCurrentValues: getExtendedCurrentValues$1,
-    getExtendedCurrentValues2: getExtendedCurrentValues2,
-    getHalfHourDemand: getHalfHourDemand$1,
-    getHalfHourDemandExport: getHalfHourDemandExport$1,
-    getHalfHourDemandPrevious: getHalfHourDemandPrevious,
-    getHalfHourEnergies: getHalfHourEnergies$1,
-    getMagneticFieldThreshold: getMagneticFieldThreshold$1,
-    getMeterInfo: getMeterInfo$1,
-    getMonthDemand: getMonthDemand$1,
-    getMonthDemandExport: getMonthDemandExport$1,
-    getMonthMaxDemand: getMonthMaxDemand$1,
-    getMonthMaxDemandExport: getMonthMaxDemandExport$1,
-    getOperatorParameters: getOperatorParameters$1,
-    getOperatorParametersExtended3: getOperatorParametersExtended3$1,
-    getRatePlanInfo: getRatePlanInfo$1,
-    getSaldo: getSaldo$1,
-    getSaldoParameters: getSaldoParameters$1,
-    getSeasonProfile: getSeasonProfile$1,
-    getSpecialDay: getSpecialDay$1,
-    getVersion: getVersion$1,
-    prepareRatePlan: prepareRatePlan$1,
-    resetPowerMaxDay: resetPowerMaxDay$1,
-    resetPowerMaxMonth: resetPowerMaxMonth$1,
-    runTariffPlan: runTariffPlan$1,
-    setAccessKey: setAccessKey$1,
-    setCorrectDateTime: setCorrectDateTime$1,
-    setCorrectTime: setCorrectTime$1,
-    setDateTime: setDateTime$2,
-    setDayProfile: setDayProfile$1,
-    setDemandParameters: setDemandParameters,
-    setDisplayParam: setDisplayParam$1,
-    setOperatorParameters: setOperatorParameters$1,
-    setOperatorParametersExtended3: setOperatorParametersExtended3$1,
-    setSaldo: setSaldo$1,
-    setSaldoParameters: setSaldoParameters$1,
-    setSeasonProfile: setSeasonProfile$1,
-    setSpecialDay: setSpecialDay$1,
-    setSpecialOperation: setSpecialOperation$1,
-    turnRelayOff: turnRelayOff$1,
-    turnRelayOn: turnRelayOn$1
-  });
-
-  invertObject(uplinkIds$1);
 
   var ENERGY_T1_FAULT = 0x01;
   var ENERGY_T2_FAULT = 0x02;
@@ -1902,10 +1940,12 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   var getDayEnergies = 0x78;
   var errorResponse = 0xfe;
+  var errorDataFrameResponse = 0xff;
 
   var uplinkIds = /*#__PURE__*/Object.freeze({
     __proto__: null,
     activateRatePlan: activateRatePlan,
+    errorDataFrameResponse: errorDataFrameResponse,
     errorResponse: errorResponse,
     getBv: getBv,
     getCorrectTime: getCorrectTime,
@@ -1985,19 +2025,19 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var RATE_2400 = 2400;
   var RATE_9600 = 9600;
   var valueToRate = {
-    plc: {
+    rs485orTwi: {
       0: RATE_9600,
       2: RATE_2400,
       4: RATE_9600
     },
     optoport: {
-      0: RATE_2400,
+      0: RATE_9600,
       2: RATE_2400,
       4: RATE_9600
     }
   };
   ({
-    plc: invertObject(valueToRate.plc),
+    rs485orTwi: invertObject(valueToRate.rs485orTwi),
     optoport: invertObject(valueToRate.optoport)
   });
 

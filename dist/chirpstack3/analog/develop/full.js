@@ -978,7 +978,9 @@ var fromBytes, toBytes;
       isMeterTerminalBoxOpen: Math.pow(2, 9),
       isModuleCompartmentOpen: Math.pow(2, 10),
       isTariffPlanChanged: Math.pow(2, 11),
-      isNewTariffPlanReceived: Math.pow(2, 12)
+      isNewTariffPlanReceived: Math.pow(2, 12),
+      isElectromagneticInfluenceReset: Math.pow(2, 13),
+      isMagneticInfluenceReset: Math.pow(2, 14)
     };
     var usWaterMeterEventBitMask = {
       transportMode: 0x01,
