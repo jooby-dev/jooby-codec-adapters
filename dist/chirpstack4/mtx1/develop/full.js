@@ -724,8 +724,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     invertObject(accessLevels);
 
-    const CASE_OPEN$1 = 0;
-    const MAGNETIC_ON$1 = 1;
+    const CASE_OPEN = 0;
+    const MAGNETIC_ON = 1;
     const PARAMETERS_UPDATE_REMOTE = 2;
     const PARAMETERS_UPDATE_LOCAL = 3;
     const RESTART$1 = 4;
@@ -734,7 +734,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const TIME_CORRECT$1 = 7;
     const DEVICE_FAILURE = 8;
     const CASE_TERMINAL_OPEN = 9;
-    const CASE_MODULE_OPEN$1 = 10;
+    const CASE_MODULE_OPEN = 10;
     const TARIFF_TABLE_SET = 11;
     const TARIFF_TABLE_GET = 12;
     const PROTECTION_RESET_EM = 13;
@@ -742,12 +742,12 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     var criticalEvents = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        CASE_MODULE_OPEN: CASE_MODULE_OPEN$1,
-        CASE_OPEN: CASE_OPEN$1,
+        CASE_MODULE_OPEN: CASE_MODULE_OPEN,
+        CASE_OPEN: CASE_OPEN,
         CASE_TERMINAL_OPEN: CASE_TERMINAL_OPEN,
         DEVICE_FAILURE: DEVICE_FAILURE,
         ERROR_ACCESS: ERROR_ACCESS,
-        MAGNETIC_ON: MAGNETIC_ON$1,
+        MAGNETIC_ON: MAGNETIC_ON,
         PARAMETERS_UPDATE_LOCAL: PARAMETERS_UPDATE_LOCAL,
         PARAMETERS_UPDATE_REMOTE: PARAMETERS_UPDATE_REMOTE,
         PROTECTION_RESET_EM: PROTECTION_RESET_EM,
@@ -900,20 +900,20 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const ENERGY_REGISTER_FAULT = 0x01;
     const VENDOR_PAR_FAULT = 0x02;
-    const OP_PAR_FAULT = 0x03;
+    const OPERATOR_PARAMETERS_VALUES_FAULT = 0x03;
     const ACCESS_LOCKED = 0x10;
-    const ERR_ACCESS = 0x11;
-    const CASE_OPEN = 0x12;
-    const CASE_CLOSE = 0x13;
-    const MAGNETIC_ON = 0x14;
-    const MAGNETIC_OFF = 0x15;
+    const ACCESS_ERROR = 0x11;
+    const CASE_OPENED = 0x12;
+    const CASE_CLOSED = 0x13;
+    const MAGNETIC_INFLUENCE_ON = 0x14;
+    const MAGNETIC_INFLUENCE_OFF = 0x15;
     const CHANGE_ACCESS_KEY0 = 0x20;
     const CHANGE_ACCESS_KEY1 = 0x21;
     const CHANGE_ACCESS_KEY2 = 0x22;
     const CHANGE_ACCESS_KEY3 = 0x23;
-    const CHANGE_PAR_LOCAL = 0x24;
-    const CHANGE_PAR_REMOTE = 0x25;
-    const CMD_CHANGE_TIME = 0x26;
+    const CHANGE_PARAMETERS_LOCAL = 0x24;
+    const CHANGE_PARAMETERS_REMOTE = 0x25;
+    const CMD_SET_DATETIME = 0x26;
     const CMD_RELAY_ON = 0x27;
     const CMD_RELAY_OFF = 0x28;
     const CHANGE_COR_TIME = 0x29;
@@ -925,11 +925,11 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const RELAY_ON = 0x36;
     const RELAY_OFF = 0x37;
     const RESTART = 0x38;
-    const WD_RESTART = 0x39;
+    const WATCHDOG_RESTART = 0x39;
     const POWER_B_ON = 0x3c;
     const POWER_B_OFF = 0x3d;
-    const POWER_C_ON = 0x3e;
-    const POWER_C_OFF = 0x3f;
+    const POWER_C_ON = 0x3E;
+    const POWER_C_OFF = 0x3F;
     const V_MAX_OK = 0x40;
     const V_MAX_OVER = 0x41;
     const V_MIN_OK = 0x42;
@@ -944,8 +944,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const F_MIN_OVER = 0x4b;
     const I_MAX_OK = 0x4c;
     const I_MAX_OVER = 0x4d;
-    const P_MAX_OK = 0x4e;
-    const P_MAX_OVER = 0x4f;
+    const P_MAX_OK = 0x4E;
+    const P_MAX_OVER = 0x4F;
     const POWER_SALDO_OK = 0x50;
     const POWER_SALDO_OVER = 0x51;
     const BATTERY_OK = 0x52;
@@ -958,126 +958,126 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const POWER_A_ON = 0x59;
     const CMD_RELAY_2_ON = 0x60;
     const CMD_RELAY_2_OFF = 0x61;
-    const CROSS_ZERO_ENT0 = 0x62;
-    const CROSS_ZERO_ENT1 = 0x63;
-    const CROSS_ZERO_ENT2 = 0x64;
-    const CROSS_ZERO_ENT3 = 0x65;
+    const CROSS_ZERO_EN_T1 = 0x62;
+    const CROSS_ZERO_EN_T2 = 0x63;
+    const CROSS_ZERO_EN_T3 = 0x64;
+    const CROSS_ZERO_EN_T4 = 0x65;
     const CALIBRATION_FLAG_SET = 0x66;
     const CALIBRATION_FLAG_RESET = 0x67;
     const BAD_TEST_EEPROM = 0x68;
     const BAD_TEST_FRAM = 0x69;
     const SET_NEW_SALDO = 0x70;
-    const SALDO_PARAM_BAD = 0x71;
-    const ACC_PARAM_BAD = 0x72;
-    const ACC_PARAM_EXT_BAD = 0x73;
-    const CALC_PERIOD_BAD = 0x74;
-    const BLOCK_TARIFF_BAD = 0x75;
-    const CALIBRATION_PARAM_BAD = 0x76;
-    const WINTER_SUMMER_BAD = 0x77;
-    const SALDO_EN_BAD = 0x78;
+    const SALDO_PARAMETERS_FAULT = 0x71;
+    const ACC_PARAMETERS_FAULT = 0x72;
+    const ACC_PARAMETERS_EXT_FAULT = 0x73;
+    const CALC_PERIOD_FAULT = 0x74;
+    const BLOCK_TARIFF_FAULT = 0x75;
+    const CALIBRATION_PARAMETERS_FAULT = 0x76;
+    const WINTER_SUMMER_FAULT = 0x77;
+    const SALDO_EN_FAULT = 0x78;
     const TIME_CORRECT = 0x79;
-    const CASE_KLEMA_OPEN = 0x7a;
-    const CASE_KLEMA_CLOSE = 0x7b;
-    const CASE_MODULE_OPEN = 0x7c;
-    const CASE_MODULE_CLOSE = 0x7d;
-    const POWER_GOOD_DIO = 0x7e;
+    const CASE_TERMINAL_BOX_OPENED = 0x7a;
+    const CASE_TERMINAL_BOX_CLOSED = 0x7b;
+    const CASE_MODULE_OPENED = 0x7c;
+    const CASE_MODULE_CLOSED = 0x7d;
+    const POWER_GOOD_DIO = 0x7E;
     const RELAY_HARD_BAD_OFF = 0x90;
     const RELAY_HARD_ON = 0x91;
     const RELAY_HARD_BAD_ON = 0x93;
     const RELAY_HARD_OFF = 0x94;
-    const CHANGE_TARIFF_TBL_2 = 0x98;
+    const CHANGE_TARIFF_TABLE_2 = 0x98;
     const SET_SALDO_PARAM = 0x9c;
     const POWER_OVER_RELAY_OFF = 0x9d;
-    const CROSS_ZERO_EXPORT_ENT0 = 0x9e;
-    const CROSS_ZERO_EXPORT_ENT1 = 0x9f;
-    const CROSS_ZERO_EXPORT_ENT2 = 0xa0;
-    const CROSS_ZERO_EXPORT_ENT3 = 0xa1;
+    const CROSS_ZERO_EXPORT_EN_T1 = 0x9E;
+    const CROSS_ZERO_EXPORT_EN_T2 = 0x9F;
+    const CROSS_ZERO_EXPORT_EN_T3 = 0xa0;
+    const CROSS_ZERO_EXPORT_EN_T4 = 0xa1;
     const TIME_CORRECT_NEW = 0xa2;
-    const EM_MAGNETIC_ON = 0xb0;
-    const EM_MAGNETIC_OFF = 0xb1;
+    const EM_MAGNETIC_INFLUENCE_ON = 0xb0;
+    const EM_MAGNETIC_INFLUENCE_OFF = 0xb1;
     const CURRENT_UNEQUAL_FAULT = 0xb2;
     const CURRENT_UNEQUAL_OK = 0xb3;
     const BIPOLAR_POWER_FAULT = 0xb4;
     const BIPOLAR_POWER_OK = 0xb5;
-    const RESET_EM_FLAG = 0xB6;
-    const RESET_MAGNET_FLAG = 0xB7;
-    const CHANGE_PARAM_CANAL = 0xB9;
-    const RELAY_OFF_BAD_SALDO = 0xBA;
-    const SET_DEMAND_EN_1MIN = 0xE0;
-    const SET_DEMAND_EN_3MIN = 0xE1;
-    const SET_DEMAND_EN_5MIN = 0xE2;
-    const SET_DEMAND_EN_10MIN = 0xE3;
-    const SET_DEMAND_EN_15MIN = 0xE4;
-    const SET_DEMAND_EN_30MIN = 0xE5;
-    const SET_DEMAND_EN_60MIN = 0xE6;
-    const P_MAX_A_MINUS_OK = 0xE7;
-    const P_MAX_A_MINUS_OVER = 0xE8;
+    const RESET_EM_FLAG = 0xb6;
+    const RESET_MAGNET_FLAG = 0xb7;
+    const CHANGE_PARAMETERS_CHANNEL = 0xb9;
+    const RELAY_OFF_BAD_SALDO = 0xba;
+    const SET_DEMAND_EN_1MIN = 0xe0;
+    const SET_DEMAND_EN_3MIN = 0xe1;
+    const SET_DEMAND_EN_5MIN = 0xe2;
+    const SET_DEMAND_EN_10MIN = 0xe3;
+    const SET_DEMAND_EN_15MIN = 0xe4;
+    const SET_DEMAND_EN_30MIN = 0xe5;
+    const SET_DEMAND_EN_60MIN = 0xe6;
+    const P_MAX_A_MINUS_OK = 0xe7;
+    const P_MAX_A_MINUS_OVER = 0xe8;
 
     var events = /*#__PURE__*/Object.freeze({
         __proto__: null,
+        ACCESS_ERROR: ACCESS_ERROR,
         ACCESS_LOCKED: ACCESS_LOCKED,
-        ACC_PARAM_BAD: ACC_PARAM_BAD,
-        ACC_PARAM_EXT_BAD: ACC_PARAM_EXT_BAD,
+        ACC_PARAMETERS_EXT_FAULT: ACC_PARAMETERS_EXT_FAULT,
+        ACC_PARAMETERS_FAULT: ACC_PARAMETERS_FAULT,
         BAD_TEST_EEPROM: BAD_TEST_EEPROM,
         BAD_TEST_FRAM: BAD_TEST_FRAM,
         BATTERY_FAULT: BATTERY_FAULT,
         BATTERY_OK: BATTERY_OK,
         BIPOLAR_POWER_FAULT: BIPOLAR_POWER_FAULT,
         BIPOLAR_POWER_OK: BIPOLAR_POWER_OK,
-        BLOCK_TARIFF_BAD: BLOCK_TARIFF_BAD,
-        CALC_PERIOD_BAD: CALC_PERIOD_BAD,
+        BLOCK_TARIFF_FAULT: BLOCK_TARIFF_FAULT,
+        CALC_PERIOD_FAULT: CALC_PERIOD_FAULT,
         CALIBRATION_FAULT: CALIBRATION_FAULT,
         CALIBRATION_FLAG_RESET: CALIBRATION_FLAG_RESET,
         CALIBRATION_FLAG_SET: CALIBRATION_FLAG_SET,
         CALIBRATION_OK: CALIBRATION_OK,
-        CALIBRATION_PARAM_BAD: CALIBRATION_PARAM_BAD,
-        CASE_CLOSE: CASE_CLOSE,
-        CASE_KLEMA_CLOSE: CASE_KLEMA_CLOSE,
-        CASE_KLEMA_OPEN: CASE_KLEMA_OPEN,
-        CASE_MODULE_CLOSE: CASE_MODULE_CLOSE,
-        CASE_MODULE_OPEN: CASE_MODULE_OPEN,
-        CASE_OPEN: CASE_OPEN,
+        CALIBRATION_PARAMETERS_FAULT: CALIBRATION_PARAMETERS_FAULT,
+        CASE_CLOSED: CASE_CLOSED,
+        CASE_MODULE_CLOSED: CASE_MODULE_CLOSED,
+        CASE_MODULE_OPENED: CASE_MODULE_OPENED,
+        CASE_OPENED: CASE_OPENED,
+        CASE_TERMINAL_BOX_CLOSED: CASE_TERMINAL_BOX_CLOSED,
+        CASE_TERMINAL_BOX_OPENED: CASE_TERMINAL_BOX_OPENED,
         CHANGE_ACCESS_KEY0: CHANGE_ACCESS_KEY0,
         CHANGE_ACCESS_KEY1: CHANGE_ACCESS_KEY1,
         CHANGE_ACCESS_KEY2: CHANGE_ACCESS_KEY2,
         CHANGE_ACCESS_KEY3: CHANGE_ACCESS_KEY3,
         CHANGE_COR_TIME: CHANGE_COR_TIME,
-        CHANGE_PARAM_CANAL: CHANGE_PARAM_CANAL,
-        CHANGE_PAR_LOCAL: CHANGE_PAR_LOCAL,
-        CHANGE_PAR_REMOTE: CHANGE_PAR_REMOTE,
+        CHANGE_PARAMETERS_CHANNEL: CHANGE_PARAMETERS_CHANNEL,
+        CHANGE_PARAMETERS_LOCAL: CHANGE_PARAMETERS_LOCAL,
+        CHANGE_PARAMETERS_REMOTE: CHANGE_PARAMETERS_REMOTE,
         CHANGE_TARIFF_TABLE: CHANGE_TARIFF_TABLE,
-        CHANGE_TARIFF_TBL_2: CHANGE_TARIFF_TBL_2,
+        CHANGE_TARIFF_TABLE_2: CHANGE_TARIFF_TABLE_2,
         CLOCK_FAULT: CLOCK_FAULT,
         CLOCK_OK: CLOCK_OK,
-        CMD_CHANGE_TIME: CMD_CHANGE_TIME,
         CMD_RELAY_2_OFF: CMD_RELAY_2_OFF,
         CMD_RELAY_2_ON: CMD_RELAY_2_ON,
         CMD_RELAY_OFF: CMD_RELAY_OFF,
         CMD_RELAY_ON: CMD_RELAY_ON,
-        CROSS_ZERO_ENT0: CROSS_ZERO_ENT0,
-        CROSS_ZERO_ENT1: CROSS_ZERO_ENT1,
-        CROSS_ZERO_ENT2: CROSS_ZERO_ENT2,
-        CROSS_ZERO_ENT3: CROSS_ZERO_ENT3,
-        CROSS_ZERO_EXPORT_ENT0: CROSS_ZERO_EXPORT_ENT0,
-        CROSS_ZERO_EXPORT_ENT1: CROSS_ZERO_EXPORT_ENT1,
-        CROSS_ZERO_EXPORT_ENT2: CROSS_ZERO_EXPORT_ENT2,
-        CROSS_ZERO_EXPORT_ENT3: CROSS_ZERO_EXPORT_ENT3,
+        CMD_SET_DATETIME: CMD_SET_DATETIME,
+        CROSS_ZERO_EN_T1: CROSS_ZERO_EN_T1,
+        CROSS_ZERO_EN_T2: CROSS_ZERO_EN_T2,
+        CROSS_ZERO_EN_T3: CROSS_ZERO_EN_T3,
+        CROSS_ZERO_EN_T4: CROSS_ZERO_EN_T4,
+        CROSS_ZERO_EXPORT_EN_T1: CROSS_ZERO_EXPORT_EN_T1,
+        CROSS_ZERO_EXPORT_EN_T2: CROSS_ZERO_EXPORT_EN_T2,
+        CROSS_ZERO_EXPORT_EN_T3: CROSS_ZERO_EXPORT_EN_T3,
+        CROSS_ZERO_EXPORT_EN_T4: CROSS_ZERO_EXPORT_EN_T4,
         CURRENT_UNEQUAL_FAULT: CURRENT_UNEQUAL_FAULT,
         CURRENT_UNEQUAL_OK: CURRENT_UNEQUAL_OK,
-        EM_MAGNETIC_OFF: EM_MAGNETIC_OFF,
-        EM_MAGNETIC_ON: EM_MAGNETIC_ON,
+        EM_MAGNETIC_INFLUENCE_OFF: EM_MAGNETIC_INFLUENCE_OFF,
+        EM_MAGNETIC_INFLUENCE_ON: EM_MAGNETIC_INFLUENCE_ON,
         ENERGY_REGISTER_FAULT: ENERGY_REGISTER_FAULT,
         ENERGY_REGISTER_OVERFLOW: ENERGY_REGISTER_OVERFLOW,
-        ERR_ACCESS: ERR_ACCESS,
         F_MAX_OK: F_MAX_OK,
         F_MAX_OVER: F_MAX_OVER,
         F_MIN_OK: F_MIN_OK,
         F_MIN_OVER: F_MIN_OVER,
         I_MAX_OK: I_MAX_OK,
         I_MAX_OVER: I_MAX_OVER,
-        MAGNETIC_OFF: MAGNETIC_OFF,
-        MAGNETIC_ON: MAGNETIC_ON,
-        OP_PAR_FAULT: OP_PAR_FAULT,
+        MAGNETIC_INFLUENCE_OFF: MAGNETIC_INFLUENCE_OFF,
+        MAGNETIC_INFLUENCE_ON: MAGNETIC_INFLUENCE_ON,
+        OPERATOR_PARAMETERS_VALUES_FAULT: OPERATOR_PARAMETERS_VALUES_FAULT,
         POWER_A_OFF: POWER_A_OFF,
         POWER_A_ON: POWER_A_ON,
         POWER_B_OFF: POWER_B_OFF,
@@ -1102,8 +1102,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         RESET_EM_FLAG: RESET_EM_FLAG,
         RESET_MAGNET_FLAG: RESET_MAGNET_FLAG,
         RESTART: RESTART,
-        SALDO_EN_BAD: SALDO_EN_BAD,
-        SALDO_PARAM_BAD: SALDO_PARAM_BAD,
+        SALDO_EN_FAULT: SALDO_EN_FAULT,
+        SALDO_PARAMETERS_FAULT: SALDO_PARAMETERS_FAULT,
         SET_DEMAND_EN_10MIN: SET_DEMAND_EN_10MIN,
         SET_DEMAND_EN_15MIN: SET_DEMAND_EN_15MIN,
         SET_DEMAND_EN_1MIN: SET_DEMAND_EN_1MIN,
@@ -1126,8 +1126,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         V_MAX_OVER: V_MAX_OVER,
         V_MIN_OK: V_MIN_OK,
         V_MIN_OVER: V_MIN_OVER,
-        WD_RESTART: WD_RESTART,
-        WINTER_SUMMER_BAD: WINTER_SUMMER_BAD,
+        WATCHDOG_RESTART: WATCHDOG_RESTART,
+        WINTER_SUMMER_FAULT: WINTER_SUMMER_FAULT,
         WINTER_TIME: WINTER_TIME
     });
 
@@ -1682,14 +1682,14 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
             month: buffer.getUint8(),
             date: buffer.getUint8(),
             dayIndex: buffer.getUint8(),
-            isPeriodic: buffer.getUint8() === 0
+            year: buffer.getUint8()
         };
     };
     const setSpecialDay = function (buffer, specialDay) {
         buffer.setUint8(specialDay.month);
         buffer.setUint8(specialDay.date);
         buffer.setUint8(specialDay.dayIndex);
-        buffer.setUint8(+!specialDay.isPeriodic);
+        buffer.setUint8(specialDay.year);
     };
     const getDeviceType = function (buffer) {
         return fromBytes$28(buffer.getBytes(9));
@@ -1919,7 +1919,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
                 }
                 data.power = [buffer.getUint8(), buffer.getUint8(), buffer.getUint8(), buffer.getUint8()];
                 break;
-            case CMD_CHANGE_TIME:
+            case CMD_SET_DATETIME:
             case TIME_CORRECT:
                 if (bytesLeft < 8) {
                     return data;
@@ -1940,7 +1940,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
                     buffer.setUint8(item);
                 }
                 break;
-            case CMD_CHANGE_TIME:
+            case CMD_SET_DATETIME:
             case TIME_CORRECT:
                 setDateTime(buffer, event.newDate);
                 break;
@@ -3244,6 +3244,28 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const ACCESS_LEVEL_MASK = 0x03;
+    const accessLevelWeight = {
+        [UNENCRYPTED]: 0,
+        [READ_ONLY]: 1,
+        [READ_WRITE]: 2,
+        [ROOT]: 3
+    };
+    const getCommandsAccessLevel = (commands) => {
+        let maxAccessLevel = READ_ONLY;
+        commands.forEach(command => {
+            let accessLevel;
+            if ('accessLevel' in command) {
+                accessLevel = command.accessLevel;
+            }
+            if ('command' in command) {
+                accessLevel = command.command.accessLevel;
+            }
+            if (accessLevelWeight[accessLevel] > accessLevelWeight[maxAccessLevel]) {
+                maxAccessLevel = accessLevel;
+            }
+        });
+        return maxAccessLevel;
+    };
     const MESSAGE_HEADER_SIZE = 2;
     const BLOCK_SIZE = 16;
     const COMMANDS_END_MARK = [0];
@@ -3322,7 +3344,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         }
         return message;
     };
-    const getToBytes$1 = toBytesMap => (commands, { messageId = 1, accessLevel = READ_ONLY, aesKey }) => {
+    const getToBytes$1 = toBytesMap => (commands, { messageId = 1, accessLevel = getCommandsAccessLevel(commands), aesKey }) => {
         const commandBytes = commands.flatMap(command => {
             if ('id' in command) {
                 return toBytesMap[command.id](command.parameters || {});
