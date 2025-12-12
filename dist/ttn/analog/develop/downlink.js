@@ -667,6 +667,7 @@ var toBytes;
   var POWER_CHANNEL = 2;
   var BINARY_SENSOR = 3;
   var TEMPERATURE_SENSOR = 4;
+  var BINARY_SENSOR_CONFIGURABLE = 5;
 
   var SF12B125 = 0;
   var SF11B125 = 1;
@@ -711,6 +712,9 @@ var toBytes;
         break;
       case TEMPERATURE_SENSOR:
         size += 5;
+        break;
+      case BINARY_SENSOR_CONFIGURABLE:
+        size += 4;
         break;
     }
     return size;
@@ -1507,6 +1511,21 @@ var toBytes;
   var setBinarySensor = function (buffer, parameters) {
     buffer.setUint16(parameters.activeStateTimeMs);
   };
+  var getBinarySensorConfigurable = function (buffer) {
+    var type = buffer.getUint8();
+    var activeStateTimeMs = buffer.getUint16();
+    var halState = buffer.getUint8();
+    return {
+      type: type,
+      activeStateTimeMs: activeStateTimeMs,
+      halState: halState
+    };
+  };
+  var setBinarySensorConfigurable = function (buffer, parameters) {
+    buffer.setUint8(parameters.type);
+    buffer.setUint16(parameters.activeStateTimeMs);
+    buffer.setUint8(parameters.halState);
+  };
   var getTemperatureSensor = function (buffer) {
     var measurementPeriod = buffer.getUint16();
     var hysteresisSec = buffer.getUint8();
@@ -1536,6 +1555,9 @@ var toBytes;
       case TEMPERATURE_SENSOR:
         parameters = getTemperatureSensor(buffer);
         break;
+      case BINARY_SENSOR_CONFIGURABLE:
+        parameters = getBinarySensorConfigurable(buffer);
+        break;
     }
     return {
       channel: channel,
@@ -1555,6 +1577,9 @@ var toBytes;
         break;
       case TEMPERATURE_SENSOR:
         setTemperatureSensor(buffer, parameters);
+        break;
+      case BINARY_SENSOR_CONFIGURABLE:
+        setBinarySensorConfigurable(buffer, parameters);
         break;
     }
   };

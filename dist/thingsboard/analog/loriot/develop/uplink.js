@@ -717,10 +717,12 @@ var fromBytes, getBytesFromHex;
   var POWER_CHANNEL = 2;
   var BINARY_SENSOR = 3;
   var TEMPERATURE_SENSOR = 4;
+  var BINARY_SENSOR_CONFIGURABLE = 5;
 
   var channelTypes = /*#__PURE__*/Object.freeze({
     __proto__: null,
     BINARY_SENSOR: BINARY_SENSOR,
+    BINARY_SENSOR_CONFIGURABLE: BINARY_SENSOR_CONFIGURABLE,
     IDLE: IDLE,
     POWER_CHANNEL: POWER_CHANNEL,
     PULSE_SENSOR: PULSE_SENSOR,
@@ -1707,6 +1709,21 @@ var fromBytes, getBytesFromHex;
   var setBinarySensor = function (buffer, parameters) {
     buffer.setUint16(parameters.activeStateTimeMs);
   };
+  var getBinarySensorConfigurable = function (buffer) {
+    var type = buffer.getUint8();
+    var activeStateTimeMs = buffer.getUint16();
+    var halState = buffer.getUint8();
+    return {
+      type: type,
+      activeStateTimeMs: activeStateTimeMs,
+      halState: halState
+    };
+  };
+  var setBinarySensorConfigurable = function (buffer, parameters) {
+    buffer.setUint8(parameters.type);
+    buffer.setUint16(parameters.activeStateTimeMs);
+    buffer.setUint8(parameters.halState);
+  };
   var getTemperatureSensor = function (buffer) {
     var measurementPeriod = buffer.getUint16();
     var hysteresisSec = buffer.getUint8();
@@ -1736,6 +1753,9 @@ var fromBytes, getBytesFromHex;
       case TEMPERATURE_SENSOR:
         parameters = getTemperatureSensor(buffer);
         break;
+      case BINARY_SENSOR_CONFIGURABLE:
+        parameters = getBinarySensorConfigurable(buffer);
+        break;
     }
     return {
       channel: channel,
@@ -1755,6 +1775,9 @@ var fromBytes, getBytesFromHex;
         break;
       case TEMPERATURE_SENSOR:
         setTemperatureSensor(buffer, parameters);
+        break;
+      case BINARY_SENSOR_CONFIGURABLE:
+        setBinarySensorConfigurable(buffer, parameters);
         break;
     }
   };
@@ -2125,12 +2148,19 @@ var fromBytes, getBytesFromHex;
         channel: getChannelValue(buffer)
       };
       switch (channelStatus.type) {
+        case POWER_CHANNEL:
+        case PULSE_SENSOR:
+        case IDLE:
+          break;
         case BINARY_SENSOR:
+        case BINARY_SENSOR_CONFIGURABLE:
           channelStatus.status = getBinarySensorStatus(buffer);
           break;
         case TEMPERATURE_SENSOR:
           channelStatus.status = getTemperatureSensorStatus(buffer);
           break;
+        default:
+          return result;
       }
       result.push(channelStatus);
     }

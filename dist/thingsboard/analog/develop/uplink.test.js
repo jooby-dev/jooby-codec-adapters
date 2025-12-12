@@ -807,10 +807,12 @@ var logs = '';
   var POWER_CHANNEL = 2;
   var BINARY_SENSOR = 3;
   var TEMPERATURE_SENSOR = 4;
+  var BINARY_SENSOR_CONFIGURABLE = 5;
 
   var channelTypes = /*#__PURE__*/Object.freeze({
     __proto__: null,
     BINARY_SENSOR: BINARY_SENSOR,
+    BINARY_SENSOR_CONFIGURABLE: BINARY_SENSOR_CONFIGURABLE,
     IDLE: IDLE,
     POWER_CHANNEL: POWER_CHANNEL,
     PULSE_SENSOR: PULSE_SENSOR,
@@ -921,6 +923,9 @@ var logs = '';
         break;
       case TEMPERATURE_SENSOR:
         size += 5;
+        break;
+      case BINARY_SENSOR_CONFIGURABLE:
+        size += 4;
         break;
     }
     return size;
@@ -2129,6 +2134,21 @@ var logs = '';
   var setBinarySensor = function setBinarySensor(buffer, parameters) {
     buffer.setUint16(parameters.activeStateTimeMs);
   };
+  var getBinarySensorConfigurable = function getBinarySensorConfigurable(buffer) {
+    var type = buffer.getUint8();
+    var activeStateTimeMs = buffer.getUint16();
+    var halState = buffer.getUint8();
+    return {
+      type: type,
+      activeStateTimeMs: activeStateTimeMs,
+      halState: halState
+    };
+  };
+  var setBinarySensorConfigurable = function setBinarySensorConfigurable(buffer, parameters) {
+    buffer.setUint8(parameters.type);
+    buffer.setUint16(parameters.activeStateTimeMs);
+    buffer.setUint8(parameters.halState);
+  };
   var getTemperatureSensor = function getTemperatureSensor(buffer) {
     var measurementPeriod = buffer.getUint16();
     var hysteresisSec = buffer.getUint8();
@@ -2158,6 +2178,9 @@ var logs = '';
       case TEMPERATURE_SENSOR:
         parameters = getTemperatureSensor(buffer);
         break;
+      case BINARY_SENSOR_CONFIGURABLE:
+        parameters = getBinarySensorConfigurable(buffer);
+        break;
     }
     return {
       channel: channel,
@@ -2177,6 +2200,9 @@ var logs = '';
         break;
       case TEMPERATURE_SENSOR:
         setTemperatureSensor(buffer, parameters);
+        break;
+      case BINARY_SENSOR_CONFIGURABLE:
+        setBinarySensorConfigurable(buffer, parameters);
         break;
     }
   };
@@ -3275,14 +3301,14 @@ var logs = '';
       name: name$l,
       headerSize: headerSize$l,
       parameters: [{
-        type: BINARY_SENSOR,
-        typeName: 'BINARY_SENSOR',
+        type: BINARY_SENSOR_CONFIGURABLE,
+        typeName: 'BINARY_SENSOR_CONFIGURABLE',
         channel: 1,
         status: {
           state: true
         }
       }],
-      bytes: [0x1f, 0x32, 0x03, 0x03, 0x00, 0x01]
+      bytes: [0x1f, 0x32, 0x03, 0x05, 0x00, 0x01]
     },
     'temperature sensor, channel: 3, temperature: 24': {
       id: id$l,
@@ -3299,7 +3325,7 @@ var logs = '';
       }],
       bytes: [0x1f, 0x32, 0x07, 0x04, 0x02, 0x18, 0x00, 0x00, 0x58, 0xc0]
     },
-    'power channel and pulse, binary and temperature sensors': {
+    'power channel and pulse, binary configurable and temperature sensors': {
       id: id$l,
       name: name$l,
       headerSize: headerSize$l,
@@ -3308,8 +3334,8 @@ var logs = '';
         typeName: 'POWER_CHANNEL',
         channel: 1
       }, {
-        type: BINARY_SENSOR,
-        typeName: 'BINARY_SENSOR',
+        type: BINARY_SENSOR_CONFIGURABLE,
+        typeName: 'BINARY_SENSOR_CONFIGURABLE',
         channel: 2,
         status: {
           state: true
@@ -3327,7 +3353,7 @@ var logs = '';
         typeName: 'PULSE_SENSOR',
         channel: 4
       }],
-      bytes: [0x1f, 0x32, 0x0e, 0x02, 0x00, 0x03, 0x01, 0x01, 0x04, 0x02, 0x14, 0x00, 0x00, 0x58, 0xc0, 0x01, 0x03]
+      bytes: [0x1f, 0x32, 0x0e, 0x02, 0x00, 0x05, 0x01, 0x01, 0x04, 0x02, 0x14, 0x00, 0x00, 0x58, 0xc0, 0x01, 0x03]
     }
   };
   var getBufferSize = function getBufferSize(channelsStatus) {
@@ -3336,6 +3362,7 @@ var logs = '';
       size += 2;
       switch (channelsStatus[index].type) {
         case BINARY_SENSOR:
+        case BINARY_SENSOR_CONFIGURABLE:
         case TEMPERATURE_SENSOR:
           size += 1;
           break;
@@ -3372,28 +3399,40 @@ var logs = '';
         channel: getChannelValue(buffer)
       };
       switch (channelStatus.type) {
+        case POWER_CHANNEL:
+        case PULSE_SENSOR:
+        case IDLE:
+          break;
         case BINARY_SENSOR:
+        case BINARY_SENSOR_CONFIGURABLE:
           channelStatus.status = getBinarySensorStatus(buffer);
           break;
         case TEMPERATURE_SENSOR:
           channelStatus.status = getTemperatureSensorStatus(buffer);
           break;
+        default:
+          return result;
       }
       result.push(channelStatus);
     }
     return result;
   };
-  var toBytes$l = function toBytes(channelsStatus) {
-    var buffer = new BinaryBuffer(getBufferSize(channelsStatus), false);
-    for (var index = 0; index < channelsStatus.length; index++) {
-      var _channelsStatus$index = channelsStatus[index],
-        type = _channelsStatus$index.type,
-        channel = _channelsStatus$index.channel,
-        status = _channelsStatus$index.status;
+  var toBytes$l = function toBytes(parameters) {
+    var buffer = new BinaryBuffer(getBufferSize(parameters), false);
+    for (var index = 0; index < parameters.length; index++) {
+      var _parameters$index = parameters[index],
+        type = _parameters$index.type,
+        channel = _parameters$index.channel,
+        status = _parameters$index.status;
       buffer.setUint8(type);
       setChannelValue(buffer, channel);
       switch (type) {
+        case POWER_CHANNEL:
+        case PULSE_SENSOR:
+        case IDLE:
+          break;
         case BINARY_SENSOR:
+        case BINARY_SENSOR_CONFIGURABLE:
           setBinarySensorStatus(status, buffer);
           break;
         case TEMPERATURE_SENSOR:
@@ -3427,8 +3466,8 @@ var logs = '';
           type: 2,
           typeName: 'POWER_CHANNEL'
         }, {
-          type: 3,
-          typeName: 'BINARY_SENSOR'
+          type: 5,
+          typeName: 'BINARY_SENSOR_CONFIGURABLE'
         }, {
           type: 4,
           typeName: 'TEMPERATURE_SENSOR'
@@ -3437,7 +3476,7 @@ var logs = '';
           typeName: 'IDLE'
         }]
       },
-      bytes: [0x1f, 0x33, 0x04, 0x02, 0x03, 0x04, 0x00]
+      bytes: [0x1f, 0x33, 0x04, 0x02, 0x05, 0x04, 0x00]
     }
   };
   var fromBytes$k = function fromBytes(bytes) {

@@ -635,10 +635,12 @@
     const POWER_CHANNEL = 2;
     const BINARY_SENSOR = 3;
     const TEMPERATURE_SENSOR = 4;
+    const BINARY_SENSOR_CONFIGURABLE = 5;
 
     var channelTypes = /*#__PURE__*/Object.freeze({
         __proto__: null,
         BINARY_SENSOR: BINARY_SENSOR,
+        BINARY_SENSOR_CONFIGURABLE: BINARY_SENSOR_CONFIGURABLE,
         IDLE: IDLE,
         POWER_CHANNEL: POWER_CHANNEL,
         PULSE_SENSOR: PULSE_SENSOR,
@@ -765,6 +767,9 @@
                 break;
             case TEMPERATURE_SENSOR:
                 size += 5;
+                break;
+            case BINARY_SENSOR_CONFIGURABLE:
+                size += 4;
                 break;
         }
         return size;
@@ -1924,6 +1929,17 @@
     const setBinarySensor = function (buffer, parameters) {
         buffer.setUint16(parameters.activeStateTimeMs);
     };
+    const getBinarySensorConfigurable = function (buffer) {
+        const type = buffer.getUint8();
+        const activeStateTimeMs = buffer.getUint16();
+        const halState = buffer.getUint8();
+        return { type, activeStateTimeMs, halState };
+    };
+    const setBinarySensorConfigurable = function (buffer, parameters) {
+        buffer.setUint8(parameters.type);
+        buffer.setUint16(parameters.activeStateTimeMs);
+        buffer.setUint8(parameters.halState);
+    };
     const getTemperatureSensor = function (buffer) {
         const measurementPeriod = buffer.getUint16();
         const hysteresisSec = buffer.getUint8();
@@ -1953,6 +1969,9 @@
             case TEMPERATURE_SENSOR:
                 parameters = getTemperatureSensor(buffer);
                 break;
+            case BINARY_SENSOR_CONFIGURABLE:
+                parameters = getBinarySensorConfigurable(buffer);
+                break;
         }
         return {
             channel,
@@ -1969,6 +1988,9 @@
                 break;
             case TEMPERATURE_SENSOR:
                 setTemperatureSensor(buffer, parameters);
+                break;
+            case BINARY_SENSOR_CONFIGURABLE:
+                setBinarySensorConfigurable(buffer, parameters);
                 break;
         }
     };
@@ -3463,7 +3485,7 @@
                 0x38, 0x00, 0x02
             ]
         },
-        '56_4PU: set channel type. Channel index: 2, type: binary sensor': {
+        '56_4PU: set channel type. Channel index: 2, type: binary sensor configurable': {
             id: id$H,
             name: name$H,
             headerSize: headerSize$H,
@@ -3472,15 +3494,17 @@
                 name: deviceParameterNames[CHANNEL_TYPE],
                 data: {
                     channel: 2,
-                    type: BINARY_SENSOR,
+                    type: BINARY_SENSOR_CONFIGURABLE,
                     parameters: {
-                        activeStateTimeMs: 5000
+                        type: 0,
+                        activeStateTimeMs: 5000,
+                        halState: 0
                     }
                 }
             },
             bytes: [
-                0x03, 0x05,
-                0x38, 0x01, 0x03, 0x13, 0x88
+                0x03, 0x07,
+                0x38, 0x01, 0x05, 0x00, 0x13, 0x88, 0x00
             ]
         },
         '56_4PU: set channel type. Channel index: 3, type: temperature sensor': {
@@ -4963,8 +4987,8 @@
             headerSize: headerSize$l,
             parameters: [
                 {
-                    type: BINARY_SENSOR,
-                    typeName: 'BINARY_SENSOR',
+                    type: BINARY_SENSOR_CONFIGURABLE,
+                    typeName: 'BINARY_SENSOR_CONFIGURABLE',
                     channel: 1,
                     status: {
                         state: true
@@ -4972,7 +4996,7 @@
                 }
             ],
             bytes: [
-                0x1f, 0x32, 0x03, 0x03, 0x00, 0x01
+                0x1f, 0x32, 0x03, 0x05, 0x00, 0x01
             ]
         },
         'temperature sensor, channel: 3, temperature: 24': {
@@ -4994,7 +5018,7 @@
                 0x1f, 0x32, 0x07, 0x04, 0x02, 0x18, 0x00, 0x00, 0x58, 0xc0
             ]
         },
-        'power channel and pulse, binary and temperature sensors': {
+        'power channel and pulse, binary configurable and temperature sensors': {
             id: id$l,
             name: name$l,
             headerSize: headerSize$l,
@@ -5005,8 +5029,8 @@
                     channel: 1
                 },
                 {
-                    type: BINARY_SENSOR,
-                    typeName: 'BINARY_SENSOR',
+                    type: BINARY_SENSOR_CONFIGURABLE,
+                    typeName: 'BINARY_SENSOR_CONFIGURABLE',
                     channel: 2,
                     status: {
                         state: true
@@ -5028,7 +5052,7 @@
                 }
             ],
             bytes: [
-                0x1f, 0x32, 0x0e, 0x02, 0x00, 0x03, 0x01, 0x01, 0x04, 0x02, 0x14, 0x00, 0x00, 0x58, 0xc0, 0x01, 0x03
+                0x1f, 0x32, 0x0e, 0x02, 0x00, 0x05, 0x01, 0x01, 0x04, 0x02, 0x14, 0x00, 0x00, 0x58, 0xc0, 0x01, 0x03
             ]
         }
     };
@@ -5038,6 +5062,7 @@
             size += 2;
             switch (channelsStatus[index].type) {
                 case BINARY_SENSOR:
+                case BINARY_SENSOR_CONFIGURABLE:
                 case TEMPERATURE_SENSOR:
                     size += 1;
                     break;
@@ -5070,25 +5095,37 @@
                 channel: getChannelValue(buffer)
             };
             switch (channelStatus.type) {
+                case POWER_CHANNEL:
+                case PULSE_SENSOR:
+                case IDLE:
+                    break;
                 case BINARY_SENSOR:
+                case BINARY_SENSOR_CONFIGURABLE:
                     channelStatus.status = getBinarySensorStatus(buffer);
                     break;
                 case TEMPERATURE_SENSOR:
                     channelStatus.status = getTemperatureSensorStatus(buffer);
                     break;
+                default:
+                    return result;
             }
             result.push(channelStatus);
         }
         return result;
     };
-    const toBytes$l = (channelsStatus) => {
-        const buffer = new BinaryBuffer(getBufferSize(channelsStatus), false);
-        for (let index = 0; index < channelsStatus.length; index++) {
-            const { type, channel, status } = channelsStatus[index];
+    const toBytes$l = (parameters) => {
+        const buffer = new BinaryBuffer(getBufferSize(parameters), false);
+        for (let index = 0; index < parameters.length; index++) {
+            const { type, channel, status } = parameters[index];
             buffer.setUint8(type);
             setChannelValue(buffer, channel);
             switch (type) {
+                case POWER_CHANNEL:
+                case PULSE_SENSOR:
+                case IDLE:
+                    break;
                 case BINARY_SENSOR:
+                case BINARY_SENSOR_CONFIGURABLE:
                     setBinarySensorStatus(status, buffer);
                     break;
                 case TEMPERATURE_SENSOR:
@@ -5120,13 +5157,13 @@
             parameters: {
                 channels: [
                     { type: 2, typeName: 'POWER_CHANNEL' },
-                    { type: 3, typeName: 'BINARY_SENSOR' },
+                    { type: 5, typeName: 'BINARY_SENSOR_CONFIGURABLE' },
                     { type: 4, typeName: 'TEMPERATURE_SENSOR' },
                     { type: 0, typeName: 'IDLE' }
                 ]
             },
             bytes: [
-                0x1f, 0x33, 0x04, 0x02, 0x03, 0x04, 0x00
+                0x1f, 0x33, 0x04, 0x02, 0x05, 0x04, 0x00
             ]
         }
     };
