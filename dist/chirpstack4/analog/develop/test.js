@@ -2043,7 +2043,7 @@
         setDataSegment(buffer, parameters);
         return toBytes$11(id$$, buffer.data);
     };
-    const toJson$1 = (parameters, options) => (JSON.stringify({
+    const toJson$3 = (parameters, options) => (JSON.stringify({
         ...parameters,
         data: getStringFromBytes(parameters.data, options)
     }));
@@ -2056,7 +2056,7 @@
         id: id$$,
         name: name$$,
         toBytes: toBytes$$,
-        toJson: toJson$1
+        toJson: toJson$3
     });
 
     const id$_ = getArchiveDays$3;
@@ -3791,6 +3791,10 @@
         buffer.setBytes(data);
         return toBytes$11(id$D, buffer.data);
     };
+    const toJson$2 = (parameters, options) => JSON.stringify({
+        ...parameters,
+        data: getStringFromBytes(parameters.data, options)
+    });
 
     var usWaterMeterCommand$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -3799,7 +3803,8 @@
         headerSize: headerSize$D,
         id: id$D,
         name: name$D,
-        toBytes: toBytes$D
+        toBytes: toBytes$D,
+        toJson: toJson$2
     });
 
     const id$C = verifyImage$3;
@@ -3868,7 +3873,10 @@
         buffer.setBytes(parameters.data);
         return toBytes$11(id$B, buffer.data);
     };
-    const toJson = (parameters) => JSON.stringify(parameters);
+    const toJson$1 = (parameters, options) => JSON.stringify({
+        ...parameters,
+        data: getStringFromBytes(parameters.data, options)
+    });
 
     var writeImage$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -3878,7 +3886,7 @@
         id: id$B,
         name: name$B,
         toBytes: toBytes$B,
-        toJson: toJson
+        toJson: toJson$1
     });
 
     var downlink = /*#__PURE__*/Object.freeze({
@@ -4199,7 +4207,7 @@
         id: id$$,
         name: name$$,
         toBytes: toBytes$$,
-        toJson: toJson$1
+        toJson: toJson$3
     });
 
     const id$x = day$1;
@@ -6719,6 +6727,10 @@
         buffer.setBytes(data);
         return toBytes$11(id$2, buffer.data);
     };
+    const toJson = (parameters, options) => JSON.stringify({
+        ...parameters,
+        data: getStringFromBytes(parameters.data, options)
+    });
 
     var usWaterMeterCommand = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -6727,7 +6739,8 @@
         headerSize: headerSize$2,
         id: id$2,
         name: name$2,
-        toBytes: toBytes$2
+        toBytes: toBytes$2,
+        toJson: toJson
     });
 
     const id$1 = verifyImage$1;

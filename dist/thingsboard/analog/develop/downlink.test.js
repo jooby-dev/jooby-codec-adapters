@@ -1827,7 +1827,7 @@ var logs = '';
     setDataSegment(buffer, parameters);
     return toBytes$s(id$q, buffer.data);
   };
-  var toJson$1 = function toJson(parameters, options) {
+  var toJson$2 = function toJson(parameters, options) {
     return JSON.stringify(_objectSpread2(_objectSpread2({}, parameters), {}, {
       data: getStringFromBytes(parameters.data, options)
     }));
@@ -1841,7 +1841,7 @@ var logs = '';
     id: id$q,
     name: name$q,
     toBytes: toBytes$q,
-    toJson: toJson$1
+    toJson: toJson$2
   });
 
   var id$p = getArchiveDays$1;
@@ -3541,6 +3541,11 @@ var logs = '';
     buffer.setBytes(data);
     return toBytes$s(id$2, buffer.data);
   };
+  var toJson$1 = function toJson(parameters, options) {
+    return JSON.stringify(_objectSpread2(_objectSpread2({}, parameters), {}, {
+      data: getStringFromBytes(parameters.data, options)
+    }));
+  };
 
   var usWaterMeterCommand = /*#__PURE__*/Object.freeze({
     __proto__: null,
@@ -3549,7 +3554,8 @@ var logs = '';
     headerSize: headerSize$2,
     id: id$2,
     name: name$2,
-    toBytes: toBytes$2
+    toBytes: toBytes$2,
+    toJson: toJson$1
   });
 
   var id$1 = verifyImage$1;
@@ -3618,8 +3624,10 @@ var logs = '';
     buffer.setBytes(parameters.data);
     return toBytes$s(id, buffer.data);
   };
-  var toJson = function toJson(parameters) {
-    return JSON.stringify(parameters);
+  var toJson = function toJson(parameters, options) {
+    return JSON.stringify(_objectSpread2(_objectSpread2({}, parameters), {}, {
+      data: getStringFromBytes(parameters.data, options)
+    }));
   };
 
   var writeImage = /*#__PURE__*/Object.freeze({

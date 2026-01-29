@@ -1029,10 +1029,8 @@ var fromBytes, getDataSegment;
   var RELAY_OFF = 0x37;
   var RESTART = 0x38;
   var WATCHDOG_RESTART = 0x39;
-  var POWER_B_ON = 0x3c;
-  var POWER_B_OFF = 0x3d;
-  var POWER_C_ON = 0x3E;
-  var POWER_C_OFF = 0x3F;
+  var COSF_OK = 0x3a;
+  var COSF_MIN_OVER = 0x3b;
   var V_MAX_OK = 0x40;
   var V_MAX_OVER = 0x41;
   var V_MIN_OK = 0x42;
@@ -1047,8 +1045,8 @@ var fromBytes, getDataSegment;
   var F_MIN_OVER = 0x4b;
   var I_MAX_OK = 0x4c;
   var I_MAX_OVER = 0x4d;
-  var P_MAX_OK = 0x4E;
-  var P_MAX_OVER = 0x4F;
+  var P_MAX_OK = 0x4e;
+  var P_MAX_OVER = 0x4f;
   var POWER_SALDO_OK = 0x50;
   var POWER_SALDO_OVER = 0x51;
   var BATTERY_OK = 0x52;
@@ -1083,7 +1081,6 @@ var fromBytes, getDataSegment;
   var CASE_TERMINAL_BOX_CLOSED = 0x7b;
   var CASE_MODULE_OPENED = 0x7c;
   var CASE_MODULE_CLOSED = 0x7d;
-  var POWER_GOOD_DIO = 0x7E;
   var RELAY_HARD_BAD_OFF = 0x90;
   var RELAY_HARD_ON = 0x91;
   var RELAY_HARD_BAD_ON = 0x93;
@@ -1091,8 +1088,8 @@ var fromBytes, getDataSegment;
   var CHANGE_TARIFF_TABLE_2 = 0x98;
   var SET_SALDO_PARAM = 0x9c;
   var POWER_OVER_RELAY_OFF = 0x9d;
-  var CROSS_ZERO_EXPORT_EN_T1 = 0x9E;
-  var CROSS_ZERO_EXPORT_EN_T2 = 0x9F;
+  var CROSS_ZERO_EXPORT_EN_T1 = 0x9e;
+  var CROSS_ZERO_EXPORT_EN_T2 = 0x9f;
   var CROSS_ZERO_EXPORT_EN_T3 = 0xa0;
   var CROSS_ZERO_EXPORT_EN_T4 = 0xa1;
   var TIME_CORRECT_NEW = 0xa2;
@@ -1158,6 +1155,8 @@ var fromBytes, getDataSegment;
     CMD_RELAY_OFF: CMD_RELAY_OFF,
     CMD_RELAY_ON: CMD_RELAY_ON,
     CMD_SET_DATETIME: CMD_SET_DATETIME,
+    COSF_MIN_OVER: COSF_MIN_OVER,
+    COSF_OK: COSF_OK,
     CROSS_ZERO_EN_T1: CROSS_ZERO_EN_T1,
     CROSS_ZERO_EN_T2: CROSS_ZERO_EN_T2,
     CROSS_ZERO_EN_T3: CROSS_ZERO_EN_T3,
@@ -1183,11 +1182,6 @@ var fromBytes, getDataSegment;
     OPERATOR_PARAMETERS_VALUES_FAULT: OPERATOR_PARAMETERS_VALUES_FAULT,
     POWER_A_OFF: POWER_A_OFF,
     POWER_A_ON: POWER_A_ON,
-    POWER_B_OFF: POWER_B_OFF,
-    POWER_B_ON: POWER_B_ON,
-    POWER_C_OFF: POWER_C_OFF,
-    POWER_C_ON: POWER_C_ON,
-    POWER_GOOD_DIO: POWER_GOOD_DIO,
     POWER_OVER_RELAY_OFF: POWER_OVER_RELAY_OFF,
     POWER_SALDO_OK: POWER_SALDO_OK,
     POWER_SALDO_OVER: POWER_SALDO_OVER,
@@ -2320,6 +2314,7 @@ var fromBytes, getDataSegment;
   var id$G = getEvents;
   var maxSize$m = BODY_WITHOUT_EVENTS_SIZE + 255 * EVENT_SIZE;
   var getFromBytes$1 = function (BinaryBufferConstructor) {
+    var getEvent$1 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : getEvent;
     return function (bytes) {
       if (bytes.length > maxSize$m) {
         throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
@@ -2329,7 +2324,7 @@ var fromBytes, getDataSegment;
       var eventsNumber = buffer.getUint8();
       var events = [];
       while (!buffer.isEmpty) {
-        events.push(getEvent(buffer));
+        events.push(getEvent$1(buffer));
       }
       return {
         date: date,

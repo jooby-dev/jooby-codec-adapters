@@ -2406,7 +2406,7 @@
       setDataSegment(buffer, parameters);
       return toBytes$11(id$$, buffer.data);
     };
-    var toJson$1 = function toJson(parameters, options) {
+    var toJson$3 = function toJson(parameters, options) {
       return JSON.stringify(_objectSpread2(_objectSpread2({}, parameters), {}, {
         data: getStringFromBytes(parameters.data, options)
       }));
@@ -2420,7 +2420,7 @@
         id: id$$,
         name: name$$,
         toBytes: toBytes$$,
-        toJson: toJson$1
+        toJson: toJson$3
     });
 
     var id$_ = getArchiveDays$3;
@@ -4120,6 +4120,11 @@
       buffer.setBytes(data);
       return toBytes$11(id$D, buffer.data);
     };
+    var toJson$2 = function toJson(parameters, options) {
+      return JSON.stringify(_objectSpread2(_objectSpread2({}, parameters), {}, {
+        data: getStringFromBytes(parameters.data, options)
+      }));
+    };
 
     var usWaterMeterCommand$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -4128,7 +4133,8 @@
         headerSize: headerSize$D,
         id: id$D,
         name: name$D,
-        toBytes: toBytes$D
+        toBytes: toBytes$D,
+        toJson: toJson$2
     });
 
     var id$C = verifyImage$3;
@@ -4197,8 +4203,10 @@
       buffer.setBytes(parameters.data);
       return toBytes$11(id$B, buffer.data);
     };
-    var toJson = function toJson(parameters) {
-      return JSON.stringify(parameters);
+    var toJson$1 = function toJson(parameters, options) {
+      return JSON.stringify(_objectSpread2(_objectSpread2({}, parameters), {}, {
+        data: getStringFromBytes(parameters.data, options)
+      }));
     };
 
     var writeImage$2 = /*#__PURE__*/Object.freeze({
@@ -4209,7 +4217,7 @@
         id: id$B,
         name: name$B,
         toBytes: toBytes$B,
-        toJson: toJson
+        toJson: toJson$1
     });
 
     var downlink = /*#__PURE__*/Object.freeze({
@@ -4535,7 +4543,7 @@
         id: id$$,
         name: name$$,
         toBytes: toBytes$$,
-        toJson: toJson$1
+        toJson: toJson$3
     });
 
     var id$x = day$1;
@@ -7140,6 +7148,11 @@
       buffer.setBytes(data);
       return toBytes$11(id$2, buffer.data);
     };
+    var toJson = function toJson(parameters, options) {
+      return JSON.stringify(_objectSpread2(_objectSpread2({}, parameters), {}, {
+        data: getStringFromBytes(parameters.data, options)
+      }));
+    };
 
     var usWaterMeterCommand = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -7148,7 +7161,8 @@
         headerSize: headerSize$2,
         id: id$2,
         name: name$2,
-        toBytes: toBytes$2
+        toBytes: toBytes$2,
+        toJson: toJson
     });
 
     var id$1 = verifyImage$1;

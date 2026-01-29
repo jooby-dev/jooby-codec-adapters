@@ -865,10 +865,8 @@
     const RELAY_OFF = 0x37;
     const RESTART = 0x38;
     const WATCHDOG_RESTART = 0x39;
-    const POWER_B_ON = 0x3c;
-    const POWER_B_OFF = 0x3d;
-    const POWER_C_ON = 0x3E;
-    const POWER_C_OFF = 0x3F;
+    const COSF_OK = 0x3a;
+    const COSF_MIN_OVER = 0x3b;
     const V_MAX_OK = 0x40;
     const V_MAX_OVER = 0x41;
     const V_MIN_OK = 0x42;
@@ -883,8 +881,8 @@
     const F_MIN_OVER = 0x4b;
     const I_MAX_OK = 0x4c;
     const I_MAX_OVER = 0x4d;
-    const P_MAX_OK = 0x4E;
-    const P_MAX_OVER = 0x4F;
+    const P_MAX_OK = 0x4e;
+    const P_MAX_OVER = 0x4f;
     const POWER_SALDO_OK = 0x50;
     const POWER_SALDO_OVER = 0x51;
     const BATTERY_OK = 0x52;
@@ -919,7 +917,6 @@
     const CASE_TERMINAL_BOX_CLOSED = 0x7b;
     const CASE_MODULE_OPENED = 0x7c;
     const CASE_MODULE_CLOSED = 0x7d;
-    const POWER_GOOD_DIO = 0x7E;
     const RELAY_HARD_BAD_OFF = 0x90;
     const RELAY_HARD_ON = 0x91;
     const RELAY_HARD_BAD_ON = 0x93;
@@ -927,8 +924,8 @@
     const CHANGE_TARIFF_TABLE_2 = 0x98;
     const SET_SALDO_PARAM = 0x9c;
     const POWER_OVER_RELAY_OFF = 0x9d;
-    const CROSS_ZERO_EXPORT_EN_T1 = 0x9E;
-    const CROSS_ZERO_EXPORT_EN_T2 = 0x9F;
+    const CROSS_ZERO_EXPORT_EN_T1 = 0x9e;
+    const CROSS_ZERO_EXPORT_EN_T2 = 0x9f;
     const CROSS_ZERO_EXPORT_EN_T3 = 0xa0;
     const CROSS_ZERO_EXPORT_EN_T4 = 0xa1;
     const TIME_CORRECT_NEW = 0xa2;
@@ -994,6 +991,8 @@
         CMD_RELAY_OFF: CMD_RELAY_OFF,
         CMD_RELAY_ON: CMD_RELAY_ON,
         CMD_SET_DATETIME: CMD_SET_DATETIME,
+        COSF_MIN_OVER: COSF_MIN_OVER,
+        COSF_OK: COSF_OK,
         CROSS_ZERO_EN_T1: CROSS_ZERO_EN_T1,
         CROSS_ZERO_EN_T2: CROSS_ZERO_EN_T2,
         CROSS_ZERO_EN_T3: CROSS_ZERO_EN_T3,
@@ -1019,11 +1018,6 @@
         OPERATOR_PARAMETERS_VALUES_FAULT: OPERATOR_PARAMETERS_VALUES_FAULT,
         POWER_A_OFF: POWER_A_OFF,
         POWER_A_ON: POWER_A_ON,
-        POWER_B_OFF: POWER_B_OFF,
-        POWER_B_ON: POWER_B_ON,
-        POWER_C_OFF: POWER_C_OFF,
-        POWER_C_ON: POWER_C_ON,
-        POWER_GOOD_DIO: POWER_GOOD_DIO,
         POWER_OVER_RELAY_OFF: POWER_OVER_RELAY_OFF,
         POWER_SALDO_OK: POWER_SALDO_OK,
         POWER_SALDO_OVER: POWER_SALDO_OVER,
@@ -8226,7 +8220,7 @@
             ]
         }
     };
-    const getFromBytes = BinaryBufferConstructor => ((bytes) => {
+    const getFromBytes = (BinaryBufferConstructor, getEvent$1 = getEvent) => ((bytes) => {
         if (bytes.length > maxSize$G) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
@@ -8235,16 +8229,16 @@
         const eventsNumber = buffer.getUint8();
         const events = [];
         while (!buffer.isEmpty) {
-            events.push(getEvent(buffer));
+            events.push(getEvent$1(buffer));
         }
         return { date, eventsNumber, events };
     });
-    const getToBytes = BinaryBufferConstructor => ((parameters) => {
+    const getToBytes = (BinaryBufferConstructor, setEvent$1 = setEvent) => ((parameters) => {
         const buffer = new BinaryBufferConstructor(maxSize$G, false);
         setDate$1(buffer, parameters.date);
         buffer.setUint8(parameters.eventsNumber);
         for (const event of parameters.events) {
-            setEvent(buffer, event);
+            setEvent$1(buffer, event);
         }
         return toBytes$26(id$G, buffer.getBytesToOffset());
     });
