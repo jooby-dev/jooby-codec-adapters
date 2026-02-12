@@ -94,6 +94,60 @@ var fromBytes, getDataSegment;
     }
   }
 
+  var getBytesFromHex = (function (hex) {
+    var cleanHex = hex.trim();
+    if (!cleanHex) {
+      return [];
+    }
+    cleanHex = cleanHex.replace(/0x/g, '').split(/\s+/).map(function (byte) {
+      return byte.padStart(2, '0');
+    }).join('');
+    if (cleanHex.length % 2 !== 0) {
+      cleanHex = "0".concat(cleanHex);
+    }
+    var resultLength = cleanHex.length / 2;
+    var bytes = new Array(resultLength);
+    for (var index = 0; index < resultLength; index++) {
+      bytes[index] = parseInt(cleanHex.substring(index * 2, index * 2 + 2), 16);
+    }
+    return bytes;
+  });
+
+  var hexFormatOptions = {
+    separator: ' ',
+    prefix: ''
+  };
+
+  var getHexFromBytes = (function (bytes) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var _Object$assign = Object.assign({}, hexFormatOptions, options),
+      separator = _Object$assign.separator,
+      prefix = _Object$assign.prefix;
+    return bytes.map(function (byte) {
+      return "".concat(prefix).concat(byte.toString(16).padStart(2, '0'));
+    }).join(separator);
+  });
+
+  var toBytes$d = function (commandId) {
+    var commandBytes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+    return [commandId, commandBytes.length].concat(_toConsumableArray(commandBytes));
+  };
+
+  var validateCommandPayload = (function (commandName, bytes, expectedLength) {
+    if (!commandName) {
+      throw new Error('Command name is required.');
+    }
+    if (bytes && !Array.isArray(bytes)) {
+      throw new Error("Invalid payload for ".concat(commandName, ". Expected array, got: ").concat(typeof bytes, "."));
+    }
+    if (bytes.length !== expectedLength) {
+      var hex = getHexFromBytes(bytes, {
+        separator: ''
+      });
+      throw new Error("Wrong buffer size for ".concat(commandName, ": ").concat(bytes.length, ". Expected: ").concat(expectedLength, ". Payload: 0x").concat(hex, "."));
+    }
+  });
+
   var getEventStatus$1 = 0x01;
   var getEnergyDayPrevious$1 = 0x03;
   var getDeviceType$1 = 0x04;
@@ -155,6 +209,7 @@ var fromBytes, getDataSegment;
   var getBv$1 = 0x70;
   var getOperatorParametersExtended3$1 = 0x71;
   var setOperatorParametersExtended3$1 = 0x72;
+  var getQuality$1 = 0x73;
   var setDemandParameters = 0x74;
   var getDemandParameters = 0x75;
   var getDemand$1 = 0x76;
@@ -201,6 +256,7 @@ var fromBytes, getDataSegment;
     getMonthMaxDemandExport: getMonthMaxDemandExport$1,
     getOperatorParameters: getOperatorParameters$1,
     getOperatorParametersExtended3: getOperatorParametersExtended3$1,
+    getQuality: getQuality$1,
     getRatePlanInfo: getRatePlanInfo$1,
     getSaldo: getSaldo$1,
     getSaldoParameters: getSaldoParameters$1,
@@ -279,6 +335,7 @@ var fromBytes, getDataSegment;
     getMonthMaxDemandExport: getMonthMaxDemandExport$1,
     getOperatorParameters: getOperatorParameters$1,
     getOperatorParametersExtended3: getOperatorParametersExtended3$1,
+    getQuality: getQuality$1,
     getRatePlanInfo: getRatePlanInfo$1,
     getSaldo: getSaldo$1,
     getSaldoParameters: getSaldoParameters$1,
@@ -306,30 +363,6 @@ var fromBytes, getDataSegment;
     turnRelayOff: turnRelayOff$1,
     turnRelayOn: turnRelayOn$1
   });
-
-  var getBytesFromHex = (function (hex) {
-    var cleanHex = hex.trim();
-    if (!cleanHex) {
-      return [];
-    }
-    cleanHex = cleanHex.replace(/0x/g, '').split(/\s+/).map(function (byte) {
-      return byte.padStart(2, '0');
-    }).join('');
-    if (cleanHex.length % 2 !== 0) {
-      cleanHex = "0".concat(cleanHex);
-    }
-    var resultLength = cleanHex.length / 2;
-    var bytes = new Array(resultLength);
-    for (var index = 0; index < resultLength; index++) {
-      bytes[index] = parseInt(cleanHex.substring(index * 2, index * 2 + 2), 16);
-    }
-    return bytes;
-  });
-
-  var toBytes$d = function (commandId) {
-    var commandBytes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    return [commandId, commandBytes.length].concat(_toConsumableArray(commandBytes));
-  };
 
   var invertObject = (function (source) {
     var target = {};
@@ -416,9 +449,7 @@ var fromBytes, getDataSegment;
   var name = commandNames[errorDataFrameResponse$1];
   var maxSize$5 = 1;
   var fromBytes$1 = function (bytes) {
-    if (bytes.length !== maxSize$5) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
+    validateCommandPayload(name, bytes, maxSize$5);
     var _bytes = _slicedToArray(bytes, 1),
       errorCode = _bytes[0];
     return {
@@ -643,6 +674,7 @@ var fromBytes, getDataSegment;
   var getBv = 0x70;
   var getOperatorParametersExtended3 = 0x71;
   var setOperatorParametersExtended3 = 0x72;
+  var getQuality = 0x73;
   var setOperatorParametersExtended4 = 0x74;
   var getOperatorParametersExtended4 = 0x75;
   var getDemand = 0x76;
@@ -693,6 +725,7 @@ var fromBytes, getDataSegment;
     getOperatorParametersExtended2: getOperatorParametersExtended2,
     getOperatorParametersExtended3: getOperatorParametersExtended3,
     getOperatorParametersExtended4: getOperatorParametersExtended4,
+    getQuality: getQuality,
     getRatePlanInfo: getRatePlanInfo,
     getSaldo: getSaldo,
     getSaldoParameters: getSaldoParameters,
@@ -775,6 +808,7 @@ var fromBytes, getDataSegment;
     getOperatorParametersExtended2: getOperatorParametersExtended2,
     getOperatorParametersExtended3: getOperatorParametersExtended3,
     getOperatorParametersExtended4: getOperatorParametersExtended4,
+    getQuality: getQuality,
     getRatePlanInfo: getRatePlanInfo,
     getSaldo: getSaldo,
     getSaldoParameters: getSaldoParameters,

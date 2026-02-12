@@ -213,6 +213,15 @@ var fromBytes, toBytes;
       var i = _toPrimitive(t, "string");
       return "symbol" == typeof i ? i : i + "";
     }
+    function _typeof(o) {
+      "@babel/helpers - typeof";
+
+      return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
+        return typeof o;
+      } : function (o) {
+        return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
+      }, _typeof(o);
+    }
     function _unsupportedIterableToArray(r, a) {
       if (r) {
         if ("string" == typeof r) return _arrayLikeToArray(r, a);
@@ -592,6 +601,31 @@ var fromBytes, toBytes;
       return [].concat(_toConsumableArray(headerData), _toConsumableArray(commandBytes));
     };
 
+    var getHexFromBytes = (function (bytes) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var _Object$assign = Object.assign({}, hexFormatOptions, options),
+        separator = _Object$assign.separator,
+        prefix = _Object$assign.prefix;
+      return bytes.map(function (_byte) {
+        return "".concat(prefix).concat(_byte.toString(16).padStart(2, '0'));
+      }).join(separator);
+    });
+
+    var validateCommandPayload = (function (commandName, bytes, expectedLength) {
+      if (!commandName) {
+        throw new Error('Command name is required.');
+      }
+      if (bytes && !Array.isArray(bytes)) {
+        throw new Error("Invalid payload for ".concat(commandName, ". Expected array, got: ").concat(_typeof(bytes), "."));
+      }
+      if (bytes.length !== expectedLength) {
+        var hex = getHexFromBytes(bytes, {
+          separator: ''
+        });
+        throw new Error("Wrong buffer size for ".concat(commandName, ": ").concat(bytes.length, ". Expected: ").concat(expectedLength, ". Payload: 0x").concat(hex, "."));
+      }
+    });
+
     var setTime2000$1 = 0x02;
     var setParameter$2 = 0x03;
     var getParameter$2 = 0x04;
@@ -662,14 +696,13 @@ var fromBytes, toBytes;
       return target;
     });
 
-    invertObject(downlinkIds);
+    var downlinkNames = invertObject(downlinkIds);
 
     var id$10 = correctTime2000$1;
+    var name$t = downlinkNames[correctTime2000$1];
     var COMMAND_BODY_SIZE$y = 2;
     var fromBytes$12 = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$y) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$t, bytes, COMMAND_BODY_SIZE$y);
       var buffer = new BinaryBuffer(bytes, false);
       var parameters = {
         sequenceNumber: buffer.getUint8(),
@@ -721,16 +754,6 @@ var fromBytes, toBytes;
       result |= newValueToSet;
       return result;
     };
-
-    var getHexFromBytes = (function (bytes) {
-      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var _Object$assign = Object.assign({}, hexFormatOptions, options),
-        separator = _Object$assign.separator,
-        prefix = _Object$assign.prefix;
-      return bytes.map(function (_byte) {
-        return "".concat(prefix).concat(_byte.toString(16).padStart(2, '0'));
-      }).join(separator);
-    });
 
     var getBytesFromHex = (function (hex) {
       var cleanHex = hex.trim();
@@ -2393,11 +2416,10 @@ var fromBytes, toBytes;
     };
 
     var id$_ = getArchiveDays$1;
+    var name$s = downlinkNames[getArchiveDays$1];
     var COMMAND_BODY_SIZE$x = 3;
     var fromBytes$10 = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$x) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$s, bytes, COMMAND_BODY_SIZE$x);
       var buffer = new BinaryBuffer(bytes, false);
       var date = getDate(buffer);
       var days = buffer.getUint8();
@@ -2420,11 +2442,10 @@ var fromBytes, toBytes;
     };
 
     var id$Z = getArchiveDaysMc$1;
+    var name$r = downlinkNames[getArchiveDaysMc$1];
     var COMMAND_BODY_SIZE$w = 4;
     var fromBytes$ = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$w) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$r, bytes, COMMAND_BODY_SIZE$w);
       var buffer = new BinaryBuffer(bytes, false);
       var date = getDate(buffer);
       var channelList = getChannels(buffer);
@@ -2455,11 +2476,10 @@ var fromBytes, toBytes;
     };
 
     var id$Y = getArchiveEvents$1;
+    var name$q = downlinkNames[getArchiveEvents$1];
     var COMMAND_BODY_SIZE$v = 5;
     var fromBytes$_ = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$v) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$q, bytes, COMMAND_BODY_SIZE$v);
       var buffer = new BinaryBuffer(bytes, false);
       var startTime2000 = getTime(buffer);
       var events = buffer.getUint8();
@@ -2481,11 +2501,10 @@ var fromBytes, toBytes;
     };
 
     var id$X = getArchiveHours$1;
+    var name$p = downlinkNames[getArchiveHours$1];
     var COMMAND_BODY_SIZE$u = 4;
     var fromBytes$Z = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$u) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$p, bytes, COMMAND_BODY_SIZE$u);
       var buffer = new BinaryBuffer(bytes, false);
       var date = getDate(buffer);
       var _getHours = getHours(buffer),
@@ -2513,11 +2532,10 @@ var fromBytes, toBytes;
     };
 
     var id$W = getArchiveHoursMc$1;
+    var name$o = downlinkNames[getArchiveHoursMc$1];
     var COMMAND_BODY_SIZE$t = 4;
     var fromBytes$Y = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$t) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$o, bytes, COMMAND_BODY_SIZE$t);
       var buffer = new BinaryBuffer(bytes, false);
       var date = getDate(buffer);
       var _getHours = getHours(buffer),
@@ -2589,11 +2607,10 @@ var fromBytes, toBytes;
     };
 
     var id$U = getBatteryStatus$1;
+    var name$n = downlinkNames[getBatteryStatus$1];
     var COMMAND_BODY_SIZE$r = 0;
     var fromBytes$W = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$r) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$n, bytes, COMMAND_BODY_SIZE$r);
       return {};
     };
     var toBytes$W = function toBytes() {
@@ -2609,11 +2626,10 @@ var fromBytes, toBytes;
     };
 
     var id$S = getChannelsTypes$1;
+    var name$m = downlinkNames[getChannelsTypes$1];
     var COMMAND_BODY_SIZE$q = 0;
     var fromBytes$U = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$q) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$m, bytes, COMMAND_BODY_SIZE$q);
       return {};
     };
     var toBytes$U = function toBytes() {
@@ -2621,11 +2637,10 @@ var fromBytes, toBytes;
     };
 
     var id$R = getCurrent;
+    var name$l = downlinkNames[getCurrent];
     var COMMAND_BODY_SIZE$p = 0;
     var fromBytes$T = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$p) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$l, bytes, COMMAND_BODY_SIZE$p);
       return {};
     };
     var toBytes$T = function toBytes() {
@@ -2633,11 +2648,10 @@ var fromBytes, toBytes;
     };
 
     var id$Q = getCurrentMc;
+    var name$k = downlinkNames[getCurrentMc];
     var COMMAND_BODY_SIZE$o = 0;
     var fromBytes$S = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$o) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$k, bytes, COMMAND_BODY_SIZE$o);
       return {};
     };
     var toBytes$S = function toBytes() {
@@ -2645,11 +2659,10 @@ var fromBytes, toBytes;
     };
 
     var id$P = getExAbsArchiveDaysMc$1;
+    var name$j = downlinkNames[getExAbsArchiveDaysMc$1];
     var COMMAND_BODY_SIZE$n = 4;
     var fromBytes$R = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$n) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$j, bytes, COMMAND_BODY_SIZE$n);
       var buffer = new BinaryBuffer(bytes, false);
       var date = getDate(buffer);
       var channelList = getChannels(buffer);
@@ -2715,11 +2728,10 @@ var fromBytes, toBytes;
     };
 
     var id$N = getExAbsCurrentMc;
+    var name$i = downlinkNames[getExAbsCurrentMc];
     var COMMAND_BODY_SIZE$l = 0;
     var fromBytes$P = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$l) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$i, bytes, COMMAND_BODY_SIZE$l);
       return {};
     };
     var toBytes$P = function toBytes() {
@@ -2727,11 +2739,10 @@ var fromBytes, toBytes;
     };
 
     var id$M = getLmicInfo$1;
+    var name$h = downlinkNames[getLmicInfo$1];
     var COMMAND_BODY_SIZE$k = 0;
     var fromBytes$O = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$k) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$h, bytes, COMMAND_BODY_SIZE$k);
       return {};
     };
     var toBytes$O = function toBytes() {
@@ -2750,11 +2761,10 @@ var fromBytes, toBytes;
     };
 
     var id$K = getSignalQuality;
+    var name$g = downlinkNames[getSignalQuality];
     var COMMAND_BODY_SIZE$j = 0;
     var fromBytes$M = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$j) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$g, bytes, COMMAND_BODY_SIZE$j);
       return {};
     };
     var toBytes$M = function toBytes() {
@@ -2762,11 +2772,10 @@ var fromBytes, toBytes;
     };
 
     var id$J = getStatus;
+    var name$f = downlinkNames[getStatus];
     var COMMAND_BODY_SIZE$i = 0;
     var fromBytes$L = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$i) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$f, bytes, COMMAND_BODY_SIZE$i);
       return {};
     };
     var toBytes$L = function toBytes() {
@@ -2774,11 +2783,10 @@ var fromBytes, toBytes;
     };
 
     var id$I = getTime2000;
+    var name$e = downlinkNames[getTime2000];
     var COMMAND_BODY_SIZE$h = 0;
     var fromBytes$K = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$h) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$e, bytes, COMMAND_BODY_SIZE$h);
       return {};
     };
     var toBytes$K = function toBytes() {
@@ -2797,11 +2805,10 @@ var fromBytes, toBytes;
     };
 
     var id$G = setTime2000$1;
+    var name$d = downlinkNames[setTime2000$1];
     var COMMAND_BODY_SIZE$g = 5;
     var fromBytes$I = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$g) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$d, bytes, COMMAND_BODY_SIZE$g);
       var buffer = new BinaryBuffer(bytes, false);
       var parameters = {
         sequenceNumber: buffer.getUint8(),
@@ -2822,11 +2829,10 @@ var fromBytes, toBytes;
     };
 
     var id$F = softRestart$1;
+    var name$c = downlinkNames[softRestart$1];
     var COMMAND_BODY_SIZE$f = 0;
     var fromBytes$H = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$f) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$c, bytes, COMMAND_BODY_SIZE$f);
       return {};
     };
     var toBytes$H = function toBytes() {
@@ -2834,11 +2840,10 @@ var fromBytes, toBytes;
     };
 
     var id$E = updateRun$1;
+    var name$b = downlinkNames[updateRun$1];
     var COMMAND_BODY_SIZE$e = 0;
     var fromBytes$G = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$e) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$b, bytes, COMMAND_BODY_SIZE$e);
       return {};
     };
     var toBytes$G = function toBytes() {
@@ -2864,11 +2869,10 @@ var fromBytes, toBytes;
     };
 
     var id$C = verifyImage$1;
+    var name$a = downlinkNames[verifyImage$1];
     var COMMAND_BODY_SIZE$d = 0;
     var fromBytes$E = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$d) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$a, bytes, COMMAND_BODY_SIZE$d);
       return {};
     };
     var toBytes$E = function toBytes() {
@@ -3129,11 +3133,10 @@ var fromBytes, toBytes;
     var uplinkNames = invertObject(uplinkIds);
 
     var id$A = correctTime2000;
+    var name$9 = uplinkNames[correctTime2000];
     var COMMAND_BODY_SIZE$c = 1;
     var fromBytes$C = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$c) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$9, bytes, COMMAND_BODY_SIZE$c);
       var buffer = new BinaryBuffer(bytes, false);
       var parameters = {
         status: buffer.getUint8()
@@ -3540,8 +3543,10 @@ var fromBytes, toBytes;
     };
 
     var id$m = getBatteryStatus;
+    var name$8 = uplinkNames[getBatteryStatus];
     var COMMAND_BODY_SIZE$a = 11;
     var fromBytes$o = function fromBytes(bytes) {
+      validateCommandPayload(name$8, bytes, COMMAND_BODY_SIZE$a);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         voltageUnderLowLoad: buffer.getUint16(),
@@ -3732,15 +3737,14 @@ var fromBytes, toBytes;
     };
 
     var id$h = getLmicInfo;
+    var name$7 = uplinkNames[getLmicInfo];
     var COMMAND_BODY_SIZE$9 = 2;
     var lmicCapabilitiesBitMask = {
       isMulticastSupported: 1 << 0,
       isFragmentedDataSupported: 1 << 1
     };
     var fromBytes$j = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$9) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$7, bytes, COMMAND_BODY_SIZE$9);
       var buffer = new BinaryBuffer(bytes);
       var capabilities = toObject(lmicCapabilitiesBitMask, buffer.getUint8());
       var version = buffer.getUint8();
@@ -3773,11 +3777,10 @@ var fromBytes, toBytes;
     };
 
     var id$f = signalQuality;
+    var name$6 = uplinkNames[signalQuality];
     var COMMAND_BODY_SIZE$8 = 6;
     var fromBytes$h = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$8) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$6, bytes, COMMAND_BODY_SIZE$8);
       var buffer = new BinaryBuffer(bytes, false);
       var parameters = {
         rssi: buffer.getInt8(),
@@ -4063,11 +4066,10 @@ var fromBytes, toBytes;
     };
 
     var id$8 = setTime2000;
+    var name$5 = uplinkNames[setTime2000];
     var COMMAND_BODY_SIZE$6 = 1;
     var fromBytes$a = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$6) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$5, bytes, COMMAND_BODY_SIZE$6);
       var buffer = new BinaryBuffer(bytes, false);
       var parameters = {
         status: buffer.getUint8()
@@ -4085,11 +4087,10 @@ var fromBytes, toBytes;
     };
 
     var id$7 = softRestart;
+    var name$4 = uplinkNames[softRestart];
     var COMMAND_BODY_SIZE$5 = 0;
     var fromBytes$9 = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$5) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$4, bytes, COMMAND_BODY_SIZE$5);
       return {};
     };
     var toBytes$8 = function toBytes() {
@@ -4241,11 +4242,10 @@ var fromBytes, toBytes;
     };
 
     var id$5 = time2000;
+    var name$3 = uplinkNames[time2000];
     var COMMAND_BODY_SIZE$4 = 5;
     var fromBytes$7 = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$4) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$3, bytes, COMMAND_BODY_SIZE$4);
       var buffer = new BinaryBuffer(bytes, false);
       var parameters = {
         sequenceNumber: buffer.getUint8(),
@@ -4266,11 +4266,10 @@ var fromBytes, toBytes;
     }
 
     var id$4 = updateRun;
+    var name$2 = uplinkNames[updateRun];
     var COMMAND_BODY_SIZE$3 = 0;
     var fromBytes$6 = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$3) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name$2, bytes, COMMAND_BODY_SIZE$3);
       return {};
     };
     var toBytes$5 = function toBytes() {
@@ -4278,8 +4277,10 @@ var fromBytes, toBytes;
     };
 
     var id$3 = usWaterMeterBatteryStatus;
+    var name$1 = uplinkNames[usWaterMeterBatteryStatus];
     var COMMAND_BODY_SIZE$2 = 7;
     var fromBytes$5 = function fromBytes(bytes) {
+      validateCommandPayload(name$1, bytes, COMMAND_BODY_SIZE$2);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         voltage: getBatteryVoltage(buffer),
@@ -4314,11 +4315,10 @@ var fromBytes, toBytes;
     };
 
     var id$1 = verifyImage;
+    var name = uplinkNames[verifyImage];
     var COMMAND_BODY_SIZE$1 = 1;
     var fromBytes$3 = function fromBytes(bytes) {
-      if (bytes.length !== COMMAND_BODY_SIZE$1) {
-        throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-      }
+      validateCommandPayload(name, bytes, COMMAND_BODY_SIZE$1);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         status: buffer.getUint8()

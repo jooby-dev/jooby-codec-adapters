@@ -407,6 +407,16 @@ var toBytes;
     return [].concat(_toConsumableArray(headerData), _toConsumableArray(commandBytes));
   };
 
+  var getHexFromBytes = (function (bytes) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var _Object$assign = Object.assign({}, hexFormatOptions, options),
+      separator = _Object$assign.separator,
+      prefix = _Object$assign.prefix;
+    return bytes.map(function (byte) {
+      return "".concat(prefix).concat(byte.toString(16).padStart(2, '0'));
+    }).join(separator);
+  });
+
   var setTime2000 = 0x02;
   var setParameter$1 = 0x03;
   var getParameter = 0x04;
@@ -519,16 +529,6 @@ var toBytes;
     result |= newValueToSet;
     return result;
   };
-
-  var getHexFromBytes = (function (bytes) {
-    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    var _Object$assign = Object.assign({}, hexFormatOptions, options),
-      separator = _Object$assign.separator,
-      prefix = _Object$assign.prefix;
-    return bytes.map(function (byte) {
-      return "".concat(prefix).concat(byte.toString(16).padStart(2, '0'));
-    }).join(separator);
-  });
 
   var getBytesFromHex = (function (hex) {
     var cleanHex = hex.trim();

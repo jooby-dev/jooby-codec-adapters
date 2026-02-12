@@ -62,6 +62,17 @@ var toBytes, setDataSegment, getBase64FromBytes;
     }
   }
 
+  var getBase64FromBytes$1 = (function (bytes) {
+    return btoa(bytes.map(function (byte) {
+      return String.fromCharCode(byte);
+    }).join(''));
+  });
+
+  var toBytes$d = function (commandId) {
+    var commandBytes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+    return [commandId, commandBytes.length].concat(_toConsumableArray(commandBytes));
+  };
+
   var getEventStatus$1 = 0x01;
   var getEnergyDayPrevious$1 = 0x03;
   var getDeviceType$1 = 0x04;
@@ -123,6 +134,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var getBv$1 = 0x70;
   var getOperatorParametersExtended3$1 = 0x71;
   var setOperatorParametersExtended3$1 = 0x72;
+  var getQuality$1 = 0x73;
   var setDemandParameters = 0x74;
   var getDemandParameters = 0x75;
   var getDemand$1 = 0x76;
@@ -169,6 +181,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getMonthMaxDemandExport: getMonthMaxDemandExport$1,
     getOperatorParameters: getOperatorParameters$1,
     getOperatorParametersExtended3: getOperatorParametersExtended3$1,
+    getQuality: getQuality$1,
     getRatePlanInfo: getRatePlanInfo$1,
     getSaldo: getSaldo$1,
     getSaldoParameters: getSaldoParameters$1,
@@ -247,6 +260,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getMonthMaxDemandExport: getMonthMaxDemandExport$1,
     getOperatorParameters: getOperatorParameters$1,
     getOperatorParametersExtended3: getOperatorParametersExtended3$1,
+    getQuality: getQuality$1,
     getRatePlanInfo: getRatePlanInfo$1,
     getSaldo: getSaldo$1,
     getSaldoParameters: getSaldoParameters$1,
@@ -274,17 +288,6 @@ var toBytes, setDataSegment, getBase64FromBytes;
     turnRelayOff: turnRelayOff$1,
     turnRelayOn: turnRelayOn$1
   });
-
-  var getBase64FromBytes$1 = (function (bytes) {
-    return btoa(bytes.map(function (byte) {
-      return String.fromCharCode(byte);
-    }).join(''));
-  });
-
-  var toBytes$d = function (commandId) {
-    var commandBytes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    return [commandId, commandBytes.length].concat(_toConsumableArray(commandBytes));
-  };
 
   var invertObject = (function (source) {
     var target = {};
@@ -1277,6 +1280,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var getBv = 0x70;
   var getOperatorParametersExtended3 = 0x71;
   var setOperatorParametersExtended3 = 0x72;
+  var getQuality = 0x73;
   var setOperatorParametersExtended4 = 0x74;
   var getOperatorParametersExtended4 = 0x75;
   var getDemand = 0x76;
@@ -1327,6 +1331,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getOperatorParametersExtended2: getOperatorParametersExtended2,
     getOperatorParametersExtended3: getOperatorParametersExtended3,
     getOperatorParametersExtended4: getOperatorParametersExtended4,
+    getQuality: getQuality,
     getRatePlanInfo: getRatePlanInfo,
     getSaldo: getSaldo,
     getSaldoParameters: getSaldoParameters,
@@ -2003,6 +2008,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getOperatorParametersExtended2: getOperatorParametersExtended2,
     getOperatorParametersExtended3: getOperatorParametersExtended3,
     getOperatorParametersExtended4: getOperatorParametersExtended4,
+    getQuality: getQuality,
     getRatePlanInfo: getRatePlanInfo,
     getSaldo: getSaldo,
     getSaldoParameters: getSaldoParameters,
