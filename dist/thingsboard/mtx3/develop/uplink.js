@@ -133,20 +133,27 @@ var fromBytes, getDataSegment;
     return [commandId, commandBytes.length].concat(_toConsumableArray(commandBytes));
   };
 
-  var validateCommandPayload = (function (commandName, bytes, expectedLength) {
+  var validateRangeCommandPayload = function (commandName, bytes, range) {
     if (!commandName) {
       throw new Error('Command name is required.');
     }
     if (bytes && !Array.isArray(bytes)) {
       throw new Error("Invalid payload for ".concat(commandName, ". Expected array, got: ").concat(typeof bytes, "."));
     }
-    if (bytes.length !== expectedLength) {
+    if (bytes.length < range.min || bytes.length > range.max) {
       var hex = getHexFromBytes(bytes, {
         separator: ''
       });
-      throw new Error("Wrong buffer size for ".concat(commandName, ": ").concat(bytes.length, ". Expected: ").concat(expectedLength, ". Payload: 0x").concat(hex, "."));
+      var expectedLengthReport = "".concat(range.max) ;
+      throw new Error("Wrong buffer size for ".concat(commandName, ": ").concat(bytes.length, ". Expected: ").concat(expectedLengthReport, ". Payload: 0x").concat(hex, "."));
     }
-  });
+  };
+  var validateFixedCommandPayload = function (commandName, bytes, expectedLength) {
+    return validateRangeCommandPayload(commandName, bytes, {
+      min: expectedLength,
+      max: expectedLength
+    });
+  };
 
   var getEventStatus$1 = 0x01;
   var getEnergyDayPrevious$1 = 0x03;
@@ -287,6 +294,7 @@ var fromBytes, getDataSegment;
 
   var getDayEnergies$1 = 0x78;
   var getDayMaxPower = 0x79;
+  var getCurrentDemand = 0x7b;
   var errorResponse$1 = 0xfe;
   var errorDataFrameResponse$1 = 0xff;
 
@@ -298,6 +306,7 @@ var fromBytes, getDataSegment;
     getBv: getBv$1,
     getCorrectTime: getCorrectTime$1,
     getCriticalEvent: getCriticalEvent$1,
+    getCurrentDemand: getCurrentDemand,
     getCurrentStatusMeter: getCurrentStatusMeter$1,
     getCurrentValues: getCurrentValues$1,
     getDateTime: getDateTime$1,
@@ -449,7 +458,7 @@ var fromBytes, getDataSegment;
   var name = commandNames[errorDataFrameResponse$1];
   var maxSize$5 = 1;
   var fromBytes$1 = function (bytes) {
-    validateCommandPayload(name, bytes, maxSize$5);
+    validateFixedCommandPayload(name, bytes, maxSize$5);
     var _bytes = _slicedToArray(bytes, 1),
       errorCode = _bytes[0];
     return {

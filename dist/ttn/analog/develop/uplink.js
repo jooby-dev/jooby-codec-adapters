@@ -438,20 +438,27 @@ var fromBytes;
     }).join(separator);
   });
 
-  var validateCommandPayload = (function (commandName, bytes, expectedLength) {
+  var validateRangeCommandPayload = function (commandName, bytes, range) {
     if (!commandName) {
       throw new Error('Command name is required.');
     }
     if (bytes && !Array.isArray(bytes)) {
       throw new Error("Invalid payload for ".concat(commandName, ". Expected array, got: ").concat(typeof bytes, "."));
     }
-    if (bytes.length !== expectedLength) {
+    if (range.min > 0 && bytes.length < range.min || range.max > 0 && bytes.length > range.max) {
       var hex = getHexFromBytes(bytes, {
         separator: ''
       });
-      throw new Error("Wrong buffer size for ".concat(commandName, ": ").concat(bytes.length, ". Expected: ").concat(expectedLength, ". Payload: 0x").concat(hex, "."));
+      var expectedLengthReport = range.min === range.max ? "".concat(range.max) : JSON.stringify(range);
+      throw new Error("Wrong buffer size for ".concat(commandName, ": ").concat(bytes.length, ". Expected: ").concat(expectedLengthReport, ". Payload: 0x").concat(hex, "."));
     }
-  });
+  };
+  var validateFixedCommandPayload = function (commandName, bytes, expectedLength) {
+    return validateRangeCommandPayload(commandName, bytes, {
+      min: expectedLength,
+      max: expectedLength
+    });
+  };
 
   var setTime2000$1 = 0x02;
   var setParameter$1 = 0x03;
@@ -546,10 +553,10 @@ var fromBytes;
   var uplinkNames = invertObject(uplinkIds);
 
   var id$B = correctTime2000$1;
-  var name$9 = uplinkNames[correctTime2000$1];
-  var COMMAND_BODY_SIZE$a = 1;
+  var name$a = uplinkNames[correctTime2000$1];
+  var COMMAND_BODY_SIZE$9 = 1;
   var fromBytes$D = function (bytes) {
-    validateCommandPayload(name$9, bytes, COMMAND_BODY_SIZE$a);
+    validateFixedCommandPayload(name$a, bytes, COMMAND_BODY_SIZE$9);
     var buffer = new BinaryBuffer(bytes, false);
     var parameters = {
       status: buffer.getUint8()
@@ -640,6 +647,8 @@ var fromBytes;
   var BATTERY_DEPASSIVATION_INFO = 10;
   var BATTERY_MINIMAL_LOAD_TIME = 11;
   var CHANNELS_CONFIG = 13;
+  var MTX_DATA_TRANSMISSION_SCHEDULE = 14;
+  var MTX_POWER_CONFIG = 15;
   var RX2_CONFIG = 18;
   var ABSOLUTE_DATA = 23;
   var ABSOLUTE_DATA_ENABLE = 24;
@@ -679,6 +688,7 @@ var fromBytes;
   var KEEP_LORA_CONNECTION_ON_REMOVAL = 59;
   var NBIOT_NTP_SERVER = 60;
   var ACTIVATE_MODULE = 61;
+  var MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG = 64;
 
   var deviceParameters = /*#__PURE__*/Object.freeze({
     __proto__: null,
@@ -705,6 +715,9 @@ var fromBytes;
     MQTT_SESSION_CONFIG: MQTT_SESSION_CONFIG,
     MQTT_SSL_ENABLE: MQTT_SSL_ENABLE,
     MQTT_TOPIC_PREFIX: MQTT_TOPIC_PREFIX,
+    MTX_DATA_TRANSMISSION_SCHEDULE: MTX_DATA_TRANSMISSION_SCHEDULE,
+    MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG: MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG,
+    MTX_POWER_CONFIG: MTX_POWER_CONFIG,
     NBIOT_APN: NBIOT_APN,
     NBIOT_BANDS: NBIOT_BANDS,
     NBIOT_DEVICE_SOFTWARE_UPDATE: NBIOT_DEVICE_SOFTWARE_UPDATE,
@@ -789,7 +802,7 @@ var fromBytes;
   var TWO_CHANNELS_HARDWARE_TYPES = [IMP2AS, IMP2EU, IMP2IN, NOVATOR];
   var ELIMP_HARDWARE_TYPES = [ELIMP];
   var FOUR_CHANNELS_HARDWARE_TYPES = [IMP4EU, IMP4IN];
-  var MTX_HARDWARE_TYPES = [MTXLORA];
+  var MTX_HARDWARE_TYPES = [MTXLORA, PLC2LORA, LORA];
   var gasBitMask = {
     isBatteryLow: Math.pow(2, 0),
     isMagneticInfluence: Math.pow(2, 1),
@@ -840,7 +853,7 @@ var fromBytes;
     pipeEmpty: 0x40,
     batteryDischarge: 0x80
   };
-  (_parametersSizeMap = {}, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, REPORTING_DATA_INTERVAL, 1 + 4), DAY_CHECKOUT_HOUR, 1 + 1), REPORTING_DATA_TYPE, 1 + 1), PRIORITY_DATA_DELIVERY_TYPE, 1 + 1), ACTIVATION_METHOD, 1 + 1), BATTERY_DEPASSIVATION_INFO, 1 + 6), BATTERY_MINIMAL_LOAD_TIME, 1 + 4), CHANNELS_CONFIG, 1 + 1), RX2_CONFIG, 1 + 4), ABSOLUTE_DATA, 1 + 9), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, ABSOLUTE_DATA_ENABLE, 1 + 1), SERIAL_NUMBER, 1 + 6), GEOLOCATION, 1 + 10), EXTRA_FRAME_INTERVAL, 1 + 2), ABSOLUTE_DATA_MULTI_CHANNEL, 1 + 10), ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL, 1 + 2), PULSE_CHANNELS_SCAN_CONFIG, 1 + 3), PULSE_CHANNELS_SET_CONFIG, 1 + 1), BATTERY_DEPASSIVATION_CONFIG, 1 + 4), MQTT_SSL_ENABLE, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, MQTT_DATA_RECEIVE_CONFIG, 1 + 3), MQTT_DATA_SEND_CONFIG, 1 + 3), NBIOT_SSL_CONFIG, 1 + 2), NBIOT_SSL_CACERT_SET, 1 + 4), NBIOT_SSL_CLIENT_CERT_SET, 1 + 4), NBIOT_SSL_CLIENT_KEY_SET, 1 + 4), REPORTING_DATA_CONFIG, 1 + 4), EVENTS_CONFIG, 1 + 3), NBIOT_LED_INDICATION, 1 + 2), NBIOT_SIM, 1 + 3), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, EXTRA_PAYLOAD_ENABLE, 1 + 1), TIME_SYNCHRONIZATION_PERIOD_VIA_MAC, 1 + 4), KEEP_LORA_CONNECTION_ON_REMOVAL, 1 + 1), ACTIVATE_MODULE, 1 + 1));
+  (_parametersSizeMap = {}, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, REPORTING_DATA_INTERVAL, 1 + 4), DAY_CHECKOUT_HOUR, 1 + 1), REPORTING_DATA_TYPE, 1 + 1), PRIORITY_DATA_DELIVERY_TYPE, 1 + 1), ACTIVATION_METHOD, 1 + 1), BATTERY_DEPASSIVATION_INFO, 1 + 6), BATTERY_MINIMAL_LOAD_TIME, 1 + 4), CHANNELS_CONFIG, 1 + 1), MTX_DATA_TRANSMISSION_SCHEDULE, 1 + 20), MTX_POWER_CONFIG, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, RX2_CONFIG, 1 + 4), ABSOLUTE_DATA, 1 + 9), ABSOLUTE_DATA_ENABLE, 1 + 1), SERIAL_NUMBER, 1 + 6), GEOLOCATION, 1 + 10), EXTRA_FRAME_INTERVAL, 1 + 2), ABSOLUTE_DATA_MULTI_CHANNEL, 1 + 10), ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL, 1 + 2), PULSE_CHANNELS_SCAN_CONFIG, 1 + 3), PULSE_CHANNELS_SET_CONFIG, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, BATTERY_DEPASSIVATION_CONFIG, 1 + 4), MQTT_SSL_ENABLE, 1 + 1), MQTT_DATA_RECEIVE_CONFIG, 1 + 3), MQTT_DATA_SEND_CONFIG, 1 + 3), NBIOT_SSL_CONFIG, 1 + 2), NBIOT_SSL_CACERT_SET, 1 + 4), NBIOT_SSL_CLIENT_CERT_SET, 1 + 4), NBIOT_SSL_CLIENT_KEY_SET, 1 + 4), REPORTING_DATA_CONFIG, 1 + 4), EVENTS_CONFIG, 1 + 3), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, NBIOT_LED_INDICATION, 1 + 2), NBIOT_SIM, 1 + 3), EXTRA_PAYLOAD_ENABLE, 1 + 1), TIME_SYNCHRONIZATION_PERIOD_VIA_MAC, 1 + 4), KEEP_LORA_CONNECTION_ON_REMOVAL, 1 + 1), ACTIVATE_MODULE, 1 + 1));
   var fourChannelsBitMask = {
     channel1: Math.pow(2, 0),
     channel2: Math.pow(2, 1),
@@ -995,7 +1008,63 @@ var fromBytes;
       }
       buffer.setUint8(parameter.value);
     }
-  }), RX2_CONFIG, {
+  }), MTX_DATA_TRANSMISSION_SCHEDULE, {
+    get: function (buffer) {
+      var schedules = [];
+      for (var i = 0; i < 4; i++) {
+        var dataType = buffer.getUint8();
+        var transmissionPeriod = buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT;
+        var allowedHoursScheduleValue = buffer.getUint24(true);
+        var allowedHoursSchedule = {};
+        for (var hour = 0; hour < 24; hour++) {
+          allowedHoursSchedule[hour] = allowedHoursScheduleValue & 1 << hour ? 1 : 0;
+        }
+        schedules.push({
+          dataType: dataType,
+          transmissionPeriod: transmissionPeriod,
+          allowedHoursSchedule: allowedHoursSchedule
+        });
+      }
+      return {
+        schedules: schedules
+      };
+    },
+    set: function (buffer, parameter) {
+      for (var schedule of parameter.schedules) {
+        buffer.setUint8(schedule.dataType);
+        buffer.setUint8(schedule.transmissionPeriod / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+        var allowedHoursScheduleValue = 0;
+        for (var hour = 0; hour < 24; hour++) {
+          if (schedule.allowedHoursSchedule[hour]) {
+            allowedHoursScheduleValue |= 1 << hour;
+          }
+        }
+        buffer.setUint24(allowedHoursScheduleValue, true);
+      }
+    }
+  }), MTX_POWER_CONFIG, {
+    get: function (buffer) {
+      var value = buffer.getUint8();
+      return {
+        active: !!(value & 0x01),
+        vari: !!(value & 0x02),
+        vare: !!(value & 0x04),
+        activeExp: !!(value & 0x08),
+        variExp: !!(value & 0x10),
+        vareExp: !!(value & 0x20)
+      };
+    },
+    set: function (buffer, parameter) {
+      var value = 0;
+      value |= parameter.active ? 0x01 : 0;
+      value |= parameter.vari ? 0x02 : 0;
+      value |= parameter.vare ? 0x04 : 0;
+      value |= parameter.activeExp ? 0x08 : 0;
+      value |= parameter.variExp ? 0x10 : 0;
+      value |= parameter.vareExp ? 0x20 : 0;
+      buffer.setUint8(value);
+    }
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, RX2_CONFIG, {
     get: function (buffer) {
       var spreadFactor = buffer.getUint8();
       var spreadFactorName = spreadFactorNames[spreadFactor];
@@ -1023,7 +1092,7 @@ var fromBytes;
       setPulseCoefficient(buffer, parameter.pulseCoefficient);
       buffer.setUint32(parameter.value);
     }
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, ABSOLUTE_DATA_ENABLE, {
+  }), ABSOLUTE_DATA_ENABLE, {
     get: function (buffer) {
       return {
         state: buffer.getUint8()
@@ -1117,7 +1186,7 @@ var fromBytes;
   }), PULSE_CHANNELS_SET_CONFIG, {
     get: getChannelsMask,
     set: setChannelsMask
-  }), BATTERY_DEPASSIVATION_CONFIG, {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, BATTERY_DEPASSIVATION_CONFIG, {
     get: function (buffer) {
       return {
         resistanceStartThreshold: buffer.getUint16(),
@@ -1143,7 +1212,7 @@ var fromBytes;
       buffer.setString(parameter.password);
       buffer.setUint8(parameter.cleanSession);
     }
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, MQTT_BROKER_ADDRESS, {
+  }), MQTT_BROKER_ADDRESS, {
     get: function (buffer) {
       return {
         hostName: buffer.getString(),
@@ -1215,13 +1284,13 @@ var fromBytes;
   }), NBIOT_SSL_CACERT_SET, {
     get: getNbiotSslSet,
     set: setNbiotSslSet
-  }), NBIOT_SSL_CLIENT_CERT_WRITE, {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_SSL_CLIENT_CERT_WRITE, {
     get: getNbiotSslWrite,
     set: setNbiotSslWrite
   }), NBIOT_SSL_CLIENT_CERT_SET, {
     get: getNbiotSslSet,
     set: setNbiotSslSet
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_SSL_CLIENT_KEY_WRITE, {
+  }), NBIOT_SSL_CLIENT_KEY_WRITE, {
     get: getNbiotSslWrite,
     set: setNbiotSslWrite
   }), NBIOT_SSL_CLIENT_KEY_SET, {
@@ -1299,7 +1368,7 @@ var fromBytes;
         buffer.setUint8(band);
       }
     }
-  }), NBIOT_APN, {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_APN, {
     get: function (buffer) {
       return {
         apn: buffer.getString()
@@ -1319,7 +1388,7 @@ var fromBytes;
       buffer.setUint8(parameter.enableLed);
       buffer.setUint8(parameter.enableNbiotNetworkLed);
     }
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_SIM, {
+  }), NBIOT_SIM, {
     get: function (buffer) {
       return {
         enable: buffer.getUint8(),
@@ -1383,6 +1452,36 @@ var fromBytes;
     },
     set: function (buffer, parameter) {
       buffer.setUint8(parameter.enable);
+    }
+  }), MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG, {
+    get: function (buffer) {
+      var schedules = [];
+      while (buffer.bytesLeft > 0) {
+        var id = buffer.getUint8();
+        var transmissionPeriod = buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT;
+        var demandType0 = buffer.getUint8();
+        var demandType1 = buffer.getUint8();
+        var demandType2 = buffer.getUint8();
+        schedules.push({
+          id: id,
+          transmissionPeriod: transmissionPeriod,
+          demandType0: demandType0,
+          demandType1: demandType1,
+          demandType2: demandType2
+        });
+      }
+      return {
+        schedules: schedules
+      };
+    },
+    set: function (buffer, parameter) {
+      for (var schedule of parameter.schedules) {
+        buffer.setUint8(schedule.id);
+        buffer.setUint8(schedule.transmissionPeriod / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+        buffer.setUint8(schedule.demandType0);
+        buffer.setUint8(schedule.demandType1);
+        buffer.setUint8(schedule.demandType2);
+      }
     }
   }));
   var getMagneticInfluenceBit = function (byte) {
@@ -2133,16 +2232,16 @@ var fromBytes;
   };
 
   var id$m = getBatteryStatus$1;
-  var name$8 = uplinkNames[getBatteryStatus$1];
-  var COMMAND_BODY_SIZE$9 = 11;
+  var name$9 = uplinkNames[getBatteryStatus$1];
+  var COMMAND_BODY_SIZE$8 = 11;
   var fromBytes$o = function (bytes) {
-    validateCommandPayload(name$8, bytes, COMMAND_BODY_SIZE$9);
+    validateFixedCommandPayload(name$9, bytes, COMMAND_BODY_SIZE$8);
     var buffer = new BinaryBuffer(bytes, false);
     return {
       voltageUnderLowLoad: buffer.getUint16(),
       voltageUnderHighLoad: buffer.getUint16(),
       internalResistance: buffer.getUint16(),
-      temperature: buffer.getUint8(),
+      temperature: buffer.getInt8(),
       remainingCapacity: buffer.getUint8(),
       isLastDayOverconsumption: buffer.getUint8() === 1,
       averageDailyOverconsumptionCounter: buffer.getUint16()
@@ -2239,14 +2338,14 @@ var fromBytes;
   };
 
   var id$h = getLmicInfo$1;
-  var name$7 = uplinkNames[getLmicInfo$1];
-  var COMMAND_BODY_SIZE$8 = 2;
+  var name$8 = uplinkNames[getLmicInfo$1];
+  var COMMAND_BODY_SIZE$7 = 2;
   var lmicCapabilitiesBitMask = {
     isMulticastSupported: 1 << 0,
     isFragmentedDataSupported: 1 << 1
   };
   var fromBytes$j = function (bytes) {
-    validateCommandPayload(name$7, bytes, COMMAND_BODY_SIZE$8);
+    validateFixedCommandPayload(name$8, bytes, COMMAND_BODY_SIZE$7);
     var buffer = new BinaryBuffer(bytes);
     var capabilities = toObject(lmicCapabilitiesBitMask, buffer.getUint8());
     var version = buffer.getUint8();
@@ -2266,10 +2365,10 @@ var fromBytes;
   };
 
   var id$f = signalQuality;
-  var name$6 = uplinkNames[signalQuality];
-  var COMMAND_BODY_SIZE$7 = 6;
+  var name$7 = uplinkNames[signalQuality];
+  var COMMAND_BODY_SIZE$6 = 6;
   var fromBytes$h = function (bytes) {
-    validateCommandPayload(name$6, bytes, COMMAND_BODY_SIZE$7);
+    validateFixedCommandPayload(name$7, bytes, COMMAND_BODY_SIZE$6);
     var buffer = new BinaryBuffer(bytes, false);
     var parameters = {
       rssi: buffer.getInt8(),
@@ -2334,6 +2433,17 @@ var fromBytes;
   var getDeviceId = function (buffer) {
     return getHexFromBytes(buffer.getBytes(MTX_ADDRESS_SIZE));
   };
+  var getBatteryVoltageValues = function (buffer) {
+    var byte1 = buffer.getUint8();
+    var byte2 = buffer.getUint8();
+    var byte3 = buffer.getUint8();
+    var noLoadBatteryVoltage = byte1 << 4 | byte2 >> 4;
+    var loadBatteryVoltage = (byte2 & 0x0f) << 8 | byte3;
+    return {
+      noLoadBatteryVoltage: noLoadBatteryVoltage,
+      loadBatteryVoltage: loadBatteryVoltage
+    };
+  };
   var fromBytes$c = function (bytes) {
     if (bytes.length > COMMAND_BODY_MAX_SIZE) {
       throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
@@ -2355,11 +2465,18 @@ var fromBytes;
       case OPTOLOW:
       case OPTOFLASH:
       case JOIN_ACCEPT:
-      case DEPASS_DONE:
       case WATER_NO_RESPONSE:
       case OPTOSENSOR_ERROR:
         eventData = {
           time2000: getTime(buffer)
+        };
+        break;
+      case DEPASS_DONE:
+        eventData = {
+          duration: buffer.getUint32(),
+          status: buffer.getUint8(),
+          ...getBatteryVoltageValues(buffer),
+          internalResistance: buffer.getUint16()
         };
         break;
       case BATTERY_ALARM:
@@ -2419,16 +2536,31 @@ var fromBytes;
   };
 
   var id$9 = setParameter$1;
-  var COMMAND_BODY_SIZE$6 = 2;
+  var name$6 = uplinkNames[setParameter$1];
+  var MIN_COMMAND_SIZE = 2;
+  var MAX_COMMAND_SIZE = 10;
   var fromBytes$b = function (bytes) {
-    if (bytes.length !== COMMAND_BODY_SIZE$6) {
-      throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
-    }
+    validateRangeCommandPayload(name$6, bytes, {
+      min: MIN_COMMAND_SIZE,
+      max: MAX_COMMAND_SIZE
+    });
     var buffer = new BinaryBuffer(bytes, false);
     var parameters = {
       id: buffer.getUint8(),
       status: buffer.getUint8()
     };
+    if (parameters.id === MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG) {
+      var scheduleStatuses = [];
+      while (buffer.bytesLeft) {
+        scheduleStatuses.push({
+          id: buffer.getUint8(),
+          isSuccessful: buffer.getUint8() !== 0
+        });
+      }
+      if (scheduleStatuses.length > 0) {
+        parameters.scheduleStatuses = scheduleStatuses;
+      }
+    }
     if (!buffer.isEmpty) {
       throw new Error('BinaryBuffer is not empty.');
     }
@@ -2439,7 +2571,7 @@ var fromBytes;
   var name$5 = uplinkNames[setTime2000$1];
   var COMMAND_BODY_SIZE$5 = 1;
   var fromBytes$a = function (bytes) {
-    validateCommandPayload(name$5, bytes, COMMAND_BODY_SIZE$5);
+    validateFixedCommandPayload(name$5, bytes, COMMAND_BODY_SIZE$5);
     var buffer = new BinaryBuffer(bytes, false);
     var parameters = {
       status: buffer.getUint8()
@@ -2454,7 +2586,7 @@ var fromBytes;
   var name$4 = uplinkNames[softRestart$1];
   var COMMAND_BODY_SIZE$4 = 0;
   var fromBytes$9 = function (bytes) {
-    validateCommandPayload(name$4, bytes, COMMAND_BODY_SIZE$4);
+    validateFixedCommandPayload(name$4, bytes, COMMAND_BODY_SIZE$4);
     return {};
   };
 
@@ -2489,7 +2621,7 @@ var fromBytes;
           var statusData = {
             batteryVoltage: getBatteryVoltage(buffer),
             batteryInternalResistance: buffer.getUint16(),
-            temperature: buffer.getUint8(),
+            temperature: buffer.getInt8(),
             remainingBatteryCapacity: buffer.getUint8(),
             lastEventSequenceNumber: buffer.getUint8()
           };
@@ -2511,10 +2643,10 @@ var fromBytes;
       case PLC2LORA:
       case LORA:
         data = {
-          time2000: buffer.getUint32(),
+          uptime: buffer.getUint32(),
           resetReason: buffer.getUint8(),
-          rssiLastDownlinkFrame: buffer.getUint8(),
-          snrLastDownlinkFrame: buffer.getUint8(),
+          rssiLastDownlinkFrame: buffer.getInt8(),
+          snrLastDownlinkFrame: buffer.getInt8(),
           downlinkRequestsNumber: buffer.getUint8(),
           downlinkFragmentsNumber: buffer.getUint8(),
           uplinkResponsesNumber: buffer.getUint8(),
@@ -2541,7 +2673,7 @@ var fromBytes;
   var name$3 = uplinkNames[time2000];
   var COMMAND_BODY_SIZE$3 = 5;
   var fromBytes$7 = function (bytes) {
-    validateCommandPayload(name$3, bytes, COMMAND_BODY_SIZE$3);
+    validateFixedCommandPayload(name$3, bytes, COMMAND_BODY_SIZE$3);
     var buffer = new BinaryBuffer(bytes, false);
     var parameters = {
       sequenceNumber: buffer.getUint8(),
@@ -2557,7 +2689,7 @@ var fromBytes;
   var name$2 = uplinkNames[updateRun$1];
   var COMMAND_BODY_SIZE$2 = 0;
   var fromBytes$6 = function (bytes) {
-    validateCommandPayload(name$2, bytes, COMMAND_BODY_SIZE$2);
+    validateFixedCommandPayload(name$2, bytes, COMMAND_BODY_SIZE$2);
     return {};
   };
 
@@ -2565,7 +2697,7 @@ var fromBytes;
   var name$1 = uplinkNames[usWaterMeterBatteryStatus];
   var COMMAND_BODY_SIZE$1 = 7;
   var fromBytes$5 = function (bytes) {
-    validateCommandPayload(name$1, bytes, COMMAND_BODY_SIZE$1);
+    validateFixedCommandPayload(name$1, bytes, COMMAND_BODY_SIZE$1);
     var buffer = new BinaryBuffer(bytes, false);
     return {
       voltage: getBatteryVoltage(buffer),
@@ -2588,7 +2720,7 @@ var fromBytes;
   var name = uplinkNames[verifyImage$1];
   var COMMAND_BODY_SIZE = 1;
   var fromBytes$3 = function (bytes) {
-    validateCommandPayload(name, bytes, COMMAND_BODY_SIZE);
+    validateFixedCommandPayload(name, bytes, COMMAND_BODY_SIZE);
     var buffer = new BinaryBuffer(bytes, false);
     return {
       status: buffer.getUint8()

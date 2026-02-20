@@ -563,6 +563,8 @@ var toBytes, getBase64FromBytes;
   var BATTERY_DEPASSIVATION_INFO = 10;
   var BATTERY_MINIMAL_LOAD_TIME = 11;
   var CHANNELS_CONFIG = 13;
+  var MTX_DATA_TRANSMISSION_SCHEDULE = 14;
+  var MTX_POWER_CONFIG = 15;
   var RX2_CONFIG = 18;
   var ABSOLUTE_DATA = 23;
   var ABSOLUTE_DATA_ENABLE = 24;
@@ -602,6 +604,7 @@ var toBytes, getBase64FromBytes;
   var KEEP_LORA_CONNECTION_ON_REMOVAL = 59;
   var NBIOT_NTP_SERVER = 60;
   var ACTIVATE_MODULE = 61;
+  var MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG = 64;
 
   var deviceParameters = /*#__PURE__*/Object.freeze({
     __proto__: null,
@@ -628,6 +631,9 @@ var toBytes, getBase64FromBytes;
     MQTT_SESSION_CONFIG: MQTT_SESSION_CONFIG,
     MQTT_SSL_ENABLE: MQTT_SSL_ENABLE,
     MQTT_TOPIC_PREFIX: MQTT_TOPIC_PREFIX,
+    MTX_DATA_TRANSMISSION_SCHEDULE: MTX_DATA_TRANSMISSION_SCHEDULE,
+    MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG: MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG,
+    MTX_POWER_CONFIG: MTX_POWER_CONFIG,
     NBIOT_APN: NBIOT_APN,
     NBIOT_BANDS: NBIOT_BANDS,
     NBIOT_DEVICE_SOFTWARE_UPDATE: NBIOT_DEVICE_SOFTWARE_UPDATE,
@@ -713,7 +719,7 @@ var toBytes, getBase64FromBytes;
     }
     return size;
   };
-  var parametersSizeMap = (_parametersSizeMap = {}, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, REPORTING_DATA_INTERVAL, 1 + 4), DAY_CHECKOUT_HOUR, 1 + 1), REPORTING_DATA_TYPE, 1 + 1), PRIORITY_DATA_DELIVERY_TYPE, 1 + 1), ACTIVATION_METHOD, 1 + 1), BATTERY_DEPASSIVATION_INFO, 1 + 6), BATTERY_MINIMAL_LOAD_TIME, 1 + 4), CHANNELS_CONFIG, 1 + 1), RX2_CONFIG, 1 + 4), ABSOLUTE_DATA, 1 + 9), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, ABSOLUTE_DATA_ENABLE, 1 + 1), SERIAL_NUMBER, 1 + 6), GEOLOCATION, 1 + 10), EXTRA_FRAME_INTERVAL, 1 + 2), ABSOLUTE_DATA_MULTI_CHANNEL, 1 + 10), ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL, 1 + 2), PULSE_CHANNELS_SCAN_CONFIG, 1 + 3), PULSE_CHANNELS_SET_CONFIG, 1 + 1), BATTERY_DEPASSIVATION_CONFIG, 1 + 4), MQTT_SSL_ENABLE, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, MQTT_DATA_RECEIVE_CONFIG, 1 + 3), MQTT_DATA_SEND_CONFIG, 1 + 3), NBIOT_SSL_CONFIG, 1 + 2), NBIOT_SSL_CACERT_SET, 1 + 4), NBIOT_SSL_CLIENT_CERT_SET, 1 + 4), NBIOT_SSL_CLIENT_KEY_SET, 1 + 4), REPORTING_DATA_CONFIG, 1 + 4), EVENTS_CONFIG, 1 + 3), NBIOT_LED_INDICATION, 1 + 2), NBIOT_SIM, 1 + 3), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, EXTRA_PAYLOAD_ENABLE, 1 + 1), TIME_SYNCHRONIZATION_PERIOD_VIA_MAC, 1 + 4), KEEP_LORA_CONNECTION_ON_REMOVAL, 1 + 1), ACTIVATE_MODULE, 1 + 1));
+  var parametersSizeMap = (_parametersSizeMap = {}, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, REPORTING_DATA_INTERVAL, 1 + 4), DAY_CHECKOUT_HOUR, 1 + 1), REPORTING_DATA_TYPE, 1 + 1), PRIORITY_DATA_DELIVERY_TYPE, 1 + 1), ACTIVATION_METHOD, 1 + 1), BATTERY_DEPASSIVATION_INFO, 1 + 6), BATTERY_MINIMAL_LOAD_TIME, 1 + 4), CHANNELS_CONFIG, 1 + 1), MTX_DATA_TRANSMISSION_SCHEDULE, 1 + 20), MTX_POWER_CONFIG, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, RX2_CONFIG, 1 + 4), ABSOLUTE_DATA, 1 + 9), ABSOLUTE_DATA_ENABLE, 1 + 1), SERIAL_NUMBER, 1 + 6), GEOLOCATION, 1 + 10), EXTRA_FRAME_INTERVAL, 1 + 2), ABSOLUTE_DATA_MULTI_CHANNEL, 1 + 10), ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL, 1 + 2), PULSE_CHANNELS_SCAN_CONFIG, 1 + 3), PULSE_CHANNELS_SET_CONFIG, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, BATTERY_DEPASSIVATION_CONFIG, 1 + 4), MQTT_SSL_ENABLE, 1 + 1), MQTT_DATA_RECEIVE_CONFIG, 1 + 3), MQTT_DATA_SEND_CONFIG, 1 + 3), NBIOT_SSL_CONFIG, 1 + 2), NBIOT_SSL_CACERT_SET, 1 + 4), NBIOT_SSL_CLIENT_CERT_SET, 1 + 4), NBIOT_SSL_CLIENT_KEY_SET, 1 + 4), REPORTING_DATA_CONFIG, 1 + 4), EVENTS_CONFIG, 1 + 3), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, NBIOT_LED_INDICATION, 1 + 2), NBIOT_SIM, 1 + 3), EXTRA_PAYLOAD_ENABLE, 1 + 1), TIME_SYNCHRONIZATION_PERIOD_VIA_MAC, 1 + 4), KEEP_LORA_CONNECTION_ON_REMOVAL, 1 + 1), ACTIVATE_MODULE, 1 + 1));
   var fourChannelsBitMask = {
     channel1: Math.pow(2, 0),
     channel2: Math.pow(2, 1),
@@ -868,7 +874,63 @@ var toBytes, getBase64FromBytes;
       }
       buffer.setUint8(parameter.value);
     }
-  }), RX2_CONFIG, {
+  }), MTX_DATA_TRANSMISSION_SCHEDULE, {
+    get: function (buffer) {
+      var schedules = [];
+      for (var i = 0; i < 4; i++) {
+        var dataType = buffer.getUint8();
+        var transmissionPeriod = buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT;
+        var allowedHoursScheduleValue = buffer.getUint24(true);
+        var allowedHoursSchedule = {};
+        for (var hour = 0; hour < 24; hour++) {
+          allowedHoursSchedule[hour] = allowedHoursScheduleValue & 1 << hour ? 1 : 0;
+        }
+        schedules.push({
+          dataType: dataType,
+          transmissionPeriod: transmissionPeriod,
+          allowedHoursSchedule: allowedHoursSchedule
+        });
+      }
+      return {
+        schedules: schedules
+      };
+    },
+    set: function (buffer, parameter) {
+      for (var schedule of parameter.schedules) {
+        buffer.setUint8(schedule.dataType);
+        buffer.setUint8(schedule.transmissionPeriod / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+        var allowedHoursScheduleValue = 0;
+        for (var hour = 0; hour < 24; hour++) {
+          if (schedule.allowedHoursSchedule[hour]) {
+            allowedHoursScheduleValue |= 1 << hour;
+          }
+        }
+        buffer.setUint24(allowedHoursScheduleValue, true);
+      }
+    }
+  }), MTX_POWER_CONFIG, {
+    get: function (buffer) {
+      var value = buffer.getUint8();
+      return {
+        active: !!(value & 0x01),
+        vari: !!(value & 0x02),
+        vare: !!(value & 0x04),
+        activeExp: !!(value & 0x08),
+        variExp: !!(value & 0x10),
+        vareExp: !!(value & 0x20)
+      };
+    },
+    set: function (buffer, parameter) {
+      var value = 0;
+      value |= parameter.active ? 0x01 : 0;
+      value |= parameter.vari ? 0x02 : 0;
+      value |= parameter.vare ? 0x04 : 0;
+      value |= parameter.activeExp ? 0x08 : 0;
+      value |= parameter.variExp ? 0x10 : 0;
+      value |= parameter.vareExp ? 0x20 : 0;
+      buffer.setUint8(value);
+    }
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, RX2_CONFIG, {
     get: function (buffer) {
       var spreadFactor = buffer.getUint8();
       var spreadFactorName = spreadFactorNames[spreadFactor];
@@ -896,7 +958,7 @@ var toBytes, getBase64FromBytes;
       setPulseCoefficient(buffer, parameter.pulseCoefficient);
       buffer.setUint32(parameter.value);
     }
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, ABSOLUTE_DATA_ENABLE, {
+  }), ABSOLUTE_DATA_ENABLE, {
     get: function (buffer) {
       return {
         state: buffer.getUint8()
@@ -990,7 +1052,7 @@ var toBytes, getBase64FromBytes;
   }), PULSE_CHANNELS_SET_CONFIG, {
     get: getChannelsMask,
     set: setChannelsMask
-  }), BATTERY_DEPASSIVATION_CONFIG, {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, BATTERY_DEPASSIVATION_CONFIG, {
     get: function (buffer) {
       return {
         resistanceStartThreshold: buffer.getUint16(),
@@ -1016,7 +1078,7 @@ var toBytes, getBase64FromBytes;
       buffer.setString(parameter.password);
       buffer.setUint8(parameter.cleanSession);
     }
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, MQTT_BROKER_ADDRESS, {
+  }), MQTT_BROKER_ADDRESS, {
     get: function (buffer) {
       return {
         hostName: buffer.getString(),
@@ -1088,13 +1150,13 @@ var toBytes, getBase64FromBytes;
   }), NBIOT_SSL_CACERT_SET, {
     get: getNbiotSslSet,
     set: setNbiotSslSet
-  }), NBIOT_SSL_CLIENT_CERT_WRITE, {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_SSL_CLIENT_CERT_WRITE, {
     get: getNbiotSslWrite,
     set: setNbiotSslWrite
   }), NBIOT_SSL_CLIENT_CERT_SET, {
     get: getNbiotSslSet,
     set: setNbiotSslSet
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_SSL_CLIENT_KEY_WRITE, {
+  }), NBIOT_SSL_CLIENT_KEY_WRITE, {
     get: getNbiotSslWrite,
     set: setNbiotSslWrite
   }), NBIOT_SSL_CLIENT_KEY_SET, {
@@ -1172,7 +1234,7 @@ var toBytes, getBase64FromBytes;
         buffer.setUint8(band);
       }
     }
-  }), NBIOT_APN, {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_APN, {
     get: function (buffer) {
       return {
         apn: buffer.getString()
@@ -1192,7 +1254,7 @@ var toBytes, getBase64FromBytes;
       buffer.setUint8(parameter.enableLed);
       buffer.setUint8(parameter.enableNbiotNetworkLed);
     }
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_deviceParameterConve, NBIOT_SIM, {
+  }), NBIOT_SIM, {
     get: function (buffer) {
       return {
         enable: buffer.getUint8(),
@@ -1257,6 +1319,36 @@ var toBytes, getBase64FromBytes;
     set: function (buffer, parameter) {
       buffer.setUint8(parameter.enable);
     }
+  }), MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG, {
+    get: function (buffer) {
+      var schedules = [];
+      while (buffer.bytesLeft > 0) {
+        var id = buffer.getUint8();
+        var transmissionPeriod = buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT;
+        var demandType0 = buffer.getUint8();
+        var demandType1 = buffer.getUint8();
+        var demandType2 = buffer.getUint8();
+        schedules.push({
+          id: id,
+          transmissionPeriod: transmissionPeriod,
+          demandType0: demandType0,
+          demandType1: demandType1,
+          demandType2: demandType2
+        });
+      }
+      return {
+        schedules: schedules
+      };
+    },
+    set: function (buffer, parameter) {
+      for (var schedule of parameter.schedules) {
+        buffer.setUint8(schedule.id);
+        buffer.setUint8(schedule.transmissionPeriod / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+        buffer.setUint8(schedule.demandType0);
+        buffer.setUint8(schedule.demandType1);
+        buffer.setUint8(schedule.demandType2);
+      }
+    }
   }));
   var getParameterSize = function (parameter) {
     var size;
@@ -1316,6 +1408,10 @@ var toBytes, getBase64FromBytes;
       case NBIOT_NTP_SERVER:
         data = parameter.data;
         size = 1 + 1 + data.server.length + 2;
+        break;
+      case MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG:
+        data = parameter.data;
+        size = 1 + data.schedules.length * 5;
         break;
       default:
         size = parametersSizeMap[parameter.id];

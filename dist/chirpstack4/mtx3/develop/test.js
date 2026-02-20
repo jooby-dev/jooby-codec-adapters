@@ -1192,6 +1192,7 @@
 
     const getDayEnergies$2 = 0x78;
     const getDayMaxPower = 0x79;
+    const getCurrentDemand = 0x7b;
     const errorResponse$2 = 0xfe;
     const errorDataFrameResponse$2 = 0xff;
 
@@ -1203,6 +1204,7 @@
         getBv: getBv$3,
         getCorrectTime: getCorrectTime$3,
         getCriticalEvent: getCriticalEvent$3,
+        getCurrentDemand: getCurrentDemand,
         getCurrentStatusMeter: getCurrentStatusMeter$3,
         getCurrentValues: getCurrentValues$3,
         getDateTime: getDateTime$4,
@@ -1573,18 +1575,22 @@
     };
     const toBytes$2k = (commandId, commandBytes = []) => [commandId, commandBytes.length, ...commandBytes];
 
-    var validateCommandPayload = (commandName, bytes, expectedLength) => {
+    const validateRangeCommandPayload = (commandName, bytes, range) => {
         if (!commandName) {
             throw new Error('Command name is required.');
         }
         if (bytes && !Array.isArray(bytes)) {
             throw new Error(`Invalid payload for ${commandName}. Expected array, got: ${typeof bytes}.`);
         }
-        if (bytes.length !== expectedLength) {
+        if ((range.min > 0 && bytes.length < range.min) || (range.max > 0 && bytes.length > range.max)) {
             const hex = getHexFromBytes(bytes, { separator: '' });
-            throw new Error(`Wrong buffer size for ${commandName}: ${bytes.length}. Expected: ${expectedLength}. Payload: 0x${hex}.`);
+            const expectedLengthReport = range.min === range.max
+                ? `${range.max}`
+                : JSON.stringify(range);
+            throw new Error(`Wrong buffer size for ${commandName}: ${bytes.length}. Expected: ${expectedLengthReport}. Payload: 0x${hex}.`);
         }
     };
+    const validateFixedCommandPayload = (commandName, bytes, expectedLength) => (validateRangeCommandPayload(commandName, bytes, { min: expectedLength, max: expectedLength }));
 
     const id$2k = activateRatePlan$3;
     const name$2k = commandNames$3[activateRatePlan$3];
@@ -1619,7 +1625,7 @@
         }
     };
     const fromBytes$2i = (bytes) => {
-        validateCommandPayload(name$2k, bytes, maxSize$2k);
+        validateFixedCommandPayload(name$2k, bytes, maxSize$2k);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             tariffTable: buffer.getUint8(),
@@ -1666,7 +1672,7 @@
         }
     };
     const fromBytes$2h = (bytes) => {
-        validateCommandPayload(name$2j, bytes, maxSize$2j);
+        validateFixedCommandPayload(name$2j, bytes, maxSize$2j);
         return {};
     };
     const toBytes$2i = () => toBytes$2k(id$2j);
@@ -1704,7 +1710,7 @@
         }
     };
     const fromBytes$2g = (bytes) => {
-        validateCommandPayload(name$2i, bytes, maxSize$2i);
+        validateFixedCommandPayload(name$2i, bytes, maxSize$2i);
         return {};
     };
     const toBytes$2h = () => toBytes$2k(id$2i);
@@ -1742,7 +1748,7 @@
         }
     };
     const fromBytes$2f = (bytes) => {
-        validateCommandPayload(name$2h, bytes, maxSize$2h);
+        validateFixedCommandPayload(name$2h, bytes, maxSize$2h);
         return {};
     };
     const toBytes$2g = () => toBytes$2k(id$2h);
@@ -1780,7 +1786,7 @@
         }
     };
     const fromBytes$2e = (bytes) => {
-        validateCommandPayload(name$2g, bytes, maxSize$2g);
+        validateFixedCommandPayload(name$2g, bytes, maxSize$2g);
         return {};
     };
     const toBytes$2f = () => toBytes$2k(id$2g);
@@ -1818,7 +1824,7 @@
         }
     };
     const fromBytes$2d = (bytes) => {
-        validateCommandPayload(name$2f, bytes, maxSize$2f);
+        validateFixedCommandPayload(name$2f, bytes, maxSize$2f);
         return {};
     };
     const toBytes$2e = () => toBytes$2k(id$2f);
@@ -1863,7 +1869,7 @@
         }
     };
     const fromBytes$2c = (bytes) => {
-        validateCommandPayload(name$2e, bytes, maxSize$2e);
+        validateFixedCommandPayload(name$2e, bytes, maxSize$2e);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
@@ -1913,7 +1919,7 @@
         }
     };
     const fromBytes$2b = (bytes) => {
-        validateCommandPayload(name$2d, bytes, maxSize$2d);
+        validateFixedCommandPayload(name$2d, bytes, maxSize$2d);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
@@ -2002,7 +2008,7 @@
         }
     };
     const fromBytes$29 = (bytes) => {
-        validateCommandPayload(name$2b, bytes, maxSize$2b);
+        validateFixedCommandPayload(name$2b, bytes, maxSize$2b);
         return {};
     };
     const toBytes$2a = () => toBytes$2k(id$2b);
@@ -2040,7 +2046,7 @@
         }
     };
     const fromBytes$28 = (bytes) => {
-        validateCommandPayload(name$2a, bytes, maxSize$2a);
+        validateFixedCommandPayload(name$2a, bytes, maxSize$2a);
         return {};
     };
     const toBytes$29 = () => toBytes$2k(id$2a);
@@ -2086,7 +2092,7 @@
         }
     };
     const fromBytes$27 = (bytes) => {
-        validateCommandPayload(name$29, bytes, maxSize$29);
+        validateFixedCommandPayload(name$29, bytes, maxSize$29);
         const buffer = new BinaryBuffer(bytes, false);
         const date = getDate$1(buffer);
         const offset = buffer.getUint8();
@@ -2132,7 +2138,7 @@
         }
     };
     const fromBytes$26 = (bytes) => {
-        validateCommandPayload(name$28, bytes, maxSize$28);
+        validateFixedCommandPayload(name$28, bytes, maxSize$28);
         return {};
     };
     const toBytes$27 = () => toBytes$2k(id$28);
@@ -2170,7 +2176,7 @@
         }
     };
     const fromBytes$25 = (bytes) => {
-        validateCommandPayload(name$27, bytes, maxSize$27);
+        validateFixedCommandPayload(name$27, bytes, maxSize$27);
         return {};
     };
     const toBytes$26 = () => toBytes$2k(id$27);
@@ -2208,7 +2214,7 @@
         }
     };
     const fromBytes$24 = (bytes) => {
-        validateCommandPayload(name$26, bytes, maxSize$26);
+        validateFixedCommandPayload(name$26, bytes, maxSize$26);
         return {};
     };
     const toBytes$25 = () => toBytes$2k(id$26);
@@ -2253,7 +2259,7 @@
         }
     };
     const fromBytes$23 = (bytes) => {
-        validateCommandPayload(name$25, bytes, maxSize$25);
+        validateFixedCommandPayload(name$25, bytes, maxSize$25);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
@@ -2303,7 +2309,7 @@
         }
     };
     const fromBytes$22 = (bytes) => {
-        validateCommandPayload(name$24, bytes, maxSize$24);
+        validateFixedCommandPayload(name$24, bytes, maxSize$24);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
@@ -2579,7 +2585,7 @@
         }
     };
     const fromBytes$20 = (bytes) => {
-        validateCommandPayload(name$22, bytes, maxSize$22);
+        validateFixedCommandPayload(name$22, bytes, maxSize$22);
         return {};
     };
     const toBytes$21 = () => toBytes$2k(id$22);
@@ -2617,7 +2623,7 @@
         }
     };
     const fromBytes$1$ = (bytes) => {
-        validateCommandPayload(name$21, bytes, maxSize$21);
+        validateFixedCommandPayload(name$21, bytes, maxSize$21);
         return {};
     };
     const toBytes$20 = () => toBytes$2k(id$21);
@@ -2659,7 +2665,7 @@
         }
     };
     const fromBytes$1_ = (bytes) => {
-        validateCommandPayload(name$20, bytes, maxSize$20);
+        validateFixedCommandPayload(name$20, bytes, maxSize$20);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             year: buffer.getUint8(),
@@ -2710,7 +2716,7 @@
         }
     };
     const fromBytes$1Z = (bytes) => {
-        validateCommandPayload(name$1$, bytes, maxSize$1$);
+        validateFixedCommandPayload(name$1$, bytes, maxSize$1$);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             year: buffer.getUint8(),
@@ -2761,7 +2767,7 @@
         }
     };
     const fromBytes$1Y = (bytes) => {
-        validateCommandPayload(name$1_, bytes, maxSize$1_);
+        validateFixedCommandPayload(name$1_, bytes, maxSize$1_);
         const [year, month] = bytes;
         return { year, month };
     };
@@ -2804,7 +2810,7 @@
         }
     };
     const fromBytes$1X = (bytes) => {
-        validateCommandPayload(name$1Z, bytes, maxSize$1Z);
+        validateFixedCommandPayload(name$1Z, bytes, maxSize$1Z);
         const [year, month] = bytes;
         return { year, month };
     };
@@ -2843,7 +2849,7 @@
         }
     };
     const fromBytes$1W = (bytes) => {
-        validateCommandPayload(name$1Y, bytes, maxSize$1Y);
+        validateFixedCommandPayload(name$1Y, bytes, maxSize$1Y);
         return {};
     };
     const toBytes$1X = () => toBytes$2k(id$1Y);
@@ -2881,7 +2887,7 @@
         }
     };
     const fromBytes$1V = (bytes) => {
-        validateCommandPayload(name$1X, bytes, maxSize$1X);
+        validateFixedCommandPayload(name$1X, bytes, maxSize$1X);
         return {};
     };
     const toBytes$1W = () => toBytes$2k(id$1X);
@@ -2923,7 +2929,7 @@
         }
     };
     const fromBytes$1U = (bytes) => {
-        validateCommandPayload(name$1W, bytes, maxSize$1W);
+        validateFixedCommandPayload(name$1W, bytes, maxSize$1W);
         const [year, month] = bytes;
         return { year, month };
     };
@@ -2965,7 +2971,7 @@
         }
     };
     const fromBytes$1T = (bytes) => {
-        validateCommandPayload(name$1V, bytes, maxSize$1V);
+        validateFixedCommandPayload(name$1V, bytes, maxSize$1V);
         return { tariffTable: bytes[0] };
     };
     const toBytes$1U = (parameters) => (toBytes$2k(id$1V, [parameters.tariffTable]));
@@ -3003,7 +3009,7 @@
         }
     };
     const fromBytes$1S = (bytes) => {
-        validateCommandPayload(name$1U, bytes, maxSize$1U);
+        validateFixedCommandPayload(name$1U, bytes, maxSize$1U);
         return {};
     };
     const toBytes$1T = () => toBytes$2k(id$1U);
@@ -3039,7 +3045,7 @@
         }
     };
     const fromBytes$1R = (bytes) => {
-        validateCommandPayload(name$1T, bytes, maxSize$1T);
+        validateFixedCommandPayload(name$1T, bytes, maxSize$1T);
         return {};
     };
     const toBytes$1S = () => toBytes$2k(id$1T);
@@ -3082,7 +3088,7 @@
         }
     };
     const fromBytes$1Q = (bytes) => {
-        validateCommandPayload(name$1S, bytes, maxSize$1S);
+        validateFixedCommandPayload(name$1S, bytes, maxSize$1S);
         const [tariffTable, index, isActive] = bytes;
         return {
             tariffTable,
@@ -3136,7 +3142,7 @@
         }
     };
     const fromBytes$1P = (bytes) => {
-        validateCommandPayload(name$1R, bytes, maxSize$1R);
+        validateFixedCommandPayload(name$1R, bytes, maxSize$1R);
         const [tariffTable, index, isActive] = bytes;
         return {
             tariffTable,
@@ -3185,7 +3191,7 @@
         }
     };
     const fromBytes$1O = (bytes) => {
-        validateCommandPayload(name$1Q, bytes, maxSize$1Q);
+        validateFixedCommandPayload(name$1Q, bytes, maxSize$1Q);
         return {};
     };
     const toBytes$1P = () => toBytes$2k(id$1Q);
@@ -3227,7 +3233,7 @@
         }
     };
     const fromBytes$1N = (bytes) => {
-        validateCommandPayload(name$1P, bytes, maxSize$1P);
+        validateFixedCommandPayload(name$1P, bytes, maxSize$1P);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             tariffTable: buffer.getUint8(),
@@ -3274,7 +3280,7 @@
         }
     };
     const fromBytes$1M = (bytes) => {
-        validateCommandPayload(name$1O, bytes, maxSize$1O);
+        validateFixedCommandPayload(name$1O, bytes, maxSize$1O);
         return {};
     };
     const toBytes$1N = () => toBytes$2k(id$1O);
@@ -3312,7 +3318,7 @@
         }
     };
     const fromBytes$1L = (bytes) => {
-        validateCommandPayload(name$1N, bytes, maxSize$1N);
+        validateFixedCommandPayload(name$1N, bytes, maxSize$1N);
         return {};
     };
     const toBytes$1M = () => toBytes$2k(id$1N);
@@ -3394,7 +3400,7 @@
         }
     };
     const fromBytes$1J = (bytes) => {
-        validateCommandPayload(name$1L, bytes, maxSize$1L);
+        validateFixedCommandPayload(name$1L, bytes, maxSize$1L);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             accessLevel: buffer.getUint8(),
@@ -3453,7 +3459,7 @@
         }
     };
     const fromBytes$1I = (bytes) => {
-        validateCommandPayload(name$1K, bytes, maxSize$1K);
+        validateFixedCommandPayload(name$1K, bytes, maxSize$1K);
         const buffer = new BinaryBuffer(bytes, false);
         return { seconds: buffer.getInt16() };
     };
@@ -3507,7 +3513,7 @@
         }
     };
     const fromBytes$1H = (bytes) => {
-        validateCommandPayload(name$1J, bytes, maxSize$1J);
+        validateFixedCommandPayload(name$1J, bytes, maxSize$1J);
         const buffer = new BinaryBuffer(bytes, false);
         return getTimeCorrectionParameters(buffer);
     };
@@ -3560,7 +3566,7 @@
         }
     };
     const fromBytes$1G = (bytes) => {
-        validateCommandPayload(name$1I, bytes, maxSize$1I);
+        validateFixedCommandPayload(name$1I, bytes, maxSize$1I);
         const buffer = new BinaryBuffer(bytes, false);
         return getDateTime$3(buffer);
     };
@@ -3731,7 +3737,7 @@
         }
     };
     const fromBytes$1E = (bytes) => {
-        validateCommandPayload(name$1G, bytes, maxSize$1G);
+        validateFixedCommandPayload(name$1G, bytes, maxSize$1G);
         const buffer = new BinaryBuffer(bytes, false);
         return getOperatorParametersExtended3$3(buffer);
     };
@@ -3784,7 +3790,7 @@
         }
     };
     const fromBytes$1D = (bytes) => {
-        validateCommandPayload(name$1F, bytes, maxSize$1F);
+        validateFixedCommandPayload(name$1F, bytes, maxSize$1F);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             date: {
@@ -3856,7 +3862,7 @@
         }
     };
     const fromBytes$1C = (bytes) => {
-        validateCommandPayload(name$1E, bytes, maxSize$1E);
+        validateFixedCommandPayload(name$1E, bytes, maxSize$1E);
         const buffer = new BinaryBuffer(bytes, false);
         return getSaldoParameters$3(buffer);
     };
@@ -3924,7 +3930,7 @@
         }
     };
     const fromBytes$1B = (bytes) => {
-        validateCommandPayload(name$1D, bytes, maxSize$1D);
+        validateFixedCommandPayload(name$1D, bytes, maxSize$1D);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             tariffTable: buffer.getUint8(),
@@ -3981,7 +3987,7 @@
         }
     };
     const fromBytes$1A = (bytes) => {
-        validateCommandPayload(name$1C, bytes, maxSize$1C);
+        validateFixedCommandPayload(name$1C, bytes, maxSize$1C);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             tariffTable: buffer.getUint8(),
@@ -4070,7 +4076,7 @@
         }
     };
     const fromBytes$1z = (bytes) => {
-        validateCommandPayload(name$1B, bytes, maxSize$1B);
+        validateFixedCommandPayload(name$1B, bytes, maxSize$1B);
         const buffer = new BinaryBuffer(bytes, false);
         const type = buffer.getUint8();
         const flags = buffer.getUint8();
@@ -4134,7 +4140,7 @@
         }
     };
     const fromBytes$1y = (bytes) => {
-        validateCommandPayload(name$1A, bytes, maxSize$1A);
+        validateFixedCommandPayload(name$1A, bytes, maxSize$1A);
         return {};
     };
     const toBytes$1z = () => toBytes$2k(id$1A);
@@ -4172,7 +4178,7 @@
         }
     };
     const fromBytes$1x = (bytes) => {
-        validateCommandPayload(name$1z, bytes, maxSize$1z);
+        validateFixedCommandPayload(name$1z, bytes, maxSize$1z);
         return {};
     };
     const toBytes$1y = () => toBytes$2k(id$1z);
@@ -4382,7 +4388,7 @@
         }
     };
     const fromBytes$1w = (bytes) => {
-        validateCommandPayload(name$1y, bytes, maxSize$1y);
+        validateFixedCommandPayload(name$1y, bytes, maxSize$1y);
         const [event, index] = bytes;
         return {
             event,
@@ -4514,7 +4520,7 @@
         }
     };
     const fromBytes$1u = (bytes) => {
-        validateCommandPayload(name$1w, bytes, maxSize$1w);
+        validateFixedCommandPayload(name$1w, bytes, maxSize$1w);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
@@ -5846,7 +5852,7 @@
         }
     };
     const fromBytes$1t = (bytes) => {
-        validateCommandPayload(name$1v, bytes, maxSize$1v);
+        validateFixedCommandPayload(name$1v, bytes, maxSize$1v);
         const buffer = new BinaryBuffer(bytes, false);
         return getDemand$2(buffer);
     };
@@ -5892,7 +5898,7 @@
         }
     };
     const fromBytes$1s = (bytes) => {
-        validateCommandPayload(name$1u, bytes, maxSize$1u);
+        validateFixedCommandPayload(name$1u, bytes, maxSize$1u);
         return { displayMode: bytes[0] };
     };
     const toBytes$1t = (parameters) => {
@@ -5934,7 +5940,7 @@
         }
     };
     const fromBytes$1r = (bytes) => {
-        validateCommandPayload(name$1t, bytes, maxSize$1t);
+        validateFixedCommandPayload(name$1t, bytes, maxSize$1t);
         return {};
     };
     const toBytes$1s = () => toBytes$2k(id$1t);
@@ -6037,7 +6043,7 @@
         }
     };
     const fromBytes$1p = (bytes) => {
-        validateCommandPayload(name$1r, bytes, maxSize$1r);
+        validateFixedCommandPayload(name$1r, bytes, maxSize$1r);
         return {};
     };
     const toBytes$1q = () => toBytes$2k(id$1r);
@@ -6075,7 +6081,7 @@
         }
     };
     const fromBytes$1o = (bytes) => {
-        validateCommandPayload(name$1q, bytes, maxSize$1q);
+        validateFixedCommandPayload(name$1q, bytes, maxSize$1q);
         return {};
     };
     const toBytes$1p = () => toBytes$2k(id$1q);
@@ -6124,7 +6130,7 @@
         }
     };
     const fromBytes$1n = (bytes) => {
-        validateCommandPayload(name$1p, bytes, maxSize$1p);
+        validateFixedCommandPayload(name$1p, bytes, maxSize$1p);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             channel: buffer.getUint8(),
@@ -6180,7 +6186,7 @@
         }
     };
     const fromBytes$1m = (bytes) => {
-        validateCommandPayload(name$1o, bytes, maxSize$1o);
+        validateFixedCommandPayload(name$1o, bytes, maxSize$1o);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
@@ -6230,7 +6236,7 @@
         }
     };
     const fromBytes$1l = (bytes) => {
-        validateCommandPayload(name$1n, bytes, maxSize$1n);
+        validateFixedCommandPayload(name$1n, bytes, maxSize$1n);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
@@ -6280,7 +6286,7 @@
         }
     };
     const fromBytes$1k = (bytes) => {
-        validateCommandPayload(name$1m, bytes, maxSize$1m);
+        validateFixedCommandPayload(name$1m, bytes, maxSize$1m);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
@@ -6330,7 +6336,7 @@
         }
     };
     const fromBytes$1j = (bytes) => {
-        validateCommandPayload(name$1l, bytes, maxSize$1l);
+        validateFixedCommandPayload(name$1l, bytes, maxSize$1l);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
@@ -6373,7 +6379,7 @@
         }
     };
     const fromBytes$1i = (bytes) => {
-        validateCommandPayload(name$1k, bytes, maxSize$1k);
+        validateFixedCommandPayload(name$1k, bytes, maxSize$1k);
         return {};
     };
     const toBytes$1j = () => toBytes$2k(id$1k);
@@ -6411,7 +6417,7 @@
         }
     };
     const fromBytes$1h = (bytes) => {
-        validateCommandPayload(name$1j, bytes, maxSize$1j);
+        validateFixedCommandPayload(name$1j, bytes, maxSize$1j);
         return {};
     };
     const toBytes$1i = () => toBytes$2k(id$1j);
@@ -6449,7 +6455,7 @@
         }
     };
     const fromBytes$1g = (bytes) => {
-        validateCommandPayload(name$1i, bytes, maxSize$1i);
+        validateFixedCommandPayload(name$1i, bytes, maxSize$1i);
         return {};
     };
     const toBytes$1h = () => toBytes$2k(id$1i);
@@ -6764,7 +6770,7 @@
         }
     };
     const fromBytes$1e = (bytes) => {
-        validateCommandPayload(name$1g, bytes, maxSize$1g);
+        validateFixedCommandPayload(name$1g, bytes, maxSize$1g);
         const buffer = new BinaryBuffer(bytes, false);
         return getOperatorParameters$1(buffer);
     };
@@ -6824,7 +6830,7 @@
         }
     };
     const fromBytes$1d = (bytes) => {
-        validateCommandPayload(name$1f, bytes, maxSize$1f);
+        validateFixedCommandPayload(name$1f, bytes, maxSize$1f);
         const buffer = new BinaryBuffer(bytes, false);
         return getOperatorParametersExtended$2(buffer);
     };
@@ -7033,7 +7039,7 @@
         }
     };
     const fromBytes$1c = (bytes) => {
-        validateCommandPayload(name$1e, bytes, maxSize$1e);
+        validateFixedCommandPayload(name$1e, bytes, maxSize$1e);
         const buffer = new BinaryBuffer(bytes, false);
         return getOperatorParametersExtended2$2(buffer);
     };
@@ -7243,7 +7249,7 @@
         }
     };
     const fromBytes$1b = (bytes) => {
-        validateCommandPayload(name$1d, bytes, maxSize$1d);
+        validateFixedCommandPayload(name$1d, bytes, maxSize$1d);
         const buffer = new BinaryBuffer(bytes, false);
         return getOperatorParametersExtended4$2(buffer);
     };
@@ -7362,7 +7368,7 @@
         }
     };
     const fromBytes$1a = (bytes) => {
-        validateCommandPayload(name$1c, bytes, maxSize$1c);
+        validateFixedCommandPayload(name$1c, bytes, maxSize$1c);
         return {};
     };
     const toBytes$1b = () => toBytes$2k(id$1c);
@@ -7403,7 +7409,7 @@
         }
     };
     const fromBytes$19 = (bytes) => {
-        validateCommandPayload(name$1b, bytes, maxSize$1b);
+        validateFixedCommandPayload(name$1b, bytes, maxSize$1b);
         const [errorCode] = bytes;
         return {
             errorCode,
@@ -7451,7 +7457,7 @@
         }
     };
     const fromBytes$18 = (bytes) => {
-        validateCommandPayload(name$1a, bytes, maxSize$1a);
+        validateFixedCommandPayload(name$1a, bytes, maxSize$1a);
         return {
             vector: bytes
         };
@@ -7505,7 +7511,7 @@
         }
     };
     const fromBytes$17 = (bytes) => {
-        validateCommandPayload(name$19, bytes, maxSize$19);
+        validateFixedCommandPayload(name$19, bytes, maxSize$19);
         const buffer = new BinaryBuffer(bytes, false);
         return getTimeCorrectionParameters(buffer);
     };
@@ -7558,7 +7564,7 @@
         }
     };
     const fromBytes$16 = (bytes) => {
-        validateCommandPayload(name$18, bytes, maxSize$18);
+        validateFixedCommandPayload(name$18, bytes, maxSize$18);
         const buffer = new BinaryBuffer(bytes, false);
         return getDateTime$3(buffer);
     };
@@ -7795,7 +7801,7 @@
         }
     };
     const fromBytes$13 = (bytes) => {
-        validateCommandPayload(name$15, bytes, maxSize$15);
+        validateFixedCommandPayload(name$15, bytes, maxSize$15);
         const buffer = new BinaryBuffer(bytes, false);
         return getDeviceId$3(buffer);
     };
@@ -7869,7 +7875,7 @@
         }
     };
     const fromBytes$12 = (bytes) => {
-        validateCommandPayload(name$14, bytes, maxSize$14);
+        validateFixedCommandPayload(name$14, bytes, maxSize$14);
         const buffer = new BinaryBuffer(bytes, false);
         return getDeviceType$3(buffer);
     };
@@ -8000,7 +8006,7 @@
         }
     };
     const fromBytes$10 = (bytes) => {
-        validateCommandPayload(name$12, bytes, maxSize$12);
+        validateFixedCommandPayload(name$12, bytes, maxSize$12);
         const buffer = new BinaryBuffer(bytes, true);
         return getEventStatus$3(buffer);
     };
@@ -8049,7 +8055,7 @@
         }
     };
     const fromBytes$$ = (bytes) => {
-        validateCommandPayload(name$11, bytes, maxSize$11);
+        validateFixedCommandPayload(name$11, bytes, maxSize$11);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             induction: buffer.getUint16(),
@@ -8101,7 +8107,7 @@
         }
     };
     const fromBytes$_ = ([ten]) => {
-        validateCommandPayload(name$10, [ten], maxSize$10);
+        validateFixedCommandPayload(name$10, [ten], maxSize$10);
         return { ten };
     };
     const toBytes$$ = ({ ten }) => toBytes$2k(id$10, [ten]);
@@ -8155,7 +8161,7 @@
         }
     };
     const fromBytes$Z = (bytes) => {
-        validateCommandPayload(name$$, bytes, maxSize$$);
+        validateFixedCommandPayload(name$$, bytes, maxSize$$);
         const buffer = new BinaryBuffer(bytes, false);
         return getOperatorParametersExtended3$3(buffer);
     };
@@ -8222,7 +8228,7 @@
         }
     };
     const fromBytes$Y = (bytes) => {
-        validateCommandPayload(name$_, bytes, maxSize$_);
+        validateFixedCommandPayload(name$_, bytes, maxSize$_);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             tariffTable: buffer.getUint8(),
@@ -8284,7 +8290,7 @@
         }
     };
     const fromBytes$X = (bytes) => {
-        validateCommandPayload(name$Z, bytes, maxSize$Z);
+        validateFixedCommandPayload(name$Z, bytes, maxSize$Z);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             currentSaldo: buffer.getInt32(),
@@ -8384,7 +8390,7 @@
         }
     };
     const fromBytes$W = (bytes) => {
-        validateCommandPayload(name$Y, bytes, maxSize$Y);
+        validateFixedCommandPayload(name$Y, bytes, maxSize$Y);
         const buffer = new BinaryBuffer(bytes, false);
         return getSaldoParameters$3(buffer);
     };
@@ -8432,7 +8438,7 @@
         }
     };
     const fromBytes$V = (bytes) => {
-        validateCommandPayload(name$X, bytes, maxSize$X);
+        validateFixedCommandPayload(name$X, bytes, maxSize$X);
         const buffer = new BinaryBuffer(bytes, false);
         return getSeasonProfile$3(buffer);
     };
@@ -8481,7 +8487,7 @@
         }
     };
     const fromBytes$U = (bytes) => {
-        validateCommandPayload(name$W, bytes, maxSize$W);
+        validateFixedCommandPayload(name$W, bytes, maxSize$W);
         const buffer = new BinaryBuffer(bytes, false);
         return getSpecialDay$3(buffer);
     };
@@ -8527,7 +8533,7 @@
         }
     };
     const fromBytes$T = (bytes) => {
-        validateCommandPayload(name$V, bytes, maxSize$V);
+        validateFixedCommandPayload(name$V, bytes, maxSize$V);
         return { version: String.fromCharCode.apply(null, [...bytes]) };
     };
     const toBytes$U = (parameters) => {
@@ -8568,7 +8574,7 @@
         }
     };
     const fromBytes$S = (bytes) => {
-        validateCommandPayload(name$U, bytes, maxSize$U);
+        validateFixedCommandPayload(name$U, bytes, maxSize$U);
         return {};
     };
     const toBytes$T = () => toBytes$2k(id$U);
@@ -8606,7 +8612,7 @@
         }
     };
     const fromBytes$R = (bytes) => {
-        validateCommandPayload(name$T, bytes, maxSize$T);
+        validateFixedCommandPayload(name$T, bytes, maxSize$T);
         return {};
     };
     const toBytes$S = () => toBytes$2k(id$T);
@@ -8644,7 +8650,7 @@
         }
     };
     const fromBytes$Q = (bytes) => {
-        validateCommandPayload(name$S, bytes, maxSize$S);
+        validateFixedCommandPayload(name$S, bytes, maxSize$S);
         return {};
     };
     const toBytes$R = () => toBytes$2k(id$S);
@@ -8682,7 +8688,7 @@
         }
     };
     const fromBytes$P = (bytes) => {
-        validateCommandPayload(name$R, bytes, maxSize$R);
+        validateFixedCommandPayload(name$R, bytes, maxSize$R);
         return {};
     };
     const toBytes$Q = () => toBytes$2k(id$R);
@@ -8720,7 +8726,7 @@
         }
     };
     const fromBytes$O = (bytes) => {
-        validateCommandPayload(name$Q, bytes, maxSize$Q);
+        validateFixedCommandPayload(name$Q, bytes, maxSize$Q);
         return {};
     };
     const toBytes$P = () => toBytes$2k(id$Q);
@@ -8758,7 +8764,7 @@
         }
     };
     const fromBytes$N = (bytes) => {
-        validateCommandPayload(name$P, bytes, maxSize$P);
+        validateFixedCommandPayload(name$P, bytes, maxSize$P);
         return {};
     };
     const toBytes$O = () => toBytes$2k(id$P);
@@ -8796,7 +8802,7 @@
         }
     };
     const fromBytes$M = (bytes) => {
-        validateCommandPayload(name$O, bytes, maxSize$O);
+        validateFixedCommandPayload(name$O, bytes, maxSize$O);
         return {};
     };
     const toBytes$N = () => toBytes$2k(id$O);
@@ -8834,7 +8840,7 @@
         }
     };
     const fromBytes$L = (bytes) => {
-        validateCommandPayload(name$N, bytes, maxSize$N);
+        validateFixedCommandPayload(name$N, bytes, maxSize$N);
         return {};
     };
     const toBytes$M = () => toBytes$2k(id$N);
@@ -8872,7 +8878,7 @@
         }
     };
     const fromBytes$K = (bytes) => {
-        validateCommandPayload(name$M, bytes, maxSize$M);
+        validateFixedCommandPayload(name$M, bytes, maxSize$M);
         return {};
     };
     const toBytes$L = () => toBytes$2k(id$M);
@@ -8910,7 +8916,7 @@
         }
     };
     const fromBytes$J = (bytes) => {
-        validateCommandPayload(name$L, bytes, maxSize$L);
+        validateFixedCommandPayload(name$L, bytes, maxSize$L);
         return {};
     };
     const toBytes$K = () => toBytes$2k(id$L);
@@ -8948,7 +8954,7 @@
         }
     };
     const fromBytes$I = (bytes) => {
-        validateCommandPayload(name$K, bytes, maxSize$K);
+        validateFixedCommandPayload(name$K, bytes, maxSize$K);
         return {};
     };
     const toBytes$J = () => toBytes$2k(id$K);
@@ -8986,7 +8992,7 @@
         }
     };
     const fromBytes$H = (bytes) => {
-        validateCommandPayload(name$J, bytes, maxSize$J);
+        validateFixedCommandPayload(name$J, bytes, maxSize$J);
         return {};
     };
     const toBytes$I = () => toBytes$2k(id$J);
@@ -9024,7 +9030,7 @@
         }
     };
     const fromBytes$G = (bytes) => {
-        validateCommandPayload(name$I, bytes, maxSize$I);
+        validateFixedCommandPayload(name$I, bytes, maxSize$I);
         return {};
     };
     const toBytes$H = () => toBytes$2k(id$I);
@@ -9062,7 +9068,7 @@
         }
     };
     const fromBytes$F = (bytes) => {
-        validateCommandPayload(name$H, bytes, maxSize$H);
+        validateFixedCommandPayload(name$H, bytes, maxSize$H);
         return {};
     };
     const toBytes$G = () => toBytes$2k(id$H);
@@ -9100,7 +9106,7 @@
         }
     };
     const fromBytes$E = (bytes) => {
-        validateCommandPayload(name$G, bytes, maxSize$G);
+        validateFixedCommandPayload(name$G, bytes, maxSize$G);
         return {};
     };
     const toBytes$F = () => toBytes$2k(id$G);
@@ -9138,7 +9144,7 @@
         }
     };
     const fromBytes$D = (bytes) => {
-        validateCommandPayload(name$F, bytes, maxSize$F);
+        validateFixedCommandPayload(name$F, bytes, maxSize$F);
         return {};
     };
     const toBytes$E = () => toBytes$2k(id$F);
@@ -9210,7 +9216,7 @@
         }
     };
     const fromBytes$C = (bytes) => {
-        validateCommandPayload(name$E, bytes, maxSize$E);
+        validateFixedCommandPayload(name$E, bytes, maxSize$E);
         const flags = bytes[0];
         const electroMagneticIndication = !!(flags & 1);
         const magneticIndication = !!(flags & 2);
@@ -9263,7 +9269,7 @@
         }
     };
     const fromBytes$B = (bytes) => {
-        validateCommandPayload(name$D, bytes, maxSize$D);
+        validateFixedCommandPayload(name$D, bytes, maxSize$D);
         return {};
     };
     const toBytes$C = () => toBytes$2k(id$D);
@@ -9301,7 +9307,7 @@
         }
     };
     const fromBytes$A = (bytes) => {
-        validateCommandPayload(name$C, bytes, maxSize$C);
+        validateFixedCommandPayload(name$C, bytes, maxSize$C);
         return {};
     };
     const toBytes$B = () => toBytes$2k(id$C);
@@ -9326,7 +9332,7 @@
     const maxSize$B = 2;
     const isLoraOnly$B = false;
     const getFromBytes$1 = (commandNamesParameter) => ((bytes) => {
-        validateCommandPayload(name$B, bytes, maxSize$B);
+        validateFixedCommandPayload(name$B, bytes, maxSize$B);
         const buffer = new BinaryBuffer(bytes, false);
         const errorCommandId = buffer.getUint8();
         const errorCode = buffer.getUint8();
@@ -9425,7 +9431,7 @@
         }
     };
     const fromBytes$y = (bytes) => {
-        validateCommandPayload(name$z, bytes, maxSize$z);
+        validateFixedCommandPayload(name$z, bytes, maxSize$z);
         const [event, index, year, month, date, hours, minutes, seconds, count] = bytes;
         return {
             event,
@@ -9541,7 +9547,7 @@
         }
     };
     const fromBytes$x = (bytes) => {
-        validateCommandPayload(name$y, bytes, maxSize$y);
+        validateFixedCommandPayload(name$y, bytes, maxSize$y);
         const buffer = new BinaryBuffer(bytes, false);
         const operatingSeconds = buffer.getUint32();
         const tbadVAAll = buffer.getUint32();
@@ -9667,7 +9673,7 @@
         }
     };
     const fromBytes$w = (bytes) => {
-        validateCommandPayload(name$x, bytes, maxSize$x);
+        validateFixedCommandPayload(name$x, bytes, maxSize$x);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             vaRms: buffer.getInt32(),
@@ -10031,7 +10037,7 @@
         }
     };
     const fromBytes$t = (bytes) => {
-        validateCommandPayload(name$u, bytes, maxSize$u);
+        validateFixedCommandPayload(name$u, bytes, maxSize$u);
         const buffer = new BinaryBuffer(bytes, false);
         return getDayMaxDemandResponse(buffer);
     };
@@ -10131,7 +10137,7 @@
         }
     };
     const fromBytes$s = (bytes) => {
-        validateCommandPayload(name$t, bytes, maxSize$t);
+        validateFixedCommandPayload(name$t, bytes, maxSize$t);
         const buffer = new BinaryBuffer(bytes, false);
         return getDayMaxDemandResponse(buffer);
     };
@@ -10345,7 +10351,7 @@
         }
     };
     const fromBytes$p = (bytes) => {
-        validateCommandPayload(name$q, bytes, maxSize$q);
+        validateFixedCommandPayload(name$q, bytes, maxSize$q);
         const buffer = new BinaryBuffer(bytes, false);
         return getEnergies(buffer);
     };
@@ -10513,7 +10519,7 @@
         }
     };
     const fromBytes$n = (bytes) => {
-        validateCommandPayload(name$o, bytes, maxSize$o);
+        validateFixedCommandPayload(name$o, bytes, maxSize$o);
         const buffer = new BinaryBuffer(bytes, false);
         return getEnergies(buffer);
     };
@@ -10572,7 +10578,7 @@
         }
     };
     const fromBytes$m = (bytes) => {
-        validateCommandPayload(name$n, bytes, maxSize$n);
+        validateFixedCommandPayload(name$n, bytes, maxSize$n);
         const buffer = new BinaryBuffer(bytes, false);
         return getEnergies(buffer);
     };
@@ -10758,7 +10764,7 @@
         }
     };
     const fromBytes$k = (bytes) => {
-        validateCommandPayload(name$k, bytes, maxSize$k);
+        validateFixedCommandPayload(name$k, bytes, maxSize$k);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             temperature: buffer.getInt16(),
@@ -11775,7 +11781,7 @@
         }
     };
     const fromBytes$b = (bytes) => {
-        validateCommandPayload(name$b, bytes, maxSize$b);
+        validateFixedCommandPayload(name$b, bytes, maxSize$b);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             year: buffer.getUint8(),
@@ -11850,7 +11856,7 @@
         }
     };
     const fromBytes$a = (bytes) => {
-        validateCommandPayload(name$a, bytes, maxSize$a);
+        validateFixedCommandPayload(name$a, bytes, maxSize$a);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             year: buffer.getUint8(),
@@ -11967,7 +11973,7 @@
         }
     };
     const fromBytes$9 = (bytes) => {
-        validateCommandPayload(name$9, bytes, maxSize$9);
+        validateFixedCommandPayload(name$9, bytes, maxSize$9);
         const buffer = new BinaryBuffer(bytes, false);
         return getMonthMaxDemandResponse(buffer);
     };
@@ -12066,7 +12072,7 @@
         }
     };
     const fromBytes$8 = (bytes) => {
-        validateCommandPayload(name$8, bytes, maxSize$8);
+        validateFixedCommandPayload(name$8, bytes, maxSize$8);
         const buffer = new BinaryBuffer(bytes, false);
         return getMonthMaxDemandResponse(buffer);
     };
@@ -12322,7 +12328,7 @@
         }
     };
     const fromBytes$7 = (bytes) => {
-        validateCommandPayload(name$7, bytes, maxSize$7);
+        validateFixedCommandPayload(name$7, bytes, maxSize$7);
         const buffer = new BinaryBuffer(bytes, false);
         return getOperatorParameters$1(buffer);
     };
@@ -12382,7 +12388,7 @@
         }
     };
     const fromBytes$6 = (bytes) => {
-        validateCommandPayload(name$6, bytes, maxSize$6);
+        validateFixedCommandPayload(name$6, bytes, maxSize$6);
         const buffer = new BinaryBuffer(bytes, false);
         return getOperatorParametersExtended$2(buffer);
     };
@@ -12591,7 +12597,7 @@
         }
     };
     const fromBytes$5 = (bytes) => {
-        validateCommandPayload(name$5, bytes, maxSize$5);
+        validateFixedCommandPayload(name$5, bytes, maxSize$5);
         const buffer = new BinaryBuffer(bytes, false);
         return getOperatorParametersExtended2$2(buffer);
     };
@@ -12801,7 +12807,7 @@
         }
     };
     const fromBytes$4 = (bytes) => {
-        validateCommandPayload(name$4, bytes, maxSize$4);
+        validateFixedCommandPayload(name$4, bytes, maxSize$4);
         const buffer = new BinaryBuffer(bytes, false);
         return getOperatorParametersExtended4$2(buffer);
     };
@@ -12862,7 +12868,7 @@
         }
     };
     const fromBytes$3 = (bytes) => {
-        validateCommandPayload(name$3, bytes, maxSize$3);
+        validateFixedCommandPayload(name$3, bytes, maxSize$3);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             year: buffer.getUint8(),
@@ -12923,7 +12929,7 @@
         }
     };
     const fromBytes$2 = (bytes) => {
-        validateCommandPayload(name$2, bytes, maxSize$2);
+        validateFixedCommandPayload(name$2, bytes, maxSize$2);
         return {};
     };
     const toBytes$2 = () => toBytes$2k(id$2);
@@ -12961,7 +12967,7 @@
         }
     };
     const fromBytes$1 = (bytes) => {
-        validateCommandPayload(name$1, bytes, maxSize$1);
+        validateFixedCommandPayload(name$1, bytes, maxSize$1);
         return {};
     };
     const toBytes$1 = () => toBytes$2k(id$1);
@@ -12999,7 +13005,7 @@
         }
     };
     const fromBytes = (bytes) => {
-        validateCommandPayload(name, bytes, maxSize);
+        validateFixedCommandPayload(name, bytes, maxSize);
         return {};
     };
     const toBytes = () => toBytes$2k(id);

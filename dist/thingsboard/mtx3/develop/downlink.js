@@ -212,6 +212,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   var getDayEnergies$1 = 0x78;
   var getDayMaxPower = 0x79;
+  var getCurrentDemand = 0x7b;
   var errorResponse$1 = 0xfe;
   var errorDataFrameResponse$1 = 0xff;
 
@@ -223,6 +224,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getBv: getBv$1,
     getCorrectTime: getCorrectTime$1,
     getCriticalEvent: getCriticalEvent$1,
+    getCurrentDemand: getCurrentDemand,
     getCurrentStatusMeter: getCurrentStatusMeter$1,
     getCurrentValues: getCurrentValues$1,
     getDateTime: getDateTime$1,

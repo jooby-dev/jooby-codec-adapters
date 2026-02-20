@@ -407,18 +407,22 @@ var fromBytes, toBytes;
             .join(separator);
     };
 
-    var validateCommandPayload = (commandName, bytes, expectedLength) => {
+    const validateRangeCommandPayload = (commandName, bytes, range) => {
         if (!commandName) {
             throw new Error('Command name is required.');
         }
         if (bytes && !Array.isArray(bytes)) {
             throw new Error(`Invalid payload for ${commandName}. Expected array, got: ${typeof bytes}.`);
         }
-        if (bytes.length !== expectedLength) {
+        if ((range.min > 0 && bytes.length < range.min) || (range.max > 0 && bytes.length > range.max)) {
             const hex = getHexFromBytes(bytes, { separator: '' });
-            throw new Error(`Wrong buffer size for ${commandName}: ${bytes.length}. Expected: ${expectedLength}. Payload: 0x${hex}.`);
+            const expectedLengthReport = range.min === range.max
+                ? `${range.max}`
+                : JSON.stringify(range);
+            throw new Error(`Wrong buffer size for ${commandName}: ${bytes.length}. Expected: ${expectedLengthReport}. Payload: 0x${hex}.`);
         }
     };
+    const validateFixedCommandPayload = (commandName, bytes, expectedLength) => (validateRangeCommandPayload(commandName, bytes, { min: expectedLength, max: expectedLength }));
 
     const setTime2000$1 = 0x02;
     const setParameter$2 = 0x03;
@@ -493,10 +497,10 @@ var fromBytes, toBytes;
     var downlinkNames = invertObject(downlinkIds);
 
     const id$10 = correctTime2000$1;
-    const name$t = downlinkNames[correctTime2000$1];
-    const COMMAND_BODY_SIZE$y = 2;
+    const name$u = downlinkNames[correctTime2000$1];
+    const COMMAND_BODY_SIZE$x = 2;
     const fromBytes$12 = (bytes) => {
-        validateCommandPayload(name$t, bytes, COMMAND_BODY_SIZE$y);
+        validateFixedCommandPayload(name$u, bytes, COMMAND_BODY_SIZE$x);
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
             sequenceNumber: buffer.getUint8(),
@@ -509,7 +513,7 @@ var fromBytes, toBytes;
     };
     const toBytes$12 = (parameters) => {
         const { sequenceNumber, seconds } = parameters;
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$y, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$x, false);
         buffer.setUint8(sequenceNumber);
         buffer.setInt8(seconds);
         return toBytes$13(id$10, buffer.data);
@@ -598,6 +602,8 @@ var fromBytes, toBytes;
     const BATTERY_DEPASSIVATION_INFO = 10;
     const BATTERY_MINIMAL_LOAD_TIME = 11;
     const CHANNELS_CONFIG = 13;
+    const MTX_DATA_TRANSMISSION_SCHEDULE = 14;
+    const MTX_POWER_CONFIG = 15;
     const RX2_CONFIG = 18;
     const ABSOLUTE_DATA = 23;
     const ABSOLUTE_DATA_ENABLE = 24;
@@ -637,6 +643,7 @@ var fromBytes, toBytes;
     const KEEP_LORA_CONNECTION_ON_REMOVAL = 59;
     const NBIOT_NTP_SERVER = 60;
     const ACTIVATE_MODULE = 61;
+    const MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG = 64;
 
     var deviceParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -663,6 +670,9 @@ var fromBytes, toBytes;
         MQTT_SESSION_CONFIG: MQTT_SESSION_CONFIG,
         MQTT_SSL_ENABLE: MQTT_SSL_ENABLE,
         MQTT_TOPIC_PREFIX: MQTT_TOPIC_PREFIX,
+        MTX_DATA_TRANSMISSION_SCHEDULE: MTX_DATA_TRANSMISSION_SCHEDULE,
+        MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG: MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG,
+        MTX_POWER_CONFIG: MTX_POWER_CONFIG,
         NBIOT_APN: NBIOT_APN,
         NBIOT_BANDS: NBIOT_BANDS,
         NBIOT_DEVICE_SOFTWARE_UPDATE: NBIOT_DEVICE_SOFTWARE_UPDATE,
@@ -765,7 +775,9 @@ var fromBytes, toBytes;
         IMP4IN
     ];
     const MTX_HARDWARE_TYPES = [
-        MTXLORA
+        MTXLORA,
+        PLC2LORA,
+        LORA
     ];
     const TWO_BYTES_HARDWARE_TYPES = [...FOUR_CHANNELS_HARDWARE_TYPES, ...MTX_HARDWARE_TYPES];
     const gasBitMask = {
@@ -846,6 +858,8 @@ var fromBytes, toBytes;
         [BATTERY_DEPASSIVATION_INFO]: 1 + 6,
         [BATTERY_MINIMAL_LOAD_TIME]: 1 + 4,
         [CHANNELS_CONFIG]: 1 + 1,
+        [MTX_DATA_TRANSMISSION_SCHEDULE]: 1 + 20,
+        [MTX_POWER_CONFIG]: 1 + 1,
         [RX2_CONFIG]: 1 + 4,
         [ABSOLUTE_DATA]: 1 + 9,
         [ABSOLUTE_DATA_ENABLE]: 1 + 1,
@@ -989,6 +1003,62 @@ var fromBytes, toBytes;
                     throw new Error('channels config must be between 0-18');
                 }
                 buffer.setUint8(parameter.value);
+            }
+        },
+        [MTX_DATA_TRANSMISSION_SCHEDULE]: {
+            get: (buffer) => {
+                const schedules = [];
+                for (let i = 0; i < 4; i++) {
+                    const dataType = buffer.getUint8();
+                    const transmissionPeriod = buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT;
+                    const allowedHoursScheduleValue = buffer.getUint24(true);
+                    const allowedHoursSchedule = {};
+                    for (let hour = 0; hour < 24; hour++) {
+                        allowedHoursSchedule[hour] = (allowedHoursScheduleValue & (1 << hour)) ? 1 : 0;
+                    }
+                    schedules.push({
+                        dataType,
+                        transmissionPeriod,
+                        allowedHoursSchedule
+                    });
+                }
+                return { schedules };
+            },
+            set: (buffer, parameter) => {
+                for (const schedule of parameter.schedules) {
+                    buffer.setUint8(schedule.dataType);
+                    buffer.setUint8(schedule.transmissionPeriod / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+                    let allowedHoursScheduleValue = 0;
+                    for (let hour = 0; hour < 24; hour++) {
+                        if (schedule.allowedHoursSchedule[hour]) {
+                            allowedHoursScheduleValue |= (1 << hour);
+                        }
+                    }
+                    buffer.setUint24(allowedHoursScheduleValue, true);
+                }
+            }
+        },
+        [MTX_POWER_CONFIG]: {
+            get: (buffer) => {
+                const value = buffer.getUint8();
+                return {
+                    active: !!(value & 0x01),
+                    vari: !!(value & 0x02),
+                    vare: !!(value & 0x04),
+                    activeExp: !!(value & 0x08),
+                    variExp: !!(value & 0x10),
+                    vareExp: !!(value & 0x20)
+                };
+            },
+            set: (buffer, parameter) => {
+                let value = 0;
+                value |= parameter.active ? 0x01 : 0;
+                value |= parameter.vari ? 0x02 : 0;
+                value |= parameter.vare ? 0x04 : 0;
+                value |= parameter.activeExp ? 0x08 : 0;
+                value |= parameter.variExp ? 0x10 : 0;
+                value |= parameter.vareExp ? 0x20 : 0;
+                buffer.setUint8(value);
             }
         },
         [RX2_CONFIG]: {
@@ -1340,6 +1410,35 @@ var fromBytes, toBytes;
             set: (buffer, parameter) => {
                 buffer.setUint8(parameter.enable);
             }
+        },
+        [MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG]: {
+            get: (buffer) => {
+                const schedules = [];
+                while (buffer.bytesLeft > 0) {
+                    const id = buffer.getUint8();
+                    const transmissionPeriod = buffer.getUint8() * DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT;
+                    const demandType0 = buffer.getUint8();
+                    const demandType1 = buffer.getUint8();
+                    const demandType2 = buffer.getUint8();
+                    schedules.push({
+                        id,
+                        transmissionPeriod,
+                        demandType0,
+                        demandType1,
+                        demandType2
+                    });
+                }
+                return { schedules };
+            },
+            set: (buffer, parameter) => {
+                for (const schedule of parameter.schedules) {
+                    buffer.setUint8(schedule.id);
+                    buffer.setUint8(schedule.transmissionPeriod / DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT);
+                    buffer.setUint8(schedule.demandType0);
+                    buffer.setUint8(schedule.demandType1);
+                    buffer.setUint8(schedule.demandType2);
+                }
+            }
         }
     };
     const getEventStatusSize = (hardwareType) => (TWO_BYTES_HARDWARE_TYPES.indexOf(hardwareType) !== -1 ? 2 : 1);
@@ -1402,6 +1501,10 @@ var fromBytes, toBytes;
                 data = parameter.data;
                 size = 1 + 1 + data.server.length + 2;
                 break;
+            case MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG:
+                data = parameter.data;
+                size = 1 + data.schedules.length * 5;
+                break;
             default:
                 size = parametersSizeMap[parameter.id];
         }
@@ -1447,6 +1550,7 @@ var fromBytes, toBytes;
             case NBIOT_APN:
             case CHANNEL_TYPE:
             case NBIOT_NTP_SERVER:
+            case MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG:
                 size = getParameterSize(parameter);
                 break;
             default:
@@ -2071,10 +2175,10 @@ var fromBytes, toBytes;
     };
 
     const id$_ = getArchiveDays$1;
-    const name$s = downlinkNames[getArchiveDays$1];
-    const COMMAND_BODY_SIZE$x = 3;
+    const name$t = downlinkNames[getArchiveDays$1];
+    const COMMAND_BODY_SIZE$w = 3;
     const fromBytes$10 = (bytes) => {
-        validateCommandPayload(name$s, bytes, COMMAND_BODY_SIZE$x);
+        validateFixedCommandPayload(name$t, bytes, COMMAND_BODY_SIZE$w);
         const buffer = new BinaryBuffer(bytes, false);
         const date = getDate(buffer);
         const days = buffer.getUint8();
@@ -2084,7 +2188,7 @@ var fromBytes, toBytes;
         return { startTime2000: getTime2000FromDate(date), days };
     };
     const toBytes$10 = (parameters) => {
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$x, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$w, false);
         const { startTime2000, days } = parameters;
         const date = getDateFromTime2000(startTime2000);
         setDate(buffer, date);
@@ -2093,10 +2197,10 @@ var fromBytes, toBytes;
     };
 
     const id$Z = getArchiveDaysMc$1;
-    const name$r = downlinkNames[getArchiveDaysMc$1];
-    const COMMAND_BODY_SIZE$w = 4;
+    const name$s = downlinkNames[getArchiveDaysMc$1];
+    const COMMAND_BODY_SIZE$v = 4;
     const fromBytes$ = (bytes) => {
-        validateCommandPayload(name$r, bytes, COMMAND_BODY_SIZE$w);
+        validateFixedCommandPayload(name$s, bytes, COMMAND_BODY_SIZE$v);
         const buffer = new BinaryBuffer(bytes, false);
         const date = getDate(buffer);
         const channelList = getChannels(buffer);
@@ -2107,7 +2211,7 @@ var fromBytes, toBytes;
         return { startTime2000: getTime2000FromDate(date), days, channelList };
     };
     const toBytes$ = (parameters) => {
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$w, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$v, false);
         const { startTime2000, days, channelList } = parameters;
         const date = getDateFromTime2000(startTime2000);
         setDate(buffer, date);
@@ -2117,10 +2221,10 @@ var fromBytes, toBytes;
     };
 
     const id$Y = getArchiveEvents$1;
-    const name$q = downlinkNames[getArchiveEvents$1];
-    const COMMAND_BODY_SIZE$v = 5;
+    const name$r = downlinkNames[getArchiveEvents$1];
+    const COMMAND_BODY_SIZE$u = 5;
     const fromBytes$_ = (bytes) => {
-        validateCommandPayload(name$q, bytes, COMMAND_BODY_SIZE$v);
+        validateFixedCommandPayload(name$r, bytes, COMMAND_BODY_SIZE$u);
         const buffer = new BinaryBuffer(bytes, false);
         const startTime2000 = getTime(buffer);
         const events = buffer.getUint8();
@@ -2131,17 +2235,17 @@ var fromBytes, toBytes;
     };
     const toBytes$_ = (parameters) => {
         const { startTime2000, events } = parameters;
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$v, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$u, false);
         setTime(buffer, startTime2000);
         buffer.setUint8(events);
         return toBytes$13(id$Y, buffer.data);
     };
 
     const id$X = getArchiveHours$1;
-    const name$p = downlinkNames[getArchiveHours$1];
-    const COMMAND_BODY_SIZE$u = 4;
+    const name$q = downlinkNames[getArchiveHours$1];
+    const COMMAND_BODY_SIZE$t = 4;
     const fromBytes$Z = (bytes) => {
-        validateCommandPayload(name$p, bytes, COMMAND_BODY_SIZE$u);
+        validateFixedCommandPayload(name$q, bytes, COMMAND_BODY_SIZE$t);
         const buffer = new BinaryBuffer(bytes, false);
         const date = getDate(buffer);
         const { hour } = getHours(buffer);
@@ -2154,7 +2258,7 @@ var fromBytes, toBytes;
     };
     const toBytes$Z = (parameters) => {
         const { startTime2000, hours } = parameters;
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$u, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$t, false);
         const date = getDateFromTime2000(startTime2000);
         const hour = date.getUTCHours();
         setDate(buffer, date);
@@ -2164,10 +2268,10 @@ var fromBytes, toBytes;
     };
 
     const id$W = getArchiveHoursMc$1;
-    const name$o = downlinkNames[getArchiveHoursMc$1];
-    const COMMAND_BODY_SIZE$t = 4;
+    const name$p = downlinkNames[getArchiveHoursMc$1];
+    const COMMAND_BODY_SIZE$s = 4;
     const fromBytes$Y = (bytes) => {
-        validateCommandPayload(name$o, bytes, COMMAND_BODY_SIZE$t);
+        validateFixedCommandPayload(name$p, bytes, COMMAND_BODY_SIZE$s);
         const buffer = new BinaryBuffer(bytes, false);
         const date = getDate(buffer);
         const { hour, hours } = getHours(buffer);
@@ -2179,7 +2283,7 @@ var fromBytes, toBytes;
         return { startTime2000: getTime2000FromDate(date), hours, channelList };
     };
     const toBytes$Y = (parameters) => {
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$t, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$s, false);
         const { hours, startTime2000, channelList } = parameters;
         const date = getDateFromTime2000(startTime2000);
         const hour = date.getUTCHours();
@@ -2190,7 +2294,7 @@ var fromBytes, toBytes;
     };
 
     const id$V = getArchiveHoursMcEx$1;
-    const COMMAND_BODY_SIZE$s = 5;
+    const COMMAND_BODY_SIZE$r = 5;
     const fromBytes$X = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         const date = getDate(buffer);
@@ -2204,7 +2308,7 @@ var fromBytes, toBytes;
         return { startTime2000: getTime2000FromDate(date), hour, hours, channelList };
     };
     const toBytes$X = (parameters) => {
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$s, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$r, false);
         const { channelList, hour, hours, startTime2000 } = parameters;
         const date = getDateFromTime2000(startTime2000);
         setDate(buffer, date);
@@ -2215,10 +2319,10 @@ var fromBytes, toBytes;
     };
 
     const id$U = getBatteryStatus$1;
-    const name$n = downlinkNames[getBatteryStatus$1];
-    const COMMAND_BODY_SIZE$r = 0;
+    const name$o = downlinkNames[getBatteryStatus$1];
+    const COMMAND_BODY_SIZE$q = 0;
     const fromBytes$W = (bytes) => {
-        validateCommandPayload(name$n, bytes, COMMAND_BODY_SIZE$r);
+        validateFixedCommandPayload(name$o, bytes, COMMAND_BODY_SIZE$q);
         return {};
     };
     const toBytes$W = () => toBytes$13(id$U);
@@ -2228,37 +2332,37 @@ var fromBytes, toBytes;
     const toBytes$V = (parameters) => (toBytes$13(id$T, Object.keys(parameters).length !== 0 ? [setChannelsMaskToNumber(parameters)] : []));
 
     const id$S = getChannelsTypes$1;
-    const name$m = downlinkNames[getChannelsTypes$1];
-    const COMMAND_BODY_SIZE$q = 0;
+    const name$n = downlinkNames[getChannelsTypes$1];
+    const COMMAND_BODY_SIZE$p = 0;
     const fromBytes$U = (bytes) => {
-        validateCommandPayload(name$m, bytes, COMMAND_BODY_SIZE$q);
+        validateFixedCommandPayload(name$n, bytes, COMMAND_BODY_SIZE$p);
         return {};
     };
     const toBytes$U = () => toBytes$13(id$S);
 
     const id$R = getCurrent;
-    const name$l = downlinkNames[getCurrent];
-    const COMMAND_BODY_SIZE$p = 0;
+    const name$m = downlinkNames[getCurrent];
+    const COMMAND_BODY_SIZE$o = 0;
     const fromBytes$T = (bytes) => {
-        validateCommandPayload(name$l, bytes, COMMAND_BODY_SIZE$p);
+        validateFixedCommandPayload(name$m, bytes, COMMAND_BODY_SIZE$o);
         return {};
     };
     const toBytes$T = () => toBytes$13(id$R);
 
     const id$Q = getCurrentMc;
-    const name$k = downlinkNames[getCurrentMc];
-    const COMMAND_BODY_SIZE$o = 0;
+    const name$l = downlinkNames[getCurrentMc];
+    const COMMAND_BODY_SIZE$n = 0;
     const fromBytes$S = (bytes) => {
-        validateCommandPayload(name$k, bytes, COMMAND_BODY_SIZE$o);
+        validateFixedCommandPayload(name$l, bytes, COMMAND_BODY_SIZE$n);
         return {};
     };
     const toBytes$S = () => toBytes$13(id$Q);
 
     const id$P = getExAbsArchiveDaysMc$1;
-    const name$j = downlinkNames[getExAbsArchiveDaysMc$1];
-    const COMMAND_BODY_SIZE$n = 4;
+    const name$k = downlinkNames[getExAbsArchiveDaysMc$1];
+    const COMMAND_BODY_SIZE$m = 4;
     const fromBytes$R = (bytes) => {
-        validateCommandPayload(name$j, bytes, COMMAND_BODY_SIZE$n);
+        validateFixedCommandPayload(name$k, bytes, COMMAND_BODY_SIZE$m);
         const buffer = new BinaryBuffer(bytes, false);
         const date = getDate(buffer);
         const channelList = getChannels(buffer);
@@ -2269,7 +2373,7 @@ var fromBytes, toBytes;
         return { startTime2000: getTime2000FromDate(date), days, channelList };
     };
     const toBytes$R = (parameters) => {
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$n, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$m, false);
         const { startTime2000, days, channelList } = parameters;
         setDate(buffer, startTime2000);
         setChannels(buffer, channelList.map(index => ({ index })));
@@ -2278,7 +2382,7 @@ var fromBytes, toBytes;
     };
 
     const id$O = getExAbsArchiveHoursMc$1;
-    const COMMAND_BODY_SIZE$m = 4;
+    const COMMAND_BODY_SIZE$l = 4;
     const fromBytes$Q = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         const date = getDate(buffer);
@@ -2291,7 +2395,7 @@ var fromBytes, toBytes;
         return { channelList, hours, startTime2000: getTime2000FromDate(date) };
     };
     const toBytes$Q = (parameters) => {
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$m, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$l, false);
         const { startTime2000, hours, channelList } = parameters;
         const date = getDateFromTime2000(startTime2000);
         const hour = date.getUTCHours();
@@ -2302,19 +2406,19 @@ var fromBytes, toBytes;
     };
 
     const id$N = getExAbsCurrentMc;
-    const name$i = downlinkNames[getExAbsCurrentMc];
-    const COMMAND_BODY_SIZE$l = 0;
+    const name$j = downlinkNames[getExAbsCurrentMc];
+    const COMMAND_BODY_SIZE$k = 0;
     const fromBytes$P = (bytes) => {
-        validateCommandPayload(name$i, bytes, COMMAND_BODY_SIZE$l);
+        validateFixedCommandPayload(name$j, bytes, COMMAND_BODY_SIZE$k);
         return {};
     };
     const toBytes$P = () => toBytes$13(id$N);
 
     const id$M = getLmicInfo$1;
-    const name$h = downlinkNames[getLmicInfo$1];
-    const COMMAND_BODY_SIZE$k = 0;
+    const name$i = downlinkNames[getLmicInfo$1];
+    const COMMAND_BODY_SIZE$j = 0;
     const fromBytes$O = (bytes) => {
-        validateCommandPayload(name$h, bytes, COMMAND_BODY_SIZE$k);
+        validateFixedCommandPayload(name$i, bytes, COMMAND_BODY_SIZE$j);
         return {};
     };
     const toBytes$O = () => toBytes$13(id$M);
@@ -2331,28 +2435,28 @@ var fromBytes, toBytes;
     };
 
     const id$K = getSignalQuality;
-    const name$g = downlinkNames[getSignalQuality];
-    const COMMAND_BODY_SIZE$j = 0;
+    const name$h = downlinkNames[getSignalQuality];
+    const COMMAND_BODY_SIZE$i = 0;
     const fromBytes$M = (bytes) => {
-        validateCommandPayload(name$g, bytes, COMMAND_BODY_SIZE$j);
+        validateFixedCommandPayload(name$h, bytes, COMMAND_BODY_SIZE$i);
         return {};
     };
     const toBytes$M = () => toBytes$13(id$K, []);
 
     const id$J = getStatus;
-    const name$f = downlinkNames[getStatus];
-    const COMMAND_BODY_SIZE$i = 0;
+    const name$g = downlinkNames[getStatus];
+    const COMMAND_BODY_SIZE$h = 0;
     const fromBytes$L = (bytes) => {
-        validateCommandPayload(name$f, bytes, COMMAND_BODY_SIZE$i);
+        validateFixedCommandPayload(name$g, bytes, COMMAND_BODY_SIZE$h);
         return {};
     };
     const toBytes$L = () => toBytes$13(id$J);
 
     const id$I = getTime2000;
-    const name$e = downlinkNames[getTime2000];
-    const COMMAND_BODY_SIZE$h = 0;
+    const name$f = downlinkNames[getTime2000];
+    const COMMAND_BODY_SIZE$g = 0;
     const fromBytes$K = (bytes) => {
-        validateCommandPayload(name$e, bytes, COMMAND_BODY_SIZE$h);
+        validateFixedCommandPayload(name$f, bytes, COMMAND_BODY_SIZE$g);
         return {};
     };
     const toBytes$K = () => toBytes$13(id$I, []);
@@ -2369,10 +2473,10 @@ var fromBytes, toBytes;
     };
 
     const id$G = setTime2000$1;
-    const name$d = downlinkNames[setTime2000$1];
-    const COMMAND_BODY_SIZE$g = 5;
+    const name$e = downlinkNames[setTime2000$1];
+    const COMMAND_BODY_SIZE$f = 5;
     const fromBytes$I = (bytes) => {
-        validateCommandPayload(name$d, bytes, COMMAND_BODY_SIZE$g);
+        validateFixedCommandPayload(name$e, bytes, COMMAND_BODY_SIZE$f);
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
             sequenceNumber: buffer.getUint8(),
@@ -2385,26 +2489,26 @@ var fromBytes, toBytes;
     };
     const toBytes$I = (parameters) => {
         const { sequenceNumber, seconds } = parameters;
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$g, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$f, false);
         buffer.setUint8(sequenceNumber);
         buffer.setInt32(seconds);
         return toBytes$13(id$G, buffer.data);
     };
 
     const id$F = softRestart$1;
-    const name$c = downlinkNames[softRestart$1];
-    const COMMAND_BODY_SIZE$f = 0;
+    const name$d = downlinkNames[softRestart$1];
+    const COMMAND_BODY_SIZE$e = 0;
     const fromBytes$H = (bytes) => {
-        validateCommandPayload(name$c, bytes, COMMAND_BODY_SIZE$f);
+        validateFixedCommandPayload(name$d, bytes, COMMAND_BODY_SIZE$e);
         return {};
     };
     const toBytes$H = () => toBytes$13(id$F);
 
     const id$E = updateRun$1;
-    const name$b = downlinkNames[updateRun$1];
-    const COMMAND_BODY_SIZE$e = 0;
+    const name$c = downlinkNames[updateRun$1];
+    const COMMAND_BODY_SIZE$d = 0;
     const fromBytes$G = (bytes) => {
-        validateCommandPayload(name$b, bytes, COMMAND_BODY_SIZE$e);
+        validateFixedCommandPayload(name$c, bytes, COMMAND_BODY_SIZE$d);
         return {};
     };
     const toBytes$G = () => toBytes$13(id$E);
@@ -2424,10 +2528,10 @@ var fromBytes, toBytes;
     };
 
     const id$C = verifyImage$1;
-    const name$a = downlinkNames[verifyImage$1];
-    const COMMAND_BODY_SIZE$d = 0;
+    const name$b = downlinkNames[verifyImage$1];
+    const COMMAND_BODY_SIZE$c = 0;
     const fromBytes$E = (bytes) => {
-        validateCommandPayload(name$a, bytes, COMMAND_BODY_SIZE$d);
+        validateFixedCommandPayload(name$b, bytes, COMMAND_BODY_SIZE$c);
         return {};
     };
     const toBytes$E = () => toBytes$13(id$C);
@@ -2674,10 +2778,10 @@ var fromBytes, toBytes;
     var uplinkNames = invertObject(uplinkIds);
 
     const id$A = correctTime2000;
-    const name$9 = uplinkNames[correctTime2000];
-    const COMMAND_BODY_SIZE$c = 1;
+    const name$a = uplinkNames[correctTime2000];
+    const COMMAND_BODY_SIZE$b = 1;
     const fromBytes$C = (bytes) => {
-        validateCommandPayload(name$9, bytes, COMMAND_BODY_SIZE$c);
+        validateFixedCommandPayload(name$a, bytes, COMMAND_BODY_SIZE$b);
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
             status: buffer.getUint8()
@@ -2689,7 +2793,7 @@ var fromBytes, toBytes;
     };
     const toBytes$B = (parameters) => {
         const { status } = parameters;
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$c, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$b, false);
         buffer.setUint8(status);
         return toBytes$13(id$A, buffer.data);
     };
@@ -2735,7 +2839,7 @@ var fromBytes, toBytes;
     };
 
     const id$x = day;
-    const COMMAND_BODY_SIZE$b = 6;
+    const COMMAND_BODY_SIZE$a = 6;
     const fromBytes$z = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         const date = getDate(buffer);
@@ -2747,7 +2851,7 @@ var fromBytes, toBytes;
         return { value, isMagneticInfluence, startTime2000: getTime2000FromDate(date) };
     };
     const toBytes$y = (parameters) => {
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$b, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$a, false);
         const { value, isMagneticInfluence, startTime2000 } = parameters;
         const date = getDateFromTime2000(startTime2000);
         const hour = date.getUTCHours();
@@ -3029,27 +3133,27 @@ var fromBytes, toBytes;
     };
 
     const id$m = getBatteryStatus;
-    const name$8 = uplinkNames[getBatteryStatus];
-    const COMMAND_BODY_SIZE$a = 11;
+    const name$9 = uplinkNames[getBatteryStatus];
+    const COMMAND_BODY_SIZE$9 = 11;
     const fromBytes$o = (bytes) => {
-        validateCommandPayload(name$8, bytes, COMMAND_BODY_SIZE$a);
+        validateFixedCommandPayload(name$9, bytes, COMMAND_BODY_SIZE$9);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             voltageUnderLowLoad: buffer.getUint16(),
             voltageUnderHighLoad: buffer.getUint16(),
             internalResistance: buffer.getUint16(),
-            temperature: buffer.getUint8(),
+            temperature: buffer.getInt8(),
             remainingCapacity: buffer.getUint8(),
             isLastDayOverconsumption: buffer.getUint8() === 1,
             averageDailyOverconsumptionCounter: buffer.getUint16()
         };
     };
     const toBytes$n = (parameters) => {
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$a, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$9, false);
         buffer.setUint16(parameters.voltageUnderLowLoad);
         buffer.setUint16(parameters.voltageUnderHighLoad);
         buffer.setUint16(parameters.internalResistance);
-        buffer.setUint8(parameters.temperature);
+        buffer.setInt8(parameters.temperature);
         buffer.setUint8(parameters.remainingCapacity);
         buffer.setUint8(parameters.isLastDayOverconsumption ? 1 : 0);
         buffer.setUint16(parameters.averageDailyOverconsumptionCounter);
@@ -3196,14 +3300,14 @@ var fromBytes, toBytes;
     };
 
     const id$h = getLmicInfo;
-    const name$7 = uplinkNames[getLmicInfo];
-    const COMMAND_BODY_SIZE$9 = 2;
+    const name$8 = uplinkNames[getLmicInfo];
+    const COMMAND_BODY_SIZE$8 = 2;
     const lmicCapabilitiesBitMask = {
         isMulticastSupported: 1 << 0,
         isFragmentedDataSupported: 1 << 1
     };
     const fromBytes$j = (bytes) => {
-        validateCommandPayload(name$7, bytes, COMMAND_BODY_SIZE$9);
+        validateFixedCommandPayload(name$8, bytes, COMMAND_BODY_SIZE$8);
         const buffer = new BinaryBuffer(bytes);
         const capabilities = toObject(lmicCapabilitiesBitMask, buffer.getUint8());
         const version = buffer.getUint8();
@@ -3214,7 +3318,7 @@ var fromBytes, toBytes;
     };
     const toBytes$i = (parameters) => {
         const { capabilities, version } = parameters;
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$9);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$8);
         buffer.setUint8(fromObject(lmicCapabilitiesBitMask, capabilities));
         buffer.setUint8(version);
         return toBytes$13(id$h, buffer.data);
@@ -3232,10 +3336,10 @@ var fromBytes, toBytes;
     };
 
     const id$f = signalQuality;
-    const name$6 = uplinkNames[signalQuality];
-    const COMMAND_BODY_SIZE$8 = 6;
+    const name$7 = uplinkNames[signalQuality];
+    const COMMAND_BODY_SIZE$7 = 6;
     const fromBytes$h = (bytes) => {
-        validateCommandPayload(name$6, bytes, COMMAND_BODY_SIZE$8);
+        validateFixedCommandPayload(name$7, bytes, COMMAND_BODY_SIZE$7);
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
             rssi: buffer.getInt8(),
@@ -3252,7 +3356,7 @@ var fromBytes, toBytes;
     };
     const toBytes$g = (parameters) => {
         const { rssi, rsrp, rsrq, sinr, txPower, ecl } = parameters;
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$8, false);
+        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$7, false);
         buffer.setInt8(rssi);
         buffer.setInt8(rsrp);
         buffer.setInt8(rsrq);
@@ -3334,6 +3438,22 @@ var fromBytes, toBytes;
     const setDeviceId = (buffer, value) => {
         getBytesFromHex(value).forEach(byte => buffer.setUint8(byte));
     };
+    const getBatteryVoltageValues = (buffer) => {
+        const byte1 = buffer.getUint8();
+        const byte2 = buffer.getUint8();
+        const byte3 = buffer.getUint8();
+        const noLoadBatteryVoltage = (byte1 << 4) | (byte2 >> 4);
+        const loadBatteryVoltage = ((byte2 & 0x0f) << 8) | byte3;
+        return { noLoadBatteryVoltage, loadBatteryVoltage };
+    };
+    const setBatteryVoltageValues = (buffer, noLoadBatteryVoltage, loadBatteryVoltage) => {
+        const value0 = noLoadBatteryVoltage & 0x0fff;
+        const value1 = loadBatteryVoltage & 0x0fff;
+        const byte0 = value0 >> 4;
+        const byte1 = ((value0 & 0x0f) << 4) | (value1 >> 8);
+        const byte2 = value1 & 0xff;
+        [byte0, byte1, byte2].forEach(byte => buffer.setUint8(byte));
+    };
     const fromBytes$c = (bytes) => {
         if (bytes.length > COMMAND_BODY_MAX_SIZE$1) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
@@ -3355,10 +3475,17 @@ var fromBytes, toBytes;
             case OPTOLOW:
             case OPTOFLASH:
             case JOIN_ACCEPT:
-            case DEPASS_DONE:
             case WATER_NO_RESPONSE:
             case OPTOSENSOR_ERROR:
                 eventData = { time2000: getTime(buffer) };
+                break;
+            case DEPASS_DONE:
+                eventData = {
+                    duration: buffer.getUint32(),
+                    status: buffer.getUint8(),
+                    ...getBatteryVoltageValues(buffer),
+                    internalResistance: buffer.getUint16()
+                };
                 break;
             case BATTERY_ALARM:
                 eventData = { voltage: getVoltage(buffer) };
@@ -3407,10 +3534,15 @@ var fromBytes, toBytes;
             case OPTOLOW:
             case OPTOFLASH:
             case JOIN_ACCEPT:
-            case DEPASS_DONE:
             case WATER_NO_RESPONSE:
             case OPTOSENSOR_ERROR:
                 setTime(buffer, data.time2000);
+                break;
+            case DEPASS_DONE:
+                buffer.setUint32(data.duration);
+                buffer.setUint8(data.status);
+                setBatteryVoltageValues(buffer, data.noLoadBatteryVoltage, data.loadBatteryVoltage);
+                buffer.setUint16(data.internalResistance);
                 break;
             case BATTERY_ALARM:
                 setVoltage(buffer, data.voltage);
@@ -3450,25 +3582,46 @@ var fromBytes, toBytes;
     };
 
     const id$9 = setParameter;
-    const COMMAND_BODY_SIZE$7 = 2;
+    const name$6 = uplinkNames[setParameter];
+    const MIN_COMMAND_SIZE = 2;
+    const MAX_COMMAND_SIZE = 10;
     const fromBytes$b = (bytes) => {
-        if (bytes.length !== COMMAND_BODY_SIZE$7) {
-            throw new Error(`Wrong buffer size: ${bytes.length}.`);
-        }
+        validateRangeCommandPayload(name$6, bytes, { min: MIN_COMMAND_SIZE, max: MAX_COMMAND_SIZE });
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
             id: buffer.getUint8(),
             status: buffer.getUint8()
         };
+        if (parameters.id === MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG) {
+            const scheduleStatuses = [];
+            while (buffer.bytesLeft) {
+                scheduleStatuses.push({
+                    id: buffer.getUint8(),
+                    isSuccessful: buffer.getUint8() !== 0
+                });
+            }
+            if (scheduleStatuses.length > 0) {
+                parameters.scheduleStatuses = scheduleStatuses;
+            }
+        }
         if (!buffer.isEmpty) {
             throw new Error('BinaryBuffer is not empty.');
         }
         return parameters;
     };
     const toBytes$a = (parameters) => {
-        const buffer = new BinaryBuffer(COMMAND_BODY_SIZE$7, false);
+        const maxSize = parameters.id === MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG
+            ? 2 + parameters.scheduleStatuses.length * 2
+            : 2;
+        const buffer = new BinaryBuffer(maxSize, false);
         buffer.setUint8(parameters.id);
         buffer.setUint8(parameters.status);
+        if (parameters.scheduleStatuses) {
+            for (const scheduleStatus of parameters.scheduleStatuses) {
+                buffer.setUint8(scheduleStatus.id);
+                buffer.setUint8(scheduleStatus.isSuccessful ? 1 : 0);
+            }
+        }
         return toBytes$13(id$9, buffer.data);
     };
 
@@ -3476,7 +3629,7 @@ var fromBytes, toBytes;
     const name$5 = uplinkNames[setTime2000];
     const COMMAND_BODY_SIZE$6 = 1;
     const fromBytes$a = (bytes) => {
-        validateCommandPayload(name$5, bytes, COMMAND_BODY_SIZE$6);
+        validateFixedCommandPayload(name$5, bytes, COMMAND_BODY_SIZE$6);
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
             status: buffer.getUint8()
@@ -3497,7 +3650,7 @@ var fromBytes, toBytes;
     const name$4 = uplinkNames[softRestart];
     const COMMAND_BODY_SIZE$5 = 0;
     const fromBytes$9 = (bytes) => {
-        validateCommandPayload(name$4, bytes, COMMAND_BODY_SIZE$5);
+        validateFixedCommandPayload(name$4, bytes, COMMAND_BODY_SIZE$5);
         return {};
     };
     const toBytes$8 = () => toBytes$13(id$7);
@@ -3528,7 +3681,7 @@ var fromBytes, toBytes;
                     const statusData = {
                         batteryVoltage: getBatteryVoltage(buffer),
                         batteryInternalResistance: buffer.getUint16(),
-                        temperature: buffer.getUint8(),
+                        temperature: buffer.getInt8(),
                         remainingBatteryCapacity: buffer.getUint8(),
                         lastEventSequenceNumber: buffer.getUint8()
                     };
@@ -3551,10 +3704,10 @@ var fromBytes, toBytes;
             case PLC2LORA:
             case LORA:
                 data = {
-                    time2000: buffer.getUint32(),
+                    uptime: buffer.getUint32(),
                     resetReason: buffer.getUint8(),
-                    rssiLastDownlinkFrame: buffer.getUint8(),
-                    snrLastDownlinkFrame: buffer.getUint8(),
+                    rssiLastDownlinkFrame: buffer.getInt8(),
+                    snrLastDownlinkFrame: buffer.getInt8(),
                     downlinkRequestsNumber: buffer.getUint8(),
                     downlinkFragmentsNumber: buffer.getUint8(),
                     uplinkResponsesNumber: buffer.getUint8(),
@@ -3599,7 +3752,7 @@ var fromBytes, toBytes;
                     else {
                         buffer.setUint16(statusData.batteryInternalResistance);
                     }
-                    buffer.setUint8(statusData.temperature);
+                    buffer.setInt8(statusData.temperature);
                     if (statusData.remainingBatteryCapacity === undefined) {
                         buffer.setUint8(UNKNOWN_BATTERY_CAPACITY);
                     }
@@ -3613,12 +3766,14 @@ var fromBytes, toBytes;
                 }
                 break;
             case MTXLORA:
+            case PLC2LORA:
+            case LORA:
                 {
                     const statusData = data;
-                    buffer.setUint32(statusData.time2000);
+                    buffer.setUint32(statusData.uptime);
                     buffer.setUint8(statusData.resetReason);
-                    buffer.setUint8(statusData.rssiLastDownlinkFrame);
-                    buffer.setUint8(statusData.snrLastDownlinkFrame);
+                    buffer.setInt8(statusData.rssiLastDownlinkFrame);
+                    buffer.setInt8(statusData.snrLastDownlinkFrame);
                     buffer.setUint8(statusData.downlinkRequestsNumber);
                     buffer.setUint8(statusData.downlinkFragmentsNumber);
                     buffer.setUint8(statusData.uplinkResponsesNumber);
@@ -3641,7 +3796,7 @@ var fromBytes, toBytes;
     const name$3 = uplinkNames[time2000];
     const COMMAND_BODY_SIZE$4 = 5;
     const fromBytes$7 = (bytes) => {
-        validateCommandPayload(name$3, bytes, COMMAND_BODY_SIZE$4);
+        validateFixedCommandPayload(name$3, bytes, COMMAND_BODY_SIZE$4);
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
             sequenceNumber: buffer.getUint8(),
@@ -3664,7 +3819,7 @@ var fromBytes, toBytes;
     const name$2 = uplinkNames[updateRun];
     const COMMAND_BODY_SIZE$3 = 0;
     const fromBytes$6 = (bytes) => {
-        validateCommandPayload(name$2, bytes, COMMAND_BODY_SIZE$3);
+        validateFixedCommandPayload(name$2, bytes, COMMAND_BODY_SIZE$3);
         return {};
     };
     const toBytes$5 = () => toBytes$13(id$4);
@@ -3673,7 +3828,7 @@ var fromBytes, toBytes;
     const name$1 = uplinkNames[usWaterMeterBatteryStatus];
     const COMMAND_BODY_SIZE$2 = 7;
     const fromBytes$5 = (bytes) => {
-        validateCommandPayload(name$1, bytes, COMMAND_BODY_SIZE$2);
+        validateFixedCommandPayload(name$1, bytes, COMMAND_BODY_SIZE$2);
         const buffer = new BinaryBuffer(bytes, false);
         return {
             voltage: getBatteryVoltage(buffer),
@@ -3707,7 +3862,7 @@ var fromBytes, toBytes;
     const name = uplinkNames[verifyImage];
     const COMMAND_BODY_SIZE$1 = 1;
     const fromBytes$3 = (bytes) => {
-        validateCommandPayload(name, bytes, COMMAND_BODY_SIZE$1);
+        validateFixedCommandPayload(name, bytes, COMMAND_BODY_SIZE$1);
         const buffer = new BinaryBuffer(bytes, false);
         return { status: buffer.getUint8() };
     };
