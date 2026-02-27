@@ -128,6 +128,8 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var setCorrectDateTime$1 = 0x5c;
   var setDisplayParam$1 = 0x5d;
   var getDisplayParam$1 = 0x5e;
+  var setGsmParameters$1 = 0x60;
+  var getGsmParameters$1 = 0x61;
   var setSpecialOperation$1 = 0x64;
   var getMagneticFieldThreshold$1 = 0x6d;
   var getHalfHourEnergies$1 = 0x6f;
@@ -169,6 +171,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getEventsCounters: getEventsCounters$1,
     getExtendedCurrentValues: getExtendedCurrentValues$1,
     getExtendedCurrentValues2: getExtendedCurrentValues2,
+    getGsmParameters: getGsmParameters$1,
     getHalfHourDemand: getHalfHourDemand$1,
     getHalfHourDemandExport: getHalfHourDemandExport$1,
     getHalfHourDemandPrevious: getHalfHourDemandPrevious,
@@ -199,6 +202,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     setDayProfile: setDayProfile$1,
     setDemandParameters: setDemandParameters,
     setDisplayParam: setDisplayParam$1,
+    setGsmParameters: setGsmParameters$1,
     setOperatorParameters: setOperatorParameters$1,
     setOperatorParametersExtended3: setOperatorParametersExtended3$1,
     setSaldo: setSaldo$1,
@@ -250,6 +254,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getEventsCounters: getEventsCounters$1,
     getExtendedCurrentValues: getExtendedCurrentValues$1,
     getExtendedCurrentValues2: getExtendedCurrentValues2,
+    getGsmParameters: getGsmParameters$1,
     getHalfHourDemand: getHalfHourDemand$1,
     getHalfHourDemandExport: getHalfHourDemandExport$1,
     getHalfHourDemandPrevious: getHalfHourDemandPrevious,
@@ -280,6 +285,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     setDayProfile: setDayProfile$1,
     setDemandParameters: setDemandParameters,
     setDisplayParam: setDisplayParam$1,
+    setGsmParameters: setGsmParameters$1,
     setOperatorParameters: setOperatorParameters$1,
     setOperatorParametersExtended3: setOperatorParametersExtended3$1,
     setSaldo: setSaldo$1,
@@ -725,20 +731,45 @@ var toBytes, setDataSegment, getBase64FromBytes;
       this.offset += INT32_SIZE;
       return result;
     },
-    setString: function (value) {
-      this.setUint8(value.length);
-      for (var index = 0; index < value.length; ++index) {
+    setFixedString: function (value, length) {
+      var lengthToCopy = value.length > length ? length : value.length;
+      var index = 0;
+      for (index = 0; index < lengthToCopy; ++index) {
         this.setUint8(value.charCodeAt(index));
       }
+      for (index = lengthToCopy; index < length; ++index) {
+        this.setUint8(0);
+      }
     },
-    getString: function () {
-      var size = this.getUint8();
-      var endIndex = this.offset + size;
+    getFixedStringBase: function (length, _ref) {
+      var stopOnZero = _ref.stopOnZero;
+      var endIndex = this.offset + length;
       var chars = [];
+      var char;
       while (this.offset < endIndex) {
-        chars.push(String.fromCharCode(this.getUint8()));
+        char = this.getUint8();
+        if (stopOnZero && char === 0) {
+          this.seek(endIndex);
+          break;
+        }
+        chars.push(String.fromCharCode(char));
       }
       return chars.join('');
+    },
+    getFixedString: function (length) {
+      return this.getFixedStringBase(length, {
+        stopOnZero: true
+      });
+    },
+    setString: function (value) {
+      this.setUint8(value.length);
+      this.setFixedString(value);
+    },
+    getString: function () {
+      var length = this.getUint8();
+      return this.getFixedStringBase(length, {
+        stopOnZero: false
+      });
     },
     getBytesToOffset: function () {
       var offset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.offset;
@@ -1087,6 +1118,40 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   invertObject(events$1);
 
+  var UNDEFINED = 0;
+  var GSM = 1;
+  var TCP_SERVER = 2;
+  var TCP_CLIENT = 3;
+  var TCP_SERVER_TCP_PING = 4;
+  var TCP_SERVER_HTTP_PING = 5;
+
+  var gsmAccessTypes = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    GSM: GSM,
+    TCP_CLIENT: TCP_CLIENT,
+    TCP_SERVER: TCP_SERVER,
+    TCP_SERVER_HTTP_PING: TCP_SERVER_HTTP_PING,
+    TCP_SERVER_TCP_PING: TCP_SERVER_TCP_PING,
+    UNDEFINED: UNDEFINED
+  });
+
+  invertObject(gsmAccessTypes);
+
+  var CONFIGURATION_0 = 0;
+  var CONFIGURATION_1 = 1;
+  var RESERVED = 2;
+  var STATUS = 3;
+
+  var gsmBlockTypes = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    CONFIGURATION_0: CONFIGURATION_0,
+    CONFIGURATION_1: CONFIGURATION_1,
+    RESERVED: RESERVED,
+    STATUS: STATUS
+  });
+
+  invertObject(gsmBlockTypes);
+
   var SET_ALL_SEGMENT_DISPLAY$1 = 1;
   var SOFTWARE_VERSION$1 = 2;
   var TOTAL_ACTIVE_ENERGY$1 = 3;
@@ -1276,6 +1341,8 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var setCorrectDateTime = 0x5c;
   var setDisplayParam = 0x5d;
   var getDisplayParam = 0x5e;
+  var setGsmParameters = 0x60;
+  var getGsmParameters = 0x61;
   var setSpecialOperation = 0x64;
   var getMagneticFieldThreshold = 0x6d;
   var getHalfHourEnergies = 0x6f;
@@ -1314,6 +1381,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getEvents: getEvents,
     getEventsCounters: getEventsCounters,
     getExtendedCurrentValues: getExtendedCurrentValues,
+    getGsmParameters: getGsmParameters,
     getHalfHourDemand: getHalfHourDemand,
     getHalfHourDemandChannel: getHalfHourDemandChannel,
     getHalfHourDemandExport: getHalfHourDemandExport,
@@ -1350,6 +1418,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     setDateTime: setDateTime,
     setDayProfile: setDayProfile,
     setDisplayParam: setDisplayParam,
+    setGsmParameters: setGsmParameters,
     setOperatorParameters: setOperatorParameters,
     setOperatorParametersExtended: setOperatorParametersExtended,
     setOperatorParametersExtended2: setOperatorParametersExtended2,
@@ -1991,6 +2060,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getEvents: getEvents,
     getEventsCounters: getEventsCounters,
     getExtendedCurrentValues: getExtendedCurrentValues,
+    getGsmParameters: getGsmParameters,
     getHalfHourDemand: getHalfHourDemand,
     getHalfHourDemandChannel: getHalfHourDemandChannel,
     getHalfHourDemandExport: getHalfHourDemandExport,
@@ -2027,6 +2097,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     setDateTime: setDateTime,
     setDayProfile: setDayProfile,
     setDisplayParam: setDisplayParam,
+    setGsmParameters: setGsmParameters,
     setOperatorParameters: setOperatorParameters,
     setOperatorParametersExtended: setOperatorParametersExtended,
     setOperatorParametersExtended2: setOperatorParametersExtended2,

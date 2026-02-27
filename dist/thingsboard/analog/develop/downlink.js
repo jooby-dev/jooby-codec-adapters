@@ -320,20 +320,45 @@ var toBytes, getBase64FromBytes;
       this.offset += INT32_SIZE;
       return result;
     },
-    setString: function (value) {
-      this.setUint8(value.length);
-      for (var index = 0; index < value.length; ++index) {
+    setFixedString: function (value, length) {
+      var lengthToCopy = value.length > length ? length : value.length;
+      var index = 0;
+      for (index = 0; index < lengthToCopy; ++index) {
         this.setUint8(value.charCodeAt(index));
       }
+      for (index = lengthToCopy; index < length; ++index) {
+        this.setUint8(0);
+      }
     },
-    getString: function () {
-      var size = this.getUint8();
-      var endIndex = this.offset + size;
+    getFixedStringBase: function (length, _ref) {
+      var stopOnZero = _ref.stopOnZero;
+      var endIndex = this.offset + length;
       var chars = [];
+      var char;
       while (this.offset < endIndex) {
-        chars.push(String.fromCharCode(this.getUint8()));
+        char = this.getUint8();
+        if (stopOnZero && char === 0) {
+          this.seek(endIndex);
+          break;
+        }
+        chars.push(String.fromCharCode(char));
       }
       return chars.join('');
+    },
+    getFixedString: function (length) {
+      return this.getFixedStringBase(length, {
+        stopOnZero: true
+      });
+    },
+    setString: function (value) {
+      this.setUint8(value.length);
+      this.setFixedString(value);
+    },
+    getString: function () {
+      var length = this.getUint8();
+      return this.getFixedStringBase(length, {
+        stopOnZero: false
+      });
     },
     getBytesToOffset: function () {
       var offset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.offset;
