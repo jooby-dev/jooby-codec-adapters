@@ -278,7 +278,7 @@ var logs = '';
       return this.data;
     },
     seek: function seek(position) {
-      if (position < 0 || position >= this.data.length) {
+      if (position < 0 || position > this.data.length) {
         throw new Error('Invalid position.');
       }
       this.offset = position;
@@ -3043,7 +3043,7 @@ var logs = '';
       maxSize: maxSize$E,
       accessLevel: accessLevel$E,
       parameters: {
-        blockIndex: 1
+        index: 1
       },
       bytes: [0x61, 0x01, 0x01]
     }
@@ -3051,13 +3051,13 @@ var logs = '';
   var fromBytes$E = function fromBytes(bytes) {
     validateFixedCommandPayload(name$E, bytes, maxSize$E);
     var _bytes = _slicedToArray(bytes, 1),
-      blockIndex = _bytes[0];
+      index = _bytes[0];
     return {
-      blockIndex: blockIndex
+      index: index
     };
   };
   var toBytes$E = function toBytes(parameters) {
-    return toBytes$14(id$E, [parameters.blockIndex]);
+    return toBytes$14(id$E, [parameters.index]);
   };
 
   var getGsmParameters = /*#__PURE__*/Object.freeze({

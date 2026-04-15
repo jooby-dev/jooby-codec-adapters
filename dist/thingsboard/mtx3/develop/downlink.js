@@ -378,14 +378,6 @@ var toBytes, setDataSegment, getBase64FromBytes;
     UNENCRYPTED: UNENCRYPTED
   });
 
-  var id$c = errorDataFrameResponse$1;
-
-  // this is required to shadow crypto-js implementation
-  var aes = {
-    encrypt: function () {},
-    decrypt: function () {}
-  };
-
   var calculateLrc = (function (data) {
     var initialLrc = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0x55;
     var lrc = initialLrc;
@@ -412,41 +404,21 @@ var toBytes, setDataSegment, getBase64FromBytes;
     });
     return maxAccessLevel;
   };
-  var BLOCK_SIZE = 16;
-  var COMMANDS_END_MARK = [0];
-  var getToBytes = function (toBytesMap) {
-    return function (commands, _ref) {
-      var _ref$messageId = _ref.messageId,
-        messageId = _ref$messageId === void 0 ? 1 : _ref$messageId,
-        _ref$accessLevel = _ref.accessLevel,
-        accessLevel = _ref$accessLevel === void 0 ? getCommandsAccessLevel(commands) : _ref$accessLevel,
-        aesKey = _ref.aesKey;
-      var commandBytes = commands.flatMap(function (command) {
-        if ('id' in command) {
-          return toBytesMap[command.id](command.parameters || {});
-        }
-        if ('command' in command) {
-          return command.command.bytes;
-        }
-        throw new Error('wrong command format');
-      });
+  _defineProperty(_defineProperty(_defineProperty({}, READ_ONLY, 'readOnlyKey'), READ_WRITE, 'readWriteKey'), ROOT, 'rootKey');
+  var getToBytes = function (bytesFromMessage) {
+    return function (commands, _ref2) {
+      var _ref2$messageId = _ref2.messageId,
+        messageId = _ref2$messageId === void 0 ? 1 : _ref2$messageId,
+        _ref2$accessLevel = _ref2.accessLevel,
+        accessLevel = _ref2$accessLevel === void 0 ? getCommandsAccessLevel(commands) : _ref2$accessLevel,
+        aesKey = _ref2.aesKey;
       var maskedAccessLevel = accessLevel | 0x10;
       var header = [messageId, maskedAccessLevel];
-      var isItErrorDataFrameOnly = commands.length === 1 && 'id' in commands[0] && commands[0].id === id$c;
-      if (isItErrorDataFrameOnly) {
-        return header.concat(commandBytes);
-      }
-      var body = [].concat(maskedAccessLevel, commandBytes, COMMANDS_END_MARK);
-      if (accessLevel !== UNENCRYPTED) {
-        var padding = (body.length + 1) % BLOCK_SIZE;
-        if (padding) {
-          body = body.concat(new Array(BLOCK_SIZE - padding).fill(0));
-        }
-      }
-      body = body.concat(calculateLrc(body));
-      if (aesKey && accessLevel !== UNENCRYPTED) {
-        body = _toConsumableArray(aes.encrypt(aesKey, body));
-      }
+      var body = bytesFromMessage(commands, {
+        messageId: messageId,
+        accessLevel: accessLevel,
+        aesKey: aesKey
+      });
       return header.concat(body);
     };
   };
@@ -631,7 +603,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
       return this.data;
     },
     seek: function (position) {
-      if (position < 0 || position >= this.data.length) {
+      if (position < 0 || position > this.data.length) {
         throw new Error('Invalid position.');
       }
       this.offset = position;

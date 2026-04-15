@@ -271,7 +271,7 @@ var logs = '';
 
   var getEventStatus$3 = 0x01;
   var getEnergyDayPrevious$2 = 0x03;
-  var getDeviceType$3 = 0x04;
+  var getDeviceType$2 = 0x04;
   var getDeviceId$3 = 0x05;
   var getDateTime$3 = 0x07;
   var setDateTime$3 = 0x08;
@@ -356,7 +356,7 @@ var logs = '';
     getDemand: getDemand$3,
     getDemandParameters: getDemandParameters,
     getDeviceId: getDeviceId$3,
-    getDeviceType: getDeviceType$3,
+    getDeviceType: getDeviceType$2,
     getDisplayParam: getDisplayParam$2,
     getEnergy: getEnergy$2,
     getEnergyDayPrevious: getEnergyDayPrevious$2,
@@ -439,7 +439,7 @@ var logs = '';
     getDemand: getDemand$3,
     getDemandParameters: getDemandParameters,
     getDeviceId: getDeviceId$3,
-    getDeviceType: getDeviceType$3,
+    getDeviceType: getDeviceType$2,
     getDisplayParam: getDisplayParam$2,
     getEnergy: getEnergy$2,
     getEnergyDayPrevious: getEnergyDayPrevious$2,
@@ -838,7 +838,7 @@ var logs = '';
       return this.data;
     },
     seek: function seek(position) {
-      if (position < 0 || position >= this.data.length) {
+      if (position < 0 || position > this.data.length) {
         throw new Error('Invalid position.');
       }
       this.offset = position;
@@ -1054,274 +1054,6 @@ var logs = '';
     result &= ~mask;
     newValueToSet <<= startIndex - 1;
     result |= newValueToSet;
-    return result;
-  };
-
-  var DEVICE_TYPE_INVALID_CHAR = 'x';
-  var nibbles1 = ['.', '1', '3', 'R', 'M'];
-  var nibbles2 = ['.', 'A', 'G', 'R', 'T', 'D'];
-  var nibbles3 = ['.', '0', '1', '2', '3', '4', '5'];
-  var nibbles4 = ['.', 'A', 'B', 'C', 'D', 'E', 'F'];
-  var nibbles5 = ['.', 'A', 'B', 'C', 'D', 'E', 'F', 'H', 'K', 'G'];
-  var nibbles6 = ['.', '1', '2', '3', '4'];
-  var nibbles7 = ['.', 'L', 'M', 'Z', 'K'];
-  var nibbles8 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  var nibbles9 = ['.', 'D', 'B', 'C', 'E', 'P', 'R', 'O', 'L', 'F', 'S', 'M', 'Y', 'G', 'N', 'U'];
-  var nibbles10 = ['.', '0', '1', '2', '3', '4', '5', '6', 'P', 'R', 'L', 'E', 'G', '-', '/'];
-  var nibbles11 = ['.', 'H', 'A', 'T', '0', '0', '0', '0', '0', '1', '2', '3', '4', '0', '0', '0'];
-  var nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
-  var mtx1DeviceTypeDescriptorMask = {
-    typeMeterG: 1 << 0,
-    downgradedToA: 1 << 4,
-    supportMeterInfo: 1 << 6
-  };
-  var mtx3DeviceTypeDescriptorMask = {
-    typeMeterTransformer: 1 << 0,
-    downgradedToR: 1 << 3,
-    typeMeterG: 1 << 4,
-    supportMeterInfo: 1 << 6,
-    reactiveByQuadrants: 1 << 7
-  };
-  var mtx3DeviceTypeDescriptorFromByte = function mtx3DeviceTypeDescriptorFromByte(_byte) {
-    var descriptor = toObject(mtx3DeviceTypeDescriptorMask, _byte);
-    return _objectSpread2(_objectSpread2({
-      meterType: 'mtx3'
-    }, descriptor), {}, {
-      typeMeterG: !descriptor.typeMeterG
-    });
-  };
-  var mtx3DeviceTypeDescriptorToByte = function mtx3DeviceTypeDescriptorToByte(descriptor) {
-    return fromObject(mtx3DeviceTypeDescriptorMask, _objectSpread2(_objectSpread2({}, descriptor), {}, {
-      typeMeterG: !descriptor.typeMeterG
-    }));
-  };
-  var splitByte = function splitByte(_byte2) {
-    return [_byte2 >> 4, _byte2 & 0x0F];
-  };
-  var splitToNibbles = function splitToNibbles(data) {
-    var result = new Array(data.length * 2).fill(0);
-    data.forEach(function (_byte3, index) {
-      var _splitByte = splitByte(_byte3),
-        _splitByte2 = _slicedToArray(_splitByte, 2),
-        high = _splitByte2[0],
-        low = _splitByte2[1];
-      result[index * 2] = high;
-      result[index * 2 + 1] = low;
-    });
-    return result;
-  };
-  var joinNibbles = function joinNibbles(nibbles) {
-    var hex = [];
-    nibbles.forEach(function (nibble) {
-      return hex.push(nibble.toString(16));
-    });
-    if (nibbles.length & 1) {
-      hex.push('0');
-    }
-    return getBytesFromHex(hex.join(''));
-  };
-  var fromBytesMtx = function fromBytesMtx(nibbles) {
-    var _nibbles1$nibbles$, _nibbles2$nibbles$, _nibbles3$nibbles$, _nibbles3$nibbles$2, _nibbles4$nibbles$, _nibbles5$nibbles$, _nibbles6$nibbles$, _nibbles7$nibbles$, _nibbles8$nibbles$;
-    if (nibbles.length !== 14 && nibbles.length !== 16) {
-      throw new Error('Device type bytes wrong size');
-    }
-    var type = ['MTX '];
-    type.push((_nibbles1$nibbles$ = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$ !== void 0 ? _nibbles1$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles2$nibbles$ = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$ !== void 0 ? _nibbles2$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles3$nibbles$ = nibbles3[nibbles[2]]) !== null && _nibbles3$nibbles$ !== void 0 ? _nibbles3$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles3$nibbles$2 = nibbles3[nibbles[3]]) !== null && _nibbles3$nibbles$2 !== void 0 ? _nibbles3$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-    type.push('.');
-    type.push((_nibbles4$nibbles$ = nibbles4[nibbles[4]]) !== null && _nibbles4$nibbles$ !== void 0 ? _nibbles4$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles5$nibbles$ = nibbles5[nibbles[5]]) !== null && _nibbles5$nibbles$ !== void 0 ? _nibbles5$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push('.');
-    type.push((_nibbles6$nibbles$ = nibbles6[nibbles[6]]) !== null && _nibbles6$nibbles$ !== void 0 ? _nibbles6$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles7$nibbles$ = nibbles7[nibbles[7]]) !== null && _nibbles7$nibbles$ !== void 0 ? _nibbles7$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    var revision = nibbles[8];
-    type.push((_nibbles8$nibbles$ = nibbles8[nibbles[9]]) !== null && _nibbles8$nibbles$ !== void 0 ? _nibbles8$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push('-');
-    var deviceProtocolIndex;
-    if (nibbles.length < 14 || nibbles[12] === 0 && nibbles[13] === 0) {
-      var _nibbles9$nibbles$;
-      type.push((_nibbles9$nibbles$ = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$ !== void 0 ? _nibbles9$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-      deviceProtocolIndex = 11;
-    } else if (nibbles[13] === 0) {
-      var _nibbles9$nibbles$2, _nibbles9$nibbles$3;
-      type.push((_nibbles9$nibbles$2 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$2 !== void 0 ? _nibbles9$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles9$nibbles$3 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$3 !== void 0 ? _nibbles9$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
-      deviceProtocolIndex = 12;
-    } else {
-      var _nibbles9$nibbles$4, _nibbles9$nibbles$5, _nibbles9$nibbles$6;
-      type.push((_nibbles9$nibbles$4 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$4 !== void 0 ? _nibbles9$nibbles$4 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles9$nibbles$5 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$5 !== void 0 ? _nibbles9$nibbles$5 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles9$nibbles$6 = nibbles9[nibbles[12]]) !== null && _nibbles9$nibbles$6 !== void 0 ? _nibbles9$nibbles$6 : DEVICE_TYPE_INVALID_CHAR);
-      deviceProtocolIndex = 13;
-    }
-    var deviceProtocolNibble = nibbles[deviceProtocolIndex];
-    if (deviceProtocolNibble && deviceProtocolNibble !== 0) {
-      var _nibbles11$deviceProt;
-      type.push((_nibbles11$deviceProt = nibbles11[deviceProtocolNibble]) !== null && _nibbles11$deviceProt !== void 0 ? _nibbles11$deviceProt : DEVICE_TYPE_INVALID_CHAR);
-    }
-    return {
-      type: type.join(''),
-      revision: revision
-    };
-  };
-  var toBytesMtx = function toBytesMtx(type, prefix, revision) {
-    var nibbles = [];
-    if (type.length < 11) {
-      throw new Error('Wrong format');
-    }
-    nibbles.push(nibbles1.indexOf(type[0]));
-    nibbles.push(nibbles2.indexOf(type[1]));
-    nibbles.push(nibbles3.indexOf(type[2]));
-    nibbles.push(nibbles3.indexOf(type[3]));
-    if (type[4] !== '.') {
-      throw new Error('Wrong format');
-    }
-    nibbles.push(nibbles4.indexOf(type[5]));
-    nibbles.push(nibbles5.indexOf(type[6]));
-    if (type[7] !== '.') {
-      throw new Error('Wrong format');
-    }
-    nibbles.push(nibbles6.indexOf(type[8]));
-    nibbles.push(nibbles7.indexOf(type[9]));
-    nibbles.push(revision !== null && revision !== void 0 ? revision : 0);
-    nibbles.push(nibbles8.indexOf(type[10]));
-    if (type[11] !== '-') {
-      throw new Error('Wrong format');
-    }
-    var deviceProtocolIndex = type.length > 13 ? type.length - 1 : type.length;
-    for (var index = 12; index < deviceProtocolIndex; index++) {
-      nibbles.push(nibbles9.indexOf(type[index]));
-    }
-    if (deviceProtocolIndex < type.length) {
-      nibbles.push(nibbles11.indexOf(type[deviceProtocolIndex]));
-    }
-    var bytes = joinNibbles(nibbles);
-    var result = new Array(9).fill(0);
-    result[0] = 0;
-    for (var _index = 0; _index < bytes.length; _index++) {
-      result[_index + (bytes.length < 8 ? 1 : 0)] = bytes[_index];
-    }
-    return result;
-  };
-  var fromBytesMtx2 = function fromBytesMtx2(nibbles) {
-    var _nibbles1$nibbles$2, _nibbles2$nibbles$2;
-    if (nibbles.length < 14) {
-      throw new Error('The buffer is too small');
-    }
-    var type = ['MTX '];
-    var separator = nibbles[1] === 5 ? '-' : ' ';
-    type.push((_nibbles1$nibbles$2 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$2 !== void 0 ? _nibbles1$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles2$nibbles$2 = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$2 !== void 0 ? _nibbles2$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-    type.push(separator);
-    for (var index = 2; index < nibbles.length; index++) {
-      if (nibbles[index] !== 0) {
-        var _nibbles10$nibbles$in;
-        type.push((_nibbles10$nibbles$in = nibbles10[nibbles[index]]) !== null && _nibbles10$nibbles$in !== void 0 ? _nibbles10$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
-      }
-    }
-    return {
-      type: type.join('')
-    };
-  };
-  var toBytesMtx2 = function toBytesMtx2(type) {
-    if (type.length < 3) {
-      throw new Error('Wrong format');
-    }
-    var nibbles = [];
-    nibbles.push(nibbles1.indexOf(type[0]));
-    nibbles.push(nibbles2.indexOf(type[1]));
-    for (var index = 3; index < type.length; index++) {
-      nibbles.push(nibbles10.indexOf(type[index]));
-    }
-    var bytes = joinNibbles(nibbles);
-    if (bytes.length === 8) {
-      return bytes;
-    }
-    if (bytes.length > 8) {
-      throw new Error('Wrong format');
-    }
-    var result = new Array(8).fill(0);
-    for (var _index2 = 0; _index2 < bytes.length; _index2++) {
-      result[_index2] = bytes[_index2];
-    }
-    return result;
-  };
-  var fromBytesM = function fromBytesM(nibbles) {
-    var _nibbles1$nibbles$3;
-    if (nibbles.length < 14) {
-      throw new Error('The buffer is too small');
-    }
-    var type = [];
-    type.push((_nibbles1$nibbles$3 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$3 !== void 0 ? _nibbles1$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
-    for (var index = 1; index < nibbles.length; index++) {
-      if (nibbles[index] !== 0) {
-        var _nibbles12$nibbles$in;
-        type.push((_nibbles12$nibbles$in = nibbles12[nibbles[index]]) !== null && _nibbles12$nibbles$in !== void 0 ? _nibbles12$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
-      }
-    }
-    return {
-      type: type.join('')
-    };
-  };
-  var toBytesM = function toBytesM(type) {
-    if (type.length < 1) {
-      throw new Error('Wrong format');
-    }
-    var nibbles = [];
-    nibbles.push(nibbles1.indexOf(type[0]));
-    for (var index = 1; index < type.length; index++) {
-      nibbles.push(nibbles12.indexOf(type[index]));
-    }
-    var bytes = joinNibbles(nibbles);
-    var result = new Array(8).fill(0);
-    for (var _index3 = 0; _index3 < bytes.length && _index3 < 8; _index3++) {
-      result[_index3] = bytes[_index3];
-    }
-    return result;
-  };
-  var fromBytes$1a = function fromBytes(bytes) {
-    if (bytes.length !== 9) {
-      throw new Error('The buffer is too small');
-    }
-    var result;
-    var reserve = [0x00, 0x05, 0x06, 0x07, 0x09, 0x7f, 0xef];
-    var position = reserve.indexOf(bytes[0]) !== -1 ? 2 : 0;
-    var nibbles = splitToNibbles(bytes.slice(0, 8));
-    var deviceTypeNibble = nibbles[position];
-    var deviceType = nibbles1[deviceTypeNibble];
-    if (deviceType === '1' || deviceType === '3') {
-      result = _objectSpread2(_objectSpread2({}, fromBytesMtx(nibbles.slice(position))), {}, {
-        descriptor: deviceType === '3' ? mtx3DeviceTypeDescriptorFromByte(bytes[8]) : _objectSpread2({
-          meterType: 'mtx1'
-        }, toObject(mtx1DeviceTypeDescriptorMask, bytes[8]))
-      });
-    } else {
-      result = deviceType === 'M' ? fromBytesM(nibbles) : fromBytesMtx2(nibbles);
-    }
-    return result;
-  };
-  var toBytes$1b = function toBytes(_ref, prefix) {
-    var type = _ref.type,
-      revision = _ref.revision,
-      descriptor = _ref.descriptor;
-    if (!type.startsWith('MTX ')) {
-      throw new Error('Wrong format');
-    }
-    var result;
-    var content = type.substring(4);
-    var deviceTypeSymbol = type[4];
-    if (deviceTypeSymbol === '1' || deviceTypeSymbol === '3') {
-      result = toBytesMtx(content, prefix, revision);
-    } else {
-      result = deviceTypeSymbol === 'M' ? toBytesM(content) : toBytesMtx2(content);
-    }
-    if (descriptor !== null && descriptor !== void 0 && descriptor.meterType) {
-      result[8] = descriptor.meterType === 'mtx1' ? fromObject(mtx1DeviceTypeDescriptorMask, descriptor) : mtx3DeviceTypeDescriptorToByte(descriptor);
-    } else {
-      result[8] = 0;
-    }
     return result;
   };
 
@@ -1956,12 +1688,6 @@ var logs = '';
     buffer.setUint8(specialDay.dayIndex);
     buffer.setUint8(specialDay.year);
   };
-  var getDeviceType$2 = function getDeviceType(buffer) {
-    return fromBytes$1a(buffer.getBytes(9));
-  };
-  var setDeviceType = function setDeviceType(buffer, deviceType) {
-    buffer.setBytes(toBytes$1b(deviceType));
-  };
   var getDate$1 = function getDate(buffer) {
     return {
       year: buffer.getUint8(),
@@ -2113,12 +1839,12 @@ var logs = '';
       bytes: [0x3e, 0x09, 0x03, 0x00, 0x03, 0x01, 0x0a, 0x00, 0x04, 0x01, 0x01]
     }
   };
-  var fromBytes$19 = function fromBytes(bytes) {
+  var fromBytes$1a = function fromBytes(bytes) {
     validateFixedCommandPayload(name$1b, bytes, maxSize$1c);
     var buffer = new BinaryBuffer(bytes, false);
     return getTimeCorrectionParameters(buffer);
   };
-  var toBytes$1a = function toBytes(parameters) {
+  var toBytes$1b = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$1c, false);
     setTimeCorrectionParameters(buffer, parameters);
     return toBytes$1f(id$1b, buffer.data);
@@ -2128,13 +1854,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$1b,
     examples: examples$19,
-    fromBytes: fromBytes$19,
+    fromBytes: fromBytes$1a,
     headerSize: headerSize$1b,
     id: id$1b,
     isLoraOnly: isLoraOnly$1b,
     maxSize: maxSize$1c,
     name: name$1b,
-    toBytes: toBytes$1a
+    toBytes: toBytes$1b
   });
 
   var id$1a = getDateTime$3;
@@ -2163,12 +1889,12 @@ var logs = '';
       bytes: [0x07, 0x08, 0x00, 0x37, 0x1f, 0x12, 0x02, 0x13, 0x02, 0x18]
     }
   };
-  var fromBytes$18 = function fromBytes(bytes) {
+  var fromBytes$19 = function fromBytes(bytes) {
     validateFixedCommandPayload(name$1a, bytes, maxSize$1b);
     var buffer = new BinaryBuffer(bytes, false);
     return getDateTime$2(buffer);
   };
-  var toBytes$19 = function toBytes(parameters) {
+  var toBytes$1a = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$1b, false);
     setDateTime$2(buffer, parameters);
     return toBytes$1f(id$1a, buffer.data);
@@ -2178,13 +1904,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$1a,
     examples: examples$18,
-    fromBytes: fromBytes$18,
+    fromBytes: fromBytes$19,
     headerSize: headerSize$1a,
     id: id$1a,
     isLoraOnly: isLoraOnly$1a,
     maxSize: maxSize$1b,
     name: name$1a,
-    toBytes: toBytes$19
+    toBytes: toBytes$1a
   });
 
   var TARIFF_NUMBER = 4;
@@ -2426,14 +2152,14 @@ var logs = '';
       bytes: [0x78, 0x0c, 0x2a, 0x43, 0x11, 0x22, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x20, 0x00]
     }
   };
-  var fromBytes$17 = function fromBytes(bytes) {
+  var fromBytes$18 = function fromBytes(bytes) {
     var buffer = new BinaryBuffer(bytes, false);
     return {
       date: getDate(buffer),
       energies: getTariffsEnergies(buffer)
     };
   };
-  var toBytes$18 = function toBytes(parameters) {
+  var toBytes$19 = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$1a, false);
     setDate(buffer, parameters.date);
     setTariffsEnergies(buffer, parameters.energies);
@@ -2454,13 +2180,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$19,
     examples: examples$17,
-    fromBytes: fromBytes$17,
+    fromBytes: fromBytes$18,
     headerSize: headerSize$19,
     id: id$19,
     isLoraOnly: isLoraOnly$19,
     maxSize: maxSize$1a,
     name: name$19,
-    toBytes: toBytes$18,
+    toBytes: toBytes$19,
     toJson: toJson$c
   });
 
@@ -2544,14 +2270,14 @@ var logs = '';
       bytes: [0x3b, 0x05, 0x10, 0x1d, 0x22, 0x2f, 0xff]
     }
   };
-  var fromBytes$16 = function fromBytes(bytes) {
+  var fromBytes$17 = function fromBytes(bytes) {
     var finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE);
     var cleanData = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
     return {
       periods: _toConsumableArray(cleanData).map(getDayProfileFromByte)
     };
   };
-  var toBytes$17 = function toBytes(parameters) {
+  var toBytes$18 = function toBytes(parameters) {
     var hasPeriodsFinalByte = parameters.periods.length < MAX_PERIODS_NUMBER;
     var size = parameters.periods.length + +hasPeriodsFinalByte;
     var buffer = new BinaryBuffer(size, false);
@@ -2568,13 +2294,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$18,
     examples: examples$16,
-    fromBytes: fromBytes$16,
+    fromBytes: fromBytes$17,
     headerSize: headerSize$18,
     id: id$18,
     isLoraOnly: isLoraOnly$18,
     maxSize: maxSize$19,
     name: name$18,
-    toBytes: toBytes$17
+    toBytes: toBytes$18
   });
 
   var id$17 = getDeviceId$3;
@@ -2599,12 +2325,12 @@ var logs = '';
       bytes: [0x05, 0x08, 0x00, 0x1a, 0x79, 0x17, 0x14, 0x1b, 0x1d, 0x6a]
     }
   };
-  var fromBytes$15 = function fromBytes(bytes) {
+  var fromBytes$16 = function fromBytes(bytes) {
     validateFixedCommandPayload(name$17, bytes, maxSize$18);
     var buffer = new BinaryBuffer(bytes, false);
     return getDeviceId$2(buffer);
   };
-  var toBytes$16 = function toBytes(parameters) {
+  var toBytes$17 = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$18, false);
     setDeviceId(buffer, parameters);
     return toBytes$1f(id$17, buffer.data);
@@ -2614,17 +2340,303 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$17,
     examples: examples$15,
-    fromBytes: fromBytes$15,
+    fromBytes: fromBytes$16,
     headerSize: headerSize$17,
     id: id$17,
     isLoraOnly: isLoraOnly$17,
     maxSize: maxSize$18,
     name: name$17,
-    toBytes: toBytes$16
+    toBytes: toBytes$17
   });
 
-  var id$16 = getDeviceType$3;
-  var name$16 = commandNames$2[getDeviceType$3];
+  var DEVICE_TYPE_SIZE = 8;
+  var DEVICE_TYPE_INVALID_CHAR = 'x';
+  var nibbles1 = ['.', '1', '3', 'R', 'M'];
+  var nibbles2 = ['.', 'A', 'G', 'R', 'T', 'D'];
+  var nibbles3 = ['.', '0', '1', '2', '3', '4', '5'];
+  var nibbles4 = ['.', 'A', 'B', 'C', 'D', 'E', 'F'];
+  var nibbles5 = ['.', 'A', 'B', 'C', 'D', 'E', 'F', 'H', 'K', 'G'];
+  var nibbles6 = ['.', '1', '2', '3', '4'];
+  var nibbles7 = ['.', 'L', 'M', 'Z', 'K'];
+  var nibbles8 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  var nibbles9 = ['.', 'D', 'B', 'C', 'E', 'P', 'R', 'O', 'L', 'F', 'S', 'M', 'Y', 'G', 'N', 'U'];
+  var nibbles10 = ['.', '0', '1', '2', '3', '4', '5', '6', 'P', 'R', 'L', 'E', 'G', '-', '/'];
+  var nibbles11 = ['.', 'H', 'A', 'T', '0', '0', '0', '0', '0', '1', '2', '3', '4', '0', '0', '0'];
+  var nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
+  var mtx1DeviceTypeDescriptorMask = {
+    typeMeterG: 1 << 0,
+    downgradedToA: 1 << 4,
+    supportMeterInfo: 1 << 6
+  };
+  var mtx3DeviceTypeDescriptorMask = {
+    typeMeterTransformer: 1 << 0,
+    downgradedToR: 1 << 3,
+    typeMeterG: 1 << 4,
+    supportMeterInfo: 1 << 6,
+    reactiveByQuadrants: 1 << 7
+  };
+  var mtx1DeviceTypeDescriptorFromByte = function mtx1DeviceTypeDescriptorFromByte(_byte) {
+    return _objectSpread2({
+      meterType: 'mtx1'
+    }, toObject(mtx1DeviceTypeDescriptorMask, _byte));
+  };
+  var mtx1DeviceTypeDescriptorToByte = function mtx1DeviceTypeDescriptorToByte(descriptor) {
+    return fromObject(mtx1DeviceTypeDescriptorMask, descriptor);
+  };
+  var mtx3DeviceTypeDescriptorFromByte = function mtx3DeviceTypeDescriptorFromByte(_byte2) {
+    var descriptor = toObject(mtx3DeviceTypeDescriptorMask, _byte2);
+    return _objectSpread2(_objectSpread2({
+      meterType: 'mtx3'
+    }, descriptor), {}, {
+      typeMeterG: !descriptor.typeMeterG
+    });
+  };
+  var mtx3DeviceTypeDescriptorToByte = function mtx3DeviceTypeDescriptorToByte(descriptor) {
+    return fromObject(mtx3DeviceTypeDescriptorMask, _objectSpread2(_objectSpread2({}, descriptor), {}, {
+      typeMeterG: !descriptor.typeMeterG
+    }));
+  };
+  var splitByte = function splitByte(_byte3) {
+    return [_byte3 >> 4, _byte3 & 0x0F];
+  };
+  var splitToNibbles = function splitToNibbles(data) {
+    var result = new Array(data.length * 2).fill(0);
+    data.forEach(function (_byte4, index) {
+      var _splitByte = splitByte(_byte4),
+        _splitByte2 = _slicedToArray(_splitByte, 2),
+        high = _splitByte2[0],
+        low = _splitByte2[1];
+      result[index * 2] = high;
+      result[index * 2 + 1] = low;
+    });
+    return result;
+  };
+  var joinNibbles = function joinNibbles(nibbles) {
+    var hex = [];
+    nibbles.forEach(function (nibble) {
+      return hex.push(nibble.toString(16));
+    });
+    if (nibbles.length & 1) {
+      hex.push('0');
+    }
+    return getBytesFromHex(hex.join(''));
+  };
+  var fromBytesMtx = function fromBytesMtx(nibbles) {
+    var _nibbles1$nibbles$, _nibbles2$nibbles$, _nibbles3$nibbles$, _nibbles3$nibbles$2, _nibbles4$nibbles$, _nibbles5$nibbles$, _nibbles6$nibbles$, _nibbles7$nibbles$, _nibbles8$nibbles$;
+    if (nibbles.length !== 14 && nibbles.length !== 16) {
+      throw new Error('Device type bytes wrong size');
+    }
+    var type = ['MTX '];
+    type.push((_nibbles1$nibbles$ = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$ !== void 0 ? _nibbles1$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles2$nibbles$ = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$ !== void 0 ? _nibbles2$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles3$nibbles$ = nibbles3[nibbles[2]]) !== null && _nibbles3$nibbles$ !== void 0 ? _nibbles3$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles3$nibbles$2 = nibbles3[nibbles[3]]) !== null && _nibbles3$nibbles$2 !== void 0 ? _nibbles3$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+    type.push('.');
+    type.push((_nibbles4$nibbles$ = nibbles4[nibbles[4]]) !== null && _nibbles4$nibbles$ !== void 0 ? _nibbles4$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles5$nibbles$ = nibbles5[nibbles[5]]) !== null && _nibbles5$nibbles$ !== void 0 ? _nibbles5$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push('.');
+    type.push((_nibbles6$nibbles$ = nibbles6[nibbles[6]]) !== null && _nibbles6$nibbles$ !== void 0 ? _nibbles6$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles7$nibbles$ = nibbles7[nibbles[7]]) !== null && _nibbles7$nibbles$ !== void 0 ? _nibbles7$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    var revision = nibbles[8];
+    type.push((_nibbles8$nibbles$ = nibbles8[nibbles[9]]) !== null && _nibbles8$nibbles$ !== void 0 ? _nibbles8$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push('-');
+    var deviceProtocolIndex;
+    if (nibbles.length < 14 || nibbles[12] === 0 && nibbles[13] === 0) {
+      var _nibbles9$nibbles$;
+      type.push((_nibbles9$nibbles$ = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$ !== void 0 ? _nibbles9$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+      deviceProtocolIndex = 11;
+    } else if (nibbles[13] === 0) {
+      var _nibbles9$nibbles$2, _nibbles9$nibbles$3;
+      type.push((_nibbles9$nibbles$2 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$2 !== void 0 ? _nibbles9$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$3 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$3 !== void 0 ? _nibbles9$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
+      deviceProtocolIndex = 12;
+    } else {
+      var _nibbles9$nibbles$4, _nibbles9$nibbles$5, _nibbles9$nibbles$6;
+      type.push((_nibbles9$nibbles$4 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$4 !== void 0 ? _nibbles9$nibbles$4 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$5 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$5 !== void 0 ? _nibbles9$nibbles$5 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$6 = nibbles9[nibbles[12]]) !== null && _nibbles9$nibbles$6 !== void 0 ? _nibbles9$nibbles$6 : DEVICE_TYPE_INVALID_CHAR);
+      deviceProtocolIndex = 13;
+    }
+    var deviceProtocolNibble = nibbles[deviceProtocolIndex];
+    if (deviceProtocolNibble && deviceProtocolNibble !== 0) {
+      var _nibbles11$deviceProt;
+      type.push((_nibbles11$deviceProt = nibbles11[deviceProtocolNibble]) !== null && _nibbles11$deviceProt !== void 0 ? _nibbles11$deviceProt : DEVICE_TYPE_INVALID_CHAR);
+    }
+    return {
+      type: type.join(''),
+      revision: revision
+    };
+  };
+  var toBytesMtx = function toBytesMtx(type, prefix, revision) {
+    var nibbles = [];
+    if (type.length < 11) {
+      throw new Error('Wrong format');
+    }
+    nibbles.push(nibbles1.indexOf(type[0]));
+    nibbles.push(nibbles2.indexOf(type[1]));
+    nibbles.push(nibbles3.indexOf(type[2]));
+    nibbles.push(nibbles3.indexOf(type[3]));
+    if (type[4] !== '.') {
+      throw new Error('Wrong format');
+    }
+    nibbles.push(nibbles4.indexOf(type[5]));
+    nibbles.push(nibbles5.indexOf(type[6]));
+    if (type[7] !== '.') {
+      throw new Error('Wrong format');
+    }
+    nibbles.push(nibbles6.indexOf(type[8]));
+    nibbles.push(nibbles7.indexOf(type[9]));
+    nibbles.push(revision !== null && revision !== void 0 ? revision : 0);
+    nibbles.push(nibbles8.indexOf(type[10]));
+    if (type[11] !== '-') {
+      throw new Error('Wrong format');
+    }
+    var deviceProtocolIndex = type.length > 13 ? type.length - 1 : type.length;
+    for (var index = 12; index < deviceProtocolIndex; index++) {
+      nibbles.push(nibbles9.indexOf(type[index]));
+    }
+    if (deviceProtocolIndex < type.length) {
+      nibbles.push(nibbles11.indexOf(type[deviceProtocolIndex]));
+    }
+    var bytes = joinNibbles(nibbles);
+    if (bytes.length >= DEVICE_TYPE_SIZE) {
+      return bytes;
+    }
+    var padLength = DEVICE_TYPE_SIZE - bytes.length;
+    return [prefix !== null && prefix !== void 0 ? prefix : 0].concat(_toConsumableArray(bytes), _toConsumableArray(new Array(padLength).fill(0)));
+  };
+  var fromBytesMtx2 = function fromBytesMtx2(nibbles) {
+    var _nibbles1$nibbles$2, _nibbles2$nibbles$2;
+    if (nibbles.length < 14) {
+      throw new Error('The buffer is too small');
+    }
+    var type = ['MTX '];
+    var separator = nibbles[1] === 5 ? '-' : ' ';
+    type.push((_nibbles1$nibbles$2 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$2 !== void 0 ? _nibbles1$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles2$nibbles$2 = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$2 !== void 0 ? _nibbles2$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+    type.push(separator);
+    for (var index = 2; index < nibbles.length; index++) {
+      if (nibbles[index] !== 0) {
+        var _nibbles10$nibbles$in;
+        type.push((_nibbles10$nibbles$in = nibbles10[nibbles[index]]) !== null && _nibbles10$nibbles$in !== void 0 ? _nibbles10$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
+      }
+    }
+    return {
+      type: type.join('')
+    };
+  };
+  var toBytesMtx2 = function toBytesMtx2(type) {
+    if (type.length < 3) {
+      throw new Error('Wrong format');
+    }
+    var nibbles = [];
+    nibbles.push(nibbles1.indexOf(type[0]));
+    nibbles.push(nibbles2.indexOf(type[1]));
+    for (var index = 3; index < type.length; index++) {
+      nibbles.push(nibbles10.indexOf(type[index]));
+    }
+    var bytes = joinNibbles(nibbles);
+    if (bytes.length === 8) {
+      return bytes;
+    }
+    if (bytes.length > 8) {
+      throw new Error('Wrong format');
+    }
+    var result = new Array(8).fill(0);
+    for (var _index = 0; _index < bytes.length; _index++) {
+      result[_index] = bytes[_index];
+    }
+    return result;
+  };
+  var fromBytesM = function fromBytesM(nibbles) {
+    var _nibbles1$nibbles$3;
+    if (nibbles.length < 14) {
+      throw new Error('The buffer is too small');
+    }
+    var type = [];
+    type.push((_nibbles1$nibbles$3 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$3 !== void 0 ? _nibbles1$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
+    for (var index = 1; index < nibbles.length; index++) {
+      if (nibbles[index] !== 0) {
+        var _nibbles12$nibbles$in;
+        type.push((_nibbles12$nibbles$in = nibbles12[nibbles[index]]) !== null && _nibbles12$nibbles$in !== void 0 ? _nibbles12$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
+      }
+    }
+    return {
+      type: type.join('')
+    };
+  };
+  var toBytesM = function toBytesM(type) {
+    if (type.length < 1) {
+      throw new Error('Wrong format');
+    }
+    var nibbles = [];
+    nibbles.push(nibbles1.indexOf(type[0]));
+    for (var index = 1; index < type.length; index++) {
+      nibbles.push(nibbles12.indexOf(type[index]));
+    }
+    var bytes = joinNibbles(nibbles);
+    var result = new Array(8).fill(0);
+    for (var _index2 = 0; _index2 < bytes.length && _index2 < 8; _index2++) {
+      result[_index2] = bytes[_index2];
+    }
+    return result;
+  };
+  var fromBytes$15 = function fromBytes(bytes) {
+    if (bytes.length < DEVICE_TYPE_SIZE) {
+      throw new Error('The buffer is too small');
+    }
+    var result;
+    var reserve = [0x00, 0x05, 0x06, 0x07, 0x09, 0x7f, 0xef];
+    var reserveIndex = reserve.indexOf(bytes[0]);
+    var manufacturingFlag = reserveIndex !== -1 ? bytes[0] : undefined;
+    var position = reserveIndex !== -1 ? 2 : 0;
+    var nibbles = splitToNibbles(bytes.slice(0, 8));
+    var deviceTypeNibble = nibbles[position];
+    var deviceType = nibbles1[deviceTypeNibble];
+    if (deviceType === '1' || deviceType === '3') {
+      var descriptor;
+      if (bytes.length > DEVICE_TYPE_SIZE) {
+        descriptor = deviceType === '3' ? mtx3DeviceTypeDescriptorFromByte(bytes[8]) : mtx1DeviceTypeDescriptorFromByte(bytes[8]);
+      }
+      result = _objectSpread2(_objectSpread2({}, fromBytesMtx(nibbles.slice(position))), descriptor != null && {
+        descriptor: descriptor
+      });
+    } else {
+      result = deviceType === 'M' ? fromBytesM(nibbles) : fromBytesMtx2(nibbles);
+    }
+    return _objectSpread2(_objectSpread2({}, result), manufacturingFlag > 0 && {
+      manufacturingFlag: manufacturingFlag
+    });
+  };
+  var toBytes$16 = function toBytes(_ref) {
+    var type = _ref.type,
+      revision = _ref.revision,
+      descriptor = _ref.descriptor,
+      manufacturingFlag = _ref.manufacturingFlag;
+    if (!type.startsWith('MTX ')) {
+      throw new Error('Wrong format');
+    }
+    var result;
+    var content = type.substring(4);
+    var deviceTypeSymbol = type[4];
+    if (deviceTypeSymbol === '1' || deviceTypeSymbol === '3') {
+      result = toBytesMtx(content, manufacturingFlag, revision);
+    } else {
+      result = deviceTypeSymbol === 'M' ? toBytesM(content) : toBytesMtx2(content);
+    }
+    if (descriptor == null) {
+      return result.slice(0, 8);
+    }
+    if (descriptor !== null && descriptor !== void 0 && descriptor.meterType) {
+      result[8] = descriptor.meterType === 'mtx1' ? mtx1DeviceTypeDescriptorToByte(descriptor) : mtx3DeviceTypeDescriptorToByte(descriptor);
+    } else {
+      result[8] = 0;
+    }
+    return result;
+  };
+
+  var id$16 = getDeviceType$2;
+  var name$16 = commandNames$2[getDeviceType$2];
   var headerSize$16 = 2;
   var accessLevel$16 = READ_ONLY;
   var maxSize$17 = 9;
@@ -2669,13 +2681,10 @@ var logs = '';
   };
   var fromBytes$14 = function fromBytes(bytes) {
     validateFixedCommandPayload(name$16, bytes, maxSize$17);
-    var buffer = new BinaryBuffer(bytes, false);
-    return getDeviceType$2(buffer);
+    return fromBytes$15(bytes);
   };
   var toBytes$15 = function toBytes(parameters) {
-    var buffer = new BinaryBuffer(maxSize$17, false);
-    setDeviceType(buffer, parameters);
-    return toBytes$1f(id$16, buffer.data);
+    return toBytes$1f(id$16, toBytes$16(parameters));
   };
 
   var getDeviceType$1 = /*#__PURE__*/Object.freeze({
@@ -2836,7 +2845,7 @@ var logs = '';
       maxSize: maxSize$14,
       accessLevel: accessLevel$13,
       parameters: {
-        blockIndex: 1
+        index: 1
       },
       bytes: [0x61, 0x01, 0x01]
     }
@@ -2844,13 +2853,13 @@ var logs = '';
   var fromBytes$11 = function fromBytes(bytes) {
     validateFixedCommandPayload(name$13, bytes, maxSize$14);
     var _bytes = _slicedToArray(bytes, 1),
-      blockIndex = _bytes[0];
+      index = _bytes[0];
     return {
-      blockIndex: blockIndex
+      index: index
     };
   };
   var toBytes$12 = function toBytes(parameters) {
-    return toBytes$1f(id$13, [parameters.blockIndex]);
+    return toBytes$1f(id$13, [parameters.index]);
   };
 
   var getGsmParameters$1 = /*#__PURE__*/Object.freeze({

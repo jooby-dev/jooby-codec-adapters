@@ -226,7 +226,7 @@ var toBytes;
       return this.data;
     },
     seek: function (position) {
-      if (position < 0 || position >= this.data.length) {
+      if (position < 0 || position > this.data.length) {
         throw new Error('Invalid position.');
       }
       this.offset = position;
@@ -413,7 +413,7 @@ var toBytes;
   });
 
   var extraCommandMask = 0x1f;
-  var toBytes$v = function (commandId, commandSize) {
+  var toBytes$w = function (commandId, commandSize) {
     if ((commandId & extraCommandMask) === 0) {
       if (commandSize > extraCommandMask) {
         throw new Error("Wrong command id/size. Id: ".concat(commandId, ", size: ").concat(commandSize, "."));
@@ -426,9 +426,9 @@ var toBytes;
     return [commandId, commandSize];
   };
 
-  var toBytes$u = function (commandId) {
+  var toBytes$v = function (commandId) {
     var commandBytes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    var headerData = toBytes$v(commandId, commandBytes.length);
+    var headerData = toBytes$w(commandId, commandBytes.length);
     return [].concat(_toConsumableArray(headerData), _toConsumableArray(commandBytes));
   };
 
@@ -459,6 +459,7 @@ var toBytes;
   var dataSegment = 0x1e;
   var getLmicInfo = 0x21f;
   var getBatteryStatus = 0x51f;
+  var depassivateBattery = 0x61f;
   var usWaterMeterCommand = 0x71f;
   var getExAbsArchiveHoursMc = 0xc1f;
   var getExAbsArchiveDaysMc = 0xd1f;
@@ -475,6 +476,7 @@ var toBytes;
     __proto__: null,
     correctTime2000: correctTime2000,
     dataSegment: dataSegment,
+    depassivateBattery: depassivateBattery,
     getArchiveDays: getArchiveDays,
     getArchiveDaysMc: getArchiveDaysMc,
     getArchiveEvents: getArchiveEvents,
@@ -514,15 +516,15 @@ var toBytes;
 
   invertObject(downlinkIds);
 
-  var id$r = correctTime2000;
-  var COMMAND_BODY_SIZE$9 = 2;
-  var toBytes$t = function (parameters) {
+  var id$s = correctTime2000;
+  var COMMAND_BODY_SIZE$a = 2;
+  var toBytes$u = function (parameters) {
     var sequenceNumber = parameters.sequenceNumber,
       seconds = parameters.seconds;
-    var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$9, false);
+    var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$a, false);
     buffer.setUint8(sequenceNumber);
     buffer.setInt8(seconds);
-    return toBytes$u(id$r, buffer.data);
+    return toBytes$v(id$s, buffer.data);
   };
 
   var fromObject = function () {
@@ -1705,12 +1707,21 @@ var toBytes;
     }
   };
 
-  var id$q = dataSegment;
+  var id$r = dataSegment;
   var COMMAND_BODY_MIN_SIZE$1 = 2;
-  var toBytes$s = function (parameters) {
+  var toBytes$t = function (parameters) {
     var buffer = new BinaryBuffer(COMMAND_BODY_MIN_SIZE$1 + parameters.data.length, false);
     setDataSegment(buffer, parameters);
-    return toBytes$u(id$q, buffer.data);
+    return toBytes$v(id$r, buffer.data);
+  };
+
+  var id$q = depassivateBattery;
+  var COMMAND_BODY_SIZE$9 = 2;
+  var toBytes$s = function (parameters) {
+    var duration = parameters.duration;
+    var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$9, false);
+    buffer.setUint16(duration);
+    return toBytes$v(id$q, buffer.data);
   };
 
   var id$p = getArchiveDays;
@@ -1722,7 +1733,7 @@ var toBytes;
     var date = getDateFromTime2000(startTime2000);
     setDate(buffer, date);
     buffer.setUint8(days);
-    return toBytes$u(id$p, buffer.data);
+    return toBytes$v(id$p, buffer.data);
   };
 
   var id$o = getArchiveDaysMc;
@@ -1740,7 +1751,7 @@ var toBytes;
       };
     }));
     buffer.setUint8(days);
-    return toBytes$u(id$o, buffer.data);
+    return toBytes$v(id$o, buffer.data);
   };
 
   var id$n = getArchiveEvents;
@@ -1751,7 +1762,7 @@ var toBytes;
     var buffer = new BinaryBuffer(COMMAND_BODY_SIZE$6, false);
     setTime(buffer, startTime2000);
     buffer.setUint8(events);
-    return toBytes$u(id$n, buffer.data);
+    return toBytes$v(id$n, buffer.data);
   };
 
   var id$m = getArchiveHours;
@@ -1765,7 +1776,7 @@ var toBytes;
     setDate(buffer, date);
     setHours(buffer, hour, 1);
     buffer.setUint8(hours);
-    return toBytes$u(id$m, buffer.data);
+    return toBytes$v(id$m, buffer.data);
   };
 
   var id$l = getArchiveHoursMc;
@@ -1784,7 +1795,7 @@ var toBytes;
         index: index
       };
     }));
-    return toBytes$u(id$l, buffer.data);
+    return toBytes$v(id$l, buffer.data);
   };
 
   var id$k = getArchiveHoursMcEx;
@@ -1804,32 +1815,32 @@ var toBytes;
         index: index
       };
     }));
-    return toBytes$u(id$k, buffer.data);
+    return toBytes$v(id$k, buffer.data);
   };
 
   var id$j = getBatteryStatus;
   var toBytes$l = function () {
-    return toBytes$u(id$j);
+    return toBytes$v(id$j);
   };
 
   var id$i = getChannelsStatus;
   var toBytes$k = function (parameters) {
-    return toBytes$u(id$i, Object.keys(parameters).length !== 0 ? [setChannelsMaskToNumber(parameters)] : []);
+    return toBytes$v(id$i, Object.keys(parameters).length !== 0 ? [setChannelsMaskToNumber(parameters)] : []);
   };
 
   var id$h = getChannelsTypes;
   var toBytes$j = function () {
-    return toBytes$u(id$h);
+    return toBytes$v(id$h);
   };
 
   var id$g = getCurrent;
   var toBytes$i = function () {
-    return toBytes$u(id$g);
+    return toBytes$v(id$g);
   };
 
   var id$f = getCurrentMc;
   var toBytes$h = function () {
-    return toBytes$u(id$f);
+    return toBytes$v(id$f);
   };
 
   var id$e = getExAbsArchiveDaysMc;
@@ -1846,7 +1857,7 @@ var toBytes;
       };
     }));
     buffer.setUint8(days);
-    return toBytes$u(id$e, buffer.data);
+    return toBytes$v(id$e, buffer.data);
   };
 
   var id$d = getExAbsArchiveHoursMc;
@@ -1865,46 +1876,46 @@ var toBytes;
         index: index
       };
     }));
-    return toBytes$u(id$d, buffer.data);
+    return toBytes$v(id$d, buffer.data);
   };
 
   var id$c = getExAbsCurrentMc;
   var toBytes$e = function () {
-    return toBytes$u(id$c);
+    return toBytes$v(id$c);
   };
 
   var id$b = getLmicInfo;
   var toBytes$d = function () {
-    return toBytes$u(id$b);
+    return toBytes$v(id$b);
   };
 
   var id$a = getParameter;
   var toBytes$c = function (parameters) {
     var buffer = new BinaryBuffer(getRequestParameterSize(parameters), false);
     setRequestParameter(buffer, parameters);
-    return toBytes$u(id$a, buffer.data);
+    return toBytes$v(id$a, buffer.data);
   };
 
   var id$9 = getSignalQuality;
   var toBytes$b = function () {
-    return toBytes$u(id$9, []);
+    return toBytes$v(id$9, []);
   };
 
   var id$8 = getStatus;
   var toBytes$a = function () {
-    return toBytes$u(id$8);
+    return toBytes$v(id$8);
   };
 
   var id$7 = getTime2000;
   var toBytes$9 = function () {
-    return toBytes$u(id$7, []);
+    return toBytes$v(id$7, []);
   };
 
   var id$6 = setParameter$1;
   var toBytes$8 = function (parameters) {
     var buffer = new BinaryBuffer(getParameterSize(parameters), false);
     setParameter(buffer, parameters);
-    return toBytes$u(id$6, buffer.data);
+    return toBytes$v(id$6, buffer.data);
   };
 
   var id$5 = setTime2000;
@@ -1915,17 +1926,17 @@ var toBytes;
     var buffer = new BinaryBuffer(COMMAND_BODY_SIZE, false);
     buffer.setUint8(sequenceNumber);
     buffer.setInt32(seconds);
-    return toBytes$u(id$5, buffer.data);
+    return toBytes$v(id$5, buffer.data);
   };
 
   var id$4 = softRestart;
   var toBytes$6 = function () {
-    return toBytes$u(id$4);
+    return toBytes$v(id$4);
   };
 
   var id$3 = updateRun;
   var toBytes$5 = function () {
-    return toBytes$u(id$3);
+    return toBytes$v(id$3);
   };
 
   var id$2 = usWaterMeterCommand;
@@ -1935,12 +1946,12 @@ var toBytes;
     var buffer = new BinaryBuffer(length, false);
     buffer.setUint8(length);
     buffer.setBytes(data);
-    return toBytes$u(id$2, buffer.data);
+    return toBytes$v(id$2, buffer.data);
   };
 
   var id$1 = verifyImage;
   var toBytes$3 = function () {
-    return toBytes$u(id$1);
+    return toBytes$v(id$1);
   };
 
   var id = writeImage;
@@ -1949,7 +1960,7 @@ var toBytes;
     var buffer = new BinaryBuffer(COMMAND_BODY_MIN_SIZE, false);
     buffer.setUint32(parameters.offset);
     buffer.setBytes(parameters.data);
-    return toBytes$u(id, buffer.data);
+    return toBytes$v(id, buffer.data);
   };
 
   var calculateLrc = (function (data) {
@@ -1980,6 +1991,7 @@ var toBytes;
 
   var toBytesMap = {};
   var toBytes$1 = getToBytes(toBytesMap);
+  toBytesMap[id$s] = toBytes$u;
   toBytesMap[id$r] = toBytes$t;
   toBytesMap[id$q] = toBytes$s;
   toBytesMap[id$p] = toBytes$r;

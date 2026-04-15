@@ -145,7 +145,7 @@
             return this.data;
         },
         seek(position) {
-            if (position < 0 || position >= this.data.length) {
+            if (position < 0 || position > this.data.length) {
                 throw new Error('Invalid position.');
             }
             this.offset = position;
@@ -336,6 +336,13 @@
         return result;
     };
 
+    var getHexFromBytes = (bytes, options = {}) => {
+        const { separator, prefix } = Object.assign({}, hexFormatOptions, options);
+        return bytes
+            .map((byte) => `${prefix}${byte.toString(16).padStart(2, '0')}`)
+            .join(separator);
+    };
+
     var getBytesFromHex = (hex) => {
         let cleanHex = hex.trim();
         if (!cleanHex) {
@@ -355,275 +362,6 @@
             bytes[index] = parseInt(cleanHex.substring(index * 2, index * 2 + 2), 16);
         }
         return bytes;
-    };
-
-    const DEVICE_TYPE_INVALID_CHAR = 'x';
-    const nibbles1 = ['.', '1', '3', 'R', 'M'];
-    const nibbles2 = ['.', 'A', 'G', 'R', 'T', 'D'];
-    const nibbles3 = ['.', '0', '1', '2', '3', '4', '5'];
-    const nibbles4 = ['.', 'A', 'B', 'C', 'D', 'E', 'F'];
-    const nibbles5 = ['.', 'A', 'B', 'C', 'D', 'E', 'F', 'H', 'K', 'G'];
-    const nibbles6 = ['.', '1', '2', '3', '4'];
-    const nibbles7 = ['.', 'L', 'M', 'Z', 'K'];
-    const nibbles8 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    const nibbles9 = ['.', 'D', 'B', 'C', 'E', 'P', 'R', 'O', 'L', 'F', 'S', 'M', 'Y', 'G', 'N', 'U'];
-    const nibbles10 = ['.', '0', '1', '2', '3', '4', '5', '6', 'P', 'R', 'L', 'E', 'G', '-', '/'];
-    const nibbles11 = ['.', 'H', 'A', 'T', '0', '0', '0', '0', '0', '1', '2', '3', '4', '0', '0', '0'];
-    const nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
-    const mtx1DeviceTypeDescriptorMask = {
-        typeMeterG: 1 << 0,
-        downgradedToA: 1 << 4,
-        supportMeterInfo: 1 << 6
-    };
-    const mtx3DeviceTypeDescriptorMask = {
-        typeMeterTransformer: 1 << 0,
-        downgradedToR: 1 << 3,
-        typeMeterG: 1 << 4,
-        supportMeterInfo: 1 << 6,
-        reactiveByQuadrants: 1 << 7
-    };
-    const mtx3DeviceTypeDescriptorFromByte = (byte) => {
-        const descriptor = toObject(mtx3DeviceTypeDescriptorMask, byte);
-        return {
-            meterType: 'mtx3',
-            ...descriptor,
-            typeMeterG: !descriptor.typeMeterG
-        };
-    };
-    const mtx3DeviceTypeDescriptorToByte = (descriptor) => (fromObject(mtx3DeviceTypeDescriptorMask, {
-        ...descriptor,
-        typeMeterG: !descriptor.typeMeterG
-    }));
-    const splitByte = (byte) => [
-        byte >> 4,
-        byte & 0x0F
-    ];
-    const splitToNibbles = (data) => {
-        const result = new Array(data.length * 2).fill(0);
-        data.forEach((byte, index) => {
-            const [high, low] = splitByte(byte);
-            result[index * 2] = high;
-            result[index * 2 + 1] = low;
-        });
-        return result;
-    };
-    const joinNibbles = (nibbles) => {
-        const hex = [];
-        nibbles.forEach(nibble => hex.push(nibble.toString(16)));
-        if (nibbles.length & 1) {
-            hex.push('0');
-        }
-        return getBytesFromHex(hex.join(''));
-    };
-    const fromBytesMtx = (nibbles) => {
-        if (nibbles.length !== 14 && nibbles.length !== 16) {
-            throw new Error('Device type bytes wrong size');
-        }
-        const type = ['MTX '];
-        type.push(nibbles1[nibbles[0]] ?? DEVICE_TYPE_INVALID_CHAR);
-        type.push(nibbles2[nibbles[1]] ?? DEVICE_TYPE_INVALID_CHAR);
-        type.push(nibbles3[nibbles[2]] ?? DEVICE_TYPE_INVALID_CHAR);
-        type.push(nibbles3[nibbles[3]] ?? DEVICE_TYPE_INVALID_CHAR);
-        type.push('.');
-        type.push(nibbles4[nibbles[4]] ?? DEVICE_TYPE_INVALID_CHAR);
-        type.push(nibbles5[nibbles[5]] ?? DEVICE_TYPE_INVALID_CHAR);
-        type.push('.');
-        type.push(nibbles6[nibbles[6]] ?? DEVICE_TYPE_INVALID_CHAR);
-        type.push(nibbles7[nibbles[7]] ?? DEVICE_TYPE_INVALID_CHAR);
-        const revision = nibbles[8];
-        type.push(nibbles8[nibbles[9]] ?? DEVICE_TYPE_INVALID_CHAR);
-        type.push('-');
-        let deviceProtocolIndex;
-        if (nibbles.length < 14 || (nibbles[12] === 0 && nibbles[13] === 0)) {
-            type.push(nibbles9[nibbles[10]] ?? DEVICE_TYPE_INVALID_CHAR);
-            deviceProtocolIndex = 11;
-        }
-        else if (nibbles[13] === 0) {
-            type.push(nibbles9[nibbles[10]] ?? DEVICE_TYPE_INVALID_CHAR);
-            type.push(nibbles9[nibbles[11]] ?? DEVICE_TYPE_INVALID_CHAR);
-            deviceProtocolIndex = 12;
-        }
-        else {
-            type.push(nibbles9[nibbles[10]] ?? DEVICE_TYPE_INVALID_CHAR);
-            type.push(nibbles9[nibbles[11]] ?? DEVICE_TYPE_INVALID_CHAR);
-            type.push(nibbles9[nibbles[12]] ?? DEVICE_TYPE_INVALID_CHAR);
-            deviceProtocolIndex = 13;
-        }
-        const deviceProtocolNibble = nibbles[deviceProtocolIndex];
-        if (deviceProtocolNibble && deviceProtocolNibble !== 0) {
-            type.push(nibbles11[deviceProtocolNibble] ?? DEVICE_TYPE_INVALID_CHAR);
-        }
-        return {
-            type: type.join(''),
-            revision
-        };
-    };
-    const toBytesMtx = (type, prefix, revision) => {
-        const nibbles = [];
-        if (type.length < 11) {
-            throw new Error('Wrong format');
-        }
-        nibbles.push(nibbles1.indexOf(type[0]));
-        nibbles.push(nibbles2.indexOf(type[1]));
-        nibbles.push(nibbles3.indexOf(type[2]));
-        nibbles.push(nibbles3.indexOf(type[3]));
-        if (type[4] !== '.') {
-            throw new Error('Wrong format');
-        }
-        nibbles.push(nibbles4.indexOf(type[5]));
-        nibbles.push(nibbles5.indexOf(type[6]));
-        if (type[7] !== '.') {
-            throw new Error('Wrong format');
-        }
-        nibbles.push(nibbles6.indexOf(type[8]));
-        nibbles.push(nibbles7.indexOf(type[9]));
-        nibbles.push(revision ?? 0);
-        nibbles.push(nibbles8.indexOf(type[10]));
-        if (type[11] !== '-') {
-            throw new Error('Wrong format');
-        }
-        const deviceProtocolIndex = type.length > 13 ? type.length - 1 : type.length;
-        for (let index = 12; index < deviceProtocolIndex; index++) {
-            nibbles.push(nibbles9.indexOf(type[index]));
-        }
-        if (deviceProtocolIndex < type.length) {
-            nibbles.push(nibbles11.indexOf(type[deviceProtocolIndex]));
-        }
-        const bytes = joinNibbles(nibbles);
-        const result = new Array(9).fill(0);
-        result[0] = 0;
-        for (let index = 0; index < bytes.length; index++) {
-            result[index + (bytes.length < 8 ? 1 : 0)] = bytes[index];
-        }
-        return result;
-    };
-    const fromBytesMtx2 = (nibbles) => {
-        if (nibbles.length < 14) {
-            throw new Error('The buffer is too small');
-        }
-        const type = ['MTX '];
-        const separator = nibbles[1] === 5 ? '-' : ' ';
-        type.push(nibbles1[nibbles[0]] ?? DEVICE_TYPE_INVALID_CHAR);
-        type.push(nibbles2[nibbles[1]] ?? DEVICE_TYPE_INVALID_CHAR);
-        type.push(separator);
-        for (let index = 2; index < nibbles.length; index++) {
-            if (nibbles[index] !== 0) {
-                type.push(nibbles10[nibbles[index]] ?? DEVICE_TYPE_INVALID_CHAR);
-            }
-        }
-        return { type: type.join('') };
-    };
-    const toBytesMtx2 = (type) => {
-        if (type.length < 3) {
-            throw new Error('Wrong format');
-        }
-        const nibbles = [];
-        nibbles.push(nibbles1.indexOf(type[0]));
-        nibbles.push(nibbles2.indexOf(type[1]));
-        for (let index = 3; index < type.length; index++) {
-            nibbles.push(nibbles10.indexOf(type[index]));
-        }
-        const bytes = joinNibbles(nibbles);
-        if (bytes.length === 8) {
-            return bytes;
-        }
-        if (bytes.length > 8) {
-            throw new Error('Wrong format');
-        }
-        const result = new Array(8).fill(0);
-        for (let index = 0; index < bytes.length; index++) {
-            result[index] = bytes[index];
-        }
-        return result;
-    };
-    const fromBytesM = (nibbles) => {
-        if (nibbles.length < 14) {
-            throw new Error('The buffer is too small');
-        }
-        const type = [];
-        type.push(nibbles1[nibbles[0]] ?? DEVICE_TYPE_INVALID_CHAR);
-        for (let index = 1; index < nibbles.length; index++) {
-            if (nibbles[index] !== 0) {
-                type.push(nibbles12[nibbles[index]] ?? DEVICE_TYPE_INVALID_CHAR);
-            }
-        }
-        return { type: type.join('') };
-    };
-    const toBytesM = (type) => {
-        if (type.length < 1) {
-            throw new Error('Wrong format');
-        }
-        const nibbles = [];
-        nibbles.push(nibbles1.indexOf(type[0]));
-        for (let index = 1; index < type.length; index++) {
-            nibbles.push(nibbles12.indexOf(type[index]));
-        }
-        const bytes = joinNibbles(nibbles);
-        const result = new Array(8).fill(0);
-        for (let index = 0; index < bytes.length && index < 8; index++) {
-            result[index] = bytes[index];
-        }
-        return result;
-    };
-    const fromBytes$2d = (bytes) => {
-        if (bytes.length !== 9) {
-            throw new Error('The buffer is too small');
-        }
-        let result;
-        const reserve = [0x00, 0x05, 0x06, 0x07, 0x09, 0x7f, 0xef];
-        const position = reserve.indexOf(bytes[0]) !== -1 ? 2 : 0;
-        const nibbles = splitToNibbles(bytes.slice(0, 8));
-        const deviceTypeNibble = nibbles[position];
-        const deviceType = nibbles1[deviceTypeNibble];
-        if (deviceType === '1' || deviceType === '3') {
-            result = {
-                ...fromBytesMtx(nibbles.slice(position)),
-                descriptor: deviceType === '3'
-                    ? mtx3DeviceTypeDescriptorFromByte(bytes[8])
-                    : {
-                        meterType: 'mtx1',
-                        ...toObject(mtx1DeviceTypeDescriptorMask, bytes[8])
-                    }
-            };
-        }
-        else {
-            result = deviceType === 'M'
-                ? fromBytesM(nibbles)
-                : fromBytesMtx2(nibbles);
-        }
-        return result;
-    };
-    const toBytes$2e = ({ type, revision, descriptor }, prefix) => {
-        if (!type.startsWith('MTX ')) {
-            throw new Error('Wrong format');
-        }
-        let result;
-        const content = type.substring(4);
-        const deviceTypeSymbol = type[4];
-        if (deviceTypeSymbol === '1' || deviceTypeSymbol === '3') {
-            result = toBytesMtx(content, prefix, revision);
-        }
-        else {
-            result = deviceTypeSymbol === 'M'
-                ? toBytesM(content)
-                : toBytesMtx2(content);
-        }
-        if (descriptor?.meterType) {
-            result[8] = descriptor.meterType === 'mtx1'
-                ? fromObject(mtx1DeviceTypeDescriptorMask, descriptor)
-                : mtx3DeviceTypeDescriptorToByte(descriptor);
-        }
-        else {
-            result[8] = 0;
-        }
-        return result;
-    };
-
-    var getHexFromBytes = (bytes, options = {}) => {
-        const { separator, prefix } = Object.assign({}, hexFormatOptions, options);
-        return bytes
-            .map((byte) => `${prefix}${byte.toString(16).padStart(2, '0')}`)
-            .join(separator);
     };
 
     const DATA_REQUEST = 0x50;
@@ -722,7 +460,7 @@
 
     const getEventStatus$3 = 0x01;
     const getEnergyDayPrevious$2 = 0x03;
-    const getDeviceType$3 = 0x04;
+    const getDeviceType$2 = 0x04;
     const getDeviceId$3 = 0x05;
     const getDateTime$3 = 0x07;
     const setDateTime$3 = 0x08;
@@ -807,7 +545,7 @@
         getDemand: getDemand$3,
         getDemandParameters: getDemandParameters$3,
         getDeviceId: getDeviceId$3,
-        getDeviceType: getDeviceType$3,
+        getDeviceType: getDeviceType$2,
         getDisplayParam: getDisplayParam$2,
         getEnergy: getEnergy$2,
         getEnergyDayPrevious: getEnergyDayPrevious$2,
@@ -1277,7 +1015,7 @@
         getDemand: getDemand$3,
         getDemandParameters: getDemandParameters$3,
         getDeviceId: getDeviceId$3,
-        getDeviceType: getDeviceType$3,
+        getDeviceType: getDeviceType$2,
         getDisplayParam: getDisplayParam$2,
         getEnergy: getEnergy$2,
         getEnergyDayPrevious: getEnergyDayPrevious$2,
@@ -1700,12 +1438,6 @@
         buffer.setUint8(specialDay.dayIndex);
         buffer.setUint8(specialDay.year);
     };
-    const getDeviceType$2 = function (buffer) {
-        return fromBytes$2d(buffer.getBytes(9));
-    };
-    const setDeviceType = function (buffer, deviceType) {
-        buffer.setBytes(toBytes$2e(deviceType));
-    };
     const getOperatorParameters$2 = function (buffer) {
         let value;
         const operatorParameters = {
@@ -2073,7 +1805,7 @@
         ...defaultFormatOptions,
         dlms: false
     };
-    const toBytes$2d = (commandId, commandBytes = []) => [commandId, commandBytes.length, ...commandBytes];
+    const toBytes$2e = (commandId, commandBytes = []) => [commandId, commandBytes.length, ...commandBytes];
 
     const validateRangeCommandPayload = (commandName, bytes, range) => {
         if (!commandName) {
@@ -2124,7 +1856,7 @@
             ]
         }
     };
-    const fromBytes$2c = (bytes) => {
+    const fromBytes$2d = (bytes) => {
         validateFixedCommandPayload(name$2c, bytes, maxSize$2c);
         const buffer = new BinaryBuffer(bytes, false);
         return {
@@ -2132,24 +1864,24 @@
             tariffPlan: getTariffPlan(buffer)
         };
     };
-    const toBytes$2c = (parameters) => {
+    const toBytes$2d = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$2c, false);
         buffer.setUint8(parameters.tariffTable);
         setTariffPlan(buffer, parameters.tariffPlan);
-        return toBytes$2d(id$2c, buffer.data);
+        return toBytes$2e(id$2c, buffer.data);
     };
 
     var activateRatePlan$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$2c,
         examples: examples$2c,
-        fromBytes: fromBytes$2c,
+        fromBytes: fromBytes$2d,
         headerSize: headerSize$2c,
         id: id$2c,
         isLoraOnly: isLoraOnly$2c,
         maxSize: maxSize$2c,
         name: name$2c,
-        toBytes: toBytes$2c
+        toBytes: toBytes$2d
     });
 
     const id$2b = getBv$2;
@@ -2171,23 +1903,23 @@
             ]
         }
     };
-    const fromBytes$2b = (bytes) => {
+    const fromBytes$2c = (bytes) => {
         validateFixedCommandPayload(name$2b, bytes, maxSize$2b);
         return {};
     };
-    const toBytes$2b = () => toBytes$2d(id$2b);
+    const toBytes$2c = () => toBytes$2e(id$2b);
 
     var getBv$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$2b,
         examples: examples$2b,
-        fromBytes: fromBytes$2b,
+        fromBytes: fromBytes$2c,
         headerSize: headerSize$2b,
         id: id$2b,
         isLoraOnly: isLoraOnly$2b,
         maxSize: maxSize$2b,
         name: name$2b,
-        toBytes: toBytes$2b
+        toBytes: toBytes$2c
     });
 
     const id$2a = getCorrectTime$2;
@@ -2209,23 +1941,23 @@
             ]
         }
     };
-    const fromBytes$2a = (bytes) => {
+    const fromBytes$2b = (bytes) => {
         validateFixedCommandPayload(name$2a, bytes, maxSize$2a);
         return {};
     };
-    const toBytes$2a = () => toBytes$2d(id$2a);
+    const toBytes$2b = () => toBytes$2e(id$2a);
 
     var getCorrectTime$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$2a,
         examples: examples$2a,
-        fromBytes: fromBytes$2a,
+        fromBytes: fromBytes$2b,
         headerSize: headerSize$2a,
         id: id$2a,
         isLoraOnly: isLoraOnly$2a,
         maxSize: maxSize$2a,
         name: name$2a,
-        toBytes: toBytes$2a
+        toBytes: toBytes$2b
     });
 
     const id$29 = getCriticalEvent$2;
@@ -2268,7 +2000,7 @@
             ]
         }
     };
-    const fromBytes$29 = (bytes) => {
+    const fromBytes$2a = (bytes) => {
         validateFixedCommandPayload(name$29, bytes, maxSize$29);
         const [event, index] = bytes;
         return {
@@ -2277,19 +2009,19 @@
             index
         };
     };
-    const toBytes$29 = (parameters) => (toBytes$2d(id$29, [parameters.event, parameters.index]));
+    const toBytes$2a = (parameters) => (toBytes$2e(id$29, [parameters.event, parameters.index]));
 
     var getCriticalEvent$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$29,
         examples: examples$29,
-        fromBytes: fromBytes$29,
+        fromBytes: fromBytes$2a,
         headerSize: headerSize$29,
         id: id$29,
         isLoraOnly: isLoraOnly$29,
         maxSize: maxSize$29,
         name: name$29,
-        toBytes: toBytes$29
+        toBytes: toBytes$2a
     });
 
     const id$28 = getCurrentStatusMeter$2;
@@ -2311,23 +2043,23 @@
             ]
         }
     };
-    const fromBytes$28 = (bytes) => {
+    const fromBytes$29 = (bytes) => {
         validateFixedCommandPayload(name$28, bytes, maxSize$28);
         return {};
     };
-    const toBytes$28 = () => toBytes$2d(id$28);
+    const toBytes$29 = () => toBytes$2e(id$28);
 
     var getCurrentStatusMeter$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$28,
         examples: examples$28,
-        fromBytes: fromBytes$28,
+        fromBytes: fromBytes$29,
         headerSize: headerSize$28,
         id: id$28,
         isLoraOnly: isLoraOnly$28,
         maxSize: maxSize$28,
         name: name$28,
-        toBytes: toBytes$28
+        toBytes: toBytes$29
     });
 
     const id$27 = getCurrentValues$2;
@@ -2349,23 +2081,23 @@
             ]
         }
     };
-    const fromBytes$27 = (bytes) => {
+    const fromBytes$28 = (bytes) => {
         validateFixedCommandPayload(name$27, bytes, maxSize$27);
         return {};
     };
-    const toBytes$27 = () => toBytes$2d(id$27);
+    const toBytes$28 = () => toBytes$2e(id$27);
 
     var getCurrentValues$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$27,
         examples: examples$27,
-        fromBytes: fromBytes$27,
+        fromBytes: fromBytes$28,
         headerSize: headerSize$27,
         id: id$27,
         isLoraOnly: isLoraOnly$27,
         maxSize: maxSize$27,
         name: name$27,
-        toBytes: toBytes$27
+        toBytes: toBytes$28
     });
 
     const id$26 = getDateTime$3;
@@ -2387,23 +2119,23 @@
             ]
         }
     };
-    const fromBytes$26 = (bytes) => {
+    const fromBytes$27 = (bytes) => {
         validateFixedCommandPayload(name$26, bytes, maxSize$26);
         return {};
     };
-    const toBytes$26 = () => toBytes$2d(id$26);
+    const toBytes$27 = () => toBytes$2e(id$26);
 
     var getDateTime$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$26,
         examples: examples$26,
-        fromBytes: fromBytes$26,
+        fromBytes: fromBytes$27,
         headerSize: headerSize$26,
         id: id$26,
         isLoraOnly: isLoraOnly$26,
         maxSize: maxSize$26,
         name: name$26,
-        toBytes: toBytes$26
+        toBytes: toBytes$27
     });
 
     const MIN_COMMAND_SIZE$6 = 3;
@@ -2453,7 +2185,7 @@
             ]
         }
     };
-    const fromBytes$25 = (bytes) => {
+    const fromBytes$26 = (bytes) => {
         const buffer = new BinaryBuffer(bytes);
         if (bytes.length === MAX_COMMAND_SIZE$c) {
             return {
@@ -2463,26 +2195,26 @@
         }
         return { date: getDate$1(buffer) };
     };
-    const toBytes$25 = (parameters) => {
+    const toBytes$26 = (parameters) => {
         const buffer = new BinaryBuffer(parameters?.energyType ? MAX_COMMAND_SIZE$c : MIN_COMMAND_SIZE$6);
         setDate$1(buffer, parameters?.date);
         if (parameters?.energyType) {
             buffer.setUint8(parameters.energyType);
         }
-        return toBytes$2d(id$25, buffer.data);
+        return toBytes$2e(id$25, buffer.data);
     };
 
     var getDayDemand$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$25,
         examples: examples$25,
-        fromBytes: fromBytes$25,
+        fromBytes: fromBytes$26,
         headerSize: headerSize$25,
         id: id$25,
         isLoraOnly: isLoraOnly$25,
         maxSize: maxSize$25,
         name: name$25,
-        toBytes: toBytes$25
+        toBytes: toBytes$26
     });
 
     const MIN_COMMAND_SIZE$5 = 3;
@@ -2532,7 +2264,7 @@
             ]
         }
     };
-    const fromBytes$24 = (bytes) => {
+    const fromBytes$25 = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         if (bytes.length === MAX_COMMAND_SIZE$b) {
             return {
@@ -2542,26 +2274,26 @@
         }
         return { date: getDate$1(buffer) };
     };
-    const toBytes$24 = (parameters) => {
+    const toBytes$25 = (parameters) => {
         const buffer = new BinaryBuffer(parameters?.energyType ? MAX_COMMAND_SIZE$b : MIN_COMMAND_SIZE$5, false);
         setDate$1(buffer, parameters?.date);
         if (parameters?.energyType) {
             buffer.setUint8(parameters.energyType);
         }
-        return toBytes$2d(id$24, buffer.data);
+        return toBytes$2e(id$24, buffer.data);
     };
 
     var getDayDemandExport$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$24,
         examples: examples$24,
-        fromBytes: fromBytes$24,
+        fromBytes: fromBytes$25,
         headerSize: headerSize$24,
         id: id$24,
         isLoraOnly: isLoraOnly$24,
         maxSize: maxSize$24,
         name: name$24,
-        toBytes: toBytes$24
+        toBytes: toBytes$25
     });
 
     const id$23 = getDayMaxDemand$2;
@@ -2590,28 +2322,28 @@
             ]
         }
     };
-    const fromBytes$23 = (bytes) => {
+    const fromBytes$24 = (bytes) => {
         validateFixedCommandPayload(name$23, bytes, maxSize$23);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
-    const toBytes$23 = (parameters) => {
+    const toBytes$24 = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$23, false);
         setDate$1(buffer, parameters.date);
-        return toBytes$2d(id$23, buffer.data);
+        return toBytes$2e(id$23, buffer.data);
     };
 
     var getDayMaxDemand$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$23,
         examples: examples$23,
-        fromBytes: fromBytes$23,
+        fromBytes: fromBytes$24,
         headerSize: headerSize$23,
         id: id$23,
         isLoraOnly: isLoraOnly$23,
         maxSize: maxSize$23,
         name: name$23,
-        toBytes: toBytes$23
+        toBytes: toBytes$24
     });
 
     const id$22 = getDayMaxDemandExport$2;
@@ -2640,28 +2372,28 @@
             ]
         }
     };
-    const fromBytes$22 = (bytes) => {
+    const fromBytes$23 = (bytes) => {
         validateFixedCommandPayload(name$22, bytes, maxSize$22);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
-    const toBytes$22 = (parameters) => {
+    const toBytes$23 = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$22, false);
         setDate$1(buffer, parameters.date);
-        return toBytes$2d(id$22, buffer.data);
+        return toBytes$2e(id$22, buffer.data);
     };
 
     var getDayMaxDemandExport$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$22,
         examples: examples$22,
-        fromBytes: fromBytes$22,
+        fromBytes: fromBytes$23,
         headerSize: headerSize$22,
         id: id$22,
         isLoraOnly: isLoraOnly$22,
         maxSize: maxSize$22,
         name: name$22,
-        toBytes: toBytes$22
+        toBytes: toBytes$23
     });
 
     const id$21 = getDayMaxDemandPrevious$2;
@@ -2683,23 +2415,23 @@
             ]
         }
     };
-    const fromBytes$21 = (bytes) => {
+    const fromBytes$22 = (bytes) => {
         validateFixedCommandPayload(name$21, bytes, maxSize$21);
         return {};
     };
-    const toBytes$21 = () => toBytes$2d(id$21);
+    const toBytes$22 = () => toBytes$2e(id$21);
 
     var getDayMaxDemandPrevious$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$21,
         examples: examples$21,
-        fromBytes: fromBytes$21,
+        fromBytes: fromBytes$22,
         headerSize: headerSize$21,
         id: id$21,
         isLoraOnly: isLoraOnly$21,
         maxSize: maxSize$21,
         name: name$21,
-        toBytes: toBytes$21
+        toBytes: toBytes$22
     });
 
     const id$20 = getDayProfile$2;
@@ -2726,26 +2458,26 @@
             ]
         }
     };
-    const fromBytes$20 = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
-    const toBytes$20 = (parameters) => {
+    const fromBytes$21 = ([tariffTable, index, isActive]) => ({ tariffTable, index, isActive: isActive === 0 });
+    const toBytes$21 = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$20, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
         buffer.setUint8(parameters.isActive ? 0 : 1);
-        return toBytes$2d(id$20, buffer.data);
+        return toBytes$2e(id$20, buffer.data);
     };
 
     var getDayProfile$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$20,
         examples: examples$20,
-        fromBytes: fromBytes$20,
+        fromBytes: fromBytes$21,
         headerSize: headerSize$20,
         id: id$20,
         isLoraOnly: isLoraOnly$20,
         maxSize: maxSize$20,
         name: name$20,
-        toBytes: toBytes$20
+        toBytes: toBytes$21
     });
 
     const id$1$ = getDemand$3;
@@ -2777,27 +2509,27 @@
             ]
         }
     };
-    const fromBytes$1$ = (bytes) => {
+    const fromBytes$20 = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         return getDemand$2(buffer);
     };
-    const toBytes$1$ = (parameters) => {
+    const toBytes$20 = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1$, false);
         setDemand(buffer, parameters);
-        return toBytes$2d(id$1$, buffer.data);
+        return toBytes$2e(id$1$, buffer.data);
     };
 
     var getDemand$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1$,
         examples: examples$1$,
-        fromBytes: fromBytes$1$,
+        fromBytes: fromBytes$20,
         headerSize: headerSize$1$,
         id: id$1$,
         isLoraOnly: isLoraOnly$1$,
         maxSize: maxSize$1$,
         name: name$1$,
-        toBytes: toBytes$1$
+        toBytes: toBytes$20
     });
 
     const id$1_ = getDemandParameters$3;
@@ -2818,23 +2550,23 @@
             ]
         }
     };
-    const fromBytes$1_ = (bytes) => {
+    const fromBytes$1$ = (bytes) => {
         validateFixedCommandPayload(name$1_, bytes, maxSize$1_);
         return {};
     };
-    const toBytes$1_ = () => toBytes$2d(id$1_);
+    const toBytes$1$ = () => toBytes$2e(id$1_);
 
     var getDemandParameters$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1_,
         examples: examples$1_,
-        fromBytes: fromBytes$1_,
+        fromBytes: fromBytes$1$,
         headerSize: headerSize$1_,
         id: id$1_,
         isLoraOnly: isLoraOnly$1_,
         maxSize: maxSize$1_,
         name: name$1_,
-        toBytes: toBytes$1_
+        toBytes: toBytes$1$
     });
 
     const id$1Z = getDeviceId$3;
@@ -2856,27 +2588,27 @@
             ]
         }
     };
-    const fromBytes$1Z = (bytes) => {
+    const fromBytes$1_ = (bytes) => {
         validateFixedCommandPayload(name$1Z, bytes, maxSize$1Z);
         return {};
     };
-    const toBytes$1Z = () => toBytes$2d(id$1Z);
+    const toBytes$1_ = () => toBytes$2e(id$1Z);
 
     var getDeviceId$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1Z,
         examples: examples$1Z,
-        fromBytes: fromBytes$1Z,
+        fromBytes: fromBytes$1_,
         headerSize: headerSize$1Z,
         id: id$1Z,
         isLoraOnly: isLoraOnly$1Z,
         maxSize: maxSize$1Z,
         name: name$1Z,
-        toBytes: toBytes$1Z
+        toBytes: toBytes$1_
     });
 
-    const id$1Y = getDeviceType$3;
-    const name$1Y = commandNames$1[getDeviceType$3];
+    const id$1Y = getDeviceType$2;
+    const name$1Y = commandNames$1[getDeviceType$2];
     const headerSize$1Y = 2;
     const accessLevel$1Y = READ_ONLY;
     const maxSize$1Y = 0;
@@ -2894,23 +2626,23 @@
             ]
         }
     };
-    const fromBytes$1Y = (bytes) => {
+    const fromBytes$1Z = (bytes) => {
         validateFixedCommandPayload(name$1Y, bytes, maxSize$1Y);
         return {};
     };
-    const toBytes$1Y = () => toBytes$2d(id$1Y);
+    const toBytes$1Z = () => toBytes$2e(id$1Y);
 
     var getDeviceType$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1Y,
         examples: examples$1Y,
-        fromBytes: fromBytes$1Y,
+        fromBytes: fromBytes$1Z,
         headerSize: headerSize$1Y,
         id: id$1Y,
         isLoraOnly: isLoraOnly$1Y,
         maxSize: maxSize$1Y,
         name: name$1Y,
-        toBytes: toBytes$1Y
+        toBytes: toBytes$1Z
     });
 
     const id$1X = getDisplayParam$2;
@@ -2935,24 +2667,24 @@
             ]
         }
     };
-    const fromBytes$1X = ([displayMode]) => ({ displayMode });
-    const toBytes$1X = (parameters) => {
+    const fromBytes$1Y = ([displayMode]) => ({ displayMode });
+    const toBytes$1Y = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1X, false);
         buffer.setUint8(parameters.displayMode);
-        return toBytes$2d(id$1X, buffer.data);
+        return toBytes$2e(id$1X, buffer.data);
     };
 
     var getDisplayParam$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1X,
         examples: examples$1X,
-        fromBytes: fromBytes$1X,
+        fromBytes: fromBytes$1Y,
         headerSize: headerSize$1X,
         id: id$1X,
         isLoraOnly: isLoraOnly$1X,
         maxSize: maxSize$1X,
         name: name$1X,
-        toBytes: toBytes$1X
+        toBytes: toBytes$1Y
     });
 
     const MIN_COMMAND_SIZE$4 = 0;
@@ -2990,31 +2722,31 @@
             ]
         }
     };
-    const fromBytes$1W = (bytes) => {
+    const fromBytes$1X = (bytes) => {
         if (bytes.length === MAX_COMMAND_SIZE$a) {
             return { energyType: bytes[0] };
         }
         return {};
     };
-    const toBytes$1W = (parameters = {}) => {
+    const toBytes$1X = (parameters = {}) => {
         const buffer = new BinaryBuffer(parameters?.energyType ? MAX_COMMAND_SIZE$a : MIN_COMMAND_SIZE$4, false);
         if (parameters?.energyType) {
             buffer.setUint8(parameters.energyType);
         }
-        return toBytes$2d(id$1W, buffer.data);
+        return toBytes$2e(id$1W, buffer.data);
     };
 
     var getEnergy$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1W,
         examples: examples$1W,
-        fromBytes: fromBytes$1W,
+        fromBytes: fromBytes$1X,
         headerSize: headerSize$1W,
         id: id$1W,
         isLoraOnly: isLoraOnly$1W,
         maxSize: maxSize$1W,
         name: name$1W,
-        toBytes: toBytes$1W
+        toBytes: toBytes$1X
     });
 
     const MIN_COMMAND_SIZE$3 = 0;
@@ -3052,7 +2784,7 @@
             ]
         }
     };
-    const fromBytes$1V = (bytes) => {
+    const fromBytes$1W = (bytes) => {
         const { length } = bytes;
         if (length !== MAX_COMMAND_SIZE$9 && length !== MIN_COMMAND_SIZE$3) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
@@ -3062,24 +2794,24 @@
         }
         return {};
     };
-    const toBytes$1V = (parameters) => {
+    const toBytes$1W = (parameters) => {
         if (parameters.energyType) {
-            return toBytes$2d(id$1V, [parameters.energyType]);
+            return toBytes$2e(id$1V, [parameters.energyType]);
         }
-        return toBytes$2d(id$1V);
+        return toBytes$2e(id$1V);
     };
 
     var getEnergyDayPrevious$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1V,
         examples: examples$1V,
-        fromBytes: fromBytes$1V,
+        fromBytes: fromBytes$1W,
         headerSize: headerSize$1V,
         id: id$1V,
         isLoraOnly: isLoraOnly$1V,
         maxSize: maxSize$1V,
         name: name$1V,
-        toBytes: toBytes$1V
+        toBytes: toBytes$1W
     });
 
     const MIN_COMMAND_SIZE$2 = 0;
@@ -3117,31 +2849,31 @@
             ]
         }
     };
-    const fromBytes$1U = (bytes) => {
+    const fromBytes$1V = (bytes) => {
         if (bytes.length === MAX_COMMAND_SIZE$8) {
             return { energyType: bytes[0] };
         }
         return {};
     };
-    const toBytes$1U = (parameters = {}) => {
+    const toBytes$1V = (parameters = {}) => {
         const buffer = new BinaryBuffer(parameters?.energyType ? MAX_COMMAND_SIZE$8 : MIN_COMMAND_SIZE$2, false);
         if (parameters?.energyType) {
             buffer.setUint8(parameters.energyType);
         }
-        return toBytes$2d(id$1U, buffer.data);
+        return toBytes$2e(id$1U, buffer.data);
     };
 
     var getEnergyExport$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1U,
         examples: examples$1U,
-        fromBytes: fromBytes$1U,
+        fromBytes: fromBytes$1V,
         headerSize: headerSize$1U,
         id: id$1U,
         isLoraOnly: isLoraOnly$1U,
         maxSize: maxSize$1U,
         name: name$1U,
-        toBytes: toBytes$1U
+        toBytes: toBytes$1V
     });
 
     const MIN_COMMAND_SIZE$1 = 0;
@@ -3179,7 +2911,7 @@
             ]
         }
     };
-    const fromBytes$1T = (bytes) => {
+    const fromBytes$1U = (bytes) => {
         const { length } = bytes;
         if (length !== MAX_COMMAND_SIZE$7 && length !== MIN_COMMAND_SIZE$1) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
@@ -3189,24 +2921,24 @@
         }
         return {};
     };
-    const toBytes$1T = (parameters) => {
+    const toBytes$1U = (parameters) => {
         if (parameters.energyType) {
-            return toBytes$2d(id$1T, [parameters.energyType]);
+            return toBytes$2e(id$1T, [parameters.energyType]);
         }
-        return toBytes$2d(id$1T);
+        return toBytes$2e(id$1T);
     };
 
     var getEnergyExportDayPrevious$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1T,
         examples: examples$1T,
-        fromBytes: fromBytes$1T,
+        fromBytes: fromBytes$1U,
         headerSize: headerSize$1T,
         id: id$1T,
         isLoraOnly: isLoraOnly$1T,
         maxSize: maxSize$1T,
         name: name$1T,
-        toBytes: toBytes$1T
+        toBytes: toBytes$1U
     });
 
     const id$1S = getEvents$2;
@@ -3236,31 +2968,31 @@
             ]
         }
     };
-    const fromBytes$1S = (bytes) => {
+    const fromBytes$1T = (bytes) => {
         validateFixedCommandPayload(name$1S, bytes, maxSize$1S);
         const buffer = new BinaryBuffer(bytes, false);
         const date = getDate$1(buffer);
         const offset = buffer.getUint8();
         return { date, offset };
     };
-    const toBytes$1S = (parameters) => {
+    const toBytes$1T = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1S, false);
         setDate$1(buffer, parameters.date);
         buffer.setUint8(parameters.offset);
-        return toBytes$2d(id$1S, buffer.data);
+        return toBytes$2e(id$1S, buffer.data);
     };
 
     var getEvents$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1S,
         examples: examples$1S,
-        fromBytes: fromBytes$1S,
+        fromBytes: fromBytes$1T,
         headerSize: headerSize$1S,
         id: id$1S,
         isLoraOnly: isLoraOnly$1S,
         maxSize: maxSize$1S,
         name: name$1S,
-        toBytes: toBytes$1S
+        toBytes: toBytes$1T
     });
 
     const id$1R = getEventsCounters$2;
@@ -3282,23 +3014,23 @@
             ]
         }
     };
-    const fromBytes$1R = (bytes) => {
+    const fromBytes$1S = (bytes) => {
         validateFixedCommandPayload(name$1R, bytes, maxSize$1R);
         return {};
     };
-    const toBytes$1R = () => toBytes$2d(id$1R);
+    const toBytes$1S = () => toBytes$2e(id$1R);
 
     var getEventsCounters$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1R,
         examples: examples$1R,
-        fromBytes: fromBytes$1R,
+        fromBytes: fromBytes$1S,
         headerSize: headerSize$1R,
         id: id$1R,
         isLoraOnly: isLoraOnly$1R,
         maxSize: maxSize$1R,
         name: name$1R,
-        toBytes: toBytes$1R
+        toBytes: toBytes$1S
     });
 
     const id$1Q = getEventStatus$3;
@@ -3320,23 +3052,23 @@
             ]
         }
     };
-    const fromBytes$1Q = (bytes) => {
+    const fromBytes$1R = (bytes) => {
         validateFixedCommandPayload(name$1Q, bytes, maxSize$1Q);
         return {};
     };
-    const toBytes$1Q = () => toBytes$2d(id$1Q);
+    const toBytes$1R = () => toBytes$2e(id$1Q);
 
     var getEventStatus$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1Q,
         examples: examples$1Q,
-        fromBytes: fromBytes$1Q,
+        fromBytes: fromBytes$1R,
         headerSize: headerSize$1Q,
         id: id$1Q,
         isLoraOnly: isLoraOnly$1Q,
         maxSize: maxSize$1Q,
         name: name$1Q,
-        toBytes: toBytes$1Q
+        toBytes: toBytes$1R
     });
 
     const id$1P = getExtendedCurrentValues$2;
@@ -3358,23 +3090,23 @@
             ]
         }
     };
-    const fromBytes$1P = (bytes) => {
+    const fromBytes$1Q = (bytes) => {
         validateFixedCommandPayload(name$1P, bytes, maxSize$1P);
         return {};
     };
-    const toBytes$1P = () => toBytes$2d(id$1P);
+    const toBytes$1Q = () => toBytes$2e(id$1P);
 
     var getExtendedCurrentValues$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1P,
         examples: examples$1P,
-        fromBytes: fromBytes$1P,
+        fromBytes: fromBytes$1Q,
         headerSize: headerSize$1P,
         id: id$1P,
         isLoraOnly: isLoraOnly$1P,
         maxSize: maxSize$1P,
         name: name$1P,
-        toBytes: toBytes$1P
+        toBytes: toBytes$1Q
     });
 
     const id$1O = getExtendedCurrentValues2$3;
@@ -3396,23 +3128,23 @@
             ]
         }
     };
-    const fromBytes$1O = (bytes) => {
+    const fromBytes$1P = (bytes) => {
         validateFixedCommandPayload(name$1O, bytes, maxSize$1O);
         return {};
     };
-    const toBytes$1O = () => toBytes$2d(id$1O);
+    const toBytes$1P = () => toBytes$2e(id$1O);
 
     var getExtendedCurrentValues2$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1O,
         examples: examples$1O,
-        fromBytes: fromBytes$1O,
+        fromBytes: fromBytes$1P,
         headerSize: headerSize$1O,
         id: id$1O,
         isLoraOnly: isLoraOnly$1O,
         maxSize: maxSize$1O,
         name: name$1O,
-        toBytes: toBytes$1O
+        toBytes: toBytes$1P
     });
 
     const id$1N = getGsmParameters$2;
@@ -3429,7 +3161,7 @@
             maxSize: maxSize$1N,
             accessLevel: accessLevel$1N,
             parameters: {
-                blockIndex: 1
+                index: 1
             },
             bytes: [
                 0x61, 0x01,
@@ -3437,24 +3169,24 @@
             ]
         }
     };
-    const fromBytes$1N = (bytes) => {
+    const fromBytes$1O = (bytes) => {
         validateFixedCommandPayload(name$1N, bytes, maxSize$1N);
-        const [blockIndex] = bytes;
-        return { blockIndex };
+        const [index] = bytes;
+        return { index };
     };
-    const toBytes$1N = (parameters) => (toBytes$2d(id$1N, [parameters.blockIndex]));
+    const toBytes$1O = (parameters) => (toBytes$2e(id$1N, [parameters.index]));
 
     var getGsmParameters$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1N,
         examples: examples$1N,
-        fromBytes: fromBytes$1N,
+        fromBytes: fromBytes$1O,
         headerSize: headerSize$1N,
         id: id$1N,
         isLoraOnly: isLoraOnly$1N,
         maxSize: maxSize$1N,
         name: name$1N,
-        toBytes: toBytes$1N
+        toBytes: toBytes$1O
     });
 
     const id$1M = getHalfHourDemand$2;
@@ -3483,28 +3215,28 @@
             ]
         }
     };
-    const fromBytes$1M = (bytes) => {
+    const fromBytes$1N = (bytes) => {
         validateFixedCommandPayload(name$1M, bytes, maxSize$1M);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
-    const toBytes$1M = (parameters) => {
+    const toBytes$1N = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1M, false);
         setDate$1(buffer, parameters.date);
-        return toBytes$2d(id$1M, buffer.data);
+        return toBytes$2e(id$1M, buffer.data);
     };
 
     var getHalfHourDemand$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1M,
         examples: examples$1M,
-        fromBytes: fromBytes$1M,
+        fromBytes: fromBytes$1N,
         headerSize: headerSize$1M,
         id: id$1M,
         isLoraOnly: isLoraOnly$1M,
         maxSize: maxSize$1M,
         name: name$1M,
-        toBytes: toBytes$1M
+        toBytes: toBytes$1N
     });
 
     const id$1L = getHalfHourDemandExport$2;
@@ -3533,28 +3265,28 @@
             ]
         }
     };
-    const fromBytes$1L = (bytes) => {
+    const fromBytes$1M = (bytes) => {
         validateFixedCommandPayload(name$1L, bytes, maxSize$1L);
         const buffer = new BinaryBuffer(bytes, false);
         return { date: getDate$1(buffer) };
     };
-    const toBytes$1L = (parameters) => {
+    const toBytes$1M = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1L, false);
         setDate$1(buffer, parameters.date);
-        return toBytes$2d(id$1L, buffer.data);
+        return toBytes$2e(id$1L, buffer.data);
     };
 
     var getHalfHourDemandExport$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1L,
         examples: examples$1L,
-        fromBytes: fromBytes$1L,
+        fromBytes: fromBytes$1M,
         headerSize: headerSize$1L,
         id: id$1L,
         isLoraOnly: isLoraOnly$1L,
         maxSize: maxSize$1L,
         name: name$1L,
-        toBytes: toBytes$1L
+        toBytes: toBytes$1M
     });
 
     const id$1K = getHalfHourDemandPrevious$2;
@@ -3576,23 +3308,23 @@
             ]
         }
     };
-    const fromBytes$1K = (bytes) => {
+    const fromBytes$1L = (bytes) => {
         validateFixedCommandPayload(name$1K, bytes, maxSize$1K);
         return {};
     };
-    const toBytes$1K = () => toBytes$2d(id$1K);
+    const toBytes$1L = () => toBytes$2e(id$1K);
 
     var getHalfHourDemandPrevious$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1K,
         examples: examples$1K,
-        fromBytes: fromBytes$1K,
+        fromBytes: fromBytes$1L,
         headerSize: headerSize$1K,
         id: id$1K,
         isLoraOnly: isLoraOnly$1K,
         maxSize: maxSize$1K,
         name: name$1K,
-        toBytes: toBytes$1K
+        toBytes: toBytes$1L
     });
 
     const TARIFF_NUMBER = 4;
@@ -3885,7 +3617,7 @@
             ]
         }
     };
-    const fromBytes$1J = (bytes) => {
+    const fromBytes$1K = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         return {
             date: getDate(buffer),
@@ -3894,26 +3626,26 @@
             halfhoursNumber: buffer.getUint8()
         };
     };
-    const toBytes$1J = (parameters) => {
+    const toBytes$1K = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1J, false);
         setDate(buffer, parameters.date);
         setEnergiesFlags(buffer, parameters.energies);
         buffer.setUint8(parameters.firstHalfhour);
         buffer.setUint8(parameters.halfhoursNumber);
-        return toBytes$2d(id$1J, buffer.data);
+        return toBytes$2e(id$1J, buffer.data);
     };
 
     var getHalfHourEnergies$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1J,
         examples: examples$1J,
-        fromBytes: fromBytes$1J,
+        fromBytes: fromBytes$1K,
         headerSize: headerSize$1J,
         id: id$1J,
         isLoraOnly: isLoraOnly$1J,
         maxSize: maxSize$1J,
         name: name$1J,
-        toBytes: toBytes$1J
+        toBytes: toBytes$1K
     });
 
     const id$1I = getMagneticFieldThreshold$2;
@@ -3935,23 +3667,23 @@
             ]
         }
     };
-    const fromBytes$1I = (bytes) => {
+    const fromBytes$1J = (bytes) => {
         validateFixedCommandPayload(name$1I, bytes, maxSize$1I);
         return {};
     };
-    const toBytes$1I = () => toBytes$2d(id$1I);
+    const toBytes$1J = () => toBytes$2e(id$1I);
 
     var getMagneticFieldThreshold$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1I,
         examples: examples$1I,
-        fromBytes: fromBytes$1I,
+        fromBytes: fromBytes$1J,
         headerSize: headerSize$1I,
         id: id$1I,
         isLoraOnly: isLoraOnly$1I,
         maxSize: maxSize$1I,
         name: name$1I,
-        toBytes: toBytes$1I
+        toBytes: toBytes$1J
     });
 
     const id$1H = getMeterInfo$2;
@@ -3973,23 +3705,23 @@
             ]
         }
     };
-    const fromBytes$1H = (bytes) => {
+    const fromBytes$1I = (bytes) => {
         validateFixedCommandPayload(name$1H, bytes, maxSize$1H);
         return {};
     };
-    const toBytes$1H = () => toBytes$2d(id$1H);
+    const toBytes$1I = () => toBytes$2e(id$1H);
 
     var getMeterInfo$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1H,
         examples: examples$1H,
-        fromBytes: fromBytes$1H,
+        fromBytes: fromBytes$1I,
         headerSize: headerSize$1H,
         id: id$1H,
         isLoraOnly: isLoraOnly$1H,
         maxSize: maxSize$1H,
         name: name$1H,
-        toBytes: toBytes$1H
+        toBytes: toBytes$1I
     });
 
     const id$1G = getMonthDemand$2;
@@ -4015,7 +3747,7 @@
             ]
         }
     };
-    const fromBytes$1G = (bytes) => {
+    const fromBytes$1H = (bytes) => {
         validateFixedCommandPayload(name$1G, bytes, maxSize$1G);
         const buffer = new BinaryBuffer(bytes, false);
         return {
@@ -4023,24 +3755,24 @@
             month: buffer.getUint8()
         };
     };
-    const toBytes$1G = (parameters) => {
+    const toBytes$1H = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1G, false);
         buffer.setUint8(parameters.year);
         buffer.setUint8(parameters.month);
-        return toBytes$2d(id$1G, buffer.data);
+        return toBytes$2e(id$1G, buffer.data);
     };
 
     var getMonthDemand$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1G,
         examples: examples$1G,
-        fromBytes: fromBytes$1G,
+        fromBytes: fromBytes$1H,
         headerSize: headerSize$1G,
         id: id$1G,
         isLoraOnly: isLoraOnly$1G,
         maxSize: maxSize$1G,
         name: name$1G,
-        toBytes: toBytes$1G
+        toBytes: toBytes$1H
     });
 
     const id$1F = getMonthDemandExport$2;
@@ -4066,7 +3798,7 @@
             ]
         }
     };
-    const fromBytes$1F = (bytes) => {
+    const fromBytes$1G = (bytes) => {
         validateFixedCommandPayload(name$1F, bytes, maxSize$1F);
         const buffer = new BinaryBuffer(bytes, false);
         return {
@@ -4074,24 +3806,24 @@
             month: buffer.getUint8()
         };
     };
-    const toBytes$1F = (parameters) => {
+    const toBytes$1G = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1F, false);
         buffer.setUint8(parameters.year);
         buffer.setUint8(parameters.month);
-        return toBytes$2d(id$1F, buffer.data);
+        return toBytes$2e(id$1F, buffer.data);
     };
 
     var getMonthDemandExport$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1F,
         examples: examples$1F,
-        fromBytes: fromBytes$1F,
+        fromBytes: fromBytes$1G,
         headerSize: headerSize$1F,
         id: id$1F,
         isLoraOnly: isLoraOnly$1F,
         maxSize: maxSize$1F,
         name: name$1F,
-        toBytes: toBytes$1F
+        toBytes: toBytes$1G
     });
 
     const id$1E = getMonthMaxDemand$2;
@@ -4117,24 +3849,24 @@
             ]
         }
     };
-    const fromBytes$1E = (bytes) => {
+    const fromBytes$1F = (bytes) => {
         validateFixedCommandPayload(name$1E, bytes, maxSize$1E);
         const [year, month] = bytes;
         return { year, month };
     };
-    const toBytes$1E = ({ year, month }) => (toBytes$2d(id$1E, [year, month]));
+    const toBytes$1F = ({ year, month }) => (toBytes$2e(id$1E, [year, month]));
 
     var getMonthMaxDemand$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1E,
         examples: examples$1E,
-        fromBytes: fromBytes$1E,
+        fromBytes: fromBytes$1F,
         headerSize: headerSize$1E,
         id: id$1E,
         isLoraOnly: isLoraOnly$1E,
         maxSize: maxSize$1E,
         name: name$1E,
-        toBytes: toBytes$1E
+        toBytes: toBytes$1F
     });
 
     const id$1D = getMonthMaxDemandExport$2;
@@ -4160,24 +3892,24 @@
             ]
         }
     };
-    const fromBytes$1D = (bytes) => {
+    const fromBytes$1E = (bytes) => {
         validateFixedCommandPayload(name$1D, bytes, maxSize$1D);
         const [year, month] = bytes;
         return { year, month };
     };
-    const toBytes$1D = ({ year, month }) => (toBytes$2d(id$1D, [year, month]));
+    const toBytes$1E = ({ year, month }) => (toBytes$2e(id$1D, [year, month]));
 
     var getMonthMaxDemandExport$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1D,
         examples: examples$1D,
-        fromBytes: fromBytes$1D,
+        fromBytes: fromBytes$1E,
         headerSize: headerSize$1D,
         id: id$1D,
         isLoraOnly: isLoraOnly$1D,
         maxSize: maxSize$1D,
         name: name$1D,
-        toBytes: toBytes$1D
+        toBytes: toBytes$1E
     });
 
     const id$1C = getOperatorParameters$3;
@@ -4199,23 +3931,23 @@
             ]
         }
     };
-    const fromBytes$1C = (bytes) => {
+    const fromBytes$1D = (bytes) => {
         validateFixedCommandPayload(name$1C, bytes, maxSize$1C);
         return {};
     };
-    const toBytes$1C = () => toBytes$2d(id$1C);
+    const toBytes$1D = () => toBytes$2e(id$1C);
 
     var getOperatorParameters$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1C,
         examples: examples$1C,
-        fromBytes: fromBytes$1C,
+        fromBytes: fromBytes$1D,
         headerSize: headerSize$1C,
         id: id$1C,
         isLoraOnly: isLoraOnly$1C,
         maxSize: maxSize$1C,
         name: name$1C,
-        toBytes: toBytes$1C
+        toBytes: toBytes$1D
     });
 
     const id$1B = getOperatorParametersExtended3$3;
@@ -4237,23 +3969,23 @@
             ]
         }
     };
-    const fromBytes$1B = (bytes) => {
+    const fromBytes$1C = (bytes) => {
         validateFixedCommandPayload(name$1B, bytes, maxSize$1B);
         return {};
     };
-    const toBytes$1B = () => toBytes$2d(id$1B);
+    const toBytes$1C = () => toBytes$2e(id$1B);
 
     var getOperatorParametersExtended3$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1B,
         examples: examples$1B,
-        fromBytes: fromBytes$1B,
+        fromBytes: fromBytes$1C,
         headerSize: headerSize$1B,
         id: id$1B,
         isLoraOnly: isLoraOnly$1B,
         maxSize: maxSize$1B,
         name: name$1B,
-        toBytes: toBytes$1B
+        toBytes: toBytes$1C
     });
 
     const id$1A = getQuality$2;
@@ -4279,24 +4011,24 @@
             ]
         }
     };
-    const fromBytes$1A = (bytes) => {
+    const fromBytes$1B = (bytes) => {
         validateFixedCommandPayload(name$1A, bytes, maxSize$1A);
         const [year, month] = bytes;
         return { year, month };
     };
-    const toBytes$1A = ({ year, month }) => (toBytes$2d(id$1A, [year, month]));
+    const toBytes$1B = ({ year, month }) => (toBytes$2e(id$1A, [year, month]));
 
     var getQuality$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1A,
         examples: examples$1A,
-        fromBytes: fromBytes$1A,
+        fromBytes: fromBytes$1B,
         headerSize: headerSize$1A,
         id: id$1A,
         isLoraOnly: isLoraOnly$1A,
         maxSize: maxSize$1A,
         name: name$1A,
-        toBytes: toBytes$1A
+        toBytes: toBytes$1B
     });
 
     const id$1z = getRatePlanInfo$2;
@@ -4321,23 +4053,23 @@
             ]
         }
     };
-    const fromBytes$1z = (bytes) => {
+    const fromBytes$1A = (bytes) => {
         validateFixedCommandPayload(name$1z, bytes, maxSize$1z);
         return { tariffTable: bytes[0] };
     };
-    const toBytes$1z = (parameters) => (toBytes$2d(id$1z, [parameters.tariffTable]));
+    const toBytes$1A = (parameters) => (toBytes$2e(id$1z, [parameters.tariffTable]));
 
     var getRatePlanInfo$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1z,
         examples: examples$1z,
-        fromBytes: fromBytes$1z,
+        fromBytes: fromBytes$1A,
         headerSize: headerSize$1z,
         id: id$1z,
         isLoraOnly: isLoraOnly$1z,
         maxSize: maxSize$1z,
         name: name$1z,
-        toBytes: toBytes$1z
+        toBytes: toBytes$1A
     });
 
     const id$1y = getSaldo$2;
@@ -4359,23 +4091,23 @@
             ]
         }
     };
-    const fromBytes$1y = (bytes) => {
+    const fromBytes$1z = (bytes) => {
         validateFixedCommandPayload(name$1y, bytes, maxSize$1y);
         return {};
     };
-    const toBytes$1y = () => toBytes$2d(id$1y);
+    const toBytes$1z = () => toBytes$2e(id$1y);
 
     var getSaldo$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1y,
         examples: examples$1y,
-        fromBytes: fromBytes$1y,
+        fromBytes: fromBytes$1z,
         headerSize: headerSize$1y,
         id: id$1y,
         isLoraOnly: isLoraOnly$1y,
         maxSize: maxSize$1y,
         name: name$1y,
-        toBytes: toBytes$1y
+        toBytes: toBytes$1z
     });
 
     const id$1x = getSaldoParameters$3;
@@ -4395,23 +4127,23 @@
             bytes: [0x2e, 0x00]
         }
     };
-    const fromBytes$1x = (bytes) => {
+    const fromBytes$1y = (bytes) => {
         validateFixedCommandPayload(name$1x, bytes, maxSize$1x);
         return {};
     };
-    const toBytes$1x = () => toBytes$2d(id$1x);
+    const toBytes$1y = () => toBytes$2e(id$1x);
 
     var getSaldoParameters$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1x,
         examples: examples$1x,
-        fromBytes: fromBytes$1x,
+        fromBytes: fromBytes$1y,
         headerSize: headerSize$1x,
         id: id$1x,
         isLoraOnly: isLoraOnly$1x,
         maxSize: maxSize$1x,
         name: name$1x,
-        toBytes: toBytes$1x
+        toBytes: toBytes$1y
     });
 
     const id$1w = getSeasonProfile$3;
@@ -4438,7 +4170,7 @@
             ]
         }
     };
-    const fromBytes$1w = (bytes) => {
+    const fromBytes$1x = (bytes) => {
         validateFixedCommandPayload(name$1w, bytes, maxSize$1w);
         const [tariffTable, index, isActive] = bytes;
         return {
@@ -4447,25 +4179,25 @@
             isActive: isActive === 0
         };
     };
-    const toBytes$1w = (parameters) => {
+    const toBytes$1x = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1w, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
         buffer.setUint8(parameters.isActive ? 0 : 1);
-        return toBytes$2d(id$1w, buffer.data);
+        return toBytes$2e(id$1w, buffer.data);
     };
 
     var getSeasonProfile$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1w,
         examples: examples$1w,
-        fromBytes: fromBytes$1w,
+        fromBytes: fromBytes$1x,
         headerSize: headerSize$1w,
         id: id$1w,
         isLoraOnly: isLoraOnly$1w,
         maxSize: maxSize$1w,
         name: name$1w,
-        toBytes: toBytes$1w
+        toBytes: toBytes$1x
     });
 
     const id$1v = getSpecialDay$3;
@@ -4492,7 +4224,7 @@
             ]
         }
     };
-    const fromBytes$1v = (bytes) => {
+    const fromBytes$1w = (bytes) => {
         validateFixedCommandPayload(name$1v, bytes, maxSize$1v);
         const [tariffTable, index, isActive] = bytes;
         return {
@@ -4501,25 +4233,25 @@
             isActive: isActive === 0
         };
     };
-    const toBytes$1v = (parameters) => {
+    const toBytes$1w = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1v, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
         buffer.setUint8(parameters.isActive ? 0 : 1);
-        return toBytes$2d(id$1v, buffer.data);
+        return toBytes$2e(id$1v, buffer.data);
     };
 
     var getSpecialDay$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1v,
         examples: examples$1v,
-        fromBytes: fromBytes$1v,
+        fromBytes: fromBytes$1w,
         headerSize: headerSize$1v,
         id: id$1v,
         isLoraOnly: isLoraOnly$1v,
         maxSize: maxSize$1v,
         name: name$1v,
-        toBytes: toBytes$1v
+        toBytes: toBytes$1w
     });
 
     const id$1u = getVersion$2;
@@ -4541,23 +4273,23 @@
             ]
         }
     };
-    const fromBytes$1u = (bytes) => {
+    const fromBytes$1v = (bytes) => {
         validateFixedCommandPayload(name$1u, bytes, maxSize$1u);
         return {};
     };
-    const toBytes$1u = () => toBytes$2d(id$1u);
+    const toBytes$1v = () => toBytes$2e(id$1u);
 
     var getVersion$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1u,
         examples: examples$1u,
-        fromBytes: fromBytes$1u,
+        fromBytes: fromBytes$1v,
         headerSize: headerSize$1u,
         id: id$1u,
         isLoraOnly: isLoraOnly$1u,
         maxSize: maxSize$1u,
         name: name$1u,
-        toBytes: toBytes$1u
+        toBytes: toBytes$1v
     });
 
     const id$1t = prepareRatePlan$2;
@@ -4583,7 +4315,7 @@
             ]
         }
     };
-    const fromBytes$1t = (bytes) => {
+    const fromBytes$1u = (bytes) => {
         validateFixedCommandPayload(name$1t, bytes, maxSize$1t);
         const buffer = new BinaryBuffer(bytes, false);
         return {
@@ -4591,24 +4323,24 @@
             id: buffer.getUint32()
         };
     };
-    const toBytes$1t = (parameters) => {
+    const toBytes$1u = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1t, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint32(parameters.id);
-        return toBytes$2d(id$1t, buffer.data);
+        return toBytes$2e(id$1t, buffer.data);
     };
 
     var prepareRatePlan$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1t,
         examples: examples$1t,
-        fromBytes: fromBytes$1t,
+        fromBytes: fromBytes$1u,
         headerSize: headerSize$1t,
         id: id$1t,
         isLoraOnly: isLoraOnly$1t,
         maxSize: maxSize$1t,
         name: name$1t,
-        toBytes: toBytes$1t
+        toBytes: toBytes$1u
     });
 
     const id$1s = resetPowerMaxDay$2;
@@ -4630,23 +4362,23 @@
             ]
         }
     };
-    const fromBytes$1s = (bytes) => {
+    const fromBytes$1t = (bytes) => {
         validateFixedCommandPayload(name$1s, bytes, maxSize$1s);
         return {};
     };
-    const toBytes$1s = () => toBytes$2d(id$1s);
+    const toBytes$1t = () => toBytes$2e(id$1s);
 
     var resetPowerMaxDay$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1s,
         examples: examples$1s,
-        fromBytes: fromBytes$1s,
+        fromBytes: fromBytes$1t,
         headerSize: headerSize$1s,
         id: id$1s,
         isLoraOnly: isLoraOnly$1s,
         maxSize: maxSize$1s,
         name: name$1s,
-        toBytes: toBytes$1s
+        toBytes: toBytes$1t
     });
 
     const id$1r = resetPowerMaxMonth$2;
@@ -4668,23 +4400,23 @@
             ]
         }
     };
-    const fromBytes$1r = (bytes) => {
+    const fromBytes$1s = (bytes) => {
         validateFixedCommandPayload(name$1r, bytes, maxSize$1r);
         return {};
     };
-    const toBytes$1r = () => toBytes$2d(id$1r);
+    const toBytes$1s = () => toBytes$2e(id$1r);
 
     var resetPowerMaxMonth$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1r,
         examples: examples$1r,
-        fromBytes: fromBytes$1r,
+        fromBytes: fromBytes$1s,
         headerSize: headerSize$1r,
         id: id$1r,
         isLoraOnly: isLoraOnly$1r,
         maxSize: maxSize$1r,
         name: name$1r,
-        toBytes: toBytes$1r
+        toBytes: toBytes$1s
     });
 
     const id$1q = runTariffPlan$2;
@@ -4707,20 +4439,20 @@
             ]
         }
     };
-    const fromBytes$1q = (bytes) => ({ tariffTable: bytes[0] });
-    const toBytes$1q = (parameters) => (toBytes$2d(id$1q, [parameters.tariffTable]));
+    const fromBytes$1r = (bytes) => ({ tariffTable: bytes[0] });
+    const toBytes$1r = (parameters) => (toBytes$2e(id$1q, [parameters.tariffTable]));
 
     var runTariffPlan$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1q,
         examples: examples$1q,
-        fromBytes: fromBytes$1q,
+        fromBytes: fromBytes$1r,
         headerSize: headerSize$1q,
         id: id$1q,
         isLoraOnly: isLoraOnly$1q,
         maxSize: maxSize$1q,
         name: name$1q,
-        toBytes: toBytes$1q
+        toBytes: toBytes$1r
     });
 
     const KEY_SIZE = 16;
@@ -4750,7 +4482,7 @@
             ]
         }
     };
-    const fromBytes$1p = (bytes) => {
+    const fromBytes$1q = (bytes) => {
         validateFixedCommandPayload(name$1p, bytes, maxSize$1p);
         const buffer = new BinaryBuffer(bytes, false);
         return {
@@ -4758,24 +4490,24 @@
             key: buffer.getBytes(KEY_SIZE)
         };
     };
-    const toBytes$1p = (parameters) => {
+    const toBytes$1q = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1p, false);
         buffer.setUint8(parameters.accessLevel);
         buffer.setBytes(parameters.key);
-        return toBytes$2d(id$1p, buffer.data);
+        return toBytes$2e(id$1p, buffer.data);
     };
 
     var setAccessKey$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1p,
         examples: examples$1p,
-        fromBytes: fromBytes$1p,
+        fromBytes: fromBytes$1q,
         headerSize: headerSize$1p,
         id: id$1p,
         isLoraOnly: isLoraOnly$1p,
         maxSize: maxSize$1p,
         name: name$1p,
-        toBytes: toBytes$1p
+        toBytes: toBytes$1q
     });
 
     const id$1o = setCorrectDateTime$2;
@@ -4809,28 +4541,28 @@
             ]
         }
     };
-    const fromBytes$1o = (bytes) => {
+    const fromBytes$1p = (bytes) => {
         validateFixedCommandPayload(name$1o, bytes, maxSize$1o);
         const buffer = new BinaryBuffer(bytes, false);
         return { seconds: buffer.getInt16() };
     };
-    const toBytes$1o = (parameters) => {
+    const toBytes$1p = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1o, false);
         buffer.setInt16(parameters.seconds);
-        return toBytes$2d(id$1o, buffer.data);
+        return toBytes$2e(id$1o, buffer.data);
     };
 
     var setCorrectDateTime$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1o,
         examples: examples$1o,
-        fromBytes: fromBytes$1o,
+        fromBytes: fromBytes$1p,
         headerSize: headerSize$1o,
         id: id$1o,
         isLoraOnly: isLoraOnly$1o,
         maxSize: maxSize$1o,
         name: name$1o,
-        toBytes: toBytes$1o
+        toBytes: toBytes$1p
     });
 
     const id$1n = setCorrectTime$2;
@@ -4863,28 +4595,28 @@
             ]
         }
     };
-    const fromBytes$1n = (bytes) => {
+    const fromBytes$1o = (bytes) => {
         validateFixedCommandPayload(name$1n, bytes, maxSize$1n);
         const buffer = new BinaryBuffer(bytes, false);
         return getTimeCorrectionParameters(buffer);
     };
-    const toBytes$1n = (parameters) => {
+    const toBytes$1o = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1n, false);
         setTimeCorrectionParameters(buffer, parameters);
-        return toBytes$2d(id$1n, buffer.data);
+        return toBytes$2e(id$1n, buffer.data);
     };
 
     var setCorrectTime$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1n,
         examples: examples$1n,
-        fromBytes: fromBytes$1n,
+        fromBytes: fromBytes$1o,
         headerSize: headerSize$1n,
         id: id$1n,
         isLoraOnly: isLoraOnly$1n,
         maxSize: maxSize$1n,
         name: name$1n,
-        toBytes: toBytes$1n
+        toBytes: toBytes$1o
     });
 
     const id$1m = setDateTime$3;
@@ -4916,28 +4648,28 @@
             ]
         }
     };
-    const fromBytes$1m = (bytes) => {
+    const fromBytes$1n = (bytes) => {
         validateFixedCommandPayload(name$1m, bytes, maxSize$1m);
         const buffer = new BinaryBuffer(bytes, false);
         return getDateTime$2(buffer);
     };
-    const toBytes$1m = (parameters) => {
+    const toBytes$1n = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1m, false);
         setDateTime$2(buffer, parameters);
-        return toBytes$2d(id$1m, buffer.data);
+        return toBytes$2e(id$1m, buffer.data);
     };
 
     var setDateTime$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1m,
         examples: examples$1m,
-        fromBytes: fromBytes$1m,
+        fromBytes: fromBytes$1n,
         headerSize: headerSize$1m,
         id: id$1m,
         isLoraOnly: isLoraOnly$1m,
         maxSize: maxSize$1m,
         name: name$1m,
-        toBytes: toBytes$1m
+        toBytes: toBytes$1n
     });
 
     const MAX_PERIODS_NUMBER$1 = 8;
@@ -5014,7 +4746,7 @@
             ]
         }
     };
-    const fromBytes$1l = (bytes) => {
+    const fromBytes$1m = (bytes) => {
         const finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE$1);
         const cleanBytes = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
         const buffer = new BinaryBuffer(cleanBytes, false);
@@ -5024,7 +4756,7 @@
             periods: [...cleanBytes.slice(buffer.offset)].map(getDayProfileFromByte)
         };
     };
-    const toBytes$1l = (parameters) => {
+    const toBytes$1m = (parameters) => {
         const hasPeriodsFinalByte = parameters.periods.length < MAX_PERIODS_NUMBER$1;
         const size = 2 + parameters.periods.length + +hasPeriodsFinalByte;
         const buffer = new BinaryBuffer(size, false);
@@ -5036,20 +4768,20 @@
         if (hasPeriodsFinalByte) {
             buffer.setUint8(PERIODS_FINAL_BYTE$1);
         }
-        return toBytes$2d(id$1l, buffer.data);
+        return toBytes$2e(id$1l, buffer.data);
     };
 
     var setDayProfile$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1l,
         examples: examples$1l,
-        fromBytes: fromBytes$1l,
+        fromBytes: fromBytes$1m,
         headerSize: headerSize$1l,
         id: id$1l,
         isLoraOnly: isLoraOnly$1l,
         maxSize: maxSize$1l,
         name: name$1l,
-        toBytes: toBytes$1l
+        toBytes: toBytes$1m
     });
 
     const id$1k = setDemandParameters$3;
@@ -5075,28 +4807,28 @@
             ]
         }
     };
-    const fromBytes$1k = (bytes) => {
+    const fromBytes$1l = (bytes) => {
         validateFixedCommandPayload(name$1k, bytes, maxSize$1k);
         const buffer = new BinaryBuffer(bytes, false);
         return getDemandParameters$2(buffer);
     };
-    const toBytes$1k = (parameters) => {
+    const toBytes$1l = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1k, false);
         setDemandParameters$2(buffer, parameters);
-        return toBytes$2d(id$1k, buffer.data);
+        return toBytes$2e(id$1k, buffer.data);
     };
 
     var setDemandParameters$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1k,
         examples: examples$1k,
-        fromBytes: fromBytes$1k,
+        fromBytes: fromBytes$1l,
         headerSize: headerSize$1k,
         id: id$1k,
         isLoraOnly: isLoraOnly$1k,
         maxSize: maxSize$1k,
         name: name$1k,
-        toBytes: toBytes$1k
+        toBytes: toBytes$1l
     });
 
     const id$1j = setDisplayParam$2;
@@ -5137,14 +4869,14 @@
             ]
         }
     };
-    const fromBytes$1j = (bytes) => {
+    const fromBytes$1k = (bytes) => {
         if (bytes.length < 1 || bytes.length > maxSize$1j) {
             throw new Error('Invalid SetDisplayParam data size.');
         }
         const [displayMode, ...order] = bytes;
         return { displayMode, order };
     };
-    const toBytes$1j = (parameters) => (toBytes$2d(id$1j, [
+    const toBytes$1k = (parameters) => (toBytes$2e(id$1j, [
         parameters.displayMode,
         ...parameters.order
     ]));
@@ -5153,13 +4885,13 @@
         __proto__: null,
         accessLevel: accessLevel$1j,
         examples: examples$1j,
-        fromBytes: fromBytes$1j,
+        fromBytes: fromBytes$1k,
         headerSize: headerSize$1j,
         id: id$1j,
         isLoraOnly: isLoraOnly$1j,
         maxSize: maxSize$1j,
         name: name$1j,
-        toBytes: toBytes$1j
+        toBytes: toBytes$1k
     });
 
     const updateX25 = (startValue, data) => {
@@ -5302,11 +5034,11 @@
             ]
         }
     };
-    const fromBytes$1i = (bytes) => {
+    const fromBytes$1j = (bytes) => {
         validateFixedCommandPayload(name$1i, bytes, maxSize$1i);
         return getGsmBlock(name$1i, bytes);
     };
-    const toBytes$1i = (parameters) => (toBytes$2d(id$1i, setGsmBlock(parameters)));
+    const toBytes$1j = (parameters) => (toBytes$2e(id$1i, setGsmBlock(parameters)));
     const toJson$c = (parameters, options) => (JSON.stringify({
         ...parameters,
         data: getStringFromBytes(parameters.data, options)
@@ -5316,13 +5048,13 @@
         __proto__: null,
         accessLevel: accessLevel$1i,
         examples: examples$1i,
-        fromBytes: fromBytes$1i,
+        fromBytes: fromBytes$1j,
         headerSize: headerSize$1i,
         id: id$1i,
         isLoraOnly: isLoraOnly$1i,
         maxSize: maxSize$1i,
         name: name$1i,
-        toBytes: toBytes$1i,
+        toBytes: toBytes$1j,
         toJson: toJson$c
     });
 
@@ -5494,28 +5226,28 @@
             ]
         }
     };
-    const fromBytes$1h = (bytes) => {
+    const fromBytes$1i = (bytes) => {
         validateFixedCommandPayload(name$1h, bytes, maxSize$1h);
         const buffer = new BinaryBuffer(bytes, false);
         return getOperatorParameters$2(buffer);
     };
-    const toBytes$1h = (parameters) => {
+    const toBytes$1i = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1h, false);
         setOperatorParameters$2(buffer, parameters);
-        return toBytes$2d(id$1h, buffer.data);
+        return toBytes$2e(id$1h, buffer.data);
     };
 
     var setOperatorParameters$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1h,
         examples: examples$1h,
-        fromBytes: fromBytes$1h,
+        fromBytes: fromBytes$1i,
         headerSize: headerSize$1h,
         id: id$1h,
         isLoraOnly: isLoraOnly$1h,
         maxSize: maxSize$1h,
         name: name$1h,
-        toBytes: toBytes$1h
+        toBytes: toBytes$1i
     });
 
     const id$1g = setOperatorParametersExtended3$3;
@@ -5553,28 +5285,28 @@
             ]
         }
     };
-    const fromBytes$1g = (bytes) => {
+    const fromBytes$1h = (bytes) => {
         validateFixedCommandPayload(name$1g, bytes, maxSize$1g);
         const buffer = new BinaryBuffer(bytes, false);
         return getOperatorParametersExtended3$2(buffer);
     };
-    const toBytes$1g = (parameters) => {
+    const toBytes$1h = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1g, false);
         setOperatorParametersExtended3$2(buffer, parameters);
-        return toBytes$2d(id$1g, buffer.data);
+        return toBytes$2e(id$1g, buffer.data);
     };
 
     var setOperatorParametersExtended3$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1g,
         examples: examples$1g,
-        fromBytes: fromBytes$1g,
+        fromBytes: fromBytes$1h,
         headerSize: headerSize$1g,
         id: id$1g,
         isLoraOnly: isLoraOnly$1g,
         maxSize: maxSize$1g,
         name: name$1g,
-        toBytes: toBytes$1g
+        toBytes: toBytes$1h
     });
 
     const id$1f = setSaldo$2;
@@ -5606,7 +5338,7 @@
             ]
         }
     };
-    const fromBytes$1f = (bytes) => {
+    const fromBytes$1g = (bytes) => {
         validateFixedCommandPayload(name$1f, bytes, maxSize$1f);
         const buffer = new BinaryBuffer(bytes, false);
         return {
@@ -5620,7 +5352,7 @@
             saldoOld: buffer.getInt32()
         };
     };
-    const toBytes$1f = (parameters) => {
+    const toBytes$1g = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1f, false);
         buffer.setUint8(parameters.date.month);
         buffer.setUint8(parameters.date.date);
@@ -5628,20 +5360,20 @@
         buffer.setUint8(parameters.date.minutes);
         buffer.setInt32(parameters.saldoNew);
         buffer.setInt32(parameters.saldoOld);
-        return toBytes$2d(id$1f, buffer.data);
+        return toBytes$2e(id$1f, buffer.data);
     };
 
     var setSaldo$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1f,
         examples: examples$1f,
-        fromBytes: fromBytes$1f,
+        fromBytes: fromBytes$1g,
         headerSize: headerSize$1f,
         id: id$1f,
         isLoraOnly: isLoraOnly$1f,
         maxSize: maxSize$1f,
         name: name$1f,
-        toBytes: toBytes$1f
+        toBytes: toBytes$1g
     });
 
     const id$1e = setSaldoParameters$3;
@@ -5678,28 +5410,28 @@
             ]
         }
     };
-    const fromBytes$1e = (bytes) => {
+    const fromBytes$1f = (bytes) => {
         validateFixedCommandPayload(name$1e, bytes, maxSize$1e);
         const buffer = new BinaryBuffer(bytes, false);
         return getSaldoParameters$2(buffer);
     };
-    const toBytes$1e = (parameters) => {
+    const toBytes$1f = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1e, false);
         setSaldoParameters$2(buffer, parameters);
-        return toBytes$2d(id$1e, buffer.data);
+        return toBytes$2e(id$1e, buffer.data);
     };
 
     var setSaldoParameters$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1e,
         examples: examples$1e,
-        fromBytes: fromBytes$1e,
+        fromBytes: fromBytes$1f,
         headerSize: headerSize$1e,
         id: id$1e,
         isLoraOnly: isLoraOnly$1e,
         maxSize: maxSize$1e,
         name: name$1e,
-        toBytes: toBytes$1e
+        toBytes: toBytes$1f
     });
 
     const id$1d = setSeasonProfile$3;
@@ -5746,7 +5478,7 @@
             ]
         }
     };
-    const fromBytes$1d = (bytes) => {
+    const fromBytes$1e = (bytes) => {
         validateFixedCommandPayload(name$1d, bytes, maxSize$1d);
         const buffer = new BinaryBuffer(bytes, false);
         return {
@@ -5755,25 +5487,25 @@
             ...getSeasonProfile$2(buffer)
         };
     };
-    const toBytes$1d = (parameters) => {
+    const toBytes$1e = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1d, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
         setSeasonProfile$2(buffer, parameters);
-        return toBytes$2d(id$1d, buffer.data);
+        return toBytes$2e(id$1d, buffer.data);
     };
 
     var setSeasonProfile$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1d,
         examples: examples$1d,
-        fromBytes: fromBytes$1d,
+        fromBytes: fromBytes$1e,
         headerSize: headerSize$1d,
         id: id$1d,
         isLoraOnly: isLoraOnly$1d,
         maxSize: maxSize$1d,
         name: name$1d,
-        toBytes: toBytes$1d
+        toBytes: toBytes$1e
     });
 
     const id$1c = setSpecialDay$3;
@@ -5803,7 +5535,7 @@
             ]
         }
     };
-    const fromBytes$1c = (bytes) => {
+    const fromBytes$1d = (bytes) => {
         validateFixedCommandPayload(name$1c, bytes, maxSize$1c);
         const buffer = new BinaryBuffer(bytes, false);
         return {
@@ -5812,25 +5544,25 @@
             ...getSpecialDay$2(buffer)
         };
     };
-    const toBytes$1c = (parameters) => {
+    const toBytes$1d = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1c, false);
         buffer.setUint8(parameters.tariffTable);
         buffer.setUint8(parameters.index);
         setSpecialDay$2(buffer, parameters);
-        return toBytes$2d(id$1c, buffer.data);
+        return toBytes$2e(id$1c, buffer.data);
     };
 
     var setSpecialDay$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1c,
         examples: examples$1c,
-        fromBytes: fromBytes$1c,
+        fromBytes: fromBytes$1d,
         headerSize: headerSize$1c,
         id: id$1c,
         isLoraOnly: isLoraOnly$1c,
         maxSize: maxSize$1c,
         name: name$1c,
-        toBytes: toBytes$1c
+        toBytes: toBytes$1d
     });
 
     const id$1b = setSpecialOperation$2;
@@ -5892,7 +5624,7 @@
             ]
         }
     };
-    const fromBytes$1b = (bytes) => {
+    const fromBytes$1c = (bytes) => {
         validateFixedCommandPayload(name$1b, bytes, maxSize$1b);
         const buffer = new BinaryBuffer(bytes, false);
         const type = buffer.getUint8();
@@ -5907,7 +5639,7 @@
             resetMagneticIndication
         };
     };
-    const toBytes$1b = (parameters) => {
+    const toBytes$1c = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1b, false);
         let flags = 0;
         if (parameters.readScreensInfo) {
@@ -5921,20 +5653,20 @@
         }
         buffer.setUint8(parameters.type);
         buffer.setUint8(flags);
-        return toBytes$2d(id$1b, buffer.data);
+        return toBytes$2e(id$1b, buffer.data);
     };
 
     var setSpecialOperation$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1b,
         examples: examples$1b,
-        fromBytes: fromBytes$1b,
+        fromBytes: fromBytes$1c,
         headerSize: headerSize$1b,
         id: id$1b,
         isLoraOnly: isLoraOnly$1b,
         maxSize: maxSize$1b,
         name: name$1b,
-        toBytes: toBytes$1b
+        toBytes: toBytes$1c
     });
 
     const id$1a = turnRelayOff$2;
@@ -5956,23 +5688,23 @@
             ]
         }
     };
-    const fromBytes$1a = (bytes) => {
+    const fromBytes$1b = (bytes) => {
         validateFixedCommandPayload(name$1a, bytes, maxSize$1a);
         return {};
     };
-    const toBytes$1a = () => toBytes$2d(id$1a);
+    const toBytes$1b = () => toBytes$2e(id$1a);
 
     var turnRelayOff$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$1a,
         examples: examples$1a,
-        fromBytes: fromBytes$1a,
+        fromBytes: fromBytes$1b,
         headerSize: headerSize$1a,
         id: id$1a,
         isLoraOnly: isLoraOnly$1a,
         maxSize: maxSize$1a,
         name: name$1a,
-        toBytes: toBytes$1a
+        toBytes: toBytes$1b
     });
 
     const id$19 = turnRelayOn$2;
@@ -5994,23 +5726,23 @@
             ]
         }
     };
-    const fromBytes$19 = (bytes) => {
+    const fromBytes$1a = (bytes) => {
         validateFixedCommandPayload(name$19, bytes, maxSize$19);
         return {};
     };
-    const toBytes$19 = () => toBytes$2d(id$19);
+    const toBytes$1a = () => toBytes$2e(id$19);
 
     var turnRelayOn$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$19,
         examples: examples$19,
-        fromBytes: fromBytes$19,
+        fromBytes: fromBytes$1a,
         headerSize: headerSize$19,
         id: id$19,
         isLoraOnly: isLoraOnly$19,
         maxSize: maxSize$19,
         name: name$19,
-        toBytes: toBytes$19
+        toBytes: toBytes$1a
     });
 
     var downlink = /*#__PURE__*/Object.freeze({
@@ -6104,23 +5836,23 @@
             ]
         }
     };
-    const fromBytes$18 = (bytes) => {
+    const fromBytes$19 = (bytes) => {
         validateFixedCommandPayload(name$18, bytes, maxSize$18);
         return {};
     };
-    const toBytes$18 = () => toBytes$2d(id$18);
+    const toBytes$19 = () => toBytes$2e(id$18);
 
     var activateRatePlan = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$18,
         examples: examples$18,
-        fromBytes: fromBytes$18,
+        fromBytes: fromBytes$19,
         headerSize: headerSize$18,
         id: id$18,
         isLoraOnly: isLoraOnly$18,
         maxSize: maxSize$18,
         name: name$18,
-        toBytes: toBytes$18
+        toBytes: toBytes$19
     });
 
     const id$17 = errorDataFrameResponse$1;
@@ -6145,7 +5877,7 @@
             ]
         }
     };
-    const fromBytes$17 = (bytes) => {
+    const fromBytes$18 = (bytes) => {
         validateFixedCommandPayload(name$17, bytes, maxSize$17);
         const [errorCode] = bytes;
         return {
@@ -6153,22 +5885,22 @@
             errorName: resultNames[errorCode]
         };
     };
-    const toBytes$17 = (parameters) => {
+    const toBytes$18 = (parameters) => {
         const { errorCode } = parameters;
-        return toBytes$2d(id$17, [errorCode]);
+        return toBytes$2e(id$17, [errorCode]);
     };
 
     var errorDataFrameResponse = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$17,
         examples: examples$17,
-        fromBytes: fromBytes$17,
+        fromBytes: fromBytes$18,
         headerSize: headerSize$17,
         id: id$17,
         isLoraOnly: isLoraOnly$17,
         maxSize: maxSize$17,
         name: name$17,
-        toBytes: toBytes$17
+        toBytes: toBytes$18
     });
 
     const id$16 = errorResponse$1;
@@ -6208,26 +5940,26 @@
             errorName: resultNames[errorCode]
         };
     });
-    const fromBytes$16 = getFromBytes$1(commandNames);
-    const toBytes$16 = (parameters) => {
+    const fromBytes$17 = getFromBytes$1(commandNames);
+    const toBytes$17 = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$16, false);
         buffer.setUint8(parameters.commandId);
         buffer.setUint8(parameters.errorCode);
-        return toBytes$2d(id$16, buffer.data);
+        return toBytes$2e(id$16, buffer.data);
     };
 
     var errorResponse = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$16,
         examples: examples$16,
-        fromBytes: fromBytes$16,
+        fromBytes: fromBytes$17,
         getFromBytes: getFromBytes$1,
         headerSize: headerSize$16,
         id: id$16,
         isLoraOnly: isLoraOnly$16,
         maxSize: maxSize$16,
         name: name$16,
-        toBytes: toBytes$16
+        toBytes: toBytes$17
     });
 
     const id$15 = getBv$2;
@@ -6252,28 +5984,28 @@
             ]
         }
     };
-    const fromBytes$15 = (bytes) => {
+    const fromBytes$16 = (bytes) => {
         validateFixedCommandPayload(name$15, bytes, maxSize$15);
         return {
             vector: bytes
         };
     };
-    const toBytes$15 = (parameters) => {
+    const toBytes$16 = (parameters) => {
         const { vector } = parameters;
-        return toBytes$2d(id$15, vector);
+        return toBytes$2e(id$15, vector);
     };
 
     var getBv = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$15,
         examples: examples$15,
-        fromBytes: fromBytes$15,
+        fromBytes: fromBytes$16,
         headerSize: headerSize$15,
         id: id$15,
         isLoraOnly: isLoraOnly$15,
         maxSize: maxSize$15,
         name: name$15,
-        toBytes: toBytes$15
+        toBytes: toBytes$16
     });
 
     const id$14 = getCorrectTime$2;
@@ -6306,28 +6038,28 @@
             ]
         }
     };
-    const fromBytes$14 = (bytes) => {
+    const fromBytes$15 = (bytes) => {
         validateFixedCommandPayload(name$14, bytes, maxSize$14);
         const buffer = new BinaryBuffer(bytes, false);
         return getTimeCorrectionParameters(buffer);
     };
-    const toBytes$14 = (parameters) => {
+    const toBytes$15 = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$14, false);
         setTimeCorrectionParameters(buffer, parameters);
-        return toBytes$2d(id$14, buffer.data);
+        return toBytes$2e(id$14, buffer.data);
     };
 
     var getCorrectTime = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$14,
         examples: examples$14,
-        fromBytes: fromBytes$14,
+        fromBytes: fromBytes$15,
         headerSize: headerSize$14,
         id: id$14,
         isLoraOnly: isLoraOnly$14,
         maxSize: maxSize$14,
         name: name$14,
-        toBytes: toBytes$14
+        toBytes: toBytes$15
     });
 
     const id$13 = getCriticalEvent$2;
@@ -6363,7 +6095,7 @@
             ]
         }
     };
-    const fromBytes$13 = (bytes) => {
+    const fromBytes$14 = (bytes) => {
         validateFixedCommandPayload(name$13, bytes, maxSize$13);
         const [event, index, year, month, date, hours, minutes, seconds, count] = bytes;
         return {
@@ -6381,9 +6113,9 @@
             count
         };
     };
-    const toBytes$13 = (parameters) => {
+    const toBytes$14 = (parameters) => {
         const { event, index, date, count } = parameters;
-        return toBytes$2d(id$13, [
+        return toBytes$2e(id$13, [
             event,
             index,
             date.year,
@@ -6400,13 +6132,13 @@
         __proto__: null,
         accessLevel: accessLevel$13,
         examples: examples$13,
-        fromBytes: fromBytes$13,
+        fromBytes: fromBytes$14,
         headerSize: headerSize$13,
         id: id$13,
         isLoraOnly: isLoraOnly$13,
         maxSize: maxSize$13,
         name: name$13,
-        toBytes: toBytes$13
+        toBytes: toBytes$14
     });
 
     const id$12 = getCurrentStatusMeter$2;
@@ -6487,7 +6219,7 @@
             ]
         }
     };
-    const fromBytes$12 = (bytes) => {
+    const fromBytes$13 = (bytes) => {
         validateFixedCommandPayload(name$12, bytes, maxSize$12);
         const buffer = new BinaryBuffer(bytes, false);
         const operatingSeconds = buffer.getUint32();
@@ -6520,7 +6252,7 @@
             isSummerTime
         };
     };
-    const toBytes$12 = (parameters) => {
+    const toBytes$13 = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$12, false);
         const statusEventValue = fromObject(eventStatusMask, parameters.statusEvent);
         buffer.setUint32(parameters.operatingSeconds);
@@ -6536,20 +6268,20 @@
         buffer.setUint8(parameters.currentTariffs['A+']);
         buffer.setUint8(parameters.currentTariffs['A-']);
         buffer.setUint8(parameters.isSummerTime ? 1 : 0);
-        return toBytes$2d(id$12, buffer.data);
+        return toBytes$2e(id$12, buffer.data);
     };
 
     var getCurrentStatusMeter = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$12,
         examples: examples$12,
-        fromBytes: fromBytes$12,
+        fromBytes: fromBytes$13,
         headerSize: headerSize$12,
         id: id$12,
         isLoraOnly: isLoraOnly$12,
         maxSize: maxSize$12,
         name: name$12,
-        toBytes: toBytes$12
+        toBytes: toBytes$13
     });
 
     const id$11 = getCurrentValues$2;
@@ -6583,7 +6315,7 @@
             ]
         }
     };
-    const fromBytes$11 = (bytes) => {
+    const fromBytes$12 = (bytes) => {
         validateFixedCommandPayload(name$11, bytes, maxSize$11);
         const buffer = new BinaryBuffer(bytes, false);
         return {
@@ -6598,7 +6330,7 @@
             pfB: buffer.getInt16() / 1000
         };
     };
-    const toBytes$11 = (parameters) => {
+    const toBytes$12 = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$11, false);
         buffer.setInt32(parameters.powerA);
         buffer.setInt32(parameters.iaRms);
@@ -6609,7 +6341,7 @@
         buffer.setInt32(parameters.powerB);
         buffer.setInt32(parameters.varB);
         buffer.setInt16(parameters.pfB * 1000);
-        return toBytes$2d(id$11, buffer.data);
+        return toBytes$2e(id$11, buffer.data);
     };
     const toJson$b = (parameters, { dlms } = defaultDlmsJsonOptions) => {
         if (!dlms) {
@@ -6635,13 +6367,13 @@
         __proto__: null,
         accessLevel: accessLevel$11,
         examples: examples$11,
-        fromBytes: fromBytes$11,
+        fromBytes: fromBytes$12,
         headerSize: headerSize$11,
         id: id$11,
         isLoraOnly: isLoraOnly$11,
         maxSize: maxSize$11,
         name: name$11,
-        toBytes: toBytes$11,
+        toBytes: toBytes$12,
         toJson: toJson$b
     });
 
@@ -6674,28 +6406,28 @@
             ]
         }
     };
-    const fromBytes$10 = (bytes) => {
+    const fromBytes$11 = (bytes) => {
         validateFixedCommandPayload(name$10, bytes, maxSize$10);
         const buffer = new BinaryBuffer(bytes, false);
         return getDateTime$2(buffer);
     };
-    const toBytes$10 = (parameters) => {
+    const toBytes$11 = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$10, false);
         setDateTime$2(buffer, parameters);
-        return toBytes$2d(id$10, buffer.data);
+        return toBytes$2e(id$10, buffer.data);
     };
 
     var getDateTime = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$10,
         examples: examples$10,
-        fromBytes: fromBytes$10,
+        fromBytes: fromBytes$11,
         headerSize: headerSize$10,
         id: id$10,
         isLoraOnly: isLoraOnly$10,
         maxSize: maxSize$10,
         name: name$10,
-        toBytes: toBytes$10
+        toBytes: toBytes$11
     });
 
     var getObisByEnergy = (energy, tariff = 0) => {
@@ -6752,7 +6484,7 @@
             ]
         }
     };
-    const fromBytes$$ = (bytes) => {
+    const fromBytes$10 = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         let parameters;
         if (bytes.length === COMMAND_SIZE$5) {
@@ -6769,7 +6501,7 @@
         }
         return parameters;
     };
-    const toBytes$$ = (parameters) => {
+    const toBytes$10 = (parameters) => {
         let size = COMMAND_SIZE$5;
         if (parameters?.energyType) {
             const energiesNumber = parameters.energies.filter(energy => energy !== null).length;
@@ -6778,7 +6510,7 @@
         const buffer = new BinaryBuffer(size, false);
         setDate$1(buffer, parameters.date);
         setPackedEnergyWithType(buffer, parameters);
-        return toBytes$2d(id$$, buffer.data);
+        return toBytes$2e(id$$, buffer.data);
     };
     const toJson$a = (parameters, { dlms } = defaultDlmsJsonOptions) => {
         if (!dlms) {
@@ -6801,13 +6533,13 @@
         __proto__: null,
         accessLevel: accessLevel$$,
         examples: examples$$,
-        fromBytes: fromBytes$$,
+        fromBytes: fromBytes$10,
         headerSize: headerSize$$,
         id: id$$,
         isLoraOnly: isLoraOnly$$,
         maxSize: maxSize$$,
         name: name$$,
-        toBytes: toBytes$$,
+        toBytes: toBytes$10,
         toJson: toJson$a
     });
 
@@ -6860,7 +6592,7 @@
             ]
         }
     };
-    const fromBytes$_ = (bytes) => {
+    const fromBytes$$ = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         let parameters;
         if (bytes.length === COMMAND_SIZE$4) {
@@ -6877,7 +6609,7 @@
         }
         return parameters;
     };
-    const toBytes$_ = (parameters) => {
+    const toBytes$$ = (parameters) => {
         let size = COMMAND_SIZE$4;
         if (parameters?.energyType) {
             const energiesNumber = parameters.energies.filter(energy => energy !== null).length;
@@ -6886,7 +6618,7 @@
         const buffer = new BinaryBuffer(size, false);
         setDate$1(buffer, parameters.date);
         setPackedEnergyWithType(buffer, parameters);
-        return toBytes$2d(id$_, buffer.data);
+        return toBytes$2e(id$_, buffer.data);
     };
     const toJson$9 = (parameters, { dlms } = defaultDlmsJsonOptions) => {
         if (!dlms) {
@@ -6909,13 +6641,13 @@
         __proto__: null,
         accessLevel: accessLevel$_,
         examples: examples$_,
-        fromBytes: fromBytes$_,
+        fromBytes: fromBytes$$,
         headerSize: headerSize$_,
         id: id$_,
         isLoraOnly: isLoraOnly$_,
         maxSize: maxSize$_,
         name: name$_,
-        toBytes: toBytes$_,
+        toBytes: toBytes$$,
         toJson: toJson$9
     });
 
@@ -6984,18 +6716,18 @@
             ]
         }
     };
-    const fromBytes$Z = (bytes) => {
+    const fromBytes$_ = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         return {
             date: getDate(buffer),
             energies: getTariffsEnergies(buffer)
         };
     };
-    const toBytes$Z = (parameters) => {
+    const toBytes$_ = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$Z, false);
         setDate(buffer, parameters.date);
         setTariffsEnergies(buffer, parameters.energies);
-        return toBytes$2d(id$Z, buffer.getBytesToOffset());
+        return toBytes$2e(id$Z, buffer.getBytesToOffset());
     };
     const toJson$8 = (parameters, { dlms } = defaultDlmsJsonOptions) => {
         const { date, energies } = parameters;
@@ -7012,13 +6744,13 @@
         __proto__: null,
         accessLevel: accessLevel$Z,
         examples: examples$Z,
-        fromBytes: fromBytes$Z,
+        fromBytes: fromBytes$_,
         headerSize: headerSize$Z,
         id: id$Z,
         isLoraOnly: isLoraOnly$Z,
         maxSize: maxSize$Z,
         name: name$Z,
-        toBytes: toBytes$Z,
+        toBytes: toBytes$_,
         toJson: toJson$8
     });
 
@@ -7074,28 +6806,28 @@
             ]
         }
     };
-    const fromBytes$Y = (bytes) => {
+    const fromBytes$Z = (bytes) => {
         validateFixedCommandPayload(name$Y, bytes, maxSize$Y);
         const buffer = new BinaryBuffer(bytes, false);
         return getDayMaxDemandResponse(buffer);
     };
-    const toBytes$Y = (parameters) => {
+    const toBytes$Z = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$Y, false);
         setDayMaxDemandResponse(buffer, parameters);
-        return toBytes$2d(id$Y, buffer.getBytesToOffset());
+        return toBytes$2e(id$Y, buffer.getBytesToOffset());
     };
 
     var getDayMaxDemand = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$Y,
         examples: examples$Y,
-        fromBytes: fromBytes$Y,
+        fromBytes: fromBytes$Z,
         headerSize: headerSize$Y,
         id: id$Y,
         isLoraOnly: isLoraOnly$Y,
         maxSize: maxSize$Y,
         name: name$Y,
-        toBytes: toBytes$Y
+        toBytes: toBytes$Z
     });
 
     const id$X = getDayMaxDemandExport$2;
@@ -7150,28 +6882,28 @@
             ]
         }
     };
-    const fromBytes$X = (bytes) => {
+    const fromBytes$Y = (bytes) => {
         validateFixedCommandPayload(name$X, bytes, maxSize$X);
         const buffer = new BinaryBuffer(bytes, false);
         return getDayMaxDemandResponse(buffer);
     };
-    const toBytes$X = (parameters) => {
+    const toBytes$Y = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$X, false);
         setDayMaxDemandResponse(buffer, parameters);
-        return toBytes$2d(id$X, buffer.getBytesToOffset());
+        return toBytes$2e(id$X, buffer.getBytesToOffset());
     };
 
     var getDayMaxDemandExport = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$X,
         examples: examples$X,
-        fromBytes: fromBytes$X,
+        fromBytes: fromBytes$Y,
         headerSize: headerSize$X,
         id: id$X,
         isLoraOnly: isLoraOnly$X,
         maxSize: maxSize$X,
         name: name$X,
-        toBytes: toBytes$X
+        toBytes: toBytes$Y
     });
 
     const id$W = getDayMaxDemandPrevious$2;
@@ -7226,28 +6958,28 @@
             ]
         }
     };
-    const fromBytes$W = (bytes) => {
+    const fromBytes$X = (bytes) => {
         validateFixedCommandPayload(name$W, bytes, maxSize$W);
         const buffer = new BinaryBuffer(bytes, false);
         return getDayMaxDemandResponse(buffer);
     };
-    const toBytes$W = (parameters) => {
+    const toBytes$X = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$W, false);
         setDayMaxDemandResponse(buffer, parameters);
-        return toBytes$2d(id$W, buffer.getBytesToOffset());
+        return toBytes$2e(id$W, buffer.getBytesToOffset());
     };
 
     var getDayMaxDemandPrevious = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$W,
         examples: examples$W,
-        fromBytes: fromBytes$W,
+        fromBytes: fromBytes$X,
         headerSize: headerSize$W,
         id: id$W,
         isLoraOnly: isLoraOnly$W,
         maxSize: maxSize$W,
         name: name$W,
-        toBytes: toBytes$W
+        toBytes: toBytes$X
     });
 
     const DATE_SIZE$1 = 2;
@@ -7323,18 +7055,18 @@
             ]
         }
     };
-    const fromBytes$V = (bytes) => {
+    const fromBytes$W = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         return {
             date: getDate(buffer),
             tariffs: getTariffsPowerMax(buffer)
         };
     };
-    const toBytes$V = (parameters) => {
+    const toBytes$W = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$V, false);
         setDate(buffer, parameters.date);
         setTariffsPowerMax(buffer, parameters.tariffs);
-        return toBytes$2d(id$V, buffer.getBytesToOffset());
+        return toBytes$2e(id$V, buffer.getBytesToOffset());
     };
     const toJson$7 = (parameters, { dlms } = defaultDlmsJsonOptions) => {
         const { date, tariffs } = parameters;
@@ -7351,13 +7083,13 @@
         __proto__: null,
         accessLevel: accessLevel$V,
         examples: examples$V,
-        fromBytes: fromBytes$V,
+        fromBytes: fromBytes$W,
         headerSize: headerSize$V,
         id: id$V,
         isLoraOnly: isLoraOnly$V,
         maxSize: maxSize$V,
         name: name$V,
-        toBytes: toBytes$V,
+        toBytes: toBytes$W,
         toJson: toJson$7
     });
 
@@ -7413,14 +7145,14 @@
             ]
         }
     };
-    const fromBytes$U = (bytes) => {
+    const fromBytes$V = (bytes) => {
         const finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE);
         const cleanData = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
         return {
             periods: [...cleanData].map(getDayProfileFromByte)
         };
     };
-    const toBytes$U = (parameters) => {
+    const toBytes$V = (parameters) => {
         const hasPeriodsFinalByte = parameters.periods.length < MAX_PERIODS_NUMBER;
         const size = parameters.periods.length + +hasPeriodsFinalByte;
         const buffer = new BinaryBuffer(size, false);
@@ -7430,20 +7162,20 @@
         if (hasPeriodsFinalByte) {
             buffer.setUint8(PERIODS_FINAL_BYTE);
         }
-        return toBytes$2d(id$U, buffer.data);
+        return toBytes$2e(id$U, buffer.data);
     };
 
     var getDayProfile = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$U,
         examples: examples$U,
-        fromBytes: fromBytes$U,
+        fromBytes: fromBytes$V,
         headerSize: headerSize$U,
         id: id$U,
         isLoraOnly: isLoraOnly$U,
         maxSize: maxSize$U,
         name: name$U,
-        toBytes: toBytes$U
+        toBytes: toBytes$V
     });
 
     const ADDITIONAL_HOUR = 25;
@@ -7817,7 +7549,7 @@
             ]
         }
     };
-    const fromBytes$T = (bytes) => {
+    const fromBytes$U = (bytes) => {
         if (!bytes || bytes.length < maxSize$1$) {
             throw new Error('Invalid uplink GetDemand byte length.');
         }
@@ -7833,7 +7565,7 @@
             : voltageFromBinary(demandsBytes, parameters.firstIndex, parameters.period);
         return parameters;
     };
-    const toBytes$T = (parameters) => {
+    const toBytes$U = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$1$ + parameters.count * 2, false);
         setDemand(buffer, parameters);
         if (parameters.demandType === A_PLUS$1 || parameters.demandType === A_MINUS$1) {
@@ -7842,20 +7574,20 @@
         else {
             voltageToBinary(parameters.demands).forEach((value) => buffer.setUint16(value));
         }
-        return toBytes$2d(id$T, buffer.data);
+        return toBytes$2e(id$T, buffer.data);
     };
 
     var getDemand = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$T,
         examples: examples$T,
-        fromBytes: fromBytes$T,
+        fromBytes: fromBytes$U,
         headerSize: headerSize$T,
         id: id$T,
         isLoraOnly: isLoraOnly$T,
         maxSize: maxSize$T,
         name: name$T,
-        toBytes: toBytes$T
+        toBytes: toBytes$U
     });
 
     const id$S = getDemandParameters$3;
@@ -7881,28 +7613,28 @@
             ]
         }
     };
-    const fromBytes$S = (bytes) => {
+    const fromBytes$T = (bytes) => {
         validateFixedCommandPayload(name$S, bytes, maxSize$S);
         const buffer = new BinaryBuffer(bytes, false);
         return getDemandParameters$2(buffer);
     };
-    const toBytes$S = (parameters) => {
+    const toBytes$T = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$S, false);
         setDemandParameters$2(buffer, parameters);
-        return toBytes$2d(id$S, buffer.data);
+        return toBytes$2e(id$S, buffer.data);
     };
 
     var getDemandParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$S,
         examples: examples$S,
-        fromBytes: fromBytes$S,
+        fromBytes: fromBytes$T,
         headerSize: headerSize$S,
         id: id$S,
         isLoraOnly: isLoraOnly$S,
         maxSize: maxSize$S,
         name: name$S,
-        toBytes: toBytes$S
+        toBytes: toBytes$T
     });
 
     const id$R = getDeviceId$3;
@@ -7930,32 +7662,309 @@
             ]
         }
     };
-    const fromBytes$R = (bytes) => {
+    const fromBytes$S = (bytes) => {
         validateFixedCommandPayload(name$R, bytes, maxSize$R);
         const buffer = new BinaryBuffer(bytes, false);
         return getDeviceId$2(buffer);
     };
-    const toBytes$R = (parameters) => {
+    const toBytes$S = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$R, false);
         setDeviceId(buffer, parameters);
-        return toBytes$2d(id$R, buffer.data);
+        return toBytes$2e(id$R, buffer.data);
     };
 
     var getDeviceId = /*#__PURE__*/Object.freeze({
         __proto__: null,
         accessLevel: accessLevel$R,
         examples: examples$R,
-        fromBytes: fromBytes$R,
+        fromBytes: fromBytes$S,
         headerSize: headerSize$R,
         id: id$R,
         isLoraOnly: isLoraOnly$R,
         maxSize: maxSize$R,
         name: name$R,
-        toBytes: toBytes$R
+        toBytes: toBytes$S
     });
 
-    const id$Q = getDeviceType$3;
-    const name$Q = commandNames[getDeviceType$3];
+    const DEVICE_TYPE_SIZE = 8;
+    const DEVICE_TYPE_INVALID_CHAR = 'x';
+    const nibbles1 = ['.', '1', '3', 'R', 'M'];
+    const nibbles2 = ['.', 'A', 'G', 'R', 'T', 'D'];
+    const nibbles3 = ['.', '0', '1', '2', '3', '4', '5'];
+    const nibbles4 = ['.', 'A', 'B', 'C', 'D', 'E', 'F'];
+    const nibbles5 = ['.', 'A', 'B', 'C', 'D', 'E', 'F', 'H', 'K', 'G'];
+    const nibbles6 = ['.', '1', '2', '3', '4'];
+    const nibbles7 = ['.', 'L', 'M', 'Z', 'K'];
+    const nibbles8 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const nibbles9 = ['.', 'D', 'B', 'C', 'E', 'P', 'R', 'O', 'L', 'F', 'S', 'M', 'Y', 'G', 'N', 'U'];
+    const nibbles10 = ['.', '0', '1', '2', '3', '4', '5', '6', 'P', 'R', 'L', 'E', 'G', '-', '/'];
+    const nibbles11 = ['.', 'H', 'A', 'T', '0', '0', '0', '0', '0', '1', '2', '3', '4', '0', '0', '0'];
+    const nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
+    const mtx1DeviceTypeDescriptorMask = {
+        typeMeterG: 1 << 0,
+        downgradedToA: 1 << 4,
+        supportMeterInfo: 1 << 6
+    };
+    const mtx3DeviceTypeDescriptorMask = {
+        typeMeterTransformer: 1 << 0,
+        downgradedToR: 1 << 3,
+        typeMeterG: 1 << 4,
+        supportMeterInfo: 1 << 6,
+        reactiveByQuadrants: 1 << 7
+    };
+    const mtx1DeviceTypeDescriptorFromByte = (byte) => ({
+        meterType: 'mtx1',
+        ...toObject(mtx1DeviceTypeDescriptorMask, byte)
+    });
+    const mtx1DeviceTypeDescriptorToByte = (descriptor) => (fromObject(mtx1DeviceTypeDescriptorMask, descriptor));
+    const mtx3DeviceTypeDescriptorFromByte = (byte) => {
+        const descriptor = toObject(mtx3DeviceTypeDescriptorMask, byte);
+        return {
+            meterType: 'mtx3',
+            ...descriptor,
+            typeMeterG: !descriptor.typeMeterG
+        };
+    };
+    const mtx3DeviceTypeDescriptorToByte = (descriptor) => (fromObject(mtx3DeviceTypeDescriptorMask, {
+        ...descriptor,
+        typeMeterG: !descriptor.typeMeterG
+    }));
+    const splitByte = (byte) => [
+        byte >> 4,
+        byte & 0x0F
+    ];
+    const splitToNibbles = (data) => {
+        const result = new Array(data.length * 2).fill(0);
+        data.forEach((byte, index) => {
+            const [high, low] = splitByte(byte);
+            result[index * 2] = high;
+            result[index * 2 + 1] = low;
+        });
+        return result;
+    };
+    const joinNibbles = (nibbles) => {
+        const hex = [];
+        nibbles.forEach(nibble => hex.push(nibble.toString(16)));
+        if (nibbles.length & 1) {
+            hex.push('0');
+        }
+        return getBytesFromHex(hex.join(''));
+    };
+    const fromBytesMtx = (nibbles) => {
+        if (nibbles.length !== 14 && nibbles.length !== 16) {
+            throw new Error('Device type bytes wrong size');
+        }
+        const type = ['MTX '];
+        type.push(nibbles1[nibbles[0]] ?? DEVICE_TYPE_INVALID_CHAR);
+        type.push(nibbles2[nibbles[1]] ?? DEVICE_TYPE_INVALID_CHAR);
+        type.push(nibbles3[nibbles[2]] ?? DEVICE_TYPE_INVALID_CHAR);
+        type.push(nibbles3[nibbles[3]] ?? DEVICE_TYPE_INVALID_CHAR);
+        type.push('.');
+        type.push(nibbles4[nibbles[4]] ?? DEVICE_TYPE_INVALID_CHAR);
+        type.push(nibbles5[nibbles[5]] ?? DEVICE_TYPE_INVALID_CHAR);
+        type.push('.');
+        type.push(nibbles6[nibbles[6]] ?? DEVICE_TYPE_INVALID_CHAR);
+        type.push(nibbles7[nibbles[7]] ?? DEVICE_TYPE_INVALID_CHAR);
+        const revision = nibbles[8];
+        type.push(nibbles8[nibbles[9]] ?? DEVICE_TYPE_INVALID_CHAR);
+        type.push('-');
+        let deviceProtocolIndex;
+        if (nibbles.length < 14 || (nibbles[12] === 0 && nibbles[13] === 0)) {
+            type.push(nibbles9[nibbles[10]] ?? DEVICE_TYPE_INVALID_CHAR);
+            deviceProtocolIndex = 11;
+        }
+        else if (nibbles[13] === 0) {
+            type.push(nibbles9[nibbles[10]] ?? DEVICE_TYPE_INVALID_CHAR);
+            type.push(nibbles9[nibbles[11]] ?? DEVICE_TYPE_INVALID_CHAR);
+            deviceProtocolIndex = 12;
+        }
+        else {
+            type.push(nibbles9[nibbles[10]] ?? DEVICE_TYPE_INVALID_CHAR);
+            type.push(nibbles9[nibbles[11]] ?? DEVICE_TYPE_INVALID_CHAR);
+            type.push(nibbles9[nibbles[12]] ?? DEVICE_TYPE_INVALID_CHAR);
+            deviceProtocolIndex = 13;
+        }
+        const deviceProtocolNibble = nibbles[deviceProtocolIndex];
+        if (deviceProtocolNibble && deviceProtocolNibble !== 0) {
+            type.push(nibbles11[deviceProtocolNibble] ?? DEVICE_TYPE_INVALID_CHAR);
+        }
+        return {
+            type: type.join(''),
+            revision
+        };
+    };
+    const toBytesMtx = (type, prefix, revision) => {
+        const nibbles = [];
+        if (type.length < 11) {
+            throw new Error('Wrong format');
+        }
+        nibbles.push(nibbles1.indexOf(type[0]));
+        nibbles.push(nibbles2.indexOf(type[1]));
+        nibbles.push(nibbles3.indexOf(type[2]));
+        nibbles.push(nibbles3.indexOf(type[3]));
+        if (type[4] !== '.') {
+            throw new Error('Wrong format');
+        }
+        nibbles.push(nibbles4.indexOf(type[5]));
+        nibbles.push(nibbles5.indexOf(type[6]));
+        if (type[7] !== '.') {
+            throw new Error('Wrong format');
+        }
+        nibbles.push(nibbles6.indexOf(type[8]));
+        nibbles.push(nibbles7.indexOf(type[9]));
+        nibbles.push(revision ?? 0);
+        nibbles.push(nibbles8.indexOf(type[10]));
+        if (type[11] !== '-') {
+            throw new Error('Wrong format');
+        }
+        const deviceProtocolIndex = type.length > 13 ? type.length - 1 : type.length;
+        for (let index = 12; index < deviceProtocolIndex; index++) {
+            nibbles.push(nibbles9.indexOf(type[index]));
+        }
+        if (deviceProtocolIndex < type.length) {
+            nibbles.push(nibbles11.indexOf(type[deviceProtocolIndex]));
+        }
+        const bytes = joinNibbles(nibbles);
+        if (bytes.length >= DEVICE_TYPE_SIZE) {
+            return bytes;
+        }
+        const padLength = DEVICE_TYPE_SIZE - bytes.length;
+        return [
+            prefix ?? 0,
+            ...bytes,
+            ...new Array(padLength).fill(0)
+        ];
+    };
+    const fromBytesMtx2 = (nibbles) => {
+        if (nibbles.length < 14) {
+            throw new Error('The buffer is too small');
+        }
+        const type = ['MTX '];
+        const separator = nibbles[1] === 5 ? '-' : ' ';
+        type.push(nibbles1[nibbles[0]] ?? DEVICE_TYPE_INVALID_CHAR);
+        type.push(nibbles2[nibbles[1]] ?? DEVICE_TYPE_INVALID_CHAR);
+        type.push(separator);
+        for (let index = 2; index < nibbles.length; index++) {
+            if (nibbles[index] !== 0) {
+                type.push(nibbles10[nibbles[index]] ?? DEVICE_TYPE_INVALID_CHAR);
+            }
+        }
+        return { type: type.join('') };
+    };
+    const toBytesMtx2 = (type) => {
+        if (type.length < 3) {
+            throw new Error('Wrong format');
+        }
+        const nibbles = [];
+        nibbles.push(nibbles1.indexOf(type[0]));
+        nibbles.push(nibbles2.indexOf(type[1]));
+        for (let index = 3; index < type.length; index++) {
+            nibbles.push(nibbles10.indexOf(type[index]));
+        }
+        const bytes = joinNibbles(nibbles);
+        if (bytes.length === 8) {
+            return bytes;
+        }
+        if (bytes.length > 8) {
+            throw new Error('Wrong format');
+        }
+        const result = new Array(8).fill(0);
+        for (let index = 0; index < bytes.length; index++) {
+            result[index] = bytes[index];
+        }
+        return result;
+    };
+    const fromBytesM = (nibbles) => {
+        if (nibbles.length < 14) {
+            throw new Error('The buffer is too small');
+        }
+        const type = [];
+        type.push(nibbles1[nibbles[0]] ?? DEVICE_TYPE_INVALID_CHAR);
+        for (let index = 1; index < nibbles.length; index++) {
+            if (nibbles[index] !== 0) {
+                type.push(nibbles12[nibbles[index]] ?? DEVICE_TYPE_INVALID_CHAR);
+            }
+        }
+        return { type: type.join('') };
+    };
+    const toBytesM = (type) => {
+        if (type.length < 1) {
+            throw new Error('Wrong format');
+        }
+        const nibbles = [];
+        nibbles.push(nibbles1.indexOf(type[0]));
+        for (let index = 1; index < type.length; index++) {
+            nibbles.push(nibbles12.indexOf(type[index]));
+        }
+        const bytes = joinNibbles(nibbles);
+        const result = new Array(8).fill(0);
+        for (let index = 0; index < bytes.length && index < 8; index++) {
+            result[index] = bytes[index];
+        }
+        return result;
+    };
+    const fromBytes$R = (bytes) => {
+        if (bytes.length < DEVICE_TYPE_SIZE) {
+            throw new Error('The buffer is too small');
+        }
+        let result;
+        const reserve = [0x00, 0x05, 0x06, 0x07, 0x09, 0x7f, 0xef];
+        const reserveIndex = reserve.indexOf(bytes[0]);
+        const manufacturingFlag = reserveIndex !== -1 ? bytes[0] : undefined;
+        const position = reserveIndex !== -1 ? 2 : 0;
+        const nibbles = splitToNibbles(bytes.slice(0, 8));
+        const deviceTypeNibble = nibbles[position];
+        const deviceType = nibbles1[deviceTypeNibble];
+        if (deviceType === '1' || deviceType === '3') {
+            let descriptor;
+            if (bytes.length > DEVICE_TYPE_SIZE) {
+                descriptor = deviceType === '3'
+                    ? mtx3DeviceTypeDescriptorFromByte(bytes[8])
+                    : mtx1DeviceTypeDescriptorFromByte(bytes[8]);
+            }
+            result = {
+                ...fromBytesMtx(nibbles.slice(position)),
+                ...(descriptor != null && { descriptor })
+            };
+        }
+        else {
+            result = deviceType === 'M'
+                ? fromBytesM(nibbles)
+                : fromBytesMtx2(nibbles);
+        }
+        return { ...result, ...(manufacturingFlag > 0 && { manufacturingFlag }) };
+    };
+    const toBytes$R = ({ type, revision, descriptor, manufacturingFlag }) => {
+        if (!type.startsWith('MTX ')) {
+            throw new Error('Wrong format');
+        }
+        let result;
+        const content = type.substring(4);
+        const deviceTypeSymbol = type[4];
+        if (deviceTypeSymbol === '1' || deviceTypeSymbol === '3') {
+            result = toBytesMtx(content, manufacturingFlag, revision);
+        }
+        else {
+            result = deviceTypeSymbol === 'M'
+                ? toBytesM(content)
+                : toBytesMtx2(content);
+        }
+        if (descriptor == null) {
+            return result.slice(0, 8);
+        }
+        if (descriptor?.meterType) {
+            result[8] = descriptor.meterType === 'mtx1'
+                ? mtx1DeviceTypeDescriptorToByte(descriptor)
+                : mtx3DeviceTypeDescriptorToByte(descriptor);
+        }
+        else {
+            result[8] = 0;
+        }
+        return result;
+    };
+
+    const id$Q = getDeviceType$2;
+    const name$Q = commandNames[getDeviceType$2];
     const headerSize$Q = 2;
     const accessLevel$Q = READ_ONLY;
     const maxSize$Q = 9;
@@ -8006,14 +8015,9 @@
     };
     const fromBytes$Q = (bytes) => {
         validateFixedCommandPayload(name$Q, bytes, maxSize$Q);
-        const buffer = new BinaryBuffer(bytes, false);
-        return getDeviceType$2(buffer);
+        return fromBytes$R(bytes);
     };
-    const toBytes$Q = (parameters) => {
-        const buffer = new BinaryBuffer(maxSize$Q, false);
-        setDeviceType(buffer, parameters);
-        return toBytes$2d(id$Q, buffer.data);
-    };
+    const toBytes$Q = (parameters) => (toBytes$2e(id$Q, toBytes$R(parameters)));
 
     var getDeviceType = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -8069,7 +8073,7 @@
         const [displayMode, ...order] = bytes;
         return { displayMode, order };
     };
-    const toBytes$P = (parameters) => (toBytes$2d(id$P, [parameters.displayMode, ...parameters.order]));
+    const toBytes$P = (parameters) => (toBytes$2e(id$P, [parameters.displayMode, ...parameters.order]));
 
     var getDisplayParam = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -8144,7 +8148,7 @@
         }
         const buffer = new BinaryBuffer(size, false);
         setPackedEnergyWithType(buffer, parameters);
-        return toBytes$2d(id$O, buffer.data);
+        return toBytes$2e(id$O, buffer.data);
     };
     const toJson$6 = (parameters, { dlms } = defaultDlmsJsonOptions) => {
         if (!dlms) {
@@ -8255,7 +8259,7 @@
         const buffer = new BinaryBuffer(getPackedEnergiesWithDateSize(parameters), false);
         setDate$1(buffer, parameters.date);
         setPackedEnergyWithType(buffer, parameters);
-        return toBytes$2d(id$N, buffer.data);
+        return toBytes$2e(id$N, buffer.data);
     };
     const toJson$5 = (parameters, { dlms } = defaultDlmsJsonOptions) => {
         const { date, energies } = parameters;
@@ -8342,7 +8346,7 @@
         }
         const buffer = new BinaryBuffer(size, false);
         setPackedEnergyWithType(buffer, parameters);
-        return toBytes$2d(id$M, buffer.data);
+        return toBytes$2e(id$M, buffer.data);
     };
     const toJson$4 = (parameters, { dlms } = defaultDlmsJsonOptions) => {
         if (!dlms) {
@@ -8453,7 +8457,7 @@
         const buffer = new BinaryBuffer(getPackedEnergiesWithDateSize(parameters), false);
         setDate$1(buffer, parameters.date);
         setPackedEnergyWithType(buffer, parameters);
-        return toBytes$2d(id$L, buffer.data);
+        return toBytes$2e(id$L, buffer.data);
     };
     const toJson$3 = (parameters, { dlms } = defaultDlmsJsonOptions) => {
         const { date, energies } = parameters;
@@ -8557,7 +8561,7 @@
         for (const event of parameters.events) {
             setEvent$1(buffer, event);
         }
-        return toBytes$2d(id$K, buffer.getBytesToOffset());
+        return toBytes$2e(id$K, buffer.getBytesToOffset());
     });
     const fromBytes$K = getFromBytes(BinaryBuffer);
     const toBytes$K = getToBytes(BinaryBuffer);
@@ -8632,7 +8636,7 @@
         buffer.setUint16(parameters.accessError);
         buffer.setUint16(parameters.accessClosed);
         buffer.setUint16(parameters.setClock);
-        return toBytes$2d(id$J, buffer.data);
+        return toBytes$2e(id$J, buffer.data);
     };
 
     var getEventsCounters = /*#__PURE__*/Object.freeze({
@@ -8692,7 +8696,7 @@
     const toBytes$I = (eventStatus) => {
         const buffer = new BinaryBuffer(maxSize$I, true);
         setEventStatus(buffer, eventStatus);
-        return toBytes$2d(id$I, buffer.data);
+        return toBytes$2e(id$I, buffer.data);
     };
 
     var getEventStatus = /*#__PURE__*/Object.freeze({
@@ -8743,7 +8747,7 @@
         const buffer = new BinaryBuffer(maxSize$H, false);
         buffer.setInt16(parameters.temperature);
         buffer.setInt16(parameters.frequency);
-        return toBytes$2d(id$H, buffer.data);
+        return toBytes$2e(id$H, buffer.data);
     };
     const toJson$2 = (parameters, { dlms } = defaultDlmsJsonOptions) => {
         const { temperature, frequency } = parameters;
@@ -8840,7 +8844,7 @@
     const toBytes$G = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$G, false);
         setExtendedCurrentValues2(buffer, parameters);
-        return toBytes$2d(id$G, buffer.data);
+        return toBytes$2e(id$G, buffer.data);
     };
 
     var getExtendedCurrentValues2 = /*#__PURE__*/Object.freeze({
@@ -8938,7 +8942,7 @@
         validateFixedCommandPayload(name$F, bytes, maxSize$F);
         return getGsmBlock(name$F, bytes);
     };
-    const toBytes$F = (parameters) => (toBytes$2d(id$F, setGsmBlock(parameters)));
+    const toBytes$F = (parameters) => (toBytes$2e(id$F, setGsmBlock(parameters)));
     const toJson$1 = (parameters, options) => (JSON.stringify({
         ...parameters,
         data: getStringFromBytes(parameters.data, options)
@@ -9212,7 +9216,7 @@
         if (parameters.dstHour) {
             buffer.setUint8(parameters.dstHour);
         }
-        return toBytes$2d(id$E, buffer.data);
+        return toBytes$2e(id$E, buffer.data);
     };
 
     var getHalfHourDemand = /*#__PURE__*/Object.freeze({
@@ -9482,7 +9486,7 @@
         if (parameters.dstHour) {
             buffer.setUint8(parameters.dstHour);
         }
-        return toBytes$2d(id$D, buffer.data);
+        return toBytes$2e(id$D, buffer.data);
     };
 
     var getHalfHourDemandExport = /*#__PURE__*/Object.freeze({
@@ -9752,7 +9756,7 @@
         if (parameters.dstHour) {
             buffer.setUint8(parameters.dstHour);
         }
-        return toBytes$2d(id$C, buffer.data);
+        return toBytes$2e(id$C, buffer.data);
     };
 
     var getHalfHourDemandPrevious = /*#__PURE__*/Object.freeze({
@@ -9861,7 +9865,7 @@
         buffer.setUint8(firstHalfhour);
         buffer.setUint8(halfhoursNumber);
         setHalfHourEnergies1(buffer, energies);
-        return toBytes$2d(id$B, buffer.getBytesToOffset());
+        return toBytes$2e(id$B, buffer.getBytesToOffset());
     };
     const toJson = (parameters, { dlms } = defaultDlmsJsonOptions) => {
         const { date, firstHalfhour, halfhoursNumber, energies } = parameters;
@@ -10002,7 +10006,7 @@
         setDate(buffer, parameters.date);
         setCurrentDemandParameters(buffer, demandParameters);
         setCurrentDemandValues(buffer, demands);
-        return toBytes$2d(id$A, buffer.getBytesToOffset());
+        return toBytes$2e(id$A, buffer.getBytesToOffset());
     };
 
     var getCurrentDemand = /*#__PURE__*/Object.freeze({
@@ -10059,7 +10063,7 @@
         buffer.setUint16(parameters.threshold);
         buffer.setUint16(parameters.inductionCoefficient * 100);
         buffer.setUint32(parameters.reserved);
-        return toBytes$2d(id$z, buffer.data);
+        return toBytes$2e(id$z, buffer.data);
     };
 
     var getMagneticFieldThreshold = /*#__PURE__*/Object.freeze({
@@ -10099,7 +10103,7 @@
         validateFixedCommandPayload(name$y, [ten], maxSize$y);
         return { ten };
     };
-    const toBytes$y = ({ ten }) => toBytes$2d(id$y, [ten]);
+    const toBytes$y = ({ ten }) => toBytes$2e(id$y, [ten]);
 
     var getMeterInfo = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -10152,7 +10156,7 @@
         buffer.setUint8(parameters.year);
         buffer.setUint8(parameters.month);
         setEnergies(buffer, parameters.energies);
-        return toBytes$2d(id$x, buffer.data);
+        return toBytes$2e(id$x, buffer.data);
     };
 
     var getMonthDemand = /*#__PURE__*/Object.freeze({
@@ -10206,7 +10210,7 @@
         buffer.setUint8(parameters.year);
         buffer.setUint8(parameters.month);
         setEnergies(buffer, parameters.energies);
-        return toBytes$2d(id$w, buffer.data);
+        return toBytes$2e(id$w, buffer.data);
     };
 
     var getMonthDemandExport = /*#__PURE__*/Object.freeze({
@@ -10289,7 +10293,7 @@
         buffer.setUint8(parameters.year);
         buffer.setUint8(parameters.month);
         setMonthMaxPowerByTariffs(buffer, parameters.tariffs);
-        return toBytes$2d(id$v, buffer.data);
+        return toBytes$2e(id$v, buffer.data);
     };
 
     var getMonthMaxDemand = /*#__PURE__*/Object.freeze({
@@ -10372,7 +10376,7 @@
         buffer.setUint8(parameters.year);
         buffer.setUint8(parameters.month);
         setMonthMaxPowerByTariffs(buffer, parameters.tariffs);
-        return toBytes$2d(id$u, buffer.data);
+        return toBytes$2e(id$u, buffer.data);
     };
 
     var getMonthMaxDemandExport = /*#__PURE__*/Object.freeze({
@@ -10563,7 +10567,7 @@
     const toBytes$t = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$t, false);
         setOperatorParameters$2(buffer, parameters);
-        return toBytes$2d(id$t, buffer.data);
+        return toBytes$2e(id$t, buffer.data);
     };
 
     var getOperatorParameters = /*#__PURE__*/Object.freeze({
@@ -10622,7 +10626,7 @@
     const toBytes$s = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$s, false);
         setOperatorParametersExtended3$2(buffer, parameters);
-        return toBytes$2d(id$s, buffer.data);
+        return toBytes$2e(id$s, buffer.data);
     };
 
     var getOperatorParametersExtended3 = /*#__PURE__*/Object.freeze({
@@ -10693,7 +10697,7 @@
         buffer.setUint32(parameters.powerOffMaidiMinutes);
         buffer.setUint16(parameters.powerOffMaifiCount);
         buffer.setUint16(parameters.badVoltagePhaseAMinutes);
-        return toBytes$2d(id$r, buffer.data);
+        return toBytes$2e(id$r, buffer.data);
     };
 
     var getQuality = /*#__PURE__*/Object.freeze({
@@ -10766,7 +10770,7 @@
         buffer.setUint8(parameters.tariffTable);
         setTariffPlan(buffer, parameters.activePlan);
         setTariffPlan(buffer, parameters.passivePlan);
-        return toBytes$2d(id$q, buffer.data);
+        return toBytes$2e(id$q, buffer.data);
     };
 
     var getRatePlanInfo = /*#__PURE__*/Object.freeze({
@@ -10840,7 +10844,7 @@
         buffer.setUint8(parameters.date.date);
         buffer.setUint8(parameters.date.hours);
         buffer.setUint8(parameters.date.minutes);
-        return toBytes$2d(id$p, buffer.data);
+        return toBytes$2e(id$p, buffer.data);
     };
 
     var getSaldo = /*#__PURE__*/Object.freeze({
@@ -10922,7 +10926,7 @@
     const toBytes$o = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$o, false);
         setSaldoParameters$2(buffer, parameters);
-        return toBytes$2d(id$o, buffer.data);
+        return toBytes$2e(id$o, buffer.data);
     };
 
     var getSaldoParameters = /*#__PURE__*/Object.freeze({
@@ -10970,7 +10974,7 @@
     const toBytes$n = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$n, false);
         setSeasonProfile$2(buffer, parameters);
-        return toBytes$2d(id$n, buffer.data);
+        return toBytes$2e(id$n, buffer.data);
     };
 
     var getSeasonProfile = /*#__PURE__*/Object.freeze({
@@ -11019,7 +11023,7 @@
     const toBytes$m = (parameters) => {
         const buffer = new BinaryBuffer(maxSize$m, false);
         setSpecialDay$2(buffer, parameters);
-        return toBytes$2d(id$m, buffer.data);
+        return toBytes$2e(id$m, buffer.data);
     };
 
     var getSpecialDay = /*#__PURE__*/Object.freeze({
@@ -11063,7 +11067,7 @@
     };
     const toBytes$l = (parameters) => {
         const version = parameters.version.split('').map(char => char.charCodeAt(0));
-        return toBytes$2d(id$l, version);
+        return toBytes$2e(id$l, version);
     };
 
     var getVersion = /*#__PURE__*/Object.freeze({
@@ -11102,7 +11106,7 @@
         validateFixedCommandPayload(name$k, bytes, maxSize$k);
         return {};
     };
-    const toBytes$k = () => toBytes$2d(id$k);
+    const toBytes$k = () => toBytes$2e(id$k);
 
     var prepareRatePlan = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11140,7 +11144,7 @@
         validateFixedCommandPayload(name$j, bytes, maxSize$j);
         return {};
     };
-    const toBytes$j = () => toBytes$2d(id$j);
+    const toBytes$j = () => toBytes$2e(id$j);
 
     var resetPowerMaxDay = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11178,7 +11182,7 @@
         validateFixedCommandPayload(name$i, bytes, maxSize$i);
         return {};
     };
-    const toBytes$i = () => toBytes$2d(id$i);
+    const toBytes$i = () => toBytes$2e(id$i);
 
     var resetPowerMaxMonth = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11216,7 +11220,7 @@
         validateFixedCommandPayload(name$h, bytes, maxSize$h);
         return {};
     };
-    const toBytes$h = () => toBytes$2d(id$h);
+    const toBytes$h = () => toBytes$2e(id$h);
 
     var runTariffPlan = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11254,7 +11258,7 @@
         validateFixedCommandPayload(name$g, bytes, maxSize$g);
         return {};
     };
-    const toBytes$g = () => toBytes$2d(id$g);
+    const toBytes$g = () => toBytes$2e(id$g);
 
     var setAccessKey = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11292,7 +11296,7 @@
         validateFixedCommandPayload(name$f, bytes, maxSize$f);
         return {};
     };
-    const toBytes$f = () => toBytes$2d(id$f);
+    const toBytes$f = () => toBytes$2e(id$f);
 
     var setCorrectDateTime = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11330,7 +11334,7 @@
         validateFixedCommandPayload(name$e, bytes, maxSize$e);
         return {};
     };
-    const toBytes$e = () => toBytes$2d(id$e);
+    const toBytes$e = () => toBytes$2e(id$e);
 
     var setCorrectTime = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11368,7 +11372,7 @@
         validateFixedCommandPayload(name$d, bytes, maxSize$d);
         return {};
     };
-    const toBytes$d = () => toBytes$2d(id$d);
+    const toBytes$d = () => toBytes$2e(id$d);
 
     var setDateTime = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11406,7 +11410,7 @@
         validateFixedCommandPayload(name$c, bytes, maxSize$c);
         return {};
     };
-    const toBytes$c = () => toBytes$2d(id$c);
+    const toBytes$c = () => toBytes$2e(id$c);
 
     var setDayProfile = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11444,7 +11448,7 @@
         validateFixedCommandPayload(name$b, bytes, maxSize$b);
         return {};
     };
-    const toBytes$b = () => toBytes$2d(id$b);
+    const toBytes$b = () => toBytes$2e(id$b);
 
     var setDemandParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11482,7 +11486,7 @@
         validateFixedCommandPayload(name$a, bytes, maxSize$a);
         return {};
     };
-    const toBytes$a = () => toBytes$2d(id$a);
+    const toBytes$a = () => toBytes$2e(id$a);
 
     var setDisplayParam = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11520,7 +11524,7 @@
         validateFixedCommandPayload(name$9, bytes, maxSize$9);
         return {};
     };
-    const toBytes$9 = () => toBytes$2d(id$9);
+    const toBytes$9 = () => toBytes$2e(id$9);
 
     var setGsmParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11558,7 +11562,7 @@
         validateFixedCommandPayload(name$8, bytes, maxSize$8);
         return {};
     };
-    const toBytes$8 = () => toBytes$2d(id$8);
+    const toBytes$8 = () => toBytes$2e(id$8);
 
     var setOperatorParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11596,7 +11600,7 @@
         validateFixedCommandPayload(name$7, bytes, maxSize$7);
         return {};
     };
-    const toBytes$7 = () => toBytes$2d(id$7);
+    const toBytes$7 = () => toBytes$2e(id$7);
 
     var setOperatorParametersExtended3 = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11634,7 +11638,7 @@
         validateFixedCommandPayload(name$6, bytes, maxSize$6);
         return {};
     };
-    const toBytes$6 = () => toBytes$2d(id$6);
+    const toBytes$6 = () => toBytes$2e(id$6);
 
     var setSaldo = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11672,7 +11676,7 @@
         validateFixedCommandPayload(name$5, bytes, maxSize$5);
         return {};
     };
-    const toBytes$5 = () => toBytes$2d(id$5);
+    const toBytes$5 = () => toBytes$2e(id$5);
 
     var setSaldoParameters = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11710,7 +11714,7 @@
         validateFixedCommandPayload(name$4, bytes, maxSize$4);
         return {};
     };
-    const toBytes$4 = () => toBytes$2d(id$4);
+    const toBytes$4 = () => toBytes$2e(id$4);
 
     var setSeasonProfile = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11748,7 +11752,7 @@
         validateFixedCommandPayload(name$3, bytes, maxSize$3);
         return {};
     };
-    const toBytes$3 = () => toBytes$2d(id$3);
+    const toBytes$3 = () => toBytes$2e(id$3);
 
     var setSpecialDay = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11834,7 +11838,7 @@
         if (parameters.magneticIndication) {
             flags |= 2;
         }
-        return toBytes$2d(id$2, [flags]);
+        return toBytes$2e(id$2, [flags]);
     };
 
     var setSpecialOperation = /*#__PURE__*/Object.freeze({
@@ -11873,7 +11877,7 @@
         validateFixedCommandPayload(name$1, bytes, maxSize$1);
         return {};
     };
-    const toBytes$1 = () => toBytes$2d(id$1);
+    const toBytes$1 = () => toBytes$2e(id$1);
 
     var turnRelayOff = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11911,7 +11915,7 @@
         validateFixedCommandPayload(name, bytes, maxSize);
         return {};
     };
-    const toBytes = () => toBytes$2d(id);
+    const toBytes = () => toBytes$2e(id);
 
     var turnRelayOn = /*#__PURE__*/Object.freeze({
         __proto__: null,

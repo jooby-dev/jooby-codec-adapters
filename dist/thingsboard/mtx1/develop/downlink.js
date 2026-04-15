@@ -212,7 +212,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
       return this.data;
     },
     seek: function (position) {
-      if (position < 0 || position >= this.data.length) {
+      if (position < 0 || position > this.data.length) {
         throw new Error('Invalid position.');
       }
       this.offset = position;
@@ -1605,7 +1605,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
 
   var id$F = getGsmParameters;
   var toBytes$G = function (parameters) {
-    return toBytes$16(id$F, [parameters.blockIndex]);
+    return toBytes$16(id$F, [parameters.index]);
   };
 
   var id$E = getHalfHourDemand;
@@ -2030,11 +2030,10 @@ var toBytes, setDataSegment, getBase64FromBytes;
   };
   var BLOCK_SIZE = 16;
   var COMMANDS_END_MARK = [0];
-  var getToBytes = function (toBytesMap) {
+  _defineProperty(_defineProperty(_defineProperty({}, READ_ONLY, 'readOnlyKey'), READ_WRITE, 'readWriteKey'), ROOT, 'rootKey');
+  var getBytesFromMessage = function (toBytesMap) {
     return function (commands, _ref) {
-      var _ref$messageId = _ref.messageId,
-        messageId = _ref$messageId === void 0 ? 1 : _ref$messageId,
-        _ref$accessLevel = _ref.accessLevel,
+      var _ref$accessLevel = _ref.accessLevel,
         accessLevel = _ref$accessLevel === void 0 ? getCommandsAccessLevel(commands) : _ref$accessLevel,
         aesKey = _ref.aesKey;
       var commandBytes = commands.flatMap(function (command) {
@@ -2047,10 +2046,9 @@ var toBytes, setDataSegment, getBase64FromBytes;
         throw new Error('wrong command format');
       });
       var maskedAccessLevel = accessLevel | 0x10;
-      var header = [messageId, maskedAccessLevel];
       var isItErrorDataFrameOnly = commands.length === 1 && 'id' in commands[0] && commands[0].id === id;
       if (isItErrorDataFrameOnly) {
-        return header.concat(commandBytes);
+        return commandBytes;
       }
       var body = [].concat(maskedAccessLevel, commandBytes, COMMANDS_END_MARK);
       if (accessLevel !== UNENCRYPTED) {
@@ -2063,12 +2061,30 @@ var toBytes, setDataSegment, getBase64FromBytes;
       if (aesKey && accessLevel !== UNENCRYPTED) {
         body = _toConsumableArray(aes.encrypt(aesKey, body));
       }
+      return body;
+    };
+  };
+  var getToBytes = function (bytesFromMessage) {
+    return function (commands, _ref2) {
+      var _ref2$messageId = _ref2.messageId,
+        messageId = _ref2$messageId === void 0 ? 1 : _ref2$messageId,
+        _ref2$accessLevel = _ref2.accessLevel,
+        accessLevel = _ref2$accessLevel === void 0 ? getCommandsAccessLevel(commands) : _ref2$accessLevel,
+        aesKey = _ref2.aesKey;
+      var maskedAccessLevel = accessLevel | 0x10;
+      var header = [messageId, maskedAccessLevel];
+      var body = bytesFromMessage(commands, {
+        messageId: messageId,
+        accessLevel: accessLevel,
+        aesKey: aesKey
+      });
       return header.concat(body);
     };
   };
 
   var toBytesMap = {};
-  var toBytes$1 = getToBytes(toBytesMap);
+  var bytesFromMessage = getBytesFromMessage(toBytesMap);
+  var toBytes$1 = getToBytes(bytesFromMessage);
   toBytesMap[id$14] = toBytes$15;
   toBytesMap[id$13] = toBytes$14;
   toBytesMap[id$12] = toBytes$13;

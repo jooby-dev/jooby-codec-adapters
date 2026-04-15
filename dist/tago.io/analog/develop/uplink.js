@@ -148,7 +148,7 @@ var fromBytes, getBytesFromHex;
             return this.data;
         },
         seek(position) {
-            if (position < 0 || position >= this.data.length) {
+            if (position < 0 || position > this.data.length) {
                 throw new Error('Invalid position.');
             }
             this.offset = position;
@@ -314,7 +314,7 @@ var fromBytes, getBytesFromHex;
 
     const shortCommandMask = 0xe0;
     const extraCommandMask = 0x1f;
-    const fromBytes$E = (bytes) => {
+    const fromBytes$F = (bytes) => {
         if (bytes.length === 0) {
             throw new Error('Invalid buffer size');
         }
@@ -396,6 +396,7 @@ var fromBytes, getBytesFromHex;
     const lastEvent = 0x60;
     const getLmicInfo$1 = 0x21f;
     const getBatteryStatus$1 = 0x51f;
+    const depassivateBattery$1 = 0x61f;
     const usWaterMeterCommand$1 = 0x71f;
     const exAbsHourMc = 0xa1f;
     const exAbsDayMc = 0xb1f;
@@ -420,6 +421,7 @@ var fromBytes, getBytesFromHex;
         dataSegment: dataSegment$1,
         day: day,
         dayMc: dayMc,
+        depassivateBattery: depassivateBattery$1,
         exAbsCurrentMc: exAbsCurrentMc,
         exAbsDayMc: exAbsDayMc,
         exAbsHourMc: exAbsHourMc,
@@ -465,11 +467,11 @@ var fromBytes, getBytesFromHex;
 
     var uplinkNames = invertObject(uplinkIds);
 
-    const id$B = correctTime2000$1;
-    const name$a = uplinkNames[correctTime2000$1];
-    const COMMAND_BODY_SIZE$9 = 1;
-    const fromBytes$D = (bytes) => {
-        validateFixedCommandPayload(name$a, bytes, COMMAND_BODY_SIZE$9);
+    const id$C = correctTime2000$1;
+    const name$b = uplinkNames[correctTime2000$1];
+    const COMMAND_BODY_SIZE$a = 1;
+    const fromBytes$E = (bytes) => {
+        validateFixedCommandPayload(name$b, bytes, COMMAND_BODY_SIZE$a);
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
             status: buffer.getUint8()
@@ -1703,9 +1705,9 @@ var fromBytes, getBytesFromHex;
         }
     };
 
-    const id$A = current;
+    const id$B = current;
     const COMMAND_BODY_MAX_SIZE$9 = 4;
-    const fromBytes$C = (bytes) => {
+    const fromBytes$D = (bytes) => {
         if (bytes.length > COMMAND_BODY_MAX_SIZE$9) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
@@ -1713,9 +1715,9 @@ var fromBytes, getBytesFromHex;
         return getLegacyCounter(buffer);
     };
 
-    const id$z = currentMc;
+    const id$A = currentMc;
     const COMMAND_BODY_MAX_SIZE$8 = 37;
-    const fromBytes$B = (bytes) => {
+    const fromBytes$C = (bytes) => {
         if (bytes.length > COMMAND_BODY_MAX_SIZE$8) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
@@ -1746,6 +1748,7 @@ var fromBytes, getBytesFromHex;
     const dataSegment = 0x1e;
     const getLmicInfo = 0x21f;
     const getBatteryStatus = 0x51f;
+    const depassivateBattery = 0x61f;
     const usWaterMeterCommand = 0x71f;
     const getExAbsArchiveHoursMc = 0xc1f;
     const getExAbsArchiveDaysMc = 0xd1f;
@@ -1762,6 +1765,7 @@ var fromBytes, getBytesFromHex;
         __proto__: null,
         correctTime2000: correctTime2000,
         dataSegment: dataSegment,
+        depassivateBattery: depassivateBattery,
         getArchiveDays: getArchiveDays,
         getArchiveDaysMc: getArchiveDaysMc,
         getArchiveEvents: getArchiveEvents,
@@ -1792,14 +1796,14 @@ var fromBytes, getBytesFromHex;
 
     invertObject(downlinkIds);
 
-    const id$y = dataSegment;
-    const fromBytes$A = (bytes) => {
+    const id$z = dataSegment;
+    const fromBytes$B = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         return getDataSegment(buffer);
     };
 
-    const id$x = day;
-    const fromBytes$z = (bytes) => {
+    const id$y = day;
+    const fromBytes$A = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         const date = getDate(buffer);
         const byte = buffer.getUint8();
@@ -1810,9 +1814,9 @@ var fromBytes, getBytesFromHex;
         return { value, isMagneticInfluence, startTime2000: getTime2000FromDate(date) };
     };
 
-    const id$w = dayMc;
+    const id$x = dayMc;
     const COMMAND_BODY_MAX_SIZE$7 = 32;
-    const fromBytes$y = (bytes) => {
+    const fromBytes$z = (bytes) => {
         if (bytes.length > COMMAND_BODY_MAX_SIZE$7) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
@@ -1824,6 +1828,14 @@ var fromBytes, getBytesFromHex;
             index: channelIndex
         }));
         return { startTime2000: getTime2000FromDate(date), channelList };
+    };
+
+    const id$w = depassivateBattery$1;
+    const name$a = uplinkNames[depassivateBattery$1];
+    const COMMAND_BODY_SIZE$9 = 0;
+    const fromBytes$y = (bytes) => {
+        validateFixedCommandPayload(name$a, bytes, COMMAND_BODY_SIZE$9);
+        return {};
     };
 
     const id$v = exAbsCurrentMc;
@@ -2108,35 +2120,15 @@ var fromBytes, getBytesFromHex;
         return getResponseParameter(buffer);
     };
 
-    const id$f = signalQuality;
-    const name$7 = uplinkNames[signalQuality];
-    const COMMAND_BODY_SIZE$6 = 6;
+    const id$f = hour;
     const fromBytes$h = (bytes) => {
-        validateFixedCommandPayload(name$7, bytes, COMMAND_BODY_SIZE$6);
-        const buffer = new BinaryBuffer(bytes, false);
-        const parameters = {
-            rssi: buffer.getInt8(),
-            rsrp: buffer.getInt8(),
-            rsrq: buffer.getInt8(),
-            sinr: buffer.getInt8(),
-            txPower: buffer.getInt8(),
-            ecl: buffer.getUint8()
-        };
-        if (!buffer.isEmpty) {
-            throw new Error('BinaryBuffer is not empty.');
-        }
-        return parameters;
-    };
-
-    const id$e = hour;
-    const fromBytes$g = (bytes) => {
         const buffer = new BinaryBuffer(bytes, false);
         return getLegacyHourCounterWithDiff(buffer);
     };
 
-    const id$d = hourMc;
+    const id$e = hourMc;
     const COMMAND_BODY_MAX_SIZE$2 = 164;
-    const fromBytes$f = (bytes) => {
+    const fromBytes$g = (bytes) => {
         if (bytes.length > COMMAND_BODY_MAX_SIZE$2) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
@@ -2144,9 +2136,9 @@ var fromBytes, getBytesFromHex;
         return getChannelsValuesWithHourDiff(buffer);
     };
 
-    const id$c = hourMcEx;
+    const id$d = hourMcEx;
     const COMMAND_BODY_MAX_SIZE$1 = 255;
-    const fromBytes$e = (bytes) => {
+    const fromBytes$f = (bytes) => {
         if (bytes.length > COMMAND_BODY_MAX_SIZE$1) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
@@ -2154,8 +2146,8 @@ var fromBytes, getBytesFromHex;
         return getChannelsValuesWithHourDiffExtended(buffer);
     };
 
-    const id$b = lastEvent;
-    const fromBytes$d = (bytes, config) => {
+    const id$c = lastEvent;
+    const fromBytes$e = (bytes, config) => {
         if (!config.hardwareType) {
             throw new Error('hardwareType in config is mandatory');
         }
@@ -2165,7 +2157,7 @@ var fromBytes, getBytesFromHex;
         return { sequenceNumber, status };
     };
 
-    const id$a = newEvent;
+    const id$b = newEvent;
     const COMMAND_BODY_MAX_SIZE = 14;
     const MTX_ADDRESS_SIZE = 8;
     const getVoltage = (buffer) => buffer.getUint16();
@@ -2178,7 +2170,7 @@ var fromBytes, getBytesFromHex;
         const loadBatteryVoltage = ((byte2 & 0x0f) << 8) | byte3;
         return { noLoadBatteryVoltage, loadBatteryVoltage };
     };
-    const fromBytes$c = (bytes) => {
+    const fromBytes$d = (bytes) => {
         if (bytes.length > COMMAND_BODY_MAX_SIZE) {
             throw new Error(`Wrong buffer size: ${bytes.length}.`);
         }
@@ -2242,12 +2234,12 @@ var fromBytes, getBytesFromHex;
         return { id: eventId, name: eventName, sequenceNumber, data: eventData };
     };
 
-    const id$9 = setParameter$1;
-    const name$6 = uplinkNames[setParameter$1];
+    const id$a = setParameter$1;
+    const name$7 = uplinkNames[setParameter$1];
     const MIN_COMMAND_SIZE = 2;
     const MAX_COMMAND_SIZE = 10;
-    const fromBytes$b = (bytes) => {
-        validateRangeCommandPayload(name$6, bytes, { min: MIN_COMMAND_SIZE, max: MAX_COMMAND_SIZE });
+    const fromBytes$c = (bytes) => {
+        validateRangeCommandPayload(name$7, bytes, { min: MIN_COMMAND_SIZE, max: MAX_COMMAND_SIZE });
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
             id: buffer.getUint8(),
@@ -2271,14 +2263,34 @@ var fromBytes, getBytesFromHex;
         return parameters;
     };
 
-    const id$8 = setTime2000$1;
-    const name$5 = uplinkNames[setTime2000$1];
-    const COMMAND_BODY_SIZE$5 = 1;
+    const id$9 = setTime2000$1;
+    const name$6 = uplinkNames[setTime2000$1];
+    const COMMAND_BODY_SIZE$6 = 1;
+    const fromBytes$b = (bytes) => {
+        validateFixedCommandPayload(name$6, bytes, COMMAND_BODY_SIZE$6);
+        const buffer = new BinaryBuffer(bytes, false);
+        const parameters = {
+            status: buffer.getUint8()
+        };
+        if (!buffer.isEmpty) {
+            throw new Error('BinaryBuffer is not empty.');
+        }
+        return parameters;
+    };
+
+    const id$8 = signalQuality;
+    const name$5 = uplinkNames[signalQuality];
+    const COMMAND_BODY_SIZE$5 = 6;
     const fromBytes$a = (bytes) => {
         validateFixedCommandPayload(name$5, bytes, COMMAND_BODY_SIZE$5);
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = {
-            status: buffer.getUint8()
+            rssi: buffer.getInt8(),
+            rsrp: buffer.getInt8(),
+            rsrq: buffer.getInt8(),
+            sinr: buffer.getInt8(),
+            txPower: buffer.getInt8(),
+            ecl: buffer.getUint8()
         };
         if (!buffer.isEmpty) {
             throw new Error('BinaryBuffer is not empty.');
@@ -2449,7 +2461,7 @@ var fromBytes, getBytesFromHex;
             return message;
         }
         do {
-            const headerInfo = fromBytes$E(bytes.slice(processedBytes, processedBytes + HEADER_MAX_SIZE));
+            const headerInfo = fromBytes$F(bytes.slice(processedBytes, processedBytes + HEADER_MAX_SIZE));
             const headerData = bytes.slice(processedBytes, processedBytes + headerInfo.headerSize);
             const bodyData = bytes.slice(processedBytes + headerInfo.headerSize, processedBytes + headerInfo.headerSize + headerInfo.commandSize);
             const command = {
@@ -2497,6 +2509,7 @@ var fromBytes, getBytesFromHex;
     const fromBytesMap = {};
     const nameMap = uplinkNames;
     const fromBytes$1 = getFromBytes(fromBytesMap, nameMap);
+    fromBytesMap[id$C] = fromBytes$E;
     fromBytesMap[id$B] = fromBytes$D;
     fromBytesMap[id$A] = fromBytes$C;
     fromBytesMap[id$z] = fromBytes$B;
@@ -2519,6 +2532,7 @@ var fromBytes, getBytesFromHex;
     fromBytesMap[id$i] = fromBytes$k;
     fromBytesMap[id$h] = fromBytes$j;
     fromBytesMap[id$g] = fromBytes$i;
+    fromBytesMap[id$f] = fromBytes$h;
     fromBytesMap[id$e] = fromBytes$g;
     fromBytesMap[id$d] = fromBytes$f;
     fromBytesMap[id$c] = fromBytes$e;
@@ -2526,7 +2540,6 @@ var fromBytes, getBytesFromHex;
     fromBytesMap[id$a] = fromBytes$c;
     fromBytesMap[id$9] = fromBytes$b;
     fromBytesMap[id$8] = fromBytes$a;
-    fromBytesMap[id$f] = fromBytes$h;
     fromBytesMap[id$7] = fromBytes$9;
     fromBytesMap[id$6] = fromBytes$8;
     fromBytesMap[id$5] = fromBytes$7;

@@ -291,7 +291,7 @@ var logs = '';
 
   var getEventStatus$2 = 0x01;
   var getEnergyDayPrevious$1 = 0x03;
-  var getDeviceType$2 = 0x04;
+  var getDeviceType$1 = 0x04;
   var getDeviceId$2 = 0x05;
   var getDateTime$2 = 0x07;
   var setDateTime$2 = 0x08;
@@ -376,7 +376,7 @@ var logs = '';
     getDemand: getDemand$2,
     getDemandParameters: getDemandParameters$2,
     getDeviceId: getDeviceId$2,
-    getDeviceType: getDeviceType$2,
+    getDeviceType: getDeviceType$1,
     getDisplayParam: getDisplayParam$1,
     getEnergy: getEnergy$1,
     getEnergyDayPrevious: getEnergyDayPrevious$1,
@@ -459,7 +459,7 @@ var logs = '';
     getDemand: getDemand$2,
     getDemandParameters: getDemandParameters$2,
     getDeviceId: getDeviceId$2,
-    getDeviceType: getDeviceType$2,
+    getDeviceType: getDeviceType$1,
     getDisplayParam: getDisplayParam$1,
     getEnergy: getEnergy$1,
     getEnergyDayPrevious: getEnergyDayPrevious$1,
@@ -815,7 +815,7 @@ var logs = '';
       return this.data;
     },
     seek: function seek(position) {
-      if (position < 0 || position >= this.data.length) {
+      if (position < 0 || position > this.data.length) {
         throw new Error('Invalid position.');
       }
       this.offset = position;
@@ -1132,274 +1132,6 @@ var logs = '';
     result &= ~mask;
     newValueToSet <<= startIndex - 1;
     result |= newValueToSet;
-    return result;
-  };
-
-  var DEVICE_TYPE_INVALID_CHAR = 'x';
-  var nibbles1 = ['.', '1', '3', 'R', 'M'];
-  var nibbles2 = ['.', 'A', 'G', 'R', 'T', 'D'];
-  var nibbles3 = ['.', '0', '1', '2', '3', '4', '5'];
-  var nibbles4 = ['.', 'A', 'B', 'C', 'D', 'E', 'F'];
-  var nibbles5 = ['.', 'A', 'B', 'C', 'D', 'E', 'F', 'H', 'K', 'G'];
-  var nibbles6 = ['.', '1', '2', '3', '4'];
-  var nibbles7 = ['.', 'L', 'M', 'Z', 'K'];
-  var nibbles8 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  var nibbles9 = ['.', 'D', 'B', 'C', 'E', 'P', 'R', 'O', 'L', 'F', 'S', 'M', 'Y', 'G', 'N', 'U'];
-  var nibbles10 = ['.', '0', '1', '2', '3', '4', '5', '6', 'P', 'R', 'L', 'E', 'G', '-', '/'];
-  var nibbles11 = ['.', 'H', 'A', 'T', '0', '0', '0', '0', '0', '1', '2', '3', '4', '0', '0', '0'];
-  var nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
-  var mtx1DeviceTypeDescriptorMask = {
-    typeMeterG: 1 << 0,
-    downgradedToA: 1 << 4,
-    supportMeterInfo: 1 << 6
-  };
-  var mtx3DeviceTypeDescriptorMask = {
-    typeMeterTransformer: 1 << 0,
-    downgradedToR: 1 << 3,
-    typeMeterG: 1 << 4,
-    supportMeterInfo: 1 << 6,
-    reactiveByQuadrants: 1 << 7
-  };
-  var mtx3DeviceTypeDescriptorFromByte = function mtx3DeviceTypeDescriptorFromByte(_byte) {
-    var descriptor = toObject(mtx3DeviceTypeDescriptorMask, _byte);
-    return _objectSpread2(_objectSpread2({
-      meterType: 'mtx3'
-    }, descriptor), {}, {
-      typeMeterG: !descriptor.typeMeterG
-    });
-  };
-  var mtx3DeviceTypeDescriptorToByte = function mtx3DeviceTypeDescriptorToByte(descriptor) {
-    return fromObject(mtx3DeviceTypeDescriptorMask, _objectSpread2(_objectSpread2({}, descriptor), {}, {
-      typeMeterG: !descriptor.typeMeterG
-    }));
-  };
-  var splitByte = function splitByte(_byte2) {
-    return [_byte2 >> 4, _byte2 & 0x0F];
-  };
-  var splitToNibbles = function splitToNibbles(data) {
-    var result = new Array(data.length * 2).fill(0);
-    data.forEach(function (_byte3, index) {
-      var _splitByte = splitByte(_byte3),
-        _splitByte2 = _slicedToArray(_splitByte, 2),
-        high = _splitByte2[0],
-        low = _splitByte2[1];
-      result[index * 2] = high;
-      result[index * 2 + 1] = low;
-    });
-    return result;
-  };
-  var joinNibbles = function joinNibbles(nibbles) {
-    var hex = [];
-    nibbles.forEach(function (nibble) {
-      return hex.push(nibble.toString(16));
-    });
-    if (nibbles.length & 1) {
-      hex.push('0');
-    }
-    return getBytesFromHex(hex.join(''));
-  };
-  var fromBytesMtx = function fromBytesMtx(nibbles) {
-    var _nibbles1$nibbles$, _nibbles2$nibbles$, _nibbles3$nibbles$, _nibbles3$nibbles$2, _nibbles4$nibbles$, _nibbles5$nibbles$, _nibbles6$nibbles$, _nibbles7$nibbles$, _nibbles8$nibbles$;
-    if (nibbles.length !== 14 && nibbles.length !== 16) {
-      throw new Error('Device type bytes wrong size');
-    }
-    var type = ['MTX '];
-    type.push((_nibbles1$nibbles$ = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$ !== void 0 ? _nibbles1$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles2$nibbles$ = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$ !== void 0 ? _nibbles2$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles3$nibbles$ = nibbles3[nibbles[2]]) !== null && _nibbles3$nibbles$ !== void 0 ? _nibbles3$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles3$nibbles$2 = nibbles3[nibbles[3]]) !== null && _nibbles3$nibbles$2 !== void 0 ? _nibbles3$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-    type.push('.');
-    type.push((_nibbles4$nibbles$ = nibbles4[nibbles[4]]) !== null && _nibbles4$nibbles$ !== void 0 ? _nibbles4$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles5$nibbles$ = nibbles5[nibbles[5]]) !== null && _nibbles5$nibbles$ !== void 0 ? _nibbles5$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push('.');
-    type.push((_nibbles6$nibbles$ = nibbles6[nibbles[6]]) !== null && _nibbles6$nibbles$ !== void 0 ? _nibbles6$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles7$nibbles$ = nibbles7[nibbles[7]]) !== null && _nibbles7$nibbles$ !== void 0 ? _nibbles7$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    var revision = nibbles[8];
-    type.push((_nibbles8$nibbles$ = nibbles8[nibbles[9]]) !== null && _nibbles8$nibbles$ !== void 0 ? _nibbles8$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-    type.push('-');
-    var deviceProtocolIndex;
-    if (nibbles.length < 14 || nibbles[12] === 0 && nibbles[13] === 0) {
-      var _nibbles9$nibbles$;
-      type.push((_nibbles9$nibbles$ = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$ !== void 0 ? _nibbles9$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
-      deviceProtocolIndex = 11;
-    } else if (nibbles[13] === 0) {
-      var _nibbles9$nibbles$2, _nibbles9$nibbles$3;
-      type.push((_nibbles9$nibbles$2 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$2 !== void 0 ? _nibbles9$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles9$nibbles$3 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$3 !== void 0 ? _nibbles9$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
-      deviceProtocolIndex = 12;
-    } else {
-      var _nibbles9$nibbles$4, _nibbles9$nibbles$5, _nibbles9$nibbles$6;
-      type.push((_nibbles9$nibbles$4 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$4 !== void 0 ? _nibbles9$nibbles$4 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles9$nibbles$5 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$5 !== void 0 ? _nibbles9$nibbles$5 : DEVICE_TYPE_INVALID_CHAR);
-      type.push((_nibbles9$nibbles$6 = nibbles9[nibbles[12]]) !== null && _nibbles9$nibbles$6 !== void 0 ? _nibbles9$nibbles$6 : DEVICE_TYPE_INVALID_CHAR);
-      deviceProtocolIndex = 13;
-    }
-    var deviceProtocolNibble = nibbles[deviceProtocolIndex];
-    if (deviceProtocolNibble && deviceProtocolNibble !== 0) {
-      var _nibbles11$deviceProt;
-      type.push((_nibbles11$deviceProt = nibbles11[deviceProtocolNibble]) !== null && _nibbles11$deviceProt !== void 0 ? _nibbles11$deviceProt : DEVICE_TYPE_INVALID_CHAR);
-    }
-    return {
-      type: type.join(''),
-      revision: revision
-    };
-  };
-  var toBytesMtx = function toBytesMtx(type, prefix, revision) {
-    var nibbles = [];
-    if (type.length < 11) {
-      throw new Error('Wrong format');
-    }
-    nibbles.push(nibbles1.indexOf(type[0]));
-    nibbles.push(nibbles2.indexOf(type[1]));
-    nibbles.push(nibbles3.indexOf(type[2]));
-    nibbles.push(nibbles3.indexOf(type[3]));
-    if (type[4] !== '.') {
-      throw new Error('Wrong format');
-    }
-    nibbles.push(nibbles4.indexOf(type[5]));
-    nibbles.push(nibbles5.indexOf(type[6]));
-    if (type[7] !== '.') {
-      throw new Error('Wrong format');
-    }
-    nibbles.push(nibbles6.indexOf(type[8]));
-    nibbles.push(nibbles7.indexOf(type[9]));
-    nibbles.push(revision !== null && revision !== void 0 ? revision : 0);
-    nibbles.push(nibbles8.indexOf(type[10]));
-    if (type[11] !== '-') {
-      throw new Error('Wrong format');
-    }
-    var deviceProtocolIndex = type.length > 13 ? type.length - 1 : type.length;
-    for (var index = 12; index < deviceProtocolIndex; index++) {
-      nibbles.push(nibbles9.indexOf(type[index]));
-    }
-    if (deviceProtocolIndex < type.length) {
-      nibbles.push(nibbles11.indexOf(type[deviceProtocolIndex]));
-    }
-    var bytes = joinNibbles(nibbles);
-    var result = new Array(9).fill(0);
-    result[0] = 0;
-    for (var _index = 0; _index < bytes.length; _index++) {
-      result[_index + (bytes.length < 8 ? 1 : 0)] = bytes[_index];
-    }
-    return result;
-  };
-  var fromBytesMtx2 = function fromBytesMtx2(nibbles) {
-    var _nibbles1$nibbles$2, _nibbles2$nibbles$2;
-    if (nibbles.length < 14) {
-      throw new Error('The buffer is too small');
-    }
-    var type = ['MTX '];
-    var separator = nibbles[1] === 5 ? '-' : ' ';
-    type.push((_nibbles1$nibbles$2 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$2 !== void 0 ? _nibbles1$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-    type.push((_nibbles2$nibbles$2 = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$2 !== void 0 ? _nibbles2$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
-    type.push(separator);
-    for (var index = 2; index < nibbles.length; index++) {
-      if (nibbles[index] !== 0) {
-        var _nibbles10$nibbles$in;
-        type.push((_nibbles10$nibbles$in = nibbles10[nibbles[index]]) !== null && _nibbles10$nibbles$in !== void 0 ? _nibbles10$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
-      }
-    }
-    return {
-      type: type.join('')
-    };
-  };
-  var toBytesMtx2 = function toBytesMtx2(type) {
-    if (type.length < 3) {
-      throw new Error('Wrong format');
-    }
-    var nibbles = [];
-    nibbles.push(nibbles1.indexOf(type[0]));
-    nibbles.push(nibbles2.indexOf(type[1]));
-    for (var index = 3; index < type.length; index++) {
-      nibbles.push(nibbles10.indexOf(type[index]));
-    }
-    var bytes = joinNibbles(nibbles);
-    if (bytes.length === 8) {
-      return bytes;
-    }
-    if (bytes.length > 8) {
-      throw new Error('Wrong format');
-    }
-    var result = new Array(8).fill(0);
-    for (var _index2 = 0; _index2 < bytes.length; _index2++) {
-      result[_index2] = bytes[_index2];
-    }
-    return result;
-  };
-  var fromBytesM = function fromBytesM(nibbles) {
-    var _nibbles1$nibbles$3;
-    if (nibbles.length < 14) {
-      throw new Error('The buffer is too small');
-    }
-    var type = [];
-    type.push((_nibbles1$nibbles$3 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$3 !== void 0 ? _nibbles1$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
-    for (var index = 1; index < nibbles.length; index++) {
-      if (nibbles[index] !== 0) {
-        var _nibbles12$nibbles$in;
-        type.push((_nibbles12$nibbles$in = nibbles12[nibbles[index]]) !== null && _nibbles12$nibbles$in !== void 0 ? _nibbles12$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
-      }
-    }
-    return {
-      type: type.join('')
-    };
-  };
-  var toBytesM = function toBytesM(type) {
-    if (type.length < 1) {
-      throw new Error('Wrong format');
-    }
-    var nibbles = [];
-    nibbles.push(nibbles1.indexOf(type[0]));
-    for (var index = 1; index < type.length; index++) {
-      nibbles.push(nibbles12.indexOf(type[index]));
-    }
-    var bytes = joinNibbles(nibbles);
-    var result = new Array(8).fill(0);
-    for (var _index3 = 0; _index3 < bytes.length && _index3 < 8; _index3++) {
-      result[_index3] = bytes[_index3];
-    }
-    return result;
-  };
-  var fromBytes$15 = function fromBytes(bytes) {
-    if (bytes.length !== 9) {
-      throw new Error('The buffer is too small');
-    }
-    var result;
-    var reserve = [0x00, 0x05, 0x06, 0x07, 0x09, 0x7f, 0xef];
-    var position = reserve.indexOf(bytes[0]) !== -1 ? 2 : 0;
-    var nibbles = splitToNibbles(bytes.slice(0, 8));
-    var deviceTypeNibble = nibbles[position];
-    var deviceType = nibbles1[deviceTypeNibble];
-    if (deviceType === '1' || deviceType === '3') {
-      result = _objectSpread2(_objectSpread2({}, fromBytesMtx(nibbles.slice(position))), {}, {
-        descriptor: deviceType === '3' ? mtx3DeviceTypeDescriptorFromByte(bytes[8]) : _objectSpread2({
-          meterType: 'mtx1'
-        }, toObject(mtx1DeviceTypeDescriptorMask, bytes[8]))
-      });
-    } else {
-      result = deviceType === 'M' ? fromBytesM(nibbles) : fromBytesMtx2(nibbles);
-    }
-    return result;
-  };
-  var toBytes$15 = function toBytes(_ref, prefix) {
-    var type = _ref.type,
-      revision = _ref.revision,
-      descriptor = _ref.descriptor;
-    if (!type.startsWith('MTX ')) {
-      throw new Error('Wrong format');
-    }
-    var result;
-    var content = type.substring(4);
-    var deviceTypeSymbol = type[4];
-    if (deviceTypeSymbol === '1' || deviceTypeSymbol === '3') {
-      result = toBytesMtx(content, prefix, revision);
-    } else {
-      result = deviceTypeSymbol === 'M' ? toBytesM(content) : toBytesMtx2(content);
-    }
-    if (descriptor !== null && descriptor !== void 0 && descriptor.meterType) {
-      result[8] = descriptor.meterType === 'mtx1' ? fromObject(mtx1DeviceTypeDescriptorMask, descriptor) : mtx3DeviceTypeDescriptorToByte(descriptor);
-    } else {
-      result[8] = 0;
-    }
     return result;
   };
 
@@ -2187,12 +1919,6 @@ var logs = '';
     buffer.setUint8(specialDay.dayIndex);
     buffer.setUint8(specialDay.year);
   };
-  var getDeviceType$1 = function getDeviceType(buffer) {
-    return fromBytes$15(buffer.getBytes(9));
-  };
-  var setDeviceType = function setDeviceType(buffer, deviceType) {
-    buffer.setBytes(toBytes$15(deviceType));
-  };
   var getOperatorParameters$1 = function getOperatorParameters(buffer) {
     var value;
     var operatorParameters = {
@@ -2612,12 +2338,12 @@ var logs = '';
       bytes: [0x3e, 0x09, 0x03, 0x00, 0x03, 0x01, 0x0a, 0x00, 0x04, 0x01, 0x01]
     }
   };
-  var fromBytes$14 = function fromBytes(bytes) {
+  var fromBytes$15 = function fromBytes(bytes) {
     validateFixedCommandPayload(name$14, bytes, maxSize$15);
     var buffer = new BinaryBuffer(bytes, false);
     return getTimeCorrectionParameters(buffer);
   };
-  var toBytes$14 = function toBytes(parameters) {
+  var toBytes$15 = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$15, false);
     setTimeCorrectionParameters(buffer, parameters);
     return toBytes$1a(id$14, buffer.data);
@@ -2627,13 +2353,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$14,
     examples: examples$14,
-    fromBytes: fromBytes$14,
+    fromBytes: fromBytes$15,
     headerSize: headerSize$14,
     id: id$14,
     isLoraOnly: isLoraOnly$14,
     maxSize: maxSize$15,
     name: name$14,
-    toBytes: toBytes$14
+    toBytes: toBytes$15
   });
 
   var id$13 = getCriticalEvent$1;
@@ -2666,7 +2392,7 @@ var logs = '';
       bytes: [0x41, 0x09, 0x01, 0x01, 0x17, 0x03, 0x0c, 0x0a, 0x16, 0x21, 0x07]
     }
   };
-  var fromBytes$13 = function fromBytes(bytes) {
+  var fromBytes$14 = function fromBytes(bytes) {
     validateFixedCommandPayload(name$13, bytes, maxSize$14);
     var _bytes = _slicedToArray(bytes, 9),
       event = _bytes[0],
@@ -2693,7 +2419,7 @@ var logs = '';
       count: count
     };
   };
-  var toBytes$13 = function toBytes(parameters) {
+  var toBytes$14 = function toBytes(parameters) {
     var event = parameters.event,
       index = parameters.index,
       date = parameters.date,
@@ -2705,13 +2431,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$13,
     examples: examples$13,
-    fromBytes: fromBytes$13,
+    fromBytes: fromBytes$14,
     headerSize: headerSize$13,
     id: id$13,
     isLoraOnly: isLoraOnly$13,
     maxSize: maxSize$14,
     name: name$13,
-    toBytes: toBytes$13
+    toBytes: toBytes$14
   });
 
   var id$12 = getCurrentStatusMeter$1;
@@ -2788,7 +2514,7 @@ var logs = '';
       bytes: [0x39, 0x1f, 0x00, 0x01, 0x22, 0x50, 0x00, 0x00, 0x87, 0x07, 0x00, 0x0e, 0x99, 0x36, 0x00, 0x00, 0x01, 0x54, 0x00, 0x00, 0x04, 0xd2, 0x00, 0x00, 0x01, 0xb4, 0x61, 0x85, 0x10, 0x01, 0x01, 0x03, 0x01]
     }
   };
-  var fromBytes$12 = function fromBytes(bytes) {
+  var fromBytes$13 = function fromBytes(bytes) {
     validateFixedCommandPayload(name$12, bytes, maxSize$13);
     var buffer = new BinaryBuffer(bytes, false);
     var operatingSeconds = buffer.getUint32();
@@ -2821,7 +2547,7 @@ var logs = '';
       isSummerTime: isSummerTime
     };
   };
-  var toBytes$12 = function toBytes(parameters) {
+  var toBytes$13 = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$13, false);
     var statusEventValue = fromObject(eventStatusMask, parameters.statusEvent);
     buffer.setUint32(parameters.operatingSeconds);
@@ -2844,13 +2570,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$12,
     examples: examples$12,
-    fromBytes: fromBytes$12,
+    fromBytes: fromBytes$13,
     headerSize: headerSize$12,
     id: id$12,
     isLoraOnly: isLoraOnly$12,
     maxSize: maxSize$13,
     name: name$12,
-    toBytes: toBytes$12
+    toBytes: toBytes$13
   });
 
   var id$11 = getCurrentValues$1;
@@ -2880,7 +2606,7 @@ var logs = '';
       bytes: [0x0d, 0x20, 0x00, 0x23, 0xd8, 0xb2, 0x00, 0x3d, 0xfa, 0x53, 0x00, 0x04, 0x9e, 0x89, 0x00, 0x01, 0xa1, 0x25, 0x01, 0xf4, 0x00, 0x04, 0xa6, 0x8b, 0x00, 0x01, 0x9f, 0x28, 0x00, 0x01, 0xa3, 0x1c, 0xfe, 0x0c]
     }
   };
-  var fromBytes$11 = function fromBytes(bytes) {
+  var fromBytes$12 = function fromBytes(bytes) {
     validateFixedCommandPayload(name$11, bytes, maxSize$12);
     var buffer = new BinaryBuffer(bytes, false);
     return {
@@ -2895,7 +2621,7 @@ var logs = '';
       pfB: buffer.getInt16() / 1000
     };
   };
-  var toBytes$11 = function toBytes(parameters) {
+  var toBytes$12 = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$12, false);
     buffer.setInt32(parameters.powerA);
     buffer.setInt32(parameters.iaRms);
@@ -2934,13 +2660,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$11,
     examples: examples$11,
-    fromBytes: fromBytes$11,
+    fromBytes: fromBytes$12,
     headerSize: headerSize$11,
     id: id$11,
     isLoraOnly: isLoraOnly$11,
     maxSize: maxSize$12,
     name: name$11,
-    toBytes: toBytes$11,
+    toBytes: toBytes$12,
     toJson: toJson$b
   });
 
@@ -2970,12 +2696,12 @@ var logs = '';
       bytes: [0x07, 0x08, 0x00, 0x37, 0x1f, 0x12, 0x02, 0x13, 0x02, 0x18]
     }
   };
-  var fromBytes$10 = function fromBytes(bytes) {
+  var fromBytes$11 = function fromBytes(bytes) {
     validateFixedCommandPayload(name$10, bytes, maxSize$11);
     var buffer = new BinaryBuffer(bytes, false);
     return getDateTime$1(buffer);
   };
-  var toBytes$10 = function toBytes(parameters) {
+  var toBytes$11 = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$11, false);
     setDateTime$1(buffer, parameters);
     return toBytes$1a(id$10, buffer.data);
@@ -2985,13 +2711,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$10,
     examples: examples$10,
-    fromBytes: fromBytes$10,
+    fromBytes: fromBytes$11,
     headerSize: headerSize$10,
     id: id$10,
     isLoraOnly: isLoraOnly$10,
     maxSize: maxSize$11,
     name: name$10,
-    toBytes: toBytes$10
+    toBytes: toBytes$11
   });
 
   var getObisByEnergy = (function (energy) {
@@ -3043,7 +2769,7 @@ var logs = '';
       bytes: [0x16, 0x10, 0x18, 0x03, 0x16, 0xd2, 0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x09, 0x1d, 0x00, 0x20, 0xbd, 0x57]
     }
   };
-  var fromBytes$ = function fromBytes(bytes) {
+  var fromBytes$10 = function fromBytes(bytes) {
     var buffer = new BinaryBuffer(bytes, false);
     var parameters;
     if (bytes.length === COMMAND_SIZE$5) {
@@ -3058,7 +2784,7 @@ var logs = '';
     }
     return parameters;
   };
-  var toBytes$ = function toBytes(parameters) {
+  var toBytes$10 = function toBytes(parameters) {
     var size = COMMAND_SIZE$5;
     if (parameters !== null && parameters !== void 0 && parameters.energyType) {
       var energiesNumber = parameters.energies.filter(function (energy) {
@@ -3095,13 +2821,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$,
     examples: examples$,
-    fromBytes: fromBytes$,
+    fromBytes: fromBytes$10,
     headerSize: headerSize$,
     id: id$,
     isLoraOnly: isLoraOnly$,
     maxSize: maxSize$10,
     name: name$,
-    toBytes: toBytes$,
+    toBytes: toBytes$10,
     toJson: toJson$a
   });
 
@@ -3148,7 +2874,7 @@ var logs = '';
       bytes: [0x4f, 0x10, 0x18, 0x03, 0x16, 0xd1, 0x02, 0x66, 0xf2, 0xae, 0x00, 0x00, 0x09, 0x1d, 0x00, 0x20, 0xbd, 0x57]
     }
   };
-  var fromBytes$_ = function fromBytes(bytes) {
+  var fromBytes$ = function fromBytes(bytes) {
     var buffer = new BinaryBuffer(bytes, false);
     var parameters;
     if (bytes.length === COMMAND_SIZE$4) {
@@ -3163,7 +2889,7 @@ var logs = '';
     }
     return parameters;
   };
-  var toBytes$_ = function toBytes(parameters) {
+  var toBytes$ = function toBytes(parameters) {
     var size = COMMAND_SIZE$4;
     if (parameters !== null && parameters !== void 0 && parameters.energyType) {
       var energiesNumber = parameters.energies.filter(function (energy) {
@@ -3200,13 +2926,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$_,
     examples: examples$_,
-    fromBytes: fromBytes$_,
+    fromBytes: fromBytes$,
     headerSize: headerSize$_,
     id: id$_,
     isLoraOnly: isLoraOnly$_,
     maxSize: maxSize$,
     name: name$_,
-    toBytes: toBytes$_,
+    toBytes: toBytes$,
     toJson: toJson$9
   });
 
@@ -3548,14 +3274,14 @@ var logs = '';
       bytes: [0x78, 0x0c, 0x2a, 0x43, 0x11, 0x22, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x20, 0x00]
     }
   };
-  var fromBytes$Z = function fromBytes(bytes) {
+  var fromBytes$_ = function fromBytes(bytes) {
     var buffer = new BinaryBuffer(bytes, false);
     return {
       date: getDate(buffer),
       energies: getTariffsEnergies(buffer)
     };
   };
-  var toBytes$Z = function toBytes(parameters) {
+  var toBytes$_ = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$_, false);
     setDate(buffer, parameters.date);
     setTariffsEnergies(buffer, parameters.energies);
@@ -3576,13 +3302,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$Z,
     examples: examples$Z,
-    fromBytes: fromBytes$Z,
+    fromBytes: fromBytes$_,
     headerSize: headerSize$Z,
     id: id$Z,
     isLoraOnly: isLoraOnly$Z,
     maxSize: maxSize$_,
     name: name$Z,
-    toBytes: toBytes$Z,
+    toBytes: toBytes$_,
     toJson: toJson$8
   });
 
@@ -3626,12 +3352,12 @@ var logs = '';
       bytes: [0x31, 0x1b, 0x17, 0x03, 0x0c, 0x01, 0x00, 0x00, 0x00, 0x01, 0xc8, 0x03, 0x0c, 0x00, 0x00, 0x25, 0x02, 0x07, 0x1e, 0x00, 0x01, 0x32, 0xed, 0x0c, 0x3b, 0x00, 0x06, 0x09, 0x77]
     }
   };
-  var fromBytes$Y = function fromBytes(bytes) {
+  var fromBytes$Z = function fromBytes(bytes) {
     validateFixedCommandPayload(name$Y, bytes, maxSize$Z);
     var buffer = new BinaryBuffer(bytes, false);
     return getDayMaxDemandResponse(buffer);
   };
-  var toBytes$Y = function toBytes(parameters) {
+  var toBytes$Z = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$Z, false);
     setDayMaxDemandResponse(buffer, parameters);
     return toBytes$1a(id$Y, buffer.getBytesToOffset());
@@ -3641,13 +3367,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$Y,
     examples: examples$Y,
-    fromBytes: fromBytes$Y,
+    fromBytes: fromBytes$Z,
     headerSize: headerSize$Y,
     id: id$Y,
     isLoraOnly: isLoraOnly$Y,
     maxSize: maxSize$Z,
     name: name$Y,
-    toBytes: toBytes$Y
+    toBytes: toBytes$Z
   });
 
   var id$X = getDayMaxDemandExport$1;
@@ -3690,12 +3416,12 @@ var logs = '';
       bytes: [0x58, 0x1b, 0x17, 0x03, 0x0c, 0x01, 0x00, 0x00, 0x00, 0x01, 0xc8, 0x03, 0x0c, 0x00, 0x00, 0x25, 0x02, 0x07, 0x1e, 0x00, 0x01, 0x32, 0xed, 0x0c, 0x3b, 0x00, 0x06, 0x09, 0x77]
     }
   };
-  var fromBytes$X = function fromBytes(bytes) {
+  var fromBytes$Y = function fromBytes(bytes) {
     validateFixedCommandPayload(name$X, bytes, maxSize$Y);
     var buffer = new BinaryBuffer(bytes, false);
     return getDayMaxDemandResponse(buffer);
   };
-  var toBytes$X = function toBytes(parameters) {
+  var toBytes$Y = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$Y, false);
     setDayMaxDemandResponse(buffer, parameters);
     return toBytes$1a(id$X, buffer.getBytesToOffset());
@@ -3705,13 +3431,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$X,
     examples: examples$X,
-    fromBytes: fromBytes$X,
+    fromBytes: fromBytes$Y,
     headerSize: headerSize$X,
     id: id$X,
     isLoraOnly: isLoraOnly$X,
     maxSize: maxSize$Y,
     name: name$X,
-    toBytes: toBytes$X
+    toBytes: toBytes$Y
   });
 
   var id$W = getDayMaxDemandPrevious$1;
@@ -3754,12 +3480,12 @@ var logs = '';
       bytes: [0x4a, 0x1b, 0x17, 0x03, 0x0c, 0x01, 0x00, 0x00, 0x00, 0x01, 0xc8, 0x03, 0x0c, 0x00, 0x00, 0x25, 0x02, 0x07, 0x1e, 0x00, 0x01, 0x32, 0xed, 0x0c, 0x3b, 0x00, 0x06, 0x09, 0x77]
     }
   };
-  var fromBytes$W = function fromBytes(bytes) {
+  var fromBytes$X = function fromBytes(bytes) {
     validateFixedCommandPayload(name$W, bytes, maxSize$X);
     var buffer = new BinaryBuffer(bytes, false);
     return getDayMaxDemandResponse(buffer);
   };
-  var toBytes$W = function toBytes(parameters) {
+  var toBytes$X = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$X, false);
     setDayMaxDemandResponse(buffer, parameters);
     return toBytes$1a(id$W, buffer.getBytesToOffset());
@@ -3769,13 +3495,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$W,
     examples: examples$W,
-    fromBytes: fromBytes$W,
+    fromBytes: fromBytes$X,
     headerSize: headerSize$W,
     id: id$W,
     isLoraOnly: isLoraOnly$W,
     maxSize: maxSize$X,
     name: name$W,
-    toBytes: toBytes$W
+    toBytes: toBytes$X
   });
 
   var DATE_SIZE$1 = 2;
@@ -3847,14 +3573,14 @@ var logs = '';
       bytes: [0x79, 0x10, 0x2a, 0x43, 0x11, 0x44, 0x02, 0x03, 0x00, 0x00, 0x10, 0x00, 0x04, 0x05, 0x00, 0x00, 0x20, 0x00]
     }
   };
-  var fromBytes$V = function fromBytes(bytes) {
+  var fromBytes$W = function fromBytes(bytes) {
     var buffer = new BinaryBuffer(bytes, false);
     return {
       date: getDate(buffer),
       tariffs: getTariffsPowerMax(buffer)
     };
   };
-  var toBytes$V = function toBytes(parameters) {
+  var toBytes$W = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$W, false);
     setDate(buffer, parameters.date);
     setTariffsPowerMax(buffer, parameters.tariffs);
@@ -3875,13 +3601,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$V,
     examples: examples$V,
-    fromBytes: fromBytes$V,
+    fromBytes: fromBytes$W,
     headerSize: headerSize$V,
     id: id$V,
     isLoraOnly: isLoraOnly$V,
     maxSize: maxSize$W,
     name: name$V,
-    toBytes: toBytes$V,
+    toBytes: toBytes$W,
     toJson: toJson$7
   });
 
@@ -3965,14 +3691,14 @@ var logs = '';
       bytes: [0x3b, 0x05, 0x10, 0x1d, 0x22, 0x2f, 0xff]
     }
   };
-  var fromBytes$U = function fromBytes(bytes) {
+  var fromBytes$V = function fromBytes(bytes) {
     var finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE);
     var cleanData = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
     return {
       periods: _toConsumableArray(cleanData).map(getDayProfileFromByte)
     };
   };
-  var toBytes$U = function toBytes(parameters) {
+  var toBytes$V = function toBytes(parameters) {
     var hasPeriodsFinalByte = parameters.periods.length < MAX_PERIODS_NUMBER;
     var size = parameters.periods.length + +hasPeriodsFinalByte;
     var buffer = new BinaryBuffer(size, false);
@@ -3989,13 +3715,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$U,
     examples: examples$U,
-    fromBytes: fromBytes$U,
+    fromBytes: fromBytes$V,
     headerSize: headerSize$U,
     id: id$U,
     isLoraOnly: isLoraOnly$U,
     maxSize: maxSize$V,
     name: name$U,
-    toBytes: toBytes$U
+    toBytes: toBytes$V
   });
 
   var ADDITIONAL_HOUR = 25;
@@ -4270,7 +3996,7 @@ var logs = '';
       bytes: [0x76, 0x15, 0x31, 0x5b, 0x40, 0x00, 0x90, 0x07, 0x0a, 0x09, 0x47, 0x09, 0x4d, 0x09, 0x44, 0x09, 0x45, 0x09, 0x46, 0x09, 0x3d, 0x03, 0xff]
     }
   };
-  var fromBytes$T = function fromBytes(bytes) {
+  var fromBytes$U = function fromBytes(bytes) {
     if (!bytes || bytes.length < maxSize$U) {
       throw new Error('Invalid uplink GetDemand byte length.');
     }
@@ -4286,7 +4012,7 @@ var logs = '';
     parameters.demands = isEnergiesDemand ? energyFromBinary(demandsBytes, parameters.firstIndex, parameters.period) : voltageFromBinary(demandsBytes, parameters.firstIndex, parameters.period);
     return parameters;
   };
-  var toBytes$T = function toBytes(parameters) {
+  var toBytes$U = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$U + parameters.count * 2, false);
     setDemand(buffer, parameters);
     if (parameters.demandType === A_PLUS || parameters.demandType === A_MINUS$1) {
@@ -4305,13 +4031,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$T,
     examples: examples$T,
-    fromBytes: fromBytes$T,
+    fromBytes: fromBytes$U,
     headerSize: headerSize$T,
     id: id$T,
     isLoraOnly: isLoraOnly$T,
     maxSize: maxSize$T,
     name: name$T,
-    toBytes: toBytes$T
+    toBytes: toBytes$U
   });
 
   var id$S = getDemandParameters$2;
@@ -4334,12 +4060,12 @@ var logs = '';
       bytes: [0x75, 0x04, 0x00, 0x14, 0xa0, 0x00]
     }
   };
-  var fromBytes$S = function fromBytes(bytes) {
+  var fromBytes$T = function fromBytes(bytes) {
     validateFixedCommandPayload(name$S, bytes, maxSize$S);
     var buffer = new BinaryBuffer(bytes, false);
     return getDemandParameters$1(buffer);
   };
-  var toBytes$S = function toBytes(parameters) {
+  var toBytes$T = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$S, false);
     setDemandParameters$1(buffer, parameters);
     return toBytes$1a(id$S, buffer.data);
@@ -4349,13 +4075,13 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$S,
     examples: examples$S,
-    fromBytes: fromBytes$S,
+    fromBytes: fromBytes$T,
     headerSize: headerSize$S,
     id: id$S,
     isLoraOnly: isLoraOnly$S,
     maxSize: maxSize$S,
     name: name$S,
-    toBytes: toBytes$S
+    toBytes: toBytes$T
   });
 
   var id$R = getDeviceId$2;
@@ -4380,12 +4106,12 @@ var logs = '';
       bytes: [0x05, 0x08, 0x00, 0x1a, 0x79, 0x17, 0x14, 0x1b, 0x1d, 0x6a]
     }
   };
-  var fromBytes$R = function fromBytes(bytes) {
+  var fromBytes$S = function fromBytes(bytes) {
     validateFixedCommandPayload(name$R, bytes, maxSize$R);
     var buffer = new BinaryBuffer(bytes, false);
     return getDeviceId$1(buffer);
   };
-  var toBytes$R = function toBytes(parameters) {
+  var toBytes$S = function toBytes(parameters) {
     var buffer = new BinaryBuffer(maxSize$R, false);
     setDeviceId(buffer, parameters);
     return toBytes$1a(id$R, buffer.data);
@@ -4395,17 +4121,303 @@ var logs = '';
     __proto__: null,
     accessLevel: accessLevel$R,
     examples: examples$R,
-    fromBytes: fromBytes$R,
+    fromBytes: fromBytes$S,
     headerSize: headerSize$R,
     id: id$R,
     isLoraOnly: isLoraOnly$R,
     maxSize: maxSize$R,
     name: name$R,
-    toBytes: toBytes$R
+    toBytes: toBytes$S
   });
 
-  var id$Q = getDeviceType$2;
-  var name$Q = commandNames$1[getDeviceType$2];
+  var DEVICE_TYPE_SIZE = 8;
+  var DEVICE_TYPE_INVALID_CHAR = 'x';
+  var nibbles1 = ['.', '1', '3', 'R', 'M'];
+  var nibbles2 = ['.', 'A', 'G', 'R', 'T', 'D'];
+  var nibbles3 = ['.', '0', '1', '2', '3', '4', '5'];
+  var nibbles4 = ['.', 'A', 'B', 'C', 'D', 'E', 'F'];
+  var nibbles5 = ['.', 'A', 'B', 'C', 'D', 'E', 'F', 'H', 'K', 'G'];
+  var nibbles6 = ['.', '1', '2', '3', '4'];
+  var nibbles7 = ['.', 'L', 'M', 'Z', 'K'];
+  var nibbles8 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  var nibbles9 = ['.', 'D', 'B', 'C', 'E', 'P', 'R', 'O', 'L', 'F', 'S', 'M', 'Y', 'G', 'N', 'U'];
+  var nibbles10 = ['.', '0', '1', '2', '3', '4', '5', '6', 'P', 'R', 'L', 'E', 'G', '-', '/'];
+  var nibbles11 = ['.', 'H', 'A', 'T', '0', '0', '0', '0', '0', '1', '2', '3', '4', '0', '0', '0'];
+  var nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
+  var mtx1DeviceTypeDescriptorMask = {
+    typeMeterG: 1 << 0,
+    downgradedToA: 1 << 4,
+    supportMeterInfo: 1 << 6
+  };
+  var mtx3DeviceTypeDescriptorMask = {
+    typeMeterTransformer: 1 << 0,
+    downgradedToR: 1 << 3,
+    typeMeterG: 1 << 4,
+    supportMeterInfo: 1 << 6,
+    reactiveByQuadrants: 1 << 7
+  };
+  var mtx1DeviceTypeDescriptorFromByte = function mtx1DeviceTypeDescriptorFromByte(_byte) {
+    return _objectSpread2({
+      meterType: 'mtx1'
+    }, toObject(mtx1DeviceTypeDescriptorMask, _byte));
+  };
+  var mtx1DeviceTypeDescriptorToByte = function mtx1DeviceTypeDescriptorToByte(descriptor) {
+    return fromObject(mtx1DeviceTypeDescriptorMask, descriptor);
+  };
+  var mtx3DeviceTypeDescriptorFromByte = function mtx3DeviceTypeDescriptorFromByte(_byte2) {
+    var descriptor = toObject(mtx3DeviceTypeDescriptorMask, _byte2);
+    return _objectSpread2(_objectSpread2({
+      meterType: 'mtx3'
+    }, descriptor), {}, {
+      typeMeterG: !descriptor.typeMeterG
+    });
+  };
+  var mtx3DeviceTypeDescriptorToByte = function mtx3DeviceTypeDescriptorToByte(descriptor) {
+    return fromObject(mtx3DeviceTypeDescriptorMask, _objectSpread2(_objectSpread2({}, descriptor), {}, {
+      typeMeterG: !descriptor.typeMeterG
+    }));
+  };
+  var splitByte = function splitByte(_byte3) {
+    return [_byte3 >> 4, _byte3 & 0x0F];
+  };
+  var splitToNibbles = function splitToNibbles(data) {
+    var result = new Array(data.length * 2).fill(0);
+    data.forEach(function (_byte4, index) {
+      var _splitByte = splitByte(_byte4),
+        _splitByte2 = _slicedToArray(_splitByte, 2),
+        high = _splitByte2[0],
+        low = _splitByte2[1];
+      result[index * 2] = high;
+      result[index * 2 + 1] = low;
+    });
+    return result;
+  };
+  var joinNibbles = function joinNibbles(nibbles) {
+    var hex = [];
+    nibbles.forEach(function (nibble) {
+      return hex.push(nibble.toString(16));
+    });
+    if (nibbles.length & 1) {
+      hex.push('0');
+    }
+    return getBytesFromHex(hex.join(''));
+  };
+  var fromBytesMtx = function fromBytesMtx(nibbles) {
+    var _nibbles1$nibbles$, _nibbles2$nibbles$, _nibbles3$nibbles$, _nibbles3$nibbles$2, _nibbles4$nibbles$, _nibbles5$nibbles$, _nibbles6$nibbles$, _nibbles7$nibbles$, _nibbles8$nibbles$;
+    if (nibbles.length !== 14 && nibbles.length !== 16) {
+      throw new Error('Device type bytes wrong size');
+    }
+    var type = ['MTX '];
+    type.push((_nibbles1$nibbles$ = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$ !== void 0 ? _nibbles1$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles2$nibbles$ = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$ !== void 0 ? _nibbles2$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles3$nibbles$ = nibbles3[nibbles[2]]) !== null && _nibbles3$nibbles$ !== void 0 ? _nibbles3$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles3$nibbles$2 = nibbles3[nibbles[3]]) !== null && _nibbles3$nibbles$2 !== void 0 ? _nibbles3$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+    type.push('.');
+    type.push((_nibbles4$nibbles$ = nibbles4[nibbles[4]]) !== null && _nibbles4$nibbles$ !== void 0 ? _nibbles4$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles5$nibbles$ = nibbles5[nibbles[5]]) !== null && _nibbles5$nibbles$ !== void 0 ? _nibbles5$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push('.');
+    type.push((_nibbles6$nibbles$ = nibbles6[nibbles[6]]) !== null && _nibbles6$nibbles$ !== void 0 ? _nibbles6$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles7$nibbles$ = nibbles7[nibbles[7]]) !== null && _nibbles7$nibbles$ !== void 0 ? _nibbles7$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    var revision = nibbles[8];
+    type.push((_nibbles8$nibbles$ = nibbles8[nibbles[9]]) !== null && _nibbles8$nibbles$ !== void 0 ? _nibbles8$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+    type.push('-');
+    var deviceProtocolIndex;
+    if (nibbles.length < 14 || nibbles[12] === 0 && nibbles[13] === 0) {
+      var _nibbles9$nibbles$;
+      type.push((_nibbles9$nibbles$ = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$ !== void 0 ? _nibbles9$nibbles$ : DEVICE_TYPE_INVALID_CHAR);
+      deviceProtocolIndex = 11;
+    } else if (nibbles[13] === 0) {
+      var _nibbles9$nibbles$2, _nibbles9$nibbles$3;
+      type.push((_nibbles9$nibbles$2 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$2 !== void 0 ? _nibbles9$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$3 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$3 !== void 0 ? _nibbles9$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
+      deviceProtocolIndex = 12;
+    } else {
+      var _nibbles9$nibbles$4, _nibbles9$nibbles$5, _nibbles9$nibbles$6;
+      type.push((_nibbles9$nibbles$4 = nibbles9[nibbles[10]]) !== null && _nibbles9$nibbles$4 !== void 0 ? _nibbles9$nibbles$4 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$5 = nibbles9[nibbles[11]]) !== null && _nibbles9$nibbles$5 !== void 0 ? _nibbles9$nibbles$5 : DEVICE_TYPE_INVALID_CHAR);
+      type.push((_nibbles9$nibbles$6 = nibbles9[nibbles[12]]) !== null && _nibbles9$nibbles$6 !== void 0 ? _nibbles9$nibbles$6 : DEVICE_TYPE_INVALID_CHAR);
+      deviceProtocolIndex = 13;
+    }
+    var deviceProtocolNibble = nibbles[deviceProtocolIndex];
+    if (deviceProtocolNibble && deviceProtocolNibble !== 0) {
+      var _nibbles11$deviceProt;
+      type.push((_nibbles11$deviceProt = nibbles11[deviceProtocolNibble]) !== null && _nibbles11$deviceProt !== void 0 ? _nibbles11$deviceProt : DEVICE_TYPE_INVALID_CHAR);
+    }
+    return {
+      type: type.join(''),
+      revision: revision
+    };
+  };
+  var toBytesMtx = function toBytesMtx(type, prefix, revision) {
+    var nibbles = [];
+    if (type.length < 11) {
+      throw new Error('Wrong format');
+    }
+    nibbles.push(nibbles1.indexOf(type[0]));
+    nibbles.push(nibbles2.indexOf(type[1]));
+    nibbles.push(nibbles3.indexOf(type[2]));
+    nibbles.push(nibbles3.indexOf(type[3]));
+    if (type[4] !== '.') {
+      throw new Error('Wrong format');
+    }
+    nibbles.push(nibbles4.indexOf(type[5]));
+    nibbles.push(nibbles5.indexOf(type[6]));
+    if (type[7] !== '.') {
+      throw new Error('Wrong format');
+    }
+    nibbles.push(nibbles6.indexOf(type[8]));
+    nibbles.push(nibbles7.indexOf(type[9]));
+    nibbles.push(revision !== null && revision !== void 0 ? revision : 0);
+    nibbles.push(nibbles8.indexOf(type[10]));
+    if (type[11] !== '-') {
+      throw new Error('Wrong format');
+    }
+    var deviceProtocolIndex = type.length > 13 ? type.length - 1 : type.length;
+    for (var index = 12; index < deviceProtocolIndex; index++) {
+      nibbles.push(nibbles9.indexOf(type[index]));
+    }
+    if (deviceProtocolIndex < type.length) {
+      nibbles.push(nibbles11.indexOf(type[deviceProtocolIndex]));
+    }
+    var bytes = joinNibbles(nibbles);
+    if (bytes.length >= DEVICE_TYPE_SIZE) {
+      return bytes;
+    }
+    var padLength = DEVICE_TYPE_SIZE - bytes.length;
+    return [prefix !== null && prefix !== void 0 ? prefix : 0].concat(_toConsumableArray(bytes), _toConsumableArray(new Array(padLength).fill(0)));
+  };
+  var fromBytesMtx2 = function fromBytesMtx2(nibbles) {
+    var _nibbles1$nibbles$2, _nibbles2$nibbles$2;
+    if (nibbles.length < 14) {
+      throw new Error('The buffer is too small');
+    }
+    var type = ['MTX '];
+    var separator = nibbles[1] === 5 ? '-' : ' ';
+    type.push((_nibbles1$nibbles$2 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$2 !== void 0 ? _nibbles1$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+    type.push((_nibbles2$nibbles$2 = nibbles2[nibbles[1]]) !== null && _nibbles2$nibbles$2 !== void 0 ? _nibbles2$nibbles$2 : DEVICE_TYPE_INVALID_CHAR);
+    type.push(separator);
+    for (var index = 2; index < nibbles.length; index++) {
+      if (nibbles[index] !== 0) {
+        var _nibbles10$nibbles$in;
+        type.push((_nibbles10$nibbles$in = nibbles10[nibbles[index]]) !== null && _nibbles10$nibbles$in !== void 0 ? _nibbles10$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
+      }
+    }
+    return {
+      type: type.join('')
+    };
+  };
+  var toBytesMtx2 = function toBytesMtx2(type) {
+    if (type.length < 3) {
+      throw new Error('Wrong format');
+    }
+    var nibbles = [];
+    nibbles.push(nibbles1.indexOf(type[0]));
+    nibbles.push(nibbles2.indexOf(type[1]));
+    for (var index = 3; index < type.length; index++) {
+      nibbles.push(nibbles10.indexOf(type[index]));
+    }
+    var bytes = joinNibbles(nibbles);
+    if (bytes.length === 8) {
+      return bytes;
+    }
+    if (bytes.length > 8) {
+      throw new Error('Wrong format');
+    }
+    var result = new Array(8).fill(0);
+    for (var _index = 0; _index < bytes.length; _index++) {
+      result[_index] = bytes[_index];
+    }
+    return result;
+  };
+  var fromBytesM = function fromBytesM(nibbles) {
+    var _nibbles1$nibbles$3;
+    if (nibbles.length < 14) {
+      throw new Error('The buffer is too small');
+    }
+    var type = [];
+    type.push((_nibbles1$nibbles$3 = nibbles1[nibbles[0]]) !== null && _nibbles1$nibbles$3 !== void 0 ? _nibbles1$nibbles$3 : DEVICE_TYPE_INVALID_CHAR);
+    for (var index = 1; index < nibbles.length; index++) {
+      if (nibbles[index] !== 0) {
+        var _nibbles12$nibbles$in;
+        type.push((_nibbles12$nibbles$in = nibbles12[nibbles[index]]) !== null && _nibbles12$nibbles$in !== void 0 ? _nibbles12$nibbles$in : DEVICE_TYPE_INVALID_CHAR);
+      }
+    }
+    return {
+      type: type.join('')
+    };
+  };
+  var toBytesM = function toBytesM(type) {
+    if (type.length < 1) {
+      throw new Error('Wrong format');
+    }
+    var nibbles = [];
+    nibbles.push(nibbles1.indexOf(type[0]));
+    for (var index = 1; index < type.length; index++) {
+      nibbles.push(nibbles12.indexOf(type[index]));
+    }
+    var bytes = joinNibbles(nibbles);
+    var result = new Array(8).fill(0);
+    for (var _index2 = 0; _index2 < bytes.length && _index2 < 8; _index2++) {
+      result[_index2] = bytes[_index2];
+    }
+    return result;
+  };
+  var fromBytes$R = function fromBytes(bytes) {
+    if (bytes.length < DEVICE_TYPE_SIZE) {
+      throw new Error('The buffer is too small');
+    }
+    var result;
+    var reserve = [0x00, 0x05, 0x06, 0x07, 0x09, 0x7f, 0xef];
+    var reserveIndex = reserve.indexOf(bytes[0]);
+    var manufacturingFlag = reserveIndex !== -1 ? bytes[0] : undefined;
+    var position = reserveIndex !== -1 ? 2 : 0;
+    var nibbles = splitToNibbles(bytes.slice(0, 8));
+    var deviceTypeNibble = nibbles[position];
+    var deviceType = nibbles1[deviceTypeNibble];
+    if (deviceType === '1' || deviceType === '3') {
+      var descriptor;
+      if (bytes.length > DEVICE_TYPE_SIZE) {
+        descriptor = deviceType === '3' ? mtx3DeviceTypeDescriptorFromByte(bytes[8]) : mtx1DeviceTypeDescriptorFromByte(bytes[8]);
+      }
+      result = _objectSpread2(_objectSpread2({}, fromBytesMtx(nibbles.slice(position))), descriptor != null && {
+        descriptor: descriptor
+      });
+    } else {
+      result = deviceType === 'M' ? fromBytesM(nibbles) : fromBytesMtx2(nibbles);
+    }
+    return _objectSpread2(_objectSpread2({}, result), manufacturingFlag > 0 && {
+      manufacturingFlag: manufacturingFlag
+    });
+  };
+  var toBytes$R = function toBytes(_ref) {
+    var type = _ref.type,
+      revision = _ref.revision,
+      descriptor = _ref.descriptor,
+      manufacturingFlag = _ref.manufacturingFlag;
+    if (!type.startsWith('MTX ')) {
+      throw new Error('Wrong format');
+    }
+    var result;
+    var content = type.substring(4);
+    var deviceTypeSymbol = type[4];
+    if (deviceTypeSymbol === '1' || deviceTypeSymbol === '3') {
+      result = toBytesMtx(content, manufacturingFlag, revision);
+    } else {
+      result = deviceTypeSymbol === 'M' ? toBytesM(content) : toBytesMtx2(content);
+    }
+    if (descriptor == null) {
+      return result.slice(0, 8);
+    }
+    if (descriptor !== null && descriptor !== void 0 && descriptor.meterType) {
+      result[8] = descriptor.meterType === 'mtx1' ? mtx1DeviceTypeDescriptorToByte(descriptor) : mtx3DeviceTypeDescriptorToByte(descriptor);
+    } else {
+      result[8] = 0;
+    }
+    return result;
+  };
+
+  var id$Q = getDeviceType$1;
+  var name$Q = commandNames$1[getDeviceType$1];
   var headerSize$Q = 2;
   var accessLevel$Q = READ_ONLY;
   var maxSize$Q = 9;
@@ -4450,13 +4462,10 @@ var logs = '';
   };
   var fromBytes$Q = function fromBytes(bytes) {
     validateFixedCommandPayload(name$Q, bytes, maxSize$Q);
-    var buffer = new BinaryBuffer(bytes, false);
-    return getDeviceType$1(buffer);
+    return fromBytes$R(bytes);
   };
   var toBytes$Q = function toBytes(parameters) {
-    var buffer = new BinaryBuffer(maxSize$Q, false);
-    setDeviceType(buffer, parameters);
-    return toBytes$1a(id$Q, buffer.data);
+    return toBytes$1a(id$Q, toBytes$R(parameters));
   };
 
   var getDeviceType = /*#__PURE__*/Object.freeze({
