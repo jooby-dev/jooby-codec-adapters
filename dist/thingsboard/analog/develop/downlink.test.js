@@ -3871,31 +3871,22 @@ var logs = '';
   var name$2 = commandNames[usWaterMeterCommand$1];
   var headerSize$2 = 3;
   var examples$2 = {
-    'request for current values': {
+    'request with getInfo command': {
       id: id$2,
       headerSize: headerSize$2,
       parameters: {
-        length: 3,
-        data: [0x21, 0x02]
+        data: [0x03, 0x21, 0x01]
       },
-      bytes: [0x1f, 0x07, 0x03, 0x03, 0x21, 0x02]
+      bytes: [0x1f, 0x07, 0x03, 0x03, 0x21, 0x01]
     }
   };
   var fromBytes$2 = function fromBytes(bytes) {
-    var buffer = new BinaryBuffer(bytes, false);
-    var length = buffer.getUint8();
     return {
-      length: length,
-      data: bytes.slice(1)
+      data: bytes
     };
   };
   var toBytes$2 = function toBytes(parameters) {
-    var data = parameters.data,
-      length = parameters.length;
-    var buffer = new BinaryBuffer(length, false);
-    buffer.setUint8(length);
-    buffer.setBytes(data);
-    return toBytes$t(id$2, buffer.data);
+    return toBytes$t(id$2, parameters.data);
   };
   var toJson$1 = function toJson(parameters, options) {
     return JSON.stringify(_objectSpread2(_objectSpread2({}, parameters), {}, {

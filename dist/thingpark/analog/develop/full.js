@@ -2561,18 +2561,8 @@ var fromBytes, toBytes;
     const toBytes$H = () => toBytes$15(id$F);
 
     const id$E = usWaterMeterCommand$1;
-    const fromBytes$G = (bytes) => {
-        const buffer = new BinaryBuffer(bytes, false);
-        const length = buffer.getUint8();
-        return { length, data: bytes.slice(1) };
-    };
-    const toBytes$G = (parameters) => {
-        const { data, length } = parameters;
-        const buffer = new BinaryBuffer(length, false);
-        buffer.setUint8(length);
-        buffer.setBytes(data);
-        return toBytes$15(id$E, buffer.data);
-    };
+    const fromBytes$G = (bytes) => ({ data: bytes });
+    const toBytes$G = (parameters) => toBytes$15(id$E, parameters.data);
 
     const id$D = verifyImage$1;
     const name$c = downlinkNames[verifyImage$1];
@@ -3905,18 +3895,8 @@ var fromBytes, toBytes;
     };
 
     const id$2 = usWaterMeterCommand;
-    const fromBytes$4 = (bytes) => {
-        const buffer = new BinaryBuffer(bytes, false);
-        const length = buffer.getUint8();
-        return { length, data: bytes.slice(1) };
-    };
-    const toBytes$3 = (parameters) => {
-        const { data, length } = parameters;
-        const buffer = new BinaryBuffer(length, false);
-        buffer.setUint8(length);
-        buffer.setBytes(data);
-        return toBytes$15(id$2, buffer.data);
-    };
+    const fromBytes$4 = (bytes) => ({ data: bytes });
+    const toBytes$3 = (parameters) => toBytes$15(id$2, parameters.data);
 
     const id$1 = verifyImage;
     const name = uplinkNames[verifyImage];

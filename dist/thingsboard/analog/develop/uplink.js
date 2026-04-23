@@ -2735,11 +2735,8 @@ var fromBytes$5 = function (bytes) {
 
 var id$2 = usWaterMeterCommand$1;
 var fromBytes$4 = function (bytes) {
-  var buffer = new BinaryBuffer(bytes, false);
-  var length = buffer.getUint8();
   return {
-    length: length,
-    data: bytes.slice(1)
+    data: bytes
   };
 };
 

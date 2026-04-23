@@ -2414,11 +2414,7 @@ var fromBytes, getBytesFromHex;
     };
 
     const id$2 = usWaterMeterCommand$1;
-    const fromBytes$4 = (bytes) => {
-        const buffer = new BinaryBuffer(bytes, false);
-        const length = buffer.getUint8();
-        return { length, data: bytes.slice(1) };
-    };
+    const fromBytes$4 = (bytes) => ({ data: bytes });
 
     const id$1 = verifyImage$1;
     const name = uplinkNames[verifyImage$1];

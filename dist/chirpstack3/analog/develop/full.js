@@ -3039,20 +3039,12 @@ var fromBytes, toBytes;
 
     var id$E = usWaterMeterCommand$1;
     var fromBytes$G = function fromBytes(bytes) {
-      var buffer = new BinaryBuffer(bytes, false);
-      var length = buffer.getUint8();
       return {
-        length: length,
-        data: bytes.slice(1)
+        data: bytes
       };
     };
     var toBytes$G = function toBytes(parameters) {
-      var data = parameters.data,
-        length = parameters.length;
-      var buffer = new BinaryBuffer(length, false);
-      buffer.setUint8(length);
-      buffer.setBytes(data);
-      return toBytes$15(id$E, buffer.data);
+      return toBytes$15(id$E, parameters.data);
     };
 
     var id$D = verifyImage$1;
@@ -4566,20 +4558,12 @@ var fromBytes, toBytes;
 
     var id$2 = usWaterMeterCommand;
     var fromBytes$4 = function fromBytes(bytes) {
-      var buffer = new BinaryBuffer(bytes, false);
-      var length = buffer.getUint8();
       return {
-        length: length,
-        data: bytes.slice(1)
+        data: bytes
       };
     };
     var toBytes$3 = function toBytes(parameters) {
-      var data = parameters.data,
-        length = parameters.length;
-      var buffer = new BinaryBuffer(length, false);
-      buffer.setUint8(length);
-      buffer.setBytes(data);
-      return toBytes$15(id$2, buffer.data);
+      return toBytes$15(id$2, parameters.data);
     };
 
     var id$1 = verifyImage;

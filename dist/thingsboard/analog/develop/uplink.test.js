@@ -5357,32 +5357,23 @@ var logs = '';
   var name$2 = commandNames$1[usWaterMeterCommand$2];
   var headerSize$2 = 3;
   var examples$2 = {
-    'response for current values': {
+    'response for getDepassivationConfig command': {
       id: id$2,
       name: name$2,
       headerSize: headerSize$2,
       parameters: {
-        length: 11,
-        data: [0x21, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04]
+        data: [0x07, 0x22, 0x18, 0xc0, 0x5d, 0x20, 0x4e]
       },
-      bytes: [0x1f, 0x07, 0x0b, 0x0b, 0x21, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04]
+      bytes: [0x1f, 0x07, 0x07, 0x07, 0x22, 0x18, 0xc0, 0x5d, 0x20, 0x4e]
     }
   };
   var fromBytes$2 = function fromBytes(bytes) {
-    var buffer = new BinaryBuffer(bytes, false);
-    var length = buffer.getUint8();
     return {
-      length: length,
-      data: bytes.slice(1)
+      data: bytes
     };
   };
   var toBytes$2 = function toBytes(parameters) {
-    var data = parameters.data,
-      length = parameters.length;
-    var buffer = new BinaryBuffer(length, false);
-    buffer.setUint8(length);
-    buffer.setBytes(data);
-    return toBytes$D(id$2, buffer.data);
+    return toBytes$D(id$2, parameters.data);
   };
   var toJson = function toJson(parameters, options) {
     return JSON.stringify(_objectSpread2(_objectSpread2({}, parameters), {}, {

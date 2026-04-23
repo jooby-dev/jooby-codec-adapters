@@ -1941,12 +1941,7 @@ var toBytes;
 
   var id$2 = usWaterMeterCommand;
   var toBytes$4 = function (parameters) {
-    var data = parameters.data,
-      length = parameters.length;
-    var buffer = new BinaryBuffer(length, false);
-    buffer.setUint8(length);
-    buffer.setBytes(data);
-    return toBytes$v(id$2, buffer.data);
+    return toBytes$v(id$2, parameters.data);
   };
 
   var id$1 = verifyImage;

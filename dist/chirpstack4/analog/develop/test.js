@@ -4087,31 +4087,20 @@
     const name$E = commandNames$1[usWaterMeterCommand$3];
     const headerSize$E = 3;
     const examples$E = {
-        'request for current values': {
+        'request with getInfo command': {
             id: id$E,
             headerSize: headerSize$E,
             parameters: {
-                length: 3,
-                data: [0x21, 0x02]
+                data: [0x03, 0x21, 0x01]
             },
             bytes: [
                 0x1f, 0x07, 0x03,
-                0x03, 0x21, 0x02
+                0x03, 0x21, 0x01
             ]
         }
     };
-    const fromBytes$E = (bytes) => {
-        const buffer = new BinaryBuffer(bytes, false);
-        const length = buffer.getUint8();
-        return { length, data: bytes.slice(1) };
-    };
-    const toBytes$E = (parameters) => {
-        const { data, length } = parameters;
-        const buffer = new BinaryBuffer(length, false);
-        buffer.setUint8(length);
-        buffer.setBytes(data);
-        return toBytes$13(id$E, buffer.data);
-    };
+    const fromBytes$E = (bytes) => ({ data: bytes });
+    const toBytes$E = (parameters) => toBytes$13(id$E, parameters.data);
     const toJson$2 = (parameters, options) => JSON.stringify({
         ...parameters,
         data: getStringFromBytes(parameters.data, options)
@@ -7133,32 +7122,21 @@
     const name$2 = commandNames[usWaterMeterCommand$1];
     const headerSize$2 = 3;
     const examples$2 = {
-        'response for current values': {
+        'response for getDepassivationConfig command': {
             id: id$2,
             name: name$2,
             headerSize: headerSize$2,
             parameters: {
-                length: 11,
-                data: [0x21, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04]
+                data: [0x07, 0x22, 0x18, 0xc0, 0x5d, 0x20, 0x4e]
             },
             bytes: [
-                0x1f, 0x07, 0x0b,
-                0x0b, 0x21, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04
+                0x1f, 0x07, 0x07,
+                0x07, 0x22, 0x18, 0xc0, 0x5d, 0x20, 0x4e
             ]
         }
     };
-    const fromBytes$2 = (bytes) => {
-        const buffer = new BinaryBuffer(bytes, false);
-        const length = buffer.getUint8();
-        return { length, data: bytes.slice(1) };
-    };
-    const toBytes$2 = (parameters) => {
-        const { data, length } = parameters;
-        const buffer = new BinaryBuffer(length, false);
-        buffer.setUint8(length);
-        buffer.setBytes(data);
-        return toBytes$13(id$2, buffer.data);
-    };
+    const fromBytes$2 = (bytes) => ({ data: bytes });
+    const toBytes$2 = (parameters) => toBytes$13(id$2, parameters.data);
     const toJson = (parameters, options) => JSON.stringify({
         ...parameters,
         data: getStringFromBytes(parameters.data, options)
