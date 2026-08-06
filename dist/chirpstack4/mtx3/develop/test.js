@@ -458,6 +458,21 @@
 
     var criticalEventNames = invertObject(criticalEvents);
 
+    const A_PLUS = 0x01;
+    const A_MINUS = 0x02;
+    const VOLTAGE_10 = 0x40;
+    const VOLTAGE$1 = 0xa0;
+
+    var demandTypes$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        A_MINUS: A_MINUS,
+        A_PLUS: A_PLUS,
+        VOLTAGE: VOLTAGE$1,
+        VOLTAGE_10: VOLTAGE_10
+    });
+
+    invertObject(demandTypes$1);
+
     const getEventStatus$4 = 0x01;
     const getEnergyDayPrevious$3 = 0x03;
     const getDeviceType$3 = 0x04;
@@ -1377,6 +1392,18 @@
     };
     const toBytes$2n = (commandId, commandBytes = []) => [commandId, commandBytes.length, ...commandBytes];
 
+    const validateSetCommandPayload = (commandName, bytes, expectedLengths) => {
+        if (!commandName) {
+            throw new Error('Command name is required.');
+        }
+        if (bytes && !Array.isArray(bytes)) {
+            throw new Error(`Invalid payload for ${commandName}. Expected array, got: ${typeof bytes}.`);
+        }
+        if (expectedLengths.indexOf(bytes.length) === -1) {
+            const hex = getHexFromBytes(bytes, { separator: '' });
+            throw new Error(`Wrong buffer size for ${commandName}: ${bytes.length}. Payload: 0x${hex}.`);
+        }
+    };
     const validateRangeCommandPayload = (commandName, bytes, range) => {
         if (!commandName) {
             throw new Error('Command name is required.');
@@ -4555,6 +4582,103 @@
         toBytes: toBytes$1w
     });
 
+    const ACTIVE_ENERGY_A_PLUS_PHASE_A = 0x01;
+    const ACTIVE_ENERGY_A_PLUS_PHASE_B = 0x02;
+    const ACTIVE_ENERGY_A_PLUS_PHASE_C = 0x03;
+    const ACTIVE_ENERGY_A_MINUS_PHASE_A = 0x04;
+    const ACTIVE_ENERGY_A_MINUS_PHASE_B = 0x05;
+    const ACTIVE_ENERGY_A_MINUS_PHASE_C = 0x06;
+    const ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_A = 0x07;
+    const ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_B = 0x08;
+    const ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_C = 0x09;
+    const ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_A = 0x0a;
+    const ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_B = 0x0b;
+    const ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_C = 0x0c;
+    const ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_A = 0x0d;
+    const ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_B = 0x0e;
+    const ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_C = 0x0f;
+    const ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_A = 0x10;
+    const ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_B = 0x11;
+    const ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_C = 0x12;
+    const ACTIVE_ENERGY_R_PLUS_PHASE_A = 0x13;
+    const ACTIVE_ENERGY_R_PLUS_PHASE_B = 0x14;
+    const ACTIVE_ENERGY_R_PLUS_PHASE_C = 0x15;
+    const ACTIVE_ENERGY_R_MINUS_PHASE_A = 0x16;
+    const ACTIVE_ENERGY_R_MINUS_PHASE_B = 0x17;
+    const ACTIVE_ENERGY_R_MINUS_PHASE_C = 0x18;
+    const VOLTAGE_PHASE_A = 0x19;
+    const VOLTAGE_PHASE_B = 0x1a;
+    const VOLTAGE_PHASE_C = 0x1b;
+    const VOLTAGE_PHASE_A_10M = 0x1c;
+    const VOLTAGE_PHASE_B_10M = 0x1d;
+    const VOLTAGE_PHASE_C_10M = 0x1e;
+    const CURRENT_PHASE_A = 0x1f;
+    const CURRENT_PHASE_B = 0x20;
+    const CURRENT_PHASE_C = 0x21;
+    const ACTIVE_ENERGY_A_PLUS = 0x81;
+    const ACTIVE_ENERGY_A_MINUS = 0x82;
+    const REACTIVE_ENERGY_A_PLUS_R_PLUS = 0x84;
+    const REACTIVE_ENERGY_A_PLUS_R_MINUS = 0x88;
+    const REACTIVE_ENERGY_A_MINUS_R_PLUS = 0x90;
+    const REACTIVE_ENERGY_A_MINUS_R_MINUS = 0xa0;
+    const ARCHIVE_CHANNEL_1 = 0xb0;
+    const ARCHIVE_CHANNEL_2 = 0xb1;
+    const ARCHIVE_CHANNEL_3 = 0xb2;
+    const ARCHIVE_CHANNEL_4 = 0xb3;
+    const ARCHIVE_CHANNEL_5 = 0xb4;
+    const ARCHIVE_CHANNEL_6 = 0xb5;
+
+    var demandTypes = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        ACTIVE_ENERGY_A_MINUS: ACTIVE_ENERGY_A_MINUS,
+        ACTIVE_ENERGY_A_MINUS_PHASE_A: ACTIVE_ENERGY_A_MINUS_PHASE_A,
+        ACTIVE_ENERGY_A_MINUS_PHASE_B: ACTIVE_ENERGY_A_MINUS_PHASE_B,
+        ACTIVE_ENERGY_A_MINUS_PHASE_C: ACTIVE_ENERGY_A_MINUS_PHASE_C,
+        ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_A: ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_A,
+        ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_B: ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_B,
+        ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_C: ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_C,
+        ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_A: ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_A,
+        ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_B: ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_B,
+        ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_C: ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_C,
+        ACTIVE_ENERGY_A_PLUS: ACTIVE_ENERGY_A_PLUS,
+        ACTIVE_ENERGY_A_PLUS_PHASE_A: ACTIVE_ENERGY_A_PLUS_PHASE_A,
+        ACTIVE_ENERGY_A_PLUS_PHASE_B: ACTIVE_ENERGY_A_PLUS_PHASE_B,
+        ACTIVE_ENERGY_A_PLUS_PHASE_C: ACTIVE_ENERGY_A_PLUS_PHASE_C,
+        ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_A: ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_A,
+        ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_B: ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_B,
+        ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_C: ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_C,
+        ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_A: ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_A,
+        ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_B: ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_B,
+        ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_C: ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_C,
+        ACTIVE_ENERGY_R_MINUS_PHASE_A: ACTIVE_ENERGY_R_MINUS_PHASE_A,
+        ACTIVE_ENERGY_R_MINUS_PHASE_B: ACTIVE_ENERGY_R_MINUS_PHASE_B,
+        ACTIVE_ENERGY_R_MINUS_PHASE_C: ACTIVE_ENERGY_R_MINUS_PHASE_C,
+        ACTIVE_ENERGY_R_PLUS_PHASE_A: ACTIVE_ENERGY_R_PLUS_PHASE_A,
+        ACTIVE_ENERGY_R_PLUS_PHASE_B: ACTIVE_ENERGY_R_PLUS_PHASE_B,
+        ACTIVE_ENERGY_R_PLUS_PHASE_C: ACTIVE_ENERGY_R_PLUS_PHASE_C,
+        ARCHIVE_CHANNEL_1: ARCHIVE_CHANNEL_1,
+        ARCHIVE_CHANNEL_2: ARCHIVE_CHANNEL_2,
+        ARCHIVE_CHANNEL_3: ARCHIVE_CHANNEL_3,
+        ARCHIVE_CHANNEL_4: ARCHIVE_CHANNEL_4,
+        ARCHIVE_CHANNEL_5: ARCHIVE_CHANNEL_5,
+        ARCHIVE_CHANNEL_6: ARCHIVE_CHANNEL_6,
+        CURRENT_PHASE_A: CURRENT_PHASE_A,
+        CURRENT_PHASE_B: CURRENT_PHASE_B,
+        CURRENT_PHASE_C: CURRENT_PHASE_C,
+        REACTIVE_ENERGY_A_MINUS_R_MINUS: REACTIVE_ENERGY_A_MINUS_R_MINUS,
+        REACTIVE_ENERGY_A_MINUS_R_PLUS: REACTIVE_ENERGY_A_MINUS_R_PLUS,
+        REACTIVE_ENERGY_A_PLUS_R_MINUS: REACTIVE_ENERGY_A_PLUS_R_MINUS,
+        REACTIVE_ENERGY_A_PLUS_R_PLUS: REACTIVE_ENERGY_A_PLUS_R_PLUS,
+        VOLTAGE_PHASE_A: VOLTAGE_PHASE_A,
+        VOLTAGE_PHASE_A_10M: VOLTAGE_PHASE_A_10M,
+        VOLTAGE_PHASE_B: VOLTAGE_PHASE_B,
+        VOLTAGE_PHASE_B_10M: VOLTAGE_PHASE_B_10M,
+        VOLTAGE_PHASE_C: VOLTAGE_PHASE_C,
+        VOLTAGE_PHASE_C_10M: VOLTAGE_PHASE_C_10M
+    });
+
+    invertObject(demandTypes);
+
     const ENERGY_T1_FAULT = 0x01;
     const ENERGY_T2_FAULT = 0x02;
     const ENERGY_T3_FAULT = 0x03;
@@ -5230,8 +5354,6 @@
         rs485orTwi: invertObject(valueToRate.rs485orTwi),
         optoport: invertObject(valueToRate.optoport)
     };
-
-    const ACTIVE_ENERGY_A_PLUS = 0x81;
 
     const MAIN_1 = 0;
     const MAIN_2 = 1;
@@ -9958,10 +10080,11 @@
     const name$x = commandNames[getCurrentValues$1];
     const headerSize$x = 2;
     const accessLevel$x = READ_ONLY;
+    const minSize = 48;
     const maxSize$x = 52;
     const isLoraOnly$x = false;
     const examples$w = {
-        'simple response': {
+        'response with neutral': {
             id: id$x,
             name: name$x,
             maxSize: maxSize$x,
@@ -9998,12 +10121,49 @@
                 0x00, 0x03, 0x20, 0xc8,
                 0x00, 0x00, 0x05, 0xdc
             ]
+        },
+        'response without neutral': {
+            id: id$x,
+            name: name$x,
+            maxSize: minSize,
+            headerSize: headerSize$x,
+            accessLevel: accessLevel$x,
+            parameters: {
+                vaRms: 230000,
+                vbRms: 231000,
+                vcRms: 229000,
+                iaRms: 5000,
+                ibRms: 4900,
+                icRms: 5050,
+                powerA: 1150000,
+                powerB: 1120000,
+                powerC: 1160000,
+                varA: 200000,
+                varB: 195000,
+                varC: 205000
+            },
+            bytes: [
+                0x0d, 0x30,
+                0x00, 0x03, 0x82, 0x70,
+                0x00, 0x03, 0x86, 0x58,
+                0x00, 0x03, 0x7e, 0x88,
+                0x00, 0x00, 0x13, 0x88,
+                0x00, 0x00, 0x13, 0x24,
+                0x00, 0x00, 0x13, 0xba,
+                0x00, 0x11, 0x8c, 0x30,
+                0x00, 0x11, 0x17, 0x00,
+                0x00, 0x11, 0xb3, 0x40,
+                0x00, 0x03, 0x0d, 0x40,
+                0x00, 0x02, 0xf9, 0xb8,
+                0x00, 0x03, 0x20, 0xc8
+            ]
         }
     };
     const fromBytes$w = (bytes) => {
-        validateFixedCommandPayload(name$x, bytes, maxSize$x);
+        validateSetCommandPayload(name$x, bytes, [minSize, maxSize$x]);
         const buffer = new BinaryBuffer(bytes, false);
-        return {
+        const hasNeutral = bytes.length === maxSize$x;
+        const result = {
             vaRms: buffer.getInt32(),
             vbRms: buffer.getInt32(),
             vcRms: buffer.getInt32(),
@@ -10015,12 +10175,15 @@
             powerC: buffer.getInt32(),
             varA: buffer.getInt32(),
             varB: buffer.getInt32(),
-            varC: buffer.getInt32(),
-            iNeutral: buffer.getInt32()
+            varC: buffer.getInt32()
         };
+        if (hasNeutral) {
+            result.iNeutral = buffer.getInt32();
+        }
+        return result;
     };
     const toBytes$w = (parameters) => {
-        const buffer = new BinaryBuffer(maxSize$x, false);
+        const buffer = new BinaryBuffer(parameters.iNeutral != null ? maxSize$x : minSize, false);
         buffer.setInt32(parameters.vaRms);
         buffer.setInt32(parameters.vbRms);
         buffer.setInt32(parameters.vcRms);
@@ -10033,7 +10196,9 @@
         buffer.setInt32(parameters.varA);
         buffer.setInt32(parameters.varB);
         buffer.setInt32(parameters.varC);
-        buffer.setInt32(parameters.iNeutral);
+        if (parameters.iNeutral != null) {
+            buffer.setInt32(parameters.iNeutral);
+        }
         return toBytes$2n(id$x, buffer.data);
     };
     const toJson$a = (parameters, options = defaultJsonOptions) => {
@@ -10049,9 +10214,11 @@
             '71.7.0': parameters.icRms,
             '1.21.7.0': parameters.powerA,
             '1.41.7.0': parameters.powerB,
-            '1.61.7.0': parameters.powerC,
-            '91.7.0': parameters.iNeutral
+            '1.61.7.0': parameters.powerC
         };
+        if (parameters.iNeutral != null) {
+            result['91.7.0'] = parameters.iNeutral;
+        }
         const varAKey = parameters.varA >= 0 ? '1.23.7.0' : '1.24.7.0';
         const varBKey = parameters.varB >= 0 ? '1.43.7.0' : '1.44.7.0';
         const varCKey = parameters.varC >= 0 ? '1.63.7.0' : '1.64.7.0';
@@ -10070,6 +10237,7 @@
         id: id$x,
         isLoraOnly: isLoraOnly$x,
         maxSize: maxSize$x,
+        minSize: minSize,
         name: name$x,
         toBytes: toBytes$w,
         toJson: toJson$a

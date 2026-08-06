@@ -458,6 +458,21 @@
 
     var criticalEventNames = invertObject(criticalEvents);
 
+    const A_PLUS$1 = 0x01;
+    const A_MINUS$1 = 0x02;
+    const VOLTAGE_10 = 0x40;
+    const VOLTAGE$1 = 0xa0;
+
+    var demandTypes = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        A_MINUS: A_MINUS$1,
+        A_PLUS: A_PLUS$1,
+        VOLTAGE: VOLTAGE$1,
+        VOLTAGE_10: VOLTAGE_10
+    });
+
+    invertObject(demandTypes);
+
     const getEventStatus$3 = 0x01;
     const getEnergyDayPrevious$2 = 0x03;
     const getDeviceType$2 = 0x04;
@@ -932,7 +947,7 @@
     const ACTIVE_POWER_IN_NEUTRAL = 9;
     const CURRENT_IN_PHASE = 10;
     const CURRENT_IN_NEUTRAL = 11;
-    const VOLTAGE$1 = 12;
+    const VOLTAGE = 12;
     const HOUR_MINUTE_SECOND = 13;
     const DATE_MONTH_YEAR = 14;
     const TOTAL_EXPORTED_ACTIVE_ENERGY = 15;
@@ -981,7 +996,7 @@
         SOFTWARE_VERSION: SOFTWARE_VERSION,
         TOTAL_ACTIVE_ENERGY: TOTAL_ACTIVE_ENERGY,
         TOTAL_EXPORTED_ACTIVE_ENERGY: TOTAL_EXPORTED_ACTIVE_ENERGY,
-        VOLTAGE: VOLTAGE$1
+        VOLTAGE: VOLTAGE
     });
 
     invertObject(screenIds);
@@ -1089,11 +1104,6 @@
         rs485orTwi: invertObject(valueToRate.rs485orTwi),
         optoport: invertObject(valueToRate.optoport)
     };
-
-    const A_PLUS$1 = 0x01;
-    const A_MINUS$1 = 0x02;
-    const VOLTAGE_10 = 0x40;
-    const VOLTAGE = 0xa0;
 
     const MAIN = 0;
     const ADDITIONAL = 1;
@@ -7472,7 +7482,7 @@
                     month: 10,
                     date: 2
                 },
-                demandType: VOLTAGE,
+                demandType: VOLTAGE$1,
                 firstIndex: 0,
                 count: 1,
                 period: 60,
@@ -7497,7 +7507,7 @@
                     month: 10,
                     date: 2
                 },
-                demandType: VOLTAGE,
+                demandType: VOLTAGE$1,
                 firstIndex: 25,
                 count: 1,
                 period: 60,
@@ -9933,7 +9943,7 @@
                         ]
                     },
                     {
-                        demandType: VOLTAGE,
+                        demandType: VOLTAGE$1,
                         values: [
                             { voltage: 2201 },
                             { voltage: 2159 }

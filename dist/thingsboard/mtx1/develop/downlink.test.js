@@ -601,6 +601,21 @@ var logs = '';
 
   var criticalEventNames = invertObject(criticalEvents);
 
+  var A_PLUS$1 = 0x01;
+  var A_MINUS$1 = 0x02;
+  var VOLTAGE_10 = 0x40;
+  var VOLTAGE$1 = 0xa0;
+
+  var demandTypes = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    A_MINUS: A_MINUS$1,
+    A_PLUS: A_PLUS$1,
+    VOLTAGE: VOLTAGE$1,
+    VOLTAGE_10: VOLTAGE_10
+  });
+
+  invertObject(demandTypes);
+
   var getEventStatus$1 = 0x01;
   var getEnergyDayPrevious$1 = 0x03;
   var getDeviceType$1 = 0x04;
@@ -1232,8 +1247,6 @@ var logs = '';
     rs485orTwi: invertObject(valueToRate.rs485orTwi),
     optoport: invertObject(valueToRate.optoport)
   };
-
-  var A_PLUS$1 = 0x01;
 
   var MAIN = 0;
   var ADDITIONAL = 1;

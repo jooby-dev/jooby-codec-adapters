@@ -519,6 +519,21 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     var criticalEventNames = invertObject(criticalEvents);
 
+    const A_PLUS = 0x01;
+    const A_MINUS = 0x02;
+    const VOLTAGE_10 = 0x40;
+    const VOLTAGE$1 = 0xa0;
+
+    var demandTypes$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        A_MINUS: A_MINUS,
+        A_PLUS: A_PLUS,
+        VOLTAGE: VOLTAGE$1,
+        VOLTAGE_10: VOLTAGE_10
+    });
+
+    invertObject(demandTypes$1);
+
     const getEventStatus$2 = 0x01;
     const getEnergyDayPrevious$1 = 0x03;
     const getDeviceType$1 = 0x04;
@@ -1415,6 +1430,18 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const toBytes$2r = (commandId, commandBytes = []) => [commandId, commandBytes.length, ...commandBytes];
 
+    const validateSetCommandPayload = (commandName, bytes, expectedLengths) => {
+        if (!commandName) {
+            throw new Error('Command name is required.');
+        }
+        if (bytes && !Array.isArray(bytes)) {
+            throw new Error(`Invalid payload for ${commandName}. Expected array, got: ${typeof bytes}.`);
+        }
+        if (expectedLengths.indexOf(bytes.length) === -1) {
+            const hex = getHexFromBytes(bytes, { separator: '' });
+            throw new Error(`Wrong buffer size for ${commandName}: ${bytes.length}. Payload: 0x${hex}.`);
+        }
+    };
     const validateRangeCommandPayload = (commandName, bytes, range) => {
         if (!commandName) {
             throw new Error('Command name is required.');
@@ -2746,6 +2773,103 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         setDate$1(buffer, parameters.date);
         return toBytes$2r(id$1x, buffer.data);
     };
+
+    const ACTIVE_ENERGY_A_PLUS_PHASE_A = 0x01;
+    const ACTIVE_ENERGY_A_PLUS_PHASE_B = 0x02;
+    const ACTIVE_ENERGY_A_PLUS_PHASE_C = 0x03;
+    const ACTIVE_ENERGY_A_MINUS_PHASE_A = 0x04;
+    const ACTIVE_ENERGY_A_MINUS_PHASE_B = 0x05;
+    const ACTIVE_ENERGY_A_MINUS_PHASE_C = 0x06;
+    const ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_A = 0x07;
+    const ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_B = 0x08;
+    const ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_C = 0x09;
+    const ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_A = 0x0a;
+    const ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_B = 0x0b;
+    const ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_C = 0x0c;
+    const ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_A = 0x0d;
+    const ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_B = 0x0e;
+    const ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_C = 0x0f;
+    const ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_A = 0x10;
+    const ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_B = 0x11;
+    const ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_C = 0x12;
+    const ACTIVE_ENERGY_R_PLUS_PHASE_A = 0x13;
+    const ACTIVE_ENERGY_R_PLUS_PHASE_B = 0x14;
+    const ACTIVE_ENERGY_R_PLUS_PHASE_C = 0x15;
+    const ACTIVE_ENERGY_R_MINUS_PHASE_A = 0x16;
+    const ACTIVE_ENERGY_R_MINUS_PHASE_B = 0x17;
+    const ACTIVE_ENERGY_R_MINUS_PHASE_C = 0x18;
+    const VOLTAGE_PHASE_A = 0x19;
+    const VOLTAGE_PHASE_B = 0x1a;
+    const VOLTAGE_PHASE_C = 0x1b;
+    const VOLTAGE_PHASE_A_10M = 0x1c;
+    const VOLTAGE_PHASE_B_10M = 0x1d;
+    const VOLTAGE_PHASE_C_10M = 0x1e;
+    const CURRENT_PHASE_A = 0x1f;
+    const CURRENT_PHASE_B = 0x20;
+    const CURRENT_PHASE_C = 0x21;
+    const ACTIVE_ENERGY_A_PLUS = 0x81;
+    const ACTIVE_ENERGY_A_MINUS = 0x82;
+    const REACTIVE_ENERGY_A_PLUS_R_PLUS = 0x84;
+    const REACTIVE_ENERGY_A_PLUS_R_MINUS = 0x88;
+    const REACTIVE_ENERGY_A_MINUS_R_PLUS = 0x90;
+    const REACTIVE_ENERGY_A_MINUS_R_MINUS = 0xa0;
+    const ARCHIVE_CHANNEL_1 = 0xb0;
+    const ARCHIVE_CHANNEL_2 = 0xb1;
+    const ARCHIVE_CHANNEL_3 = 0xb2;
+    const ARCHIVE_CHANNEL_4 = 0xb3;
+    const ARCHIVE_CHANNEL_5 = 0xb4;
+    const ARCHIVE_CHANNEL_6 = 0xb5;
+
+    var demandTypes = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        ACTIVE_ENERGY_A_MINUS: ACTIVE_ENERGY_A_MINUS,
+        ACTIVE_ENERGY_A_MINUS_PHASE_A: ACTIVE_ENERGY_A_MINUS_PHASE_A,
+        ACTIVE_ENERGY_A_MINUS_PHASE_B: ACTIVE_ENERGY_A_MINUS_PHASE_B,
+        ACTIVE_ENERGY_A_MINUS_PHASE_C: ACTIVE_ENERGY_A_MINUS_PHASE_C,
+        ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_A: ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_A,
+        ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_B: ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_B,
+        ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_C: ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_C,
+        ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_A: ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_A,
+        ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_B: ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_B,
+        ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_C: ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_C,
+        ACTIVE_ENERGY_A_PLUS: ACTIVE_ENERGY_A_PLUS,
+        ACTIVE_ENERGY_A_PLUS_PHASE_A: ACTIVE_ENERGY_A_PLUS_PHASE_A,
+        ACTIVE_ENERGY_A_PLUS_PHASE_B: ACTIVE_ENERGY_A_PLUS_PHASE_B,
+        ACTIVE_ENERGY_A_PLUS_PHASE_C: ACTIVE_ENERGY_A_PLUS_PHASE_C,
+        ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_A: ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_A,
+        ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_B: ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_B,
+        ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_C: ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_C,
+        ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_A: ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_A,
+        ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_B: ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_B,
+        ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_C: ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_C,
+        ACTIVE_ENERGY_R_MINUS_PHASE_A: ACTIVE_ENERGY_R_MINUS_PHASE_A,
+        ACTIVE_ENERGY_R_MINUS_PHASE_B: ACTIVE_ENERGY_R_MINUS_PHASE_B,
+        ACTIVE_ENERGY_R_MINUS_PHASE_C: ACTIVE_ENERGY_R_MINUS_PHASE_C,
+        ACTIVE_ENERGY_R_PLUS_PHASE_A: ACTIVE_ENERGY_R_PLUS_PHASE_A,
+        ACTIVE_ENERGY_R_PLUS_PHASE_B: ACTIVE_ENERGY_R_PLUS_PHASE_B,
+        ACTIVE_ENERGY_R_PLUS_PHASE_C: ACTIVE_ENERGY_R_PLUS_PHASE_C,
+        ARCHIVE_CHANNEL_1: ARCHIVE_CHANNEL_1,
+        ARCHIVE_CHANNEL_2: ARCHIVE_CHANNEL_2,
+        ARCHIVE_CHANNEL_3: ARCHIVE_CHANNEL_3,
+        ARCHIVE_CHANNEL_4: ARCHIVE_CHANNEL_4,
+        ARCHIVE_CHANNEL_5: ARCHIVE_CHANNEL_5,
+        ARCHIVE_CHANNEL_6: ARCHIVE_CHANNEL_6,
+        CURRENT_PHASE_A: CURRENT_PHASE_A,
+        CURRENT_PHASE_B: CURRENT_PHASE_B,
+        CURRENT_PHASE_C: CURRENT_PHASE_C,
+        REACTIVE_ENERGY_A_MINUS_R_MINUS: REACTIVE_ENERGY_A_MINUS_R_MINUS,
+        REACTIVE_ENERGY_A_MINUS_R_PLUS: REACTIVE_ENERGY_A_MINUS_R_PLUS,
+        REACTIVE_ENERGY_A_PLUS_R_MINUS: REACTIVE_ENERGY_A_PLUS_R_MINUS,
+        REACTIVE_ENERGY_A_PLUS_R_PLUS: REACTIVE_ENERGY_A_PLUS_R_PLUS,
+        VOLTAGE_PHASE_A: VOLTAGE_PHASE_A,
+        VOLTAGE_PHASE_A_10M: VOLTAGE_PHASE_A_10M,
+        VOLTAGE_PHASE_B: VOLTAGE_PHASE_B,
+        VOLTAGE_PHASE_B_10M: VOLTAGE_PHASE_B_10M,
+        VOLTAGE_PHASE_C: VOLTAGE_PHASE_C,
+        VOLTAGE_PHASE_C_10M: VOLTAGE_PHASE_C_10M
+    });
+
+    invertObject(demandTypes);
 
     const ENERGY_T1_FAULT = 0x01;
     const ENERGY_T2_FAULT = 0x02;
@@ -5404,11 +5528,13 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const id$v = getCurrentValues;
     const name$i = uplinkNames[getCurrentValues];
+    const minSize = 48;
     const maxSize$j = 52;
     const fromBytes$y = (bytes) => {
-        validateFixedCommandPayload(name$i, bytes, maxSize$j);
+        validateSetCommandPayload(name$i, bytes, [minSize, maxSize$j]);
         const buffer = new BinaryBuffer(bytes, false);
-        return {
+        const hasNeutral = bytes.length === maxSize$j;
+        const result = {
             vaRms: buffer.getInt32(),
             vbRms: buffer.getInt32(),
             vcRms: buffer.getInt32(),
@@ -5420,12 +5546,15 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
             powerC: buffer.getInt32(),
             varA: buffer.getInt32(),
             varB: buffer.getInt32(),
-            varC: buffer.getInt32(),
-            iNeutral: buffer.getInt32()
+            varC: buffer.getInt32()
         };
+        if (hasNeutral) {
+            result.iNeutral = buffer.getInt32();
+        }
+        return result;
     };
     const toBytes$x = (parameters) => {
-        const buffer = new BinaryBuffer(maxSize$j, false);
+        const buffer = new BinaryBuffer(parameters.iNeutral != null ? maxSize$j : minSize, false);
         buffer.setInt32(parameters.vaRms);
         buffer.setInt32(parameters.vbRms);
         buffer.setInt32(parameters.vcRms);
@@ -5438,7 +5567,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         buffer.setInt32(parameters.varA);
         buffer.setInt32(parameters.varB);
         buffer.setInt32(parameters.varC);
-        buffer.setInt32(parameters.iNeutral);
+        if (parameters.iNeutral != null) {
+            buffer.setInt32(parameters.iNeutral);
+        }
         return toBytes$2r(id$v, buffer.data);
     };
 

@@ -818,6 +818,21 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     var criticalEventNames = invertObject(criticalEvents);
 
+    var A_PLUS = 0x01;
+    var A_MINUS = 0x02;
+    var VOLTAGE_10 = 0x40;
+    var VOLTAGE$1 = 0xa0;
+
+    var demandTypes = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        A_MINUS: A_MINUS,
+        A_PLUS: A_PLUS,
+        VOLTAGE: VOLTAGE$1,
+        VOLTAGE_10: VOLTAGE_10
+    });
+
+    invertObject(demandTypes);
+
     var getEventStatus$1 = 0x01;
     var getEnergyDayPrevious = 0x03;
     var getDeviceType = 0x04;
@@ -1449,9 +1464,6 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       rs485orTwi: invertObject(valueToRate.rs485orTwi),
       optoport: invertObject(valueToRate.optoport)
     };
-
-    var A_PLUS = 0x01;
-    var A_MINUS = 0x02;
 
     var TARIFF_PLAN_SIZE = 11;
     var OPERATOR_PARAMETERS_SIZE = 74;

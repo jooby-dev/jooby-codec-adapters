@@ -744,6 +744,21 @@
 
     var criticalEventNames = invertObject(criticalEvents);
 
+    var A_PLUS = 0x01;
+    var A_MINUS = 0x02;
+    var VOLTAGE_10 = 0x40;
+    var VOLTAGE$1 = 0xa0;
+
+    var demandTypes$1 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        A_MINUS: A_MINUS,
+        A_PLUS: A_PLUS,
+        VOLTAGE: VOLTAGE$1,
+        VOLTAGE_10: VOLTAGE_10
+    });
+
+    invertObject(demandTypes$1);
+
     var getEventStatus$4 = 0x01;
     var getEnergyDayPrevious$3 = 0x03;
     var getDeviceType$3 = 0x04;
@@ -1742,6 +1757,20 @@
       return [commandId, commandBytes.length].concat(_toConsumableArray(commandBytes));
     };
 
+    var validateSetCommandPayload = function validateSetCommandPayload(commandName, bytes, expectedLengths) {
+      if (!commandName) {
+        throw new Error('Command name is required.');
+      }
+      if (bytes && !Array.isArray(bytes)) {
+        throw new Error("Invalid payload for ".concat(commandName, ". Expected array, got: ").concat(_typeof(bytes), "."));
+      }
+      if (expectedLengths.indexOf(bytes.length) === -1) {
+        var hex = getHexFromBytes(bytes, {
+          separator: ''
+        });
+        throw new Error("Wrong buffer size for ".concat(commandName, ": ").concat(bytes.length, ". Payload: 0x").concat(hex, "."));
+      }
+    };
     var validateRangeCommandPayload = function validateRangeCommandPayload(commandName, bytes, range) {
       if (!commandName) {
         throw new Error('Command name is required.');
@@ -4912,6 +4941,103 @@
         toBytes: toBytes$1w
     });
 
+    var ACTIVE_ENERGY_A_PLUS_PHASE_A = 0x01;
+    var ACTIVE_ENERGY_A_PLUS_PHASE_B = 0x02;
+    var ACTIVE_ENERGY_A_PLUS_PHASE_C = 0x03;
+    var ACTIVE_ENERGY_A_MINUS_PHASE_A = 0x04;
+    var ACTIVE_ENERGY_A_MINUS_PHASE_B = 0x05;
+    var ACTIVE_ENERGY_A_MINUS_PHASE_C = 0x06;
+    var ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_A = 0x07;
+    var ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_B = 0x08;
+    var ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_C = 0x09;
+    var ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_A = 0x0a;
+    var ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_B = 0x0b;
+    var ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_C = 0x0c;
+    var ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_A = 0x0d;
+    var ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_B = 0x0e;
+    var ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_C = 0x0f;
+    var ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_A = 0x10;
+    var ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_B = 0x11;
+    var ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_C = 0x12;
+    var ACTIVE_ENERGY_R_PLUS_PHASE_A = 0x13;
+    var ACTIVE_ENERGY_R_PLUS_PHASE_B = 0x14;
+    var ACTIVE_ENERGY_R_PLUS_PHASE_C = 0x15;
+    var ACTIVE_ENERGY_R_MINUS_PHASE_A = 0x16;
+    var ACTIVE_ENERGY_R_MINUS_PHASE_B = 0x17;
+    var ACTIVE_ENERGY_R_MINUS_PHASE_C = 0x18;
+    var VOLTAGE_PHASE_A = 0x19;
+    var VOLTAGE_PHASE_B = 0x1a;
+    var VOLTAGE_PHASE_C = 0x1b;
+    var VOLTAGE_PHASE_A_10M = 0x1c;
+    var VOLTAGE_PHASE_B_10M = 0x1d;
+    var VOLTAGE_PHASE_C_10M = 0x1e;
+    var CURRENT_PHASE_A = 0x1f;
+    var CURRENT_PHASE_B = 0x20;
+    var CURRENT_PHASE_C = 0x21;
+    var ACTIVE_ENERGY_A_PLUS = 0x81;
+    var ACTIVE_ENERGY_A_MINUS = 0x82;
+    var REACTIVE_ENERGY_A_PLUS_R_PLUS = 0x84;
+    var REACTIVE_ENERGY_A_PLUS_R_MINUS = 0x88;
+    var REACTIVE_ENERGY_A_MINUS_R_PLUS = 0x90;
+    var REACTIVE_ENERGY_A_MINUS_R_MINUS = 0xa0;
+    var ARCHIVE_CHANNEL_1 = 0xb0;
+    var ARCHIVE_CHANNEL_2 = 0xb1;
+    var ARCHIVE_CHANNEL_3 = 0xb2;
+    var ARCHIVE_CHANNEL_4 = 0xb3;
+    var ARCHIVE_CHANNEL_5 = 0xb4;
+    var ARCHIVE_CHANNEL_6 = 0xb5;
+
+    var demandTypes = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        ACTIVE_ENERGY_A_MINUS: ACTIVE_ENERGY_A_MINUS,
+        ACTIVE_ENERGY_A_MINUS_PHASE_A: ACTIVE_ENERGY_A_MINUS_PHASE_A,
+        ACTIVE_ENERGY_A_MINUS_PHASE_B: ACTIVE_ENERGY_A_MINUS_PHASE_B,
+        ACTIVE_ENERGY_A_MINUS_PHASE_C: ACTIVE_ENERGY_A_MINUS_PHASE_C,
+        ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_A: ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_A,
+        ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_B: ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_B,
+        ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_C: ACTIVE_ENERGY_A_MINUS_R_MINUS_PHASE_C,
+        ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_A: ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_A,
+        ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_B: ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_B,
+        ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_C: ACTIVE_ENERGY_A_MINUS_R_PLUS_PHASE_C,
+        ACTIVE_ENERGY_A_PLUS: ACTIVE_ENERGY_A_PLUS,
+        ACTIVE_ENERGY_A_PLUS_PHASE_A: ACTIVE_ENERGY_A_PLUS_PHASE_A,
+        ACTIVE_ENERGY_A_PLUS_PHASE_B: ACTIVE_ENERGY_A_PLUS_PHASE_B,
+        ACTIVE_ENERGY_A_PLUS_PHASE_C: ACTIVE_ENERGY_A_PLUS_PHASE_C,
+        ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_A: ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_A,
+        ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_B: ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_B,
+        ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_C: ACTIVE_ENERGY_A_PLUS_R_MINUS_PHASE_C,
+        ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_A: ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_A,
+        ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_B: ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_B,
+        ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_C: ACTIVE_ENERGY_A_PLUS_R_PLUS_PHASE_C,
+        ACTIVE_ENERGY_R_MINUS_PHASE_A: ACTIVE_ENERGY_R_MINUS_PHASE_A,
+        ACTIVE_ENERGY_R_MINUS_PHASE_B: ACTIVE_ENERGY_R_MINUS_PHASE_B,
+        ACTIVE_ENERGY_R_MINUS_PHASE_C: ACTIVE_ENERGY_R_MINUS_PHASE_C,
+        ACTIVE_ENERGY_R_PLUS_PHASE_A: ACTIVE_ENERGY_R_PLUS_PHASE_A,
+        ACTIVE_ENERGY_R_PLUS_PHASE_B: ACTIVE_ENERGY_R_PLUS_PHASE_B,
+        ACTIVE_ENERGY_R_PLUS_PHASE_C: ACTIVE_ENERGY_R_PLUS_PHASE_C,
+        ARCHIVE_CHANNEL_1: ARCHIVE_CHANNEL_1,
+        ARCHIVE_CHANNEL_2: ARCHIVE_CHANNEL_2,
+        ARCHIVE_CHANNEL_3: ARCHIVE_CHANNEL_3,
+        ARCHIVE_CHANNEL_4: ARCHIVE_CHANNEL_4,
+        ARCHIVE_CHANNEL_5: ARCHIVE_CHANNEL_5,
+        ARCHIVE_CHANNEL_6: ARCHIVE_CHANNEL_6,
+        CURRENT_PHASE_A: CURRENT_PHASE_A,
+        CURRENT_PHASE_B: CURRENT_PHASE_B,
+        CURRENT_PHASE_C: CURRENT_PHASE_C,
+        REACTIVE_ENERGY_A_MINUS_R_MINUS: REACTIVE_ENERGY_A_MINUS_R_MINUS,
+        REACTIVE_ENERGY_A_MINUS_R_PLUS: REACTIVE_ENERGY_A_MINUS_R_PLUS,
+        REACTIVE_ENERGY_A_PLUS_R_MINUS: REACTIVE_ENERGY_A_PLUS_R_MINUS,
+        REACTIVE_ENERGY_A_PLUS_R_PLUS: REACTIVE_ENERGY_A_PLUS_R_PLUS,
+        VOLTAGE_PHASE_A: VOLTAGE_PHASE_A,
+        VOLTAGE_PHASE_A_10M: VOLTAGE_PHASE_A_10M,
+        VOLTAGE_PHASE_B: VOLTAGE_PHASE_B,
+        VOLTAGE_PHASE_B_10M: VOLTAGE_PHASE_B_10M,
+        VOLTAGE_PHASE_C: VOLTAGE_PHASE_C,
+        VOLTAGE_PHASE_C_10M: VOLTAGE_PHASE_C_10M
+    });
+
+    invertObject(demandTypes);
+
     var ENERGY_T1_FAULT = 0x01;
     var ENERGY_T2_FAULT = 0x02;
     var ENERGY_T3_FAULT = 0x03;
@@ -5587,8 +5713,6 @@
       rs485orTwi: invertObject(valueToRate.rs485orTwi),
       optoport: invertObject(valueToRate.optoport)
     };
-
-    var ACTIVE_ENERGY_A_PLUS = 0x81;
 
     var MAIN_1 = 0;
     var MAIN_2 = 1;
@@ -10247,10 +10371,11 @@
     var name$x = commandNames[getCurrentValues$1];
     var headerSize$x = 2;
     var accessLevel$x = READ_ONLY;
+    var minSize = 48;
     var maxSize$x = 52;
     var isLoraOnly$x = false;
     var examples$w = {
-      'simple response': {
+      'response with neutral': {
         id: id$x,
         name: name$x,
         maxSize: maxSize$x,
@@ -10272,12 +10397,35 @@
           iNeutral: 1500
         },
         bytes: [0x0d, 0x34, 0x00, 0x03, 0x82, 0x70, 0x00, 0x03, 0x86, 0x58, 0x00, 0x03, 0x7e, 0x88, 0x00, 0x00, 0x13, 0x88, 0x00, 0x00, 0x13, 0x24, 0x00, 0x00, 0x13, 0xba, 0x00, 0x11, 0x8c, 0x30, 0x00, 0x11, 0x17, 0x00, 0x00, 0x11, 0xb3, 0x40, 0x00, 0x03, 0x0d, 0x40, 0x00, 0x02, 0xf9, 0xb8, 0x00, 0x03, 0x20, 0xc8, 0x00, 0x00, 0x05, 0xdc]
+      },
+      'response without neutral': {
+        id: id$x,
+        name: name$x,
+        maxSize: minSize,
+        headerSize: headerSize$x,
+        accessLevel: accessLevel$x,
+        parameters: {
+          vaRms: 230000,
+          vbRms: 231000,
+          vcRms: 229000,
+          iaRms: 5000,
+          ibRms: 4900,
+          icRms: 5050,
+          powerA: 1150000,
+          powerB: 1120000,
+          powerC: 1160000,
+          varA: 200000,
+          varB: 195000,
+          varC: 205000
+        },
+        bytes: [0x0d, 0x30, 0x00, 0x03, 0x82, 0x70, 0x00, 0x03, 0x86, 0x58, 0x00, 0x03, 0x7e, 0x88, 0x00, 0x00, 0x13, 0x88, 0x00, 0x00, 0x13, 0x24, 0x00, 0x00, 0x13, 0xba, 0x00, 0x11, 0x8c, 0x30, 0x00, 0x11, 0x17, 0x00, 0x00, 0x11, 0xb3, 0x40, 0x00, 0x03, 0x0d, 0x40, 0x00, 0x02, 0xf9, 0xb8, 0x00, 0x03, 0x20, 0xc8]
       }
     };
     var fromBytes$w = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$x, bytes, maxSize$x);
+      validateSetCommandPayload(name$x, bytes, [minSize, maxSize$x]);
       var buffer = new BinaryBuffer(bytes, false);
-      return {
+      var hasNeutral = bytes.length === maxSize$x;
+      var result = {
         vaRms: buffer.getInt32(),
         vbRms: buffer.getInt32(),
         vcRms: buffer.getInt32(),
@@ -10289,12 +10437,15 @@
         powerC: buffer.getInt32(),
         varA: buffer.getInt32(),
         varB: buffer.getInt32(),
-        varC: buffer.getInt32(),
-        iNeutral: buffer.getInt32()
+        varC: buffer.getInt32()
       };
+      if (hasNeutral) {
+        result.iNeutral = buffer.getInt32();
+      }
+      return result;
     };
     var toBytes$w = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$x, false);
+      var buffer = new BinaryBuffer(parameters.iNeutral != null ? maxSize$x : minSize, false);
       buffer.setInt32(parameters.vaRms);
       buffer.setInt32(parameters.vbRms);
       buffer.setInt32(parameters.vcRms);
@@ -10307,7 +10458,9 @@
       buffer.setInt32(parameters.varA);
       buffer.setInt32(parameters.varB);
       buffer.setInt32(parameters.varC);
-      buffer.setInt32(parameters.iNeutral);
+      if (parameters.iNeutral != null) {
+        buffer.setInt32(parameters.iNeutral);
+      }
       return toBytes$2n(id$x, buffer.data);
     };
     var toJson$a = function toJson(parameters) {
@@ -10324,9 +10477,11 @@
         '71.7.0': parameters.icRms,
         '1.21.7.0': parameters.powerA,
         '1.41.7.0': parameters.powerB,
-        '1.61.7.0': parameters.powerC,
-        '91.7.0': parameters.iNeutral
+        '1.61.7.0': parameters.powerC
       };
+      if (parameters.iNeutral != null) {
+        result['91.7.0'] = parameters.iNeutral;
+      }
       var varAKey = parameters.varA >= 0 ? '1.23.7.0' : '1.24.7.0';
       var varBKey = parameters.varB >= 0 ? '1.43.7.0' : '1.44.7.0';
       var varCKey = parameters.varC >= 0 ? '1.63.7.0' : '1.64.7.0';
@@ -10345,6 +10500,7 @@
         id: id$x,
         isLoraOnly: isLoraOnly$x,
         maxSize: maxSize$x,
+        minSize: minSize,
         name: name$x,
         toBytes: toBytes$w,
         toJson: toJson$a
