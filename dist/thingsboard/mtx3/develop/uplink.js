@@ -222,6 +222,7 @@ var fromBytes, getDataSegment;
   var setDemandParameters = 0x74;
   var getDemandParameters = 0x75;
   var getDemand$1 = 0x76;
+  var getDemandCumulative$1 = 0x77;
   var getMeterInfo$1 = 0x7a;
 
   var downlinkIds$1 = /*#__PURE__*/Object.freeze({
@@ -240,6 +241,7 @@ var fromBytes, getDataSegment;
     getDayMaxDemandPrevious: getDayMaxDemandPrevious,
     getDayProfile: getDayProfile$1,
     getDemand: getDemand$1,
+    getDemandCumulative: getDemandCumulative$1,
     getDemandParameters: getDemandParameters,
     getDeviceId: getDeviceId$1,
     getDeviceType: getDeviceType$1,
@@ -323,6 +325,7 @@ var fromBytes, getDataSegment;
     getDayMaxPower: getDayMaxPower,
     getDayProfile: getDayProfile$1,
     getDemand: getDemand$1,
+    getDemandCumulative: getDemandCumulative$1,
     getDemandParameters: getDemandParameters,
     getDeviceId: getDeviceId$1,
     getDeviceType: getDeviceType$1,
@@ -614,6 +617,7 @@ var fromBytes, getDataSegment;
   var setOperatorParametersExtended4 = 0x74;
   var getOperatorParametersExtended4 = 0x75;
   var getDemand = 0x76;
+  var getDemandCumulative = 0x77;
   var getMeterInfo = 0x7a;
 
   var downlinkIds = /*#__PURE__*/Object.freeze({
@@ -631,6 +635,7 @@ var fromBytes, getDataSegment;
     getDayMaxDemandExport: getDayMaxDemandExport,
     getDayProfile: getDayProfile,
     getDemand: getDemand,
+    getDemandCumulative: getDemandCumulative,
     getDeviceId: getDeviceId,
     getDeviceType: getDeviceType,
     getDisplayParam: getDisplayParam,
@@ -716,6 +721,7 @@ var fromBytes, getDataSegment;
     getDayMaxDemandExport: getDayMaxDemandExport,
     getDayProfile: getDayProfile,
     getDemand: getDemand,
+    getDemandCumulative: getDemandCumulative,
     getDeviceId: getDeviceId,
     getDeviceType: getDeviceType,
     getDisplayParam: getDisplayParam,
@@ -2695,7 +2701,15 @@ var fromBytes, getDataSegment;
     var buffer = new BinaryBuffer(maxSize + parameters.count * 2, false);
     setDemand(buffer, parameters);
     parameters.demands.forEach(function (value) {
-      return buffer.setUint16(value === null ? NO_VALUE : value);
+      if (value == null) {
+        buffer.setUint16(NO_VALUE);
+        return;
+      }
+      if (typeof value === 'number') {
+        buffer.setUint16(value);
+      } else {
+        buffer.setUint16(value.lastSummerHour << 8 | 0xff);
+      }
     });
     return toBytes$d(id, buffer.data);
   };

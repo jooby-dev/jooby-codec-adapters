@@ -140,6 +140,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var setDemandParameters = 0x74;
   var getDemandParameters = 0x75;
   var getDemand$1 = 0x76;
+  var getDemandCumulative$1 = 0x77;
   var getMeterInfo$1 = 0x7a;
 
   var downlinkIds$1 = /*#__PURE__*/Object.freeze({
@@ -158,6 +159,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getDayMaxDemandPrevious: getDayMaxDemandPrevious,
     getDayProfile: getDayProfile$1,
     getDemand: getDemand$1,
+    getDemandCumulative: getDemandCumulative$1,
     getDemandParameters: getDemandParameters,
     getDeviceId: getDeviceId$1,
     getDeviceType: getDeviceType$1,
@@ -241,6 +243,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getDayMaxPower: getDayMaxPower,
     getDayProfile: getDayProfile$1,
     getDemand: getDemand$1,
+    getDemandCumulative: getDemandCumulative$1,
     getDemandParameters: getDemandParameters,
     getDeviceId: getDeviceId$1,
     getDeviceType: getDeviceType$1,
@@ -1340,6 +1343,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
   var setOperatorParametersExtended4 = 0x74;
   var getOperatorParametersExtended4 = 0x75;
   var getDemand = 0x76;
+  var getDemandCumulative = 0x77;
   var getMeterInfo = 0x7a;
 
   var downlinkIds = /*#__PURE__*/Object.freeze({
@@ -1357,6 +1361,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getDayMaxDemandExport: getDayMaxDemandExport,
     getDayProfile: getDayProfile,
     getDemand: getDemand,
+    getDemandCumulative: getDemandCumulative,
     getDeviceId: getDeviceId,
     getDeviceType: getDeviceType,
     getDisplayParam: getDisplayParam,
@@ -2133,6 +2138,7 @@ var toBytes, setDataSegment, getBase64FromBytes;
     getDayMaxDemandExport: getDayMaxDemandExport,
     getDayProfile: getDayProfile,
     getDemand: getDemand,
+    getDemandCumulative: getDemandCumulative,
     getDeviceId: getDeviceId,
     getDeviceType: getDeviceType,
     getDisplayParam: getDisplayParam,
