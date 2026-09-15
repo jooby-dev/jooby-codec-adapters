@@ -2754,7 +2754,7 @@ var logs = '';
     if (energies) {
       setPowerMax(buffer, energies['A+']);
       setPowerMax(buffer, energies['A+R+']);
-      setPowerMax(buffer, energies['A+R+']);
+      setPowerMax(buffer, energies['A+R-']);
     }
   };
   var getAMinusTariffPowerMax = function getAMinusTariffPowerMax(buffer, energyFlags) {

@@ -5576,7 +5576,7 @@ var logs = '';
   var typeMeterMask = {
     TRANSFORMATION_RATIO: 1 << 0,
     METER_TYPE_R: 1 << 4,
-    ACCUMULATE_BY_R_PLUS_MINUS: 1 << 7
+    ACCUMULATE_BY_QUADRANTS: 1 << 7
   };
   var define1Mask = {
     RESET_DAY_MAX_POWER_KEY: 1 << 0,
@@ -6684,7 +6684,7 @@ var logs = '';
         typeMeter: {
           TRANSFORMATION_RATIO: false,
           METER_TYPE_R: false,
-          ACCUMULATE_BY_R_PLUS_MINUS: false
+          ACCUMULATE_BY_QUADRANTS: false
         },
         phMin: 0,
         timeoutIMax: 5,

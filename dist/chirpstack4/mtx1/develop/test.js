@@ -3593,7 +3593,7 @@
         if (energies) {
             setPowerMax(buffer, energies['A+']);
             setPowerMax(buffer, energies['A+R+']);
-            setPowerMax(buffer, energies['A+R+']);
+            setPowerMax(buffer, energies['A+R-']);
         }
     };
     const getAMinusTariffPowerMax = function (buffer, energyFlags) {

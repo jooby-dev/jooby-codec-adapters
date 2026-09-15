@@ -4252,6 +4252,24 @@ var logs = '';
       },
       bytes: [0x62, 0x20, 0x09]
     },
+    'status for IMP2EU': {
+      id: id$c,
+      name: name$c,
+      headerSize: headerSize$c,
+      parameters: {
+        sequenceNumber: 32,
+        status: {
+          isBatteryLow: true,
+          isConnectionLost: false,
+          isFirstChannelInactive: true,
+          isSecondChannelInactive: false
+        }
+      },
+      config: {
+        hardwareType: IMP2EU
+      },
+      bytes: [0x62, 0x20, 0x11]
+    },
     'status for IMP4EU': {
       id: id$c,
       name: name$c,

@@ -1860,10 +1860,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$2q = activateRatePlan$1;
-    var name$1W = commandNames$1[activateRatePlan$1];
-    var maxSize$23 = 1 + TARIFF_PLAN_SIZE;
-    var fromBytes$2n = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1W, bytes, maxSize$23);
+    var name$1$ = commandNames$1[activateRatePlan$1];
+    var maxSize$27 = 1 + TARIFF_PLAN_SIZE;
+    var fromBytes$2r = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1$, bytes, maxSize$27);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         tariffTable: buffer.getUint8(),
@@ -1871,17 +1871,17 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$2s = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$23, false);
+      var buffer = new BinaryBuffer(maxSize$27, false);
       buffer.setUint8(parameters.tariffTable);
       setTariffPlan(buffer, parameters.tariffPlan);
       return toBytes$2t(id$2q, buffer.data);
     };
 
     var id$2p = getBv$1;
-    var name$1V = commandNames$1[getBv$1];
-    var maxSize$22 = 0;
-    var fromBytes$2m = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1V, bytes, maxSize$22);
+    var name$1_ = commandNames$1[getBv$1];
+    var maxSize$26 = 0;
+    var fromBytes$2q = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1_, bytes, maxSize$26);
       return {};
     };
     var toBytes$2r = function toBytes() {
@@ -1889,10 +1889,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$2o = getCorrectTime$1;
-    var name$1U = commandNames$1[getCorrectTime$1];
-    var maxSize$21 = 0;
-    var fromBytes$2l = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1U, bytes, maxSize$21);
+    var name$1Z = commandNames$1[getCorrectTime$1];
+    var maxSize$25 = 0;
+    var fromBytes$2p = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1Z, bytes, maxSize$25);
       return {};
     };
     var toBytes$2q = function toBytes() {
@@ -1900,10 +1900,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$2n = getCurrentStatusMeter$1;
-    var name$1T = commandNames$1[getCurrentStatusMeter$1];
-    var maxSize$20 = 0;
-    var fromBytes$2k = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1T, bytes, maxSize$20);
+    var name$1Y = commandNames$1[getCurrentStatusMeter$1];
+    var maxSize$24 = 0;
+    var fromBytes$2o = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1Y, bytes, maxSize$24);
       return {};
     };
     var toBytes$2p = function toBytes() {
@@ -1911,10 +1911,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$2m = getCurrentValues$1;
-    var name$1S = commandNames$1[getCurrentValues$1];
-    var maxSize$1$ = 0;
-    var fromBytes$2j = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1S, bytes, maxSize$1$);
+    var name$1X = commandNames$1[getCurrentValues$1];
+    var maxSize$23 = 0;
+    var fromBytes$2n = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1X, bytes, maxSize$23);
       return {};
     };
     var toBytes$2o = function toBytes() {
@@ -1922,10 +1922,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$2l = getDateTime$2;
-    var name$1R = commandNames$1[getDateTime$2];
-    var maxSize$1_ = 0;
-    var fromBytes$2i = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1R, bytes, maxSize$1_);
+    var name$1W = commandNames$1[getDateTime$2];
+    var maxSize$22 = 0;
+    var fromBytes$2m = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1W, bytes, maxSize$22);
       return {};
     };
     var toBytes$2n = function toBytes() {
@@ -1933,40 +1933,40 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$2k = getDayMaxDemand$1;
-    var name$1Q = commandNames$1[getDayMaxDemand$1];
-    var maxSize$1Z = 3;
-    var fromBytes$2h = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1Q, bytes, maxSize$1Z);
+    var name$1V = commandNames$1[getDayMaxDemand$1];
+    var maxSize$21 = 3;
+    var fromBytes$2l = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1V, bytes, maxSize$21);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: getDate$1(buffer)
       };
     };
     var toBytes$2m = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1Z, false);
+      var buffer = new BinaryBuffer(maxSize$21, false);
       setDate$1(buffer, parameters.date);
       return toBytes$2t(id$2k, buffer.data);
     };
 
     var id$2j = getDayMaxDemandExport$1;
-    var name$1P = commandNames$1[getDayMaxDemandExport$1];
-    var maxSize$1Y = 3;
-    var fromBytes$2g = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1P, bytes, maxSize$1Y);
+    var name$1U = commandNames$1[getDayMaxDemandExport$1];
+    var maxSize$20 = 3;
+    var fromBytes$2k = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1U, bytes, maxSize$20);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: getDate$1(buffer)
       };
     };
     var toBytes$2l = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1Y, false);
+      var buffer = new BinaryBuffer(maxSize$20, false);
       setDate$1(buffer, parameters.date);
       return toBytes$2t(id$2j, buffer.data);
     };
 
     var id$2i = getDayProfile$1;
-    var maxSize$1X = 3;
-    var fromBytes$2f = function fromBytes(_ref) {
+    var maxSize$1$ = 3;
+    var fromBytes$2j = function fromBytes(_ref) {
       var _ref2 = _slicedToArray(_ref, 3),
         tariffTable = _ref2[0],
         index = _ref2[1],
@@ -1978,32 +1978,32 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$2k = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1X, false);
+      var buffer = new BinaryBuffer(maxSize$1$, false);
       buffer.setUint8(parameters.tariffTable);
       buffer.setUint8(parameters.index);
       buffer.setUint8(parameters.isActive ? 0 : 1);
       return toBytes$2t(id$2i, buffer.data);
     };
 
-    var maxSize$1W = 7;
+    var maxSize$1_ = 7;
 
     var id$2h = getDemandCumulative$1;
-    var maxSize$1V = 7;
-    var fromBytes$2e = function fromBytes(bytes) {
+    var maxSize$1Z = 7;
+    var fromBytes$2i = function fromBytes(bytes) {
       var buffer = new BinaryBuffer(bytes, false);
       return getDemand$2(buffer);
     };
     var toBytes$2j = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1V, false);
+      var buffer = new BinaryBuffer(maxSize$1Z, false);
       setDemand$1(buffer, parameters);
       return toBytes$2t(id$2h, buffer.data);
     };
 
     var id$2g = getDeviceId$2;
-    var name$1O = commandNames$1[getDeviceId$2];
-    var maxSize$1U = 0;
-    var fromBytes$2d = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1O, bytes, maxSize$1U);
+    var name$1T = commandNames$1[getDeviceId$2];
+    var maxSize$1Y = 0;
+    var fromBytes$2h = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1T, bytes, maxSize$1Y);
       return {};
     };
     var toBytes$2i = function toBytes() {
@@ -2011,10 +2011,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$2f = getDeviceType$1;
-    var name$1N = commandNames$1[getDeviceType$1];
-    var maxSize$1T = 0;
-    var fromBytes$2c = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1N, bytes, maxSize$1T);
+    var name$1S = commandNames$1[getDeviceType$1];
+    var maxSize$1X = 0;
+    var fromBytes$2g = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1S, bytes, maxSize$1X);
       return {};
     };
     var toBytes$2h = function toBytes() {
@@ -2022,10 +2022,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$2e = getEvents$1;
-    var name$1M = commandNames$1[getEvents$1];
-    var maxSize$1S = 4;
-    var fromBytes$2b = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1M, bytes, maxSize$1S);
+    var name$1R = commandNames$1[getEvents$1];
+    var maxSize$1W = 4;
+    var fromBytes$2f = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1R, bytes, maxSize$1W);
       var buffer = new BinaryBuffer(bytes, false);
       var date = getDate$1(buffer);
       var offset = buffer.getUint8();
@@ -2035,17 +2035,17 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$2g = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1S, false);
+      var buffer = new BinaryBuffer(maxSize$1W, false);
       setDate$1(buffer, parameters.date);
       buffer.setUint8(parameters.offset);
       return toBytes$2t(id$2e, buffer.data);
     };
 
     var id$2d = getEventsCounters$1;
-    var name$1L = commandNames$1[getEventsCounters$1];
-    var maxSize$1R = 0;
-    var fromBytes$2a = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1L, bytes, maxSize$1R);
+    var name$1Q = commandNames$1[getEventsCounters$1];
+    var maxSize$1V = 0;
+    var fromBytes$2e = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1Q, bytes, maxSize$1V);
       return {};
     };
     var toBytes$2f = function toBytes() {
@@ -2053,10 +2053,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$2c = getEventStatus$2;
-    var name$1K = commandNames$1[getEventStatus$2];
-    var maxSize$1Q = 0;
-    var fromBytes$29 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1K, bytes, maxSize$1Q);
+    var name$1P = commandNames$1[getEventStatus$2];
+    var maxSize$1U = 0;
+    var fromBytes$2d = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1P, bytes, maxSize$1U);
       return {};
     };
     var toBytes$2e = function toBytes() {
@@ -2064,10 +2064,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$2b = getExtendedCurrentValues$1;
-    var name$1J = commandNames$1[getExtendedCurrentValues$1];
-    var maxSize$1P = 0;
-    var fromBytes$28 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1J, bytes, maxSize$1P);
+    var name$1O = commandNames$1[getExtendedCurrentValues$1];
+    var maxSize$1T = 0;
+    var fromBytes$2c = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1O, bytes, maxSize$1T);
       return {};
     };
     var toBytes$2d = function toBytes() {
@@ -2075,38 +2075,48 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$2a = getGsmParameters$1;
+    var name$1N = commandNames$1[getGsmParameters$1];
+    var maxSize$1S = 1;
+    var fromBytes$2b = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1N, bytes, maxSize$1S);
+      var _bytes = _slicedToArray(bytes, 1),
+        index = _bytes[0];
+      return {
+        index: index
+      };
+    };
     var toBytes$2c = function toBytes(parameters) {
       return toBytes$2t(id$2a, [parameters.index]);
     };
 
     var id$29 = getHalfHourDemand$1;
-    var name$1I = commandNames$1[getHalfHourDemand$1];
-    var maxSize$1O = 3;
-    var fromBytes$27 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1I, bytes, maxSize$1O);
+    var name$1M = commandNames$1[getHalfHourDemand$1];
+    var maxSize$1R = 3;
+    var fromBytes$2a = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1M, bytes, maxSize$1R);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: getDate$1(buffer)
       };
     };
     var toBytes$2b = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1O, false);
+      var buffer = new BinaryBuffer(maxSize$1R, false);
       setDate$1(buffer, parameters.date);
       return toBytes$2t(id$29, buffer.data);
     };
 
     var id$28 = getHalfHourDemandExport$1;
-    var name$1H = commandNames$1[getHalfHourDemandExport$1];
-    var maxSize$1N = 3;
-    var fromBytes$26 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1H, bytes, maxSize$1N);
+    var name$1L = commandNames$1[getHalfHourDemandExport$1];
+    var maxSize$1Q = 3;
+    var fromBytes$29 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1L, bytes, maxSize$1Q);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: getDate$1(buffer)
       };
     };
     var toBytes$2a = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1N, false);
+      var buffer = new BinaryBuffer(maxSize$1Q, false);
       setDate$1(buffer, parameters.date);
       return toBytes$2t(id$28, buffer.data);
     };
@@ -2290,8 +2300,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$27 = getHalfHourEnergies$1;
-    var maxSize$1M = 5;
-    var fromBytes$25 = function fromBytes(bytes) {
+    var maxSize$1P = 5;
+    var fromBytes$28 = function fromBytes(bytes) {
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: getDate(buffer),
@@ -2301,7 +2311,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$29 = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1M, false);
+      var buffer = new BinaryBuffer(maxSize$1P, false);
       setDate(buffer, parameters.date);
       setEnergiesFlags(buffer, parameters.energies);
       buffer.setUint8(parameters.firstHalfhour);
@@ -2310,10 +2320,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$26 = getMagneticFieldThreshold$1;
-    var name$1G = commandNames$1[getMagneticFieldThreshold$1];
-    var maxSize$1L = 0;
-    var fromBytes$24 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1G, bytes, maxSize$1L);
+    var name$1K = commandNames$1[getMagneticFieldThreshold$1];
+    var maxSize$1O = 0;
+    var fromBytes$27 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1K, bytes, maxSize$1O);
       return {};
     };
     var toBytes$28 = function toBytes() {
@@ -2321,10 +2331,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$25 = getMeterInfo$1;
-    var name$1F = commandNames$1[getMeterInfo$1];
-    var maxSize$1K = 0;
-    var fromBytes$23 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1F, bytes, maxSize$1K);
+    var name$1J = commandNames$1[getMeterInfo$1];
+    var maxSize$1N = 0;
+    var fromBytes$26 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1J, bytes, maxSize$1N);
       return {};
     };
     var toBytes$27 = function toBytes() {
@@ -2332,10 +2342,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$24 = getMonthDemand$1;
-    var name$1E = commandNames$1[getMonthDemand$1];
-    var maxSize$1J = 2;
-    var fromBytes$22 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1E, bytes, maxSize$1J);
+    var name$1I = commandNames$1[getMonthDemand$1];
+    var maxSize$1M = 2;
+    var fromBytes$25 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1I, bytes, maxSize$1M);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         year: buffer.getUint8(),
@@ -2343,17 +2353,17 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$26 = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1J, false);
+      var buffer = new BinaryBuffer(maxSize$1M, false);
       buffer.setUint8(parameters.year);
       buffer.setUint8(parameters.month);
       return toBytes$2t(id$24, buffer.data);
     };
 
     var id$23 = getMonthDemandExport$1;
-    var name$1D = commandNames$1[getMonthDemandExport$1];
-    var maxSize$1I = 2;
-    var fromBytes$21 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1D, bytes, maxSize$1I);
+    var name$1H = commandNames$1[getMonthDemandExport$1];
+    var maxSize$1L = 2;
+    var fromBytes$24 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1H, bytes, maxSize$1L);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         year: buffer.getUint8(),
@@ -2361,17 +2371,17 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$25 = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1I, false);
+      var buffer = new BinaryBuffer(maxSize$1L, false);
       buffer.setUint8(parameters.year);
       buffer.setUint8(parameters.month);
       return toBytes$2t(id$23, buffer.data);
     };
 
     var id$22 = getMonthMaxDemand$1;
-    var name$1C = commandNames$1[getMonthMaxDemand$1];
-    var maxSize$1H = 2;
-    var fromBytes$20 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1C, bytes, maxSize$1H);
+    var name$1G = commandNames$1[getMonthMaxDemand$1];
+    var maxSize$1K = 2;
+    var fromBytes$23 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1G, bytes, maxSize$1K);
       var _bytes = _slicedToArray(bytes, 2),
         year = _bytes[0],
         month = _bytes[1];
@@ -2387,10 +2397,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$21 = getMonthMaxDemandExport$1;
-    var name$1B = commandNames$1[getMonthMaxDemandExport$1];
-    var maxSize$1G = 2;
-    var fromBytes$1$ = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1B, bytes, maxSize$1G);
+    var name$1F = commandNames$1[getMonthMaxDemandExport$1];
+    var maxSize$1J = 2;
+    var fromBytes$22 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1F, bytes, maxSize$1J);
       var _bytes = _slicedToArray(bytes, 2),
         year = _bytes[0],
         month = _bytes[1];
@@ -2406,10 +2416,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$20 = getOperatorParameters$2;
-    var name$1A = commandNames$1[getOperatorParameters$2];
-    var maxSize$1F = 0;
-    var fromBytes$1_ = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1A, bytes, maxSize$1F);
+    var name$1E = commandNames$1[getOperatorParameters$2];
+    var maxSize$1I = 0;
+    var fromBytes$21 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1E, bytes, maxSize$1I);
       return {};
     };
     var toBytes$22 = function toBytes() {
@@ -2417,10 +2427,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1$ = getOperatorParametersExtended3$2;
-    var name$1z = commandNames$1[getOperatorParametersExtended3$2];
-    var maxSize$1E = 0;
-    var fromBytes$1Z = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1z, bytes, maxSize$1E);
+    var name$1D = commandNames$1[getOperatorParametersExtended3$2];
+    var maxSize$1H = 0;
+    var fromBytes$20 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1D, bytes, maxSize$1H);
       return {};
     };
     var toBytes$21 = function toBytes() {
@@ -2428,10 +2438,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1_ = getQuality$1;
-    var name$1y = commandNames$1[getQuality$1];
-    var maxSize$1D = 2;
-    var fromBytes$1Y = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1y, bytes, maxSize$1D);
+    var name$1C = commandNames$1[getQuality$1];
+    var maxSize$1G = 2;
+    var fromBytes$1$ = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1C, bytes, maxSize$1G);
       var _bytes = _slicedToArray(bytes, 2),
         year = _bytes[0],
         month = _bytes[1];
@@ -2447,10 +2457,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1Z = getRatePlanInfo$1;
-    var name$1x = commandNames$1[getRatePlanInfo$1];
-    var maxSize$1C = 1;
-    var fromBytes$1X = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1x, bytes, maxSize$1C);
+    var name$1B = commandNames$1[getRatePlanInfo$1];
+    var maxSize$1F = 1;
+    var fromBytes$1_ = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1B, bytes, maxSize$1F);
       return {
         tariffTable: bytes[0]
       };
@@ -2460,10 +2470,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1Y = getSaldo$1;
-    var name$1w = commandNames$1[getSaldo$1];
-    var maxSize$1B = 0;
-    var fromBytes$1W = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1w, bytes, maxSize$1B);
+    var name$1A = commandNames$1[getSaldo$1];
+    var maxSize$1E = 0;
+    var fromBytes$1Z = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1A, bytes, maxSize$1E);
       return {};
     };
     var toBytes$1_ = function toBytes() {
@@ -2471,10 +2481,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1X = getSaldoParameters$2;
-    var name$1v = commandNames$1[getSaldoParameters$2];
-    var maxSize$1A = 0;
-    var fromBytes$1V = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1v, bytes, maxSize$1A);
+    var name$1z = commandNames$1[getSaldoParameters$2];
+    var maxSize$1D = 0;
+    var fromBytes$1Y = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1z, bytes, maxSize$1D);
       return {};
     };
     var toBytes$1Z = function toBytes() {
@@ -2482,10 +2492,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1W = getSeasonProfile$2;
-    var name$1u = commandNames$1[getSeasonProfile$2];
-    var maxSize$1z = 3;
-    var fromBytes$1U = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1u, bytes, maxSize$1z);
+    var name$1y = commandNames$1[getSeasonProfile$2];
+    var maxSize$1C = 3;
+    var fromBytes$1X = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1y, bytes, maxSize$1C);
       var _bytes = _slicedToArray(bytes, 3),
         tariffTable = _bytes[0],
         index = _bytes[1],
@@ -2497,7 +2507,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$1Y = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1z, false);
+      var buffer = new BinaryBuffer(maxSize$1C, false);
       buffer.setUint8(parameters.tariffTable);
       buffer.setUint8(parameters.index);
       buffer.setUint8(parameters.isActive ? 0 : 1);
@@ -2505,10 +2515,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1V = getSpecialDay$2;
-    var name$1t = commandNames$1[getSpecialDay$2];
-    var maxSize$1y = 3;
-    var fromBytes$1T = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1t, bytes, maxSize$1y);
+    var name$1x = commandNames$1[getSpecialDay$2];
+    var maxSize$1B = 3;
+    var fromBytes$1W = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1x, bytes, maxSize$1B);
       var _bytes = _slicedToArray(bytes, 3),
         tariffTable = _bytes[0],
         index = _bytes[1],
@@ -2520,7 +2530,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$1X = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1y, false);
+      var buffer = new BinaryBuffer(maxSize$1B, false);
       buffer.setUint8(parameters.tariffTable);
       buffer.setUint8(parameters.index);
       buffer.setUint8(parameters.isActive ? 0 : 1);
@@ -2528,10 +2538,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1U = getVersion$1;
-    var name$1s = commandNames$1[getVersion$1];
-    var maxSize$1x = 0;
-    var fromBytes$1S = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1s, bytes, maxSize$1x);
+    var name$1w = commandNames$1[getVersion$1];
+    var maxSize$1A = 0;
+    var fromBytes$1V = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1w, bytes, maxSize$1A);
       return {};
     };
     var toBytes$1W = function toBytes() {
@@ -2539,10 +2549,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1T = prepareRatePlan$1;
-    var name$1r = commandNames$1[prepareRatePlan$1];
-    var maxSize$1w = 5;
-    var fromBytes$1R = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1r, bytes, maxSize$1w);
+    var name$1v = commandNames$1[prepareRatePlan$1];
+    var maxSize$1z = 5;
+    var fromBytes$1U = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1v, bytes, maxSize$1z);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         tariffTable: buffer.getUint8(),
@@ -2550,17 +2560,17 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$1V = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1w, false);
+      var buffer = new BinaryBuffer(maxSize$1z, false);
       buffer.setUint8(parameters.tariffTable);
       buffer.setUint32(parameters.id);
       return toBytes$2t(id$1T, buffer.data);
     };
 
     var id$1S = resetPowerMaxDay$1;
-    var name$1q = commandNames$1[resetPowerMaxDay$1];
-    var maxSize$1v = 0;
-    var fromBytes$1Q = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1q, bytes, maxSize$1v);
+    var name$1u = commandNames$1[resetPowerMaxDay$1];
+    var maxSize$1y = 0;
+    var fromBytes$1T = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1u, bytes, maxSize$1y);
       return {};
     };
     var toBytes$1U = function toBytes() {
@@ -2568,10 +2578,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1R = resetPowerMaxMonth$1;
-    var name$1p = commandNames$1[resetPowerMaxMonth$1];
-    var maxSize$1u = 0;
-    var fromBytes$1P = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1p, bytes, maxSize$1u);
+    var name$1t = commandNames$1[resetPowerMaxMonth$1];
+    var maxSize$1x = 0;
+    var fromBytes$1S = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1t, bytes, maxSize$1x);
       return {};
     };
     var toBytes$1T = function toBytes() {
@@ -2579,7 +2589,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1Q = runTariffPlan$1;
-    var fromBytes$1O = function fromBytes(bytes) {
+    var fromBytes$1R = function fromBytes(bytes) {
       return {
         tariffTable: bytes[0]
       };
@@ -2590,10 +2600,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     var KEY_SIZE = 16;
     var id$1P = setAccessKey$1;
-    var name$1o = commandNames$1[setAccessKey$1];
-    var maxSize$1t = 1 + KEY_SIZE;
-    var fromBytes$1N = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1o, bytes, maxSize$1t);
+    var name$1s = commandNames$1[setAccessKey$1];
+    var maxSize$1w = 1 + KEY_SIZE;
+    var fromBytes$1Q = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1s, bytes, maxSize$1w);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         accessLevel: buffer.getUint8(),
@@ -2601,52 +2611,52 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$1R = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1t, false);
+      var buffer = new BinaryBuffer(maxSize$1w, false);
       buffer.setUint8(parameters.accessLevel);
       buffer.setBytes(parameters.key);
       return toBytes$2t(id$1P, buffer.data);
     };
 
     var id$1O = setCorrectDateTime$1;
-    var name$1n = commandNames$1[setCorrectDateTime$1];
-    var maxSize$1s = 2;
-    var fromBytes$1M = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1n, bytes, maxSize$1s);
+    var name$1r = commandNames$1[setCorrectDateTime$1];
+    var maxSize$1v = 2;
+    var fromBytes$1P = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1r, bytes, maxSize$1v);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         seconds: buffer.getInt16()
       };
     };
     var toBytes$1Q = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1s, false);
+      var buffer = new BinaryBuffer(maxSize$1v, false);
       buffer.setInt16(parameters.seconds);
       return toBytes$2t(id$1O, buffer.data);
     };
 
     var id$1N = setCorrectTime$1;
-    var name$1m = commandNames$1[setCorrectTime$1];
-    var maxSize$1r = 9;
-    var fromBytes$1L = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1m, bytes, maxSize$1r);
+    var name$1q = commandNames$1[setCorrectTime$1];
+    var maxSize$1u = 9;
+    var fromBytes$1O = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1q, bytes, maxSize$1u);
       var buffer = new BinaryBuffer(bytes, false);
       return getTimeCorrectionParameters(buffer);
     };
     var toBytes$1P = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1r, false);
+      var buffer = new BinaryBuffer(maxSize$1u, false);
       setTimeCorrectionParameters(buffer, parameters);
       return toBytes$2t(id$1N, buffer.data);
     };
 
     var id$1M = setDateTime$2;
-    var name$1l = commandNames$1[setDateTime$2];
-    var maxSize$1q = 8;
-    var fromBytes$1K = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1l, bytes, maxSize$1q);
+    var name$1p = commandNames$1[setDateTime$2];
+    var maxSize$1t = 8;
+    var fromBytes$1N = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1p, bytes, maxSize$1t);
       var buffer = new BinaryBuffer(bytes, false);
       return getDateTime$1(buffer);
     };
     var toBytes$1O = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1q, false);
+      var buffer = new BinaryBuffer(maxSize$1t, false);
       setDateTime$1(buffer, parameters);
       return toBytes$2t(id$1M, buffer.data);
     };
@@ -2654,7 +2664,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var MAX_PERIODS_NUMBER$1 = 8;
     var PERIODS_FINAL_BYTE$1 = 0xff;
     var id$1L = setDayProfile$2;
-    var fromBytes$1J = function fromBytes(bytes) {
+    var fromBytes$1M = function fromBytes(bytes) {
       var finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE$1);
       var cleanBytes = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
       var buffer = new BinaryBuffer(cleanBytes, false);
@@ -2704,10 +2714,29 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       throw new Error('unknown CRC16 type');
     });
 
+    var getBytesCrc = function getBytesCrc(bytes) {
+      if (bytes.length >= 2) {
+        var crcBuffer = new BinaryBuffer(bytes.slice(-2));
+        return crcBuffer.getUint16();
+      }
+      return undefined;
+    };
     var convertCrcToBytes = function convertCrcToBytes(crc) {
       var buffer = new BinaryBuffer(2);
       buffer.setUint16(crc);
       return buffer.toUint8Array();
+    };
+    var parse = function parse(bytes) {
+      var receivedCrc = getBytesCrc(bytes);
+      var payload = bytes.slice(0, bytes.length - 2);
+      var calculatedCrc = calculateCrc16(payload);
+      return {
+        payload: payload,
+        crc: {
+          calculated: calculatedCrc,
+          received: receivedCrc
+        }
+      };
     };
     var appendCrc = function appendCrc(payload) {
       if (payload.length === 0) return [];
@@ -2718,6 +2747,33 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     var GSM_BLOCK_PREFIX = 0xda;
     var GSM_BLOCK_SIZE = 60;
+    var getGsmBlock = function getGsmBlock(commandName, bytes) {
+      var _bytes = _slicedToArray(bytes, 1),
+        index = _bytes[0];
+      var block = parse(bytes.slice(1));
+      if (index > 3) {
+        throw new Error("Command ".concat(commandName, ". Invalid block index: ").concat(index, "."));
+      }
+      if (block.crc.calculated !== block.crc.received) {
+        var crcToHex = function crcToHex(value) {
+          return value.toString(16).padStart(4, '0');
+        };
+        throw new Error("Command ".concat(commandName, ". Invalid block crc. Calculated: ") + "0x".concat(crcToHex(block.crc.calculated), ", received: 0x").concat(crcToHex(block.crc.received)));
+      }
+      var _block$payload = _toArray(block.payload),
+        blockPrefix = _block$payload[0],
+        data = _arrayLikeToArray(_block$payload).slice(1);
+      if (blockPrefix !== GSM_BLOCK_PREFIX) {
+        throw new Error("Command ".concat(commandName, ". Invalid block prefix: ").concat(blockPrefix, "."));
+      }
+      if (data.length !== 1 + GSM_BLOCK_SIZE) {
+        throw new Error("Command ".concat(commandName, ". Invalid payload length: ").concat(data.length, "."));
+      }
+      return {
+        index: index,
+        data: data
+      };
+    };
     var setGsmBlock = function setGsmBlock(block) {
       var data = [GSM_BLOCK_PREFIX].concat(_toConsumableArray(block.data));
       if (block.data.length < GSM_BLOCK_SIZE) {
@@ -2727,29 +2783,35 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1K = setGsmParameters$1;
+    var name$1o = commandNames$1[setGsmParameters$1];
+    var maxSize$1s = 3 + GSM_BLOCK_SIZE + 2;
+    var fromBytes$1L = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1o, bytes, maxSize$1s);
+      return getGsmBlock(name$1o, bytes);
+    };
     var toBytes$1M = function toBytes(parameters) {
       return toBytes$2t(id$1K, setGsmBlock(parameters));
     };
 
     var id$1J = setOperatorParametersExtended3$2;
-    var name$1k = commandNames$1[setOperatorParametersExtended3$2];
-    var maxSize$1p = 17;
-    var fromBytes$1I = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1k, bytes, maxSize$1p);
+    var name$1n = commandNames$1[setOperatorParametersExtended3$2];
+    var maxSize$1r = 17;
+    var fromBytes$1K = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1n, bytes, maxSize$1r);
       var buffer = new BinaryBuffer(bytes, false);
       return getOperatorParametersExtended3$1(buffer);
     };
     var toBytes$1L = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1p, false);
+      var buffer = new BinaryBuffer(maxSize$1r, false);
       setOperatorParametersExtended3$1(buffer, parameters);
       return toBytes$2t(id$1J, buffer.data);
     };
 
     var id$1I = setSaldo$1;
-    var name$1j = commandNames$1[setSaldo$1];
-    var maxSize$1o = 12;
-    var fromBytes$1H = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1j, bytes, maxSize$1o);
+    var name$1m = commandNames$1[setSaldo$1];
+    var maxSize$1q = 12;
+    var fromBytes$1J = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1m, bytes, maxSize$1q);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: {
@@ -2763,7 +2825,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$1K = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1o, false);
+      var buffer = new BinaryBuffer(maxSize$1q, false);
       buffer.setUint8(parameters.date.month);
       buffer.setUint8(parameters.date.date);
       buffer.setUint8(parameters.date.hours);
@@ -2774,24 +2836,24 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1H = setSaldoParameters$2;
-    var name$1i = commandNames$1[setSaldoParameters$2];
-    var maxSize$1n = 37;
-    var fromBytes$1G = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1i, bytes, maxSize$1n);
+    var name$1l = commandNames$1[setSaldoParameters$2];
+    var maxSize$1p = 37;
+    var fromBytes$1I = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1l, bytes, maxSize$1p);
       var buffer = new BinaryBuffer(bytes, false);
       return getSaldoParameters$1(buffer);
     };
     var toBytes$1J = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1n, false);
+      var buffer = new BinaryBuffer(maxSize$1p, false);
       setSaldoParameters$1(buffer, parameters);
       return toBytes$2t(id$1H, buffer.data);
     };
 
     var id$1G = setSeasonProfile$2;
-    var name$1h = commandNames$1[setSeasonProfile$2];
-    var maxSize$1m = 2 + SEASON_PROFILE_SIZE;
-    var fromBytes$1F = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1h, bytes, maxSize$1m);
+    var name$1k = commandNames$1[setSeasonProfile$2];
+    var maxSize$1o = 2 + SEASON_PROFILE_SIZE;
+    var fromBytes$1H = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1k, bytes, maxSize$1o);
       var buffer = new BinaryBuffer(bytes, false);
       return _objectSpread2({
         tariffTable: buffer.getUint8(),
@@ -2799,7 +2861,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       }, getSeasonProfile$1(buffer));
     };
     var toBytes$1I = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1m, false);
+      var buffer = new BinaryBuffer(maxSize$1o, false);
       buffer.setUint8(parameters.tariffTable);
       buffer.setUint8(parameters.index);
       setSeasonProfile$1(buffer, parameters);
@@ -2807,10 +2869,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1F = setSpecialDay$2;
-    var name$1g = commandNames$1[setSpecialDay$2];
-    var maxSize$1l = 6;
-    var fromBytes$1E = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1g, bytes, maxSize$1l);
+    var name$1j = commandNames$1[setSpecialDay$2];
+    var maxSize$1n = 6;
+    var fromBytes$1G = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1j, bytes, maxSize$1n);
       var buffer = new BinaryBuffer(bytes, false);
       return _objectSpread2({
         tariffTable: buffer.getUint8(),
@@ -2818,7 +2880,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       }, getSpecialDay$1(buffer));
     };
     var toBytes$1H = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1l, false);
+      var buffer = new BinaryBuffer(maxSize$1n, false);
       buffer.setUint8(parameters.tariffTable);
       buffer.setUint8(parameters.index);
       setSpecialDay$1(buffer, parameters);
@@ -2826,10 +2888,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1E = setSpecialOperation$1;
-    var name$1f = commandNames$1[setSpecialOperation$1];
-    var maxSize$1k = 2;
-    var fromBytes$1D = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1f, bytes, maxSize$1k);
+    var name$1i = commandNames$1[setSpecialOperation$1];
+    var maxSize$1m = 2;
+    var fromBytes$1F = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1i, bytes, maxSize$1m);
       var buffer = new BinaryBuffer(bytes, false);
       var type = buffer.getUint8();
       var flags = buffer.getUint8();
@@ -2844,7 +2906,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$1G = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1k, false);
+      var buffer = new BinaryBuffer(maxSize$1m, false);
       var flags = 0;
       if (parameters.readScreensInfo) {
         flags |= 0x80;
@@ -2861,10 +2923,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1D = turnRelayOff$1;
-    var name$1e = commandNames$1[turnRelayOff$1];
-    var maxSize$1j = 0;
-    var fromBytes$1C = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1e, bytes, maxSize$1j);
+    var name$1h = commandNames$1[turnRelayOff$1];
+    var maxSize$1l = 0;
+    var fromBytes$1E = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1h, bytes, maxSize$1l);
       return {};
     };
     var toBytes$1F = function toBytes() {
@@ -2872,10 +2934,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1C = turnRelayOn$1;
-    var name$1d = commandNames$1[turnRelayOn$1];
-    var maxSize$1i = 0;
-    var fromBytes$1B = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1d, bytes, maxSize$1i);
+    var name$1g = commandNames$1[turnRelayOn$1];
+    var maxSize$1k = 0;
+    var fromBytes$1D = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1g, bytes, maxSize$1k);
       return {};
     };
     var toBytes$1E = function toBytes() {
@@ -2883,10 +2945,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1B = errorDataFrameResponse$1;
-    var name$1c = commandNames[errorDataFrameResponse$1];
-    var maxSize$1h = 1;
-    var fromBytes$1A = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1c, bytes, maxSize$1h);
+    var name$1f = commandNames[errorDataFrameResponse$1];
+    var maxSize$1j = 1;
+    var fromBytes$1C = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1f, bytes, maxSize$1j);
       var _bytes = _slicedToArray(bytes, 1),
         errorCode = _bytes[0];
       return {
@@ -2921,10 +2983,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         id = _bytes[0];
       if (id === id$1B) {
         try {
-          var parameters = fromBytes$1A(bytes.slice(COMMAND_HEADER_SIZE$1));
+          var parameters = fromBytes$1C(bytes.slice(COMMAND_HEADER_SIZE$1));
           return {
             id: id,
-            name: name$1c,
+            name: name$1f,
             headerSize: COMMAND_HEADER_SIZE$1,
             bytes: bytes,
             parameters: parameters
@@ -3287,10 +3349,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var downlinkNames = invertObject(downlinkIds);
 
     var id$1A = getCriticalEvent;
-    var name$1b = downlinkNames[getCriticalEvent];
-    var maxSize$1g = 2;
-    var fromBytes$1z = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1b, bytes, maxSize$1g);
+    var name$1e = downlinkNames[getCriticalEvent];
+    var maxSize$1i = 2;
+    var fromBytes$1B = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1e, bytes, maxSize$1i);
       var _bytes = _slicedToArray(bytes, 2),
         event = _bytes[0],
         index = _bytes[1];
@@ -3310,7 +3372,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var MIN_COMMAND_SIZE$2 = 3;
     var MAX_COMMAND_SIZE$2 = 4;
     var id$1z = getDayDemand;
-    var fromBytes$1y = function fromBytes(bytes) {
+    var fromBytes$1A = function fromBytes(bytes) {
       var buffer = new BinaryBuffer(bytes, false);
       if (bytes.length === MAX_COMMAND_SIZE$2) {
         return {
@@ -3332,17 +3394,17 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1y = getDayDemandExport;
-    var name$1a = downlinkNames[getDayDemandExport];
-    var maxSize$1f = 3;
-    var fromBytes$1x = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$1a, bytes, maxSize$1f);
+    var name$1d = downlinkNames[getDayDemandExport];
+    var maxSize$1h = 3;
+    var fromBytes$1z = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1d, bytes, maxSize$1h);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: getDate$1(buffer)
       };
     };
     var toBytes$1A = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1f, false);
+      var buffer = new BinaryBuffer(maxSize$1h, false);
       setDate$1(buffer, parameters.date);
       return toBytes$2t(id$1y, buffer.data);
     };
@@ -4306,7 +4368,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var typeMeterMask = {
       TRANSFORMATION_RATIO: 1 << 0,
       METER_TYPE_R: 1 << 4,
-      ACCUMULATE_BY_R_PLUS_MINUS: 1 << 7
+      ACCUMULATE_BY_QUADRANTS: 1 << 7
     };
     var define1Mask = {
       RESET_DAY_MAX_POWER_KEY: 1 << 0,
@@ -4758,39 +4820,39 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1x = getDemand$1;
-    var name$19 = downlinkNames[getDemand$1];
-    var maxSize$1e = 7;
-    var fromBytes$1w = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$19, bytes, maxSize$1e);
+    var name$1c = downlinkNames[getDemand$1];
+    var maxSize$1g = 7;
+    var fromBytes$1y = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1c, bytes, maxSize$1g);
       var buffer = new BinaryBuffer(bytes, false);
       return getDemand(buffer);
     };
     var toBytes$1z = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1e, false);
+      var buffer = new BinaryBuffer(maxSize$1g, false);
       setDemand(buffer, parameters);
       return toBytes$2t(id$1x, buffer.data);
     };
 
     var id$1w = getDisplayParam;
-    var name$18 = downlinkNames[getDisplayParam];
-    var maxSize$1d = 1;
-    var fromBytes$1v = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$18, bytes, maxSize$1d);
+    var name$1b = downlinkNames[getDisplayParam];
+    var maxSize$1f = 1;
+    var fromBytes$1x = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1b, bytes, maxSize$1f);
       return {
         displayMode: bytes[0]
       };
     };
     var toBytes$1y = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1d, false);
+      var buffer = new BinaryBuffer(maxSize$1f, false);
       buffer.setUint8(parameters.displayMode);
       return toBytes$2t(id$1w, buffer.data);
     };
 
     var id$1v = getEnergy;
-    var name$17 = downlinkNames[getEnergy];
-    var maxSize$1c = 0;
-    var fromBytes$1u = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$17, bytes, maxSize$1c);
+    var name$1a = downlinkNames[getEnergy];
+    var maxSize$1e = 0;
+    var fromBytes$1w = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$1a, bytes, maxSize$1e);
       return {};
     };
     var toBytes$1x = function toBytes() {
@@ -4800,7 +4862,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var MIN_COMMAND_SIZE$1 = 0;
     var MAX_COMMAND_SIZE$1 = 1;
     var id$1u = getEnergyDayPrevious;
-    var fromBytes$1t = function fromBytes(bytes) {
+    var fromBytes$1v = function fromBytes(bytes) {
       var length = bytes.length;
       if (length !== MAX_COMMAND_SIZE$1 && length !== MIN_COMMAND_SIZE$1) {
         throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
@@ -4820,10 +4882,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1t = getEnergyExport;
-    var name$16 = downlinkNames[getEnergyExport];
-    var maxSize$1b = 0;
-    var fromBytes$1s = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$16, bytes, maxSize$1b);
+    var name$19 = downlinkNames[getEnergyExport];
+    var maxSize$1d = 0;
+    var fromBytes$1u = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$19, bytes, maxSize$1d);
       return {};
     };
     var toBytes$1v = function toBytes() {
@@ -4831,10 +4893,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1s = getEnergyExportDayPrevious;
-    var name$15 = downlinkNames[getEnergyExportDayPrevious];
-    var maxSize$1a = 0;
-    var fromBytes$1r = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$15, bytes, maxSize$1a);
+    var name$18 = downlinkNames[getEnergyExportDayPrevious];
+    var maxSize$1c = 0;
+    var fromBytes$1t = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$18, bytes, maxSize$1c);
       return {};
     };
     var toBytes$1u = function toBytes() {
@@ -4842,10 +4904,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1r = getHalfHourDemandChannel;
-    var name$14 = downlinkNames[getHalfHourDemandChannel];
-    var maxSize$19 = 5;
-    var fromBytes$1q = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$14, bytes, maxSize$19);
+    var name$17 = downlinkNames[getHalfHourDemandChannel];
+    var maxSize$1b = 5;
+    var fromBytes$1s = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$17, bytes, maxSize$1b);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         channel: buffer.getUint8(),
@@ -4854,7 +4916,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$1t = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$19, false);
+      var buffer = new BinaryBuffer(maxSize$1b, false);
       buffer.setUint8(parameters.channel);
       buffer.setUint8(parameters.loadProfile);
       setDate$1(buffer, parameters.date);
@@ -4862,74 +4924,74 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1q = getHalfHourDemandVare;
-    var name$13 = downlinkNames[getHalfHourDemandVare];
-    var maxSize$18 = 3;
-    var fromBytes$1p = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$13, bytes, maxSize$18);
+    var name$16 = downlinkNames[getHalfHourDemandVare];
+    var maxSize$1a = 3;
+    var fromBytes$1r = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$16, bytes, maxSize$1a);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: getDate$1(buffer)
       };
     };
     var toBytes$1s = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$18, false);
+      var buffer = new BinaryBuffer(maxSize$1a, false);
       setDate$1(buffer, parameters.date);
       return toBytes$2t(id$1q, buffer.data);
     };
 
     var id$1p = getHalfHourDemandVareExport;
-    var name$12 = downlinkNames[getHalfHourDemandVareExport];
-    var maxSize$17 = 3;
-    var fromBytes$1o = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$12, bytes, maxSize$17);
+    var name$15 = downlinkNames[getHalfHourDemandVareExport];
+    var maxSize$19 = 3;
+    var fromBytes$1q = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$15, bytes, maxSize$19);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: getDate$1(buffer)
       };
     };
     var toBytes$1r = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$17, false);
+      var buffer = new BinaryBuffer(maxSize$19, false);
       setDate$1(buffer, parameters.date);
       return toBytes$2t(id$1p, buffer.data);
     };
 
     var id$1o = getHalfHourDemandVari;
-    var name$11 = downlinkNames[getHalfHourDemandVari];
-    var maxSize$16 = 3;
-    var fromBytes$1n = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$11, bytes, maxSize$16);
+    var name$14 = downlinkNames[getHalfHourDemandVari];
+    var maxSize$18 = 3;
+    var fromBytes$1p = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$14, bytes, maxSize$18);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: getDate$1(buffer)
       };
     };
     var toBytes$1q = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$16, false);
+      var buffer = new BinaryBuffer(maxSize$18, false);
       setDate$1(buffer, parameters.date);
       return toBytes$2t(id$1o, buffer.data);
     };
 
     var id$1n = getHalfHourDemandVariExport;
-    var name$10 = downlinkNames[getHalfHourDemandVariExport];
-    var maxSize$15 = 3;
-    var fromBytes$1m = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$10, bytes, maxSize$15);
+    var name$13 = downlinkNames[getHalfHourDemandVariExport];
+    var maxSize$17 = 3;
+    var fromBytes$1o = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$13, bytes, maxSize$17);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: getDate$1(buffer)
       };
     };
     var toBytes$1p = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$15, false);
+      var buffer = new BinaryBuffer(maxSize$17, false);
       setDate$1(buffer, parameters.date);
       return toBytes$2t(id$1n, buffer.data);
     };
 
     var id$1m = getOperatorParametersExtended$1;
-    var name$ = downlinkNames[getOperatorParametersExtended$1];
-    var maxSize$14 = 0;
-    var fromBytes$1l = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$, bytes, maxSize$14);
+    var name$12 = downlinkNames[getOperatorParametersExtended$1];
+    var maxSize$16 = 0;
+    var fromBytes$1n = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$12, bytes, maxSize$16);
       return {};
     };
     var toBytes$1o = function toBytes() {
@@ -4937,10 +4999,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1l = getOperatorParametersExtended2$1;
-    var name$_ = downlinkNames[getOperatorParametersExtended2$1];
-    var maxSize$13 = 0;
-    var fromBytes$1k = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$_, bytes, maxSize$13);
+    var name$11 = downlinkNames[getOperatorParametersExtended2$1];
+    var maxSize$15 = 0;
+    var fromBytes$1m = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$11, bytes, maxSize$15);
       return {};
     };
     var toBytes$1n = function toBytes() {
@@ -4948,10 +5010,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1k = getOperatorParametersExtended4$1;
-    var name$Z = downlinkNames[getOperatorParametersExtended4$1];
-    var maxSize$12 = 0;
-    var fromBytes$1j = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$Z, bytes, maxSize$12);
+    var name$10 = downlinkNames[getOperatorParametersExtended4$1];
+    var maxSize$14 = 0;
+    var fromBytes$1l = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$10, bytes, maxSize$14);
       return {};
     };
     var toBytes$1m = function toBytes() {
@@ -4959,9 +5021,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1j = setDisplayParam;
-    var maxSize$11 = 65;
-    var fromBytes$1i = function fromBytes(bytes) {
-      if (bytes.length < 1 || bytes.length > maxSize$11) {
+    var maxSize$13 = 65;
+    var fromBytes$1k = function fromBytes(bytes) {
+      if (bytes.length < 1 || bytes.length > maxSize$13) {
         throw new Error('Invalid SetDisplayParam data size.');
       }
       var _bytes = _toArray(bytes),
@@ -4977,57 +5039,57 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1i = setOperatorParameters$1;
-    var name$Y = downlinkNames[setOperatorParameters$1];
-    var maxSize$10 = OPERATOR_PARAMETERS_SIZE;
-    var fromBytes$1h = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$Y, bytes, maxSize$10);
+    var name$ = downlinkNames[setOperatorParameters$1];
+    var maxSize$12 = OPERATOR_PARAMETERS_SIZE;
+    var fromBytes$1j = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$, bytes, maxSize$12);
       var buffer = new BinaryBuffer(bytes, false);
       return getOperatorParameters(buffer);
     };
     var toBytes$1k = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$10, false);
+      var buffer = new BinaryBuffer(maxSize$12, false);
       setOperatorParameters(buffer, parameters);
       return toBytes$2t(id$1i, buffer.data);
     };
 
     var id$1h = setOperatorParametersExtended$1;
-    var name$X = downlinkNames[setOperatorParametersExtended$1];
-    var maxSize$ = OPERATOR_PARAMETERS_EXTENDED_SIZE;
-    var fromBytes$1g = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$X, bytes, maxSize$);
+    var name$_ = downlinkNames[setOperatorParametersExtended$1];
+    var maxSize$11 = OPERATOR_PARAMETERS_EXTENDED_SIZE;
+    var fromBytes$1i = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$_, bytes, maxSize$11);
       var buffer = new BinaryBuffer(bytes, false);
       return getOperatorParametersExtended(buffer);
     };
     var toBytes$1j = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$, false);
+      var buffer = new BinaryBuffer(maxSize$11, false);
       setOperatorParametersExtended(buffer, parameters);
       return toBytes$2t(id$1h, buffer.data);
     };
 
     var id$1g = setOperatorParametersExtended2$1;
-    var name$W = downlinkNames[setOperatorParametersExtended2$1];
-    var maxSize$_ = OPERATOR_PARAMETERS_EXTENDED2_SIZE;
-    var fromBytes$1f = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$W, bytes, maxSize$_);
+    var name$Z = downlinkNames[setOperatorParametersExtended2$1];
+    var maxSize$10 = OPERATOR_PARAMETERS_EXTENDED2_SIZE;
+    var fromBytes$1h = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$Z, bytes, maxSize$10);
       var buffer = new BinaryBuffer(bytes, false);
       return getOperatorParametersExtended2(buffer);
     };
     var toBytes$1i = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$_, false);
+      var buffer = new BinaryBuffer(maxSize$10, false);
       setOperatorParametersExtended2(buffer, parameters);
       return toBytes$2t(id$1g, buffer.data);
     };
 
     var id$1f = setOperatorParametersExtended4$1;
-    var name$V = downlinkNames[setOperatorParametersExtended4$1];
-    var maxSize$Z = OPERATOR_PARAMETERS_EXTENDED4_SIZE;
-    var fromBytes$1e = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$V, bytes, maxSize$Z);
+    var name$Y = downlinkNames[setOperatorParametersExtended4$1];
+    var maxSize$ = OPERATOR_PARAMETERS_EXTENDED4_SIZE;
+    var fromBytes$1g = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$Y, bytes, maxSize$);
       var buffer = new BinaryBuffer(bytes, false);
       return getOperatorParametersExtended4(buffer);
     };
     var toBytes$1h = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$Z, false);
+      var buffer = new BinaryBuffer(maxSize$, false);
       setOperatorParametersExtended4(buffer, parameters);
       return toBytes$2t(id$1f, buffer.data);
     };
@@ -5111,87 +5173,87 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     toBytesMap$1[id$1h] = toBytes$1j;
     toBytesMap$1[id$1g] = toBytes$1i;
     toBytesMap$1[id$1f] = toBytes$1h;
-    fromBytesMap$1[id$2q] = fromBytes$2n;
-    fromBytesMap$1[id$2p] = fromBytes$2m;
-    fromBytesMap$1[id$2o] = fromBytes$2l;
-    fromBytesMap$1[id$2n] = fromBytes$2k;
-    fromBytesMap$1[id$2m] = fromBytes$2j;
-    fromBytesMap$1[id$2l] = fromBytes$2i;
-    fromBytesMap$1[id$2k] = fromBytes$2h;
-    fromBytesMap$1[id$2j] = fromBytes$2g;
-    fromBytesMap$1[id$2i] = fromBytes$2f;
-    fromBytesMap$1[id$2h] = fromBytes$2e;
-    fromBytesMap$1[id$2g] = fromBytes$2d;
-    fromBytesMap$1[id$2f] = fromBytes$2c;
-    fromBytesMap$1[id$2e] = fromBytes$2b;
-    fromBytesMap$1[id$2d] = fromBytes$2a;
-    fromBytesMap$1[id$2c] = fromBytes$29;
-    fromBytesMap$1[id$2b] = fromBytes$28;
-    fromBytesMap$1[id$2a] = toBytes$2c;
-    fromBytesMap$1[id$29] = fromBytes$27;
-    fromBytesMap$1[id$28] = fromBytes$26;
-    fromBytesMap$1[id$27] = fromBytes$25;
-    fromBytesMap$1[id$26] = fromBytes$24;
-    fromBytesMap$1[id$25] = fromBytes$23;
-    fromBytesMap$1[id$24] = fromBytes$22;
-    fromBytesMap$1[id$23] = fromBytes$21;
-    fromBytesMap$1[id$22] = fromBytes$20;
-    fromBytesMap$1[id$21] = fromBytes$1$;
-    fromBytesMap$1[id$20] = fromBytes$1_;
-    fromBytesMap$1[id$1$] = fromBytes$1Z;
-    fromBytesMap$1[id$1_] = fromBytes$1Y;
-    fromBytesMap$1[id$1Z] = fromBytes$1X;
-    fromBytesMap$1[id$1Y] = fromBytes$1W;
-    fromBytesMap$1[id$1X] = fromBytes$1V;
-    fromBytesMap$1[id$1W] = fromBytes$1U;
-    fromBytesMap$1[id$1V] = fromBytes$1T;
-    fromBytesMap$1[id$1U] = fromBytes$1S;
-    fromBytesMap$1[id$1T] = fromBytes$1R;
-    fromBytesMap$1[id$1S] = fromBytes$1Q;
-    fromBytesMap$1[id$1R] = fromBytes$1P;
-    fromBytesMap$1[id$1Q] = fromBytes$1O;
-    fromBytesMap$1[id$1P] = fromBytes$1N;
-    fromBytesMap$1[id$1O] = fromBytes$1M;
-    fromBytesMap$1[id$1N] = fromBytes$1L;
-    fromBytesMap$1[id$1M] = fromBytes$1K;
-    fromBytesMap$1[id$1L] = fromBytes$1J;
-    fromBytesMap$1[id$1K] = toBytes$1M;
-    fromBytesMap$1[id$1J] = fromBytes$1I;
-    fromBytesMap$1[id$1I] = fromBytes$1H;
-    fromBytesMap$1[id$1H] = fromBytes$1G;
-    fromBytesMap$1[id$1G] = fromBytes$1F;
-    fromBytesMap$1[id$1F] = fromBytes$1E;
-    fromBytesMap$1[id$1E] = fromBytes$1D;
-    fromBytesMap$1[id$1D] = fromBytes$1C;
-    fromBytesMap$1[id$1C] = fromBytes$1B;
-    fromBytesMap$1[id$1A] = fromBytes$1z;
-    fromBytesMap$1[id$1z] = fromBytes$1y;
-    fromBytesMap$1[id$1y] = fromBytes$1x;
-    fromBytesMap$1[id$1x] = fromBytes$1w;
-    fromBytesMap$1[id$1w] = fromBytes$1v;
-    fromBytesMap$1[id$1v] = fromBytes$1u;
-    fromBytesMap$1[id$1u] = fromBytes$1t;
-    fromBytesMap$1[id$1t] = fromBytes$1s;
-    fromBytesMap$1[id$1s] = fromBytes$1r;
-    fromBytesMap$1[id$1r] = fromBytes$1q;
-    fromBytesMap$1[id$1q] = fromBytes$1p;
-    fromBytesMap$1[id$1p] = fromBytes$1o;
-    fromBytesMap$1[id$1o] = fromBytes$1n;
-    fromBytesMap$1[id$1n] = fromBytes$1m;
-    fromBytesMap$1[id$1m] = fromBytes$1l;
-    fromBytesMap$1[id$1l] = fromBytes$1k;
-    fromBytesMap$1[id$1k] = fromBytes$1j;
-    fromBytesMap$1[id$1j] = fromBytes$1i;
-    fromBytesMap$1[id$1i] = fromBytes$1h;
-    fromBytesMap$1[id$1h] = fromBytes$1g;
-    fromBytesMap$1[id$1g] = fromBytes$1f;
-    fromBytesMap$1[id$1f] = fromBytes$1e;
+    fromBytesMap$1[id$2q] = fromBytes$2r;
+    fromBytesMap$1[id$2p] = fromBytes$2q;
+    fromBytesMap$1[id$2o] = fromBytes$2p;
+    fromBytesMap$1[id$2n] = fromBytes$2o;
+    fromBytesMap$1[id$2m] = fromBytes$2n;
+    fromBytesMap$1[id$2l] = fromBytes$2m;
+    fromBytesMap$1[id$2k] = fromBytes$2l;
+    fromBytesMap$1[id$2j] = fromBytes$2k;
+    fromBytesMap$1[id$2i] = fromBytes$2j;
+    fromBytesMap$1[id$2h] = fromBytes$2i;
+    fromBytesMap$1[id$2g] = fromBytes$2h;
+    fromBytesMap$1[id$2f] = fromBytes$2g;
+    fromBytesMap$1[id$2e] = fromBytes$2f;
+    fromBytesMap$1[id$2d] = fromBytes$2e;
+    fromBytesMap$1[id$2c] = fromBytes$2d;
+    fromBytesMap$1[id$2b] = fromBytes$2c;
+    fromBytesMap$1[id$2a] = fromBytes$2b;
+    fromBytesMap$1[id$29] = fromBytes$2a;
+    fromBytesMap$1[id$28] = fromBytes$29;
+    fromBytesMap$1[id$27] = fromBytes$28;
+    fromBytesMap$1[id$26] = fromBytes$27;
+    fromBytesMap$1[id$25] = fromBytes$26;
+    fromBytesMap$1[id$24] = fromBytes$25;
+    fromBytesMap$1[id$23] = fromBytes$24;
+    fromBytesMap$1[id$22] = fromBytes$23;
+    fromBytesMap$1[id$21] = fromBytes$22;
+    fromBytesMap$1[id$20] = fromBytes$21;
+    fromBytesMap$1[id$1$] = fromBytes$20;
+    fromBytesMap$1[id$1_] = fromBytes$1$;
+    fromBytesMap$1[id$1Z] = fromBytes$1_;
+    fromBytesMap$1[id$1Y] = fromBytes$1Z;
+    fromBytesMap$1[id$1X] = fromBytes$1Y;
+    fromBytesMap$1[id$1W] = fromBytes$1X;
+    fromBytesMap$1[id$1V] = fromBytes$1W;
+    fromBytesMap$1[id$1U] = fromBytes$1V;
+    fromBytesMap$1[id$1T] = fromBytes$1U;
+    fromBytesMap$1[id$1S] = fromBytes$1T;
+    fromBytesMap$1[id$1R] = fromBytes$1S;
+    fromBytesMap$1[id$1Q] = fromBytes$1R;
+    fromBytesMap$1[id$1P] = fromBytes$1Q;
+    fromBytesMap$1[id$1O] = fromBytes$1P;
+    fromBytesMap$1[id$1N] = fromBytes$1O;
+    fromBytesMap$1[id$1M] = fromBytes$1N;
+    fromBytesMap$1[id$1L] = fromBytes$1M;
+    fromBytesMap$1[id$1K] = fromBytes$1L;
+    fromBytesMap$1[id$1J] = fromBytes$1K;
+    fromBytesMap$1[id$1I] = fromBytes$1J;
+    fromBytesMap$1[id$1H] = fromBytes$1I;
+    fromBytesMap$1[id$1G] = fromBytes$1H;
+    fromBytesMap$1[id$1F] = fromBytes$1G;
+    fromBytesMap$1[id$1E] = fromBytes$1F;
+    fromBytesMap$1[id$1D] = fromBytes$1E;
+    fromBytesMap$1[id$1C] = fromBytes$1D;
+    fromBytesMap$1[id$1A] = fromBytes$1B;
+    fromBytesMap$1[id$1z] = fromBytes$1A;
+    fromBytesMap$1[id$1y] = fromBytes$1z;
+    fromBytesMap$1[id$1x] = fromBytes$1y;
+    fromBytesMap$1[id$1w] = fromBytes$1x;
+    fromBytesMap$1[id$1v] = fromBytes$1w;
+    fromBytesMap$1[id$1u] = fromBytes$1v;
+    fromBytesMap$1[id$1t] = fromBytes$1u;
+    fromBytesMap$1[id$1s] = fromBytes$1t;
+    fromBytesMap$1[id$1r] = fromBytes$1s;
+    fromBytesMap$1[id$1q] = fromBytes$1r;
+    fromBytesMap$1[id$1p] = fromBytes$1q;
+    fromBytesMap$1[id$1o] = fromBytes$1p;
+    fromBytesMap$1[id$1n] = fromBytes$1o;
+    fromBytesMap$1[id$1m] = fromBytes$1n;
+    fromBytesMap$1[id$1l] = fromBytes$1m;
+    fromBytesMap$1[id$1k] = fromBytes$1l;
+    fromBytesMap$1[id$1j] = fromBytes$1k;
+    fromBytesMap$1[id$1i] = fromBytes$1j;
+    fromBytesMap$1[id$1h] = fromBytes$1i;
+    fromBytesMap$1[id$1g] = fromBytes$1h;
+    fromBytesMap$1[id$1f] = fromBytes$1g;
 
     var id$1e = activateRatePlan$1;
-    var name$U = commandNames[activateRatePlan$1];
-    var maxSize$Y = 0;
-    var fromBytes$1d = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$U, bytes, maxSize$Y);
+    var name$X = commandNames[activateRatePlan$1];
+    var maxSize$_ = 0;
+    var fromBytes$1f = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$X, bytes, maxSize$_);
       return {};
     };
     var toBytes$1f = function toBytes() {
@@ -5199,11 +5261,11 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1d = errorResponse$1;
-    var name$T = commandNames[errorResponse$1];
-    var maxSize$X = 2;
+    var name$W = commandNames[errorResponse$1];
+    var maxSize$Z = 2;
     var getFromBytes$1 = function getFromBytes(commandNamesParameter) {
       return function (bytes) {
-        validateFixedCommandPayload(name$T, bytes, maxSize$X);
+        validateFixedCommandPayload(name$W, bytes, maxSize$Z);
         var buffer = new BinaryBuffer(bytes, false);
         var errorCommandId = buffer.getUint8();
         var errorCode = buffer.getUint8();
@@ -5216,17 +5278,17 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$1e = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$X, false);
+      var buffer = new BinaryBuffer(maxSize$Z, false);
       buffer.setUint8(parameters.commandId);
       buffer.setUint8(parameters.errorCode);
       return toBytes$2t(id$1d, buffer.data);
     };
 
     var id$1c = getBv$1;
-    var name$S = commandNames[getBv$1];
-    var maxSize$W = 6;
-    var fromBytes$1c = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$S, bytes, maxSize$W);
+    var name$V = commandNames[getBv$1];
+    var maxSize$Y = 6;
+    var fromBytes$1e = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$V, bytes, maxSize$Y);
       return {
         vector: bytes
       };
@@ -5237,15 +5299,15 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1b = getCorrectTime$1;
-    var name$R = commandNames[getCorrectTime$1];
-    var maxSize$V = 9;
-    var fromBytes$1b = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$R, bytes, maxSize$V);
+    var name$U = commandNames[getCorrectTime$1];
+    var maxSize$X = 9;
+    var fromBytes$1d = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$U, bytes, maxSize$X);
       var buffer = new BinaryBuffer(bytes, false);
       return getTimeCorrectionParameters(buffer);
     };
     var toBytes$1c = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$V, false);
+      var buffer = new BinaryBuffer(maxSize$X, false);
       setTimeCorrectionParameters(buffer, parameters);
       return toBytes$2t(id$1b, buffer.data);
     };
@@ -5259,15 +5321,15 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$1a = getDateTime$2;
-    var name$Q = commandNames[getDateTime$2];
-    var maxSize$U = 8;
-    var fromBytes$1a = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$Q, bytes, maxSize$U);
+    var name$T = commandNames[getDateTime$2];
+    var maxSize$W = 8;
+    var fromBytes$1c = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$T, bytes, maxSize$W);
       var buffer = new BinaryBuffer(bytes, false);
       return getDateTime$1(buffer);
     };
     var toBytes$1b = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$U, false);
+      var buffer = new BinaryBuffer(maxSize$W, false);
       setDateTime$1(buffer, parameters);
       return toBytes$2t(id$1a, buffer.data);
     };
@@ -5277,8 +5339,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var TARIFF_FLAGS_SIZE = 1;
     var MAX_TARIFFS_ENERGIES_SIZE = 6 * 4 * 4;
     var id$19 = getDayEnergies$1;
-    var maxSize$T = DATE_SIZE$1 + ENERGY_FLAGS_SIZE$1 + TARIFF_FLAGS_SIZE + MAX_TARIFFS_ENERGIES_SIZE;
-    var fromBytes$19 = function fromBytes(bytes) {
+    var maxSize$V = DATE_SIZE$1 + ENERGY_FLAGS_SIZE$1 + TARIFF_FLAGS_SIZE + MAX_TARIFFS_ENERGIES_SIZE;
+    var fromBytes$1b = function fromBytes(bytes) {
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: getDate(buffer),
@@ -5286,7 +5348,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$1a = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$T, false);
+      var buffer = new BinaryBuffer(maxSize$V, false);
       setDate(buffer, parameters.date);
       setTariffsEnergies(buffer, parameters.energies);
       return toBytes$2t(id$19, buffer.getBytesToOffset());
@@ -5295,7 +5357,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var MAX_PERIODS_NUMBER = 8;
     var PERIODS_FINAL_BYTE = 0xff;
     var id$18 = getDayProfile$1;
-    var fromBytes$18 = function fromBytes(bytes) {
+    var fromBytes$1a = function fromBytes(bytes) {
       var finalByteIndex = bytes.indexOf(PERIODS_FINAL_BYTE);
       var cleanData = finalByteIndex === -1 ? bytes : bytes.slice(0, finalByteIndex);
       return {
@@ -5317,15 +5379,15 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     var id$17 = getDemandCumulative$1;
     var NO_VALUE$1 = 0xffffffff;
-    var fromBytes$17 = function fromBytes(bytes) {
-      if (!bytes || bytes.length < maxSize$1W) {
+    var fromBytes$19 = function fromBytes(bytes) {
+      if (!bytes || bytes.length < maxSize$1_) {
         throw new Error('Invalid uplink GetDemand byte length.');
       }
       var buffer = new BinaryBuffer(bytes, false);
       var parameters = getDemand$2(buffer);
       var indexLastSummerRecord = getLastSummerHourIndex(parameters.period);
       var hasLastSummerHour = parameters.count > 0 && indexLastSummerRecord >= parameters.firstIndex && indexLastSummerRecord < parameters.firstIndex + parameters.count;
-      var expectedLength = maxSize$1W + 4 * parameters.count - (hasLastSummerHour ? 2 : 0);
+      var expectedLength = maxSize$1_ + 4 * parameters.count - (hasLastSummerHour ? 2 : 0);
       if (bytes.length !== expectedLength) {
         throw new Error('Invalid uplink GetDemandCumulative demands byte length.');
       }
@@ -5346,7 +5408,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         return d != null && typeof d !== 'number' && d.lastSummerHour != null;
       });
       var demandsCount = (_parameters$demands$l = (_parameters$demands2 = parameters.demands) === null || _parameters$demands2 === void 0 ? void 0 : _parameters$demands2.length) !== null && _parameters$demands$l !== void 0 ? _parameters$demands$l : 0;
-      var commandSize = demandsCount > 0 ? maxSize$1W + demandsCount * 4 - (hasLastSummerHour ? 2 : 0) : maxSize$1W;
+      var commandSize = demandsCount > 0 ? maxSize$1_ + demandsCount * 4 - (hasLastSummerHour ? 2 : 0) : maxSize$1_;
       var buffer = new BinaryBuffer(commandSize, false);
       setDemand$1(buffer, parameters);
       parameters.demands.forEach(function (value) {
@@ -5364,15 +5426,15 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$16 = getDeviceId$2;
-    var name$P = commandNames[getDeviceId$2];
-    var maxSize$S = 8;
-    var fromBytes$16 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$P, bytes, maxSize$S);
+    var name$S = commandNames[getDeviceId$2];
+    var maxSize$U = 8;
+    var fromBytes$18 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$S, bytes, maxSize$U);
       var buffer = new BinaryBuffer(bytes, false);
       return getDeviceId$1(buffer);
     };
     var toBytes$17 = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$S, false);
+      var buffer = new BinaryBuffer(maxSize$U, false);
       setDeviceId(buffer, parameters);
       return toBytes$2t(id$16, buffer.data);
     };
@@ -5609,7 +5671,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       }
       return result;
     };
-    var fromBytes$15 = function fromBytes(bytes) {
+    var fromBytes$17 = function fromBytes(bytes) {
       if (bytes.length < DEVICE_TYPE_SIZE) {
         throw new Error('The buffer is too small');
       }
@@ -5664,11 +5726,11 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$15 = getDeviceType$1;
-    var name$O = commandNames[getDeviceType$1];
-    var maxSize$R = 9;
-    var fromBytes$14 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$O, bytes, maxSize$R);
-      return fromBytes$15(bytes);
+    var name$R = commandNames[getDeviceType$1];
+    var maxSize$T = 9;
+    var fromBytes$16 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$R, bytes, maxSize$T);
+      return fromBytes$17(bytes);
     };
     var toBytes$15 = function toBytes(parameters) {
       return toBytes$2t(id$15, toBytes$16(parameters));
@@ -5677,11 +5739,11 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var BODY_WITHOUT_EVENTS_SIZE = 3 + 1;
     var EVENT_SIZE = 4;
     var id$14 = getEvents$1;
-    var maxSize$Q = BODY_WITHOUT_EVENTS_SIZE + 255 * EVENT_SIZE;
+    var maxSize$S = BODY_WITHOUT_EVENTS_SIZE + 255 * EVENT_SIZE;
     var getFromBytes = function getFromBytes(BinaryBufferConstructor) {
       var getEvent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : getEvent$1;
       return function (bytes) {
-        if (bytes.length > maxSize$Q) {
+        if (bytes.length > maxSize$S) {
           throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
         }
         var buffer = new BinaryBufferConstructor(bytes, false);
@@ -5701,7 +5763,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var getToBytes = function getToBytes(BinaryBufferConstructor) {
       var setEvent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : setEvent$1;
       return function (parameters) {
-        var buffer = new BinaryBufferConstructor(maxSize$Q, false);
+        var buffer = new BinaryBufferConstructor(maxSize$S, false);
         setDate$1(buffer, parameters.date);
         buffer.setUint8(parameters.eventsNumber);
         var _iterator = _createForOfIteratorHelper(parameters.events),
@@ -5723,7 +5785,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var COMMAND_BODY_SIZE = 14;
     var OLD_COMMAND_BODY_SIZE = 20;
     var id$13 = getEventsCounters$1;
-    var fromBytes$13 = function fromBytes(bytes) {
+    var fromBytes$15 = function fromBytes(bytes) {
       if (bytes.length !== COMMAND_BODY_SIZE && bytes.length !== OLD_COMMAND_BODY_SIZE) {
         throw new Error("Wrong buffer size: ".concat(bytes.length, "."));
       }
@@ -5758,20 +5820,26 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$12 = getEventStatus$2;
-    var name$N = commandNames[getEventStatus$2];
-    var maxSize$P = 2;
-    var fromBytes$12 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$N, bytes, maxSize$P);
+    var name$Q = commandNames[getEventStatus$2];
+    var maxSize$R = 2;
+    var fromBytes$14 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$Q, bytes, maxSize$R);
       var buffer = new BinaryBuffer(bytes, true);
       return getEventStatus$1(buffer);
     };
     var toBytes$13 = function toBytes(eventStatus) {
-      var buffer = new BinaryBuffer(maxSize$P, true);
+      var buffer = new BinaryBuffer(maxSize$R, true);
       setEventStatus(buffer, eventStatus);
       return toBytes$2t(id$12, buffer.data);
     };
 
     var id$11 = getGsmParameters$1;
+    var name$P = commandNames[getGsmParameters$1];
+    var maxSize$Q = 3 + GSM_BLOCK_SIZE + 2;
+    var fromBytes$13 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$P, bytes, maxSize$Q);
+      return getGsmBlock(name$P, bytes);
+    };
     var toBytes$12 = function toBytes(parameters) {
       return toBytes$2t(id$11, setGsmBlock(parameters));
     };
@@ -5782,13 +5850,13 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var HALFHOURS_NUMBER_SIZE = 1;
     var MAX_HALFHOURS_ENERGY_SIZE = 247;
     var id$10 = getHalfHourEnergies$1;
-    var maxSize$O = DATE_SIZE + ENERGY_FLAGS_SIZE + START_HALFHOUR_SIZE + HALFHOURS_NUMBER_SIZE + MAX_HALFHOURS_ENERGY_SIZE;
+    var maxSize$P = DATE_SIZE + ENERGY_FLAGS_SIZE + START_HALFHOUR_SIZE + HALFHOURS_NUMBER_SIZE + MAX_HALFHOURS_ENERGY_SIZE;
 
     var id$ = getMagneticFieldThreshold$1;
-    var name$M = commandNames[getMagneticFieldThreshold$1];
-    var maxSize$N = 10;
-    var fromBytes$11 = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$M, bytes, maxSize$N);
+    var name$O = commandNames[getMagneticFieldThreshold$1];
+    var maxSize$O = 10;
+    var fromBytes$12 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$O, bytes, maxSize$O);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         induction: buffer.getUint16(),
@@ -5798,7 +5866,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$11 = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$N, false);
+      var buffer = new BinaryBuffer(maxSize$O, false);
       buffer.setUint16(parameters.induction);
       buffer.setUint16(parameters.threshold);
       buffer.setUint16(parameters.inductionCoefficient * 100);
@@ -5807,12 +5875,12 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$_ = getMeterInfo$1;
-    var name$L = commandNames[getMeterInfo$1];
-    var maxSize$M = 1;
-    var fromBytes$10 = function fromBytes(_ref) {
+    var name$N = commandNames[getMeterInfo$1];
+    var maxSize$N = 1;
+    var fromBytes$11 = function fromBytes(_ref) {
       var _ref2 = _slicedToArray(_ref, 1),
         ten = _ref2[0];
-      validateFixedCommandPayload(name$L, [ten], maxSize$M);
+      validateFixedCommandPayload(name$N, [ten], maxSize$N);
       return {
         ten: ten
       };
@@ -5823,24 +5891,24 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$Z = getOperatorParametersExtended3$2;
-    var name$K = commandNames[getOperatorParametersExtended3$2];
-    var maxSize$L = 17;
-    var fromBytes$ = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$K, bytes, maxSize$L);
+    var name$M = commandNames[getOperatorParametersExtended3$2];
+    var maxSize$M = 17;
+    var fromBytes$10 = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$M, bytes, maxSize$M);
       var buffer = new BinaryBuffer(bytes, false);
       return getOperatorParametersExtended3$1(buffer);
     };
     var toBytes$ = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$L, false);
+      var buffer = new BinaryBuffer(maxSize$M, false);
       setOperatorParametersExtended3$1(buffer, parameters);
       return toBytes$2t(id$Z, buffer.data);
     };
 
     var id$Y = getRatePlanInfo$1;
-    var name$J = commandNames[getRatePlanInfo$1];
-    var maxSize$K = 1 + TARIFF_PLAN_SIZE * 2;
-    var fromBytes$_ = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$J, bytes, maxSize$K);
+    var name$L = commandNames[getRatePlanInfo$1];
+    var maxSize$L = 1 + TARIFF_PLAN_SIZE * 2;
+    var fromBytes$ = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$L, bytes, maxSize$L);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         tariffTable: buffer.getUint8(),
@@ -5849,7 +5917,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$_ = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$K, false);
+      var buffer = new BinaryBuffer(maxSize$L, false);
       buffer.setUint8(parameters.tariffTable);
       setTariffPlan(buffer, parameters.activePlan);
       setTariffPlan(buffer, parameters.passivePlan);
@@ -5857,10 +5925,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$X = getSaldo$1;
-    var name$I = commandNames[getSaldo$1];
-    var maxSize$J = 29;
-    var fromBytes$Z = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$I, bytes, maxSize$J);
+    var name$K = commandNames[getSaldo$1];
+    var maxSize$K = 29;
+    var fromBytes$_ = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$K, bytes, maxSize$K);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         currentSaldo: buffer.getInt32(),
@@ -5878,7 +5946,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$Z = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$J, false);
+      var buffer = new BinaryBuffer(maxSize$K, false);
       buffer.setInt32(parameters.currentSaldo);
       buffer.setUint8(parameters.count);
       parameters.energy.forEach(function (value) {
@@ -5893,52 +5961,52 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$W = getSaldoParameters$2;
-    var name$H = commandNames[getSaldoParameters$2];
-    var maxSize$I = 37;
-    var fromBytes$Y = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$H, bytes, maxSize$I);
+    var name$J = commandNames[getSaldoParameters$2];
+    var maxSize$J = 37;
+    var fromBytes$Z = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$J, bytes, maxSize$J);
       var buffer = new BinaryBuffer(bytes, false);
       return getSaldoParameters$1(buffer);
     };
     var toBytes$Y = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$I, false);
+      var buffer = new BinaryBuffer(maxSize$J, false);
       setSaldoParameters$1(buffer, parameters);
       return toBytes$2t(id$W, buffer.data);
     };
 
     var id$V = getSeasonProfile$2;
-    var name$G = commandNames[getSeasonProfile$2];
-    var maxSize$H = 9;
-    var fromBytes$X = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$G, bytes, maxSize$H);
+    var name$I = commandNames[getSeasonProfile$2];
+    var maxSize$I = 9;
+    var fromBytes$Y = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$I, bytes, maxSize$I);
       var buffer = new BinaryBuffer(bytes, false);
       return getSeasonProfile$1(buffer);
     };
     var toBytes$X = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$H, false);
+      var buffer = new BinaryBuffer(maxSize$I, false);
       setSeasonProfile$1(buffer, parameters);
       return toBytes$2t(id$V, buffer.data);
     };
 
     var id$U = getSpecialDay$2;
-    var name$F = commandNames[getSpecialDay$2];
-    var maxSize$G = 4;
-    var fromBytes$W = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$F, bytes, maxSize$G);
+    var name$H = commandNames[getSpecialDay$2];
+    var maxSize$H = 4;
+    var fromBytes$X = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$H, bytes, maxSize$H);
       var buffer = new BinaryBuffer(bytes, false);
       return getSpecialDay$1(buffer);
     };
     var toBytes$W = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$G, false);
+      var buffer = new BinaryBuffer(maxSize$H, false);
       setSpecialDay$1(buffer, parameters);
       return toBytes$2t(id$U, buffer.data);
     };
 
     var id$T = getVersion$1;
-    var name$E = commandNames[getVersion$1];
-    var maxSize$F = 10;
-    var fromBytes$V = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$E, bytes, maxSize$F);
+    var name$G = commandNames[getVersion$1];
+    var maxSize$G = 10;
+    var fromBytes$W = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$G, bytes, maxSize$G);
       return {
         version: String.fromCharCode.apply(null, _toConsumableArray(bytes))
       };
@@ -5951,10 +6019,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$S = prepareRatePlan$1;
-    var name$D = commandNames[prepareRatePlan$1];
-    var maxSize$E = 0;
-    var fromBytes$U = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$D, bytes, maxSize$E);
+    var name$F = commandNames[prepareRatePlan$1];
+    var maxSize$F = 0;
+    var fromBytes$V = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$F, bytes, maxSize$F);
       return {};
     };
     var toBytes$U = function toBytes() {
@@ -5962,10 +6030,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$R = resetPowerMaxDay$1;
-    var name$C = commandNames[resetPowerMaxDay$1];
-    var maxSize$D = 0;
-    var fromBytes$T = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$C, bytes, maxSize$D);
+    var name$E = commandNames[resetPowerMaxDay$1];
+    var maxSize$E = 0;
+    var fromBytes$U = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$E, bytes, maxSize$E);
       return {};
     };
     var toBytes$T = function toBytes() {
@@ -5973,10 +6041,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$Q = resetPowerMaxMonth$1;
-    var name$B = commandNames[resetPowerMaxMonth$1];
-    var maxSize$C = 0;
-    var fromBytes$S = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$B, bytes, maxSize$C);
+    var name$D = commandNames[resetPowerMaxMonth$1];
+    var maxSize$D = 0;
+    var fromBytes$T = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$D, bytes, maxSize$D);
       return {};
     };
     var toBytes$S = function toBytes() {
@@ -5984,10 +6052,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$P = runTariffPlan$1;
-    var name$A = commandNames[runTariffPlan$1];
-    var maxSize$B = 0;
-    var fromBytes$R = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$A, bytes, maxSize$B);
+    var name$C = commandNames[runTariffPlan$1];
+    var maxSize$C = 0;
+    var fromBytes$S = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$C, bytes, maxSize$C);
       return {};
     };
     var toBytes$R = function toBytes() {
@@ -5995,10 +6063,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$O = setAccessKey$1;
-    var name$z = commandNames[setAccessKey$1];
-    var maxSize$A = 0;
-    var fromBytes$Q = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$z, bytes, maxSize$A);
+    var name$B = commandNames[setAccessKey$1];
+    var maxSize$B = 0;
+    var fromBytes$R = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$B, bytes, maxSize$B);
       return {};
     };
     var toBytes$Q = function toBytes() {
@@ -6006,10 +6074,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$N = setCorrectDateTime$1;
-    var name$y = commandNames[setCorrectDateTime$1];
-    var maxSize$z = 0;
-    var fromBytes$P = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$y, bytes, maxSize$z);
+    var name$A = commandNames[setCorrectDateTime$1];
+    var maxSize$A = 0;
+    var fromBytes$Q = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$A, bytes, maxSize$A);
       return {};
     };
     var toBytes$P = function toBytes() {
@@ -6017,10 +6085,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$M = setCorrectTime$1;
-    var name$x = commandNames[setCorrectTime$1];
-    var maxSize$y = 0;
-    var fromBytes$O = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$x, bytes, maxSize$y);
+    var name$z = commandNames[setCorrectTime$1];
+    var maxSize$z = 0;
+    var fromBytes$P = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$z, bytes, maxSize$z);
       return {};
     };
     var toBytes$O = function toBytes() {
@@ -6028,10 +6096,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$L = setDateTime$2;
-    var name$w = commandNames[setDateTime$2];
-    var maxSize$x = 0;
-    var fromBytes$N = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$w, bytes, maxSize$x);
+    var name$y = commandNames[setDateTime$2];
+    var maxSize$y = 0;
+    var fromBytes$O = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$y, bytes, maxSize$y);
       return {};
     };
     var toBytes$N = function toBytes() {
@@ -6039,10 +6107,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$K = setDayProfile$2;
-    var name$v = commandNames[setDayProfile$2];
-    var maxSize$w = 0;
-    var fromBytes$M = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$v, bytes, maxSize$w);
+    var name$x = commandNames[setDayProfile$2];
+    var maxSize$x = 0;
+    var fromBytes$N = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$x, bytes, maxSize$x);
       return {};
     };
     var toBytes$M = function toBytes() {
@@ -6050,10 +6118,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$J = setDisplayParam$1;
-    var name$u = commandNames[setDisplayParam$1];
-    var maxSize$v = 0;
-    var fromBytes$L = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$u, bytes, maxSize$v);
+    var name$w = commandNames[setDisplayParam$1];
+    var maxSize$w = 0;
+    var fromBytes$M = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$w, bytes, maxSize$w);
       return {};
     };
     var toBytes$L = function toBytes() {
@@ -6061,15 +6129,21 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$I = setGsmParameters$1;
+    var name$v = commandNames[setGsmParameters$1];
+    var maxSize$v = 0;
+    var fromBytes$L = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$v, bytes, maxSize$v);
+      return {};
+    };
     var toBytes$K = function toBytes() {
       return toBytes$2t(id$I);
     };
 
     var id$H = setOperatorParameters$2;
-    var name$t = commandNames[setOperatorParameters$2];
+    var name$u = commandNames[setOperatorParameters$2];
     var maxSize$u = 0;
     var fromBytes$K = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$t, bytes, maxSize$u);
+      validateFixedCommandPayload(name$u, bytes, maxSize$u);
       return {};
     };
     var toBytes$J = function toBytes() {
@@ -6077,10 +6151,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$G = setOperatorParametersExtended3$2;
-    var name$s = commandNames[setOperatorParametersExtended3$2];
+    var name$t = commandNames[setOperatorParametersExtended3$2];
     var maxSize$t = 0;
     var fromBytes$J = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$s, bytes, maxSize$t);
+      validateFixedCommandPayload(name$t, bytes, maxSize$t);
       return {};
     };
     var toBytes$I = function toBytes() {
@@ -6088,10 +6162,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$F = setSaldo$1;
-    var name$r = commandNames[setSaldo$1];
+    var name$s = commandNames[setSaldo$1];
     var maxSize$s = 0;
     var fromBytes$I = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$r, bytes, maxSize$s);
+      validateFixedCommandPayload(name$s, bytes, maxSize$s);
       return {};
     };
     var toBytes$H = function toBytes() {
@@ -6099,10 +6173,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$E = setSaldoParameters$2;
-    var name$q = commandNames[setSaldoParameters$2];
+    var name$r = commandNames[setSaldoParameters$2];
     var maxSize$r = 0;
     var fromBytes$H = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$q, bytes, maxSize$r);
+      validateFixedCommandPayload(name$r, bytes, maxSize$r);
       return {};
     };
     var toBytes$G = function toBytes() {
@@ -6110,10 +6184,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$D = setSeasonProfile$2;
-    var name$p = commandNames[setSeasonProfile$2];
+    var name$q = commandNames[setSeasonProfile$2];
     var maxSize$q = 0;
     var fromBytes$G = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$p, bytes, maxSize$q);
+      validateFixedCommandPayload(name$q, bytes, maxSize$q);
       return {};
     };
     var toBytes$F = function toBytes() {
@@ -6121,10 +6195,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$C = setSpecialDay$2;
-    var name$o = commandNames[setSpecialDay$2];
+    var name$p = commandNames[setSpecialDay$2];
     var maxSize$p = 0;
     var fromBytes$F = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$o, bytes, maxSize$p);
+      validateFixedCommandPayload(name$p, bytes, maxSize$p);
       return {};
     };
     var toBytes$E = function toBytes() {
@@ -6132,10 +6206,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$B = setSpecialOperation$1;
-    var name$n = commandNames[setSpecialOperation$1];
+    var name$o = commandNames[setSpecialOperation$1];
     var maxSize$o = 1;
     var fromBytes$E = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$n, bytes, maxSize$o);
+      validateFixedCommandPayload(name$o, bytes, maxSize$o);
       var flags = bytes[0];
       var electroMagneticIndication = !!(flags & 1);
       var magneticIndication = !!(flags & 2);
@@ -6156,10 +6230,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$A = turnRelayOff$1;
-    var name$m = commandNames[turnRelayOff$1];
+    var name$n = commandNames[turnRelayOff$1];
     var maxSize$n = 0;
     var fromBytes$D = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$m, bytes, maxSize$n);
+      validateFixedCommandPayload(name$n, bytes, maxSize$n);
       return {};
     };
     var toBytes$C = function toBytes() {
@@ -6167,10 +6241,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$z = turnRelayOn$1;
-    var name$l = commandNames[turnRelayOn$1];
+    var name$m = commandNames[turnRelayOn$1];
     var maxSize$m = 0;
     var fromBytes$C = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$l, bytes, maxSize$m);
+      validateFixedCommandPayload(name$m, bytes, maxSize$m);
       return {};
     };
     var toBytes$B = function toBytes() {
@@ -6182,10 +6256,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var fromBytes$B = getFromBytes$1(uplinkNames);
 
     var id$x = getCriticalEvent;
-    var name$k = uplinkNames[getCriticalEvent];
+    var name$l = uplinkNames[getCriticalEvent];
     var maxSize$l = 9;
     var fromBytes$A = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$k, bytes, maxSize$l);
+      validateFixedCommandPayload(name$l, bytes, maxSize$l);
       var _bytes = _slicedToArray(bytes, 9),
         event = _bytes[0],
         index = _bytes[1],
@@ -6238,10 +6312,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       RELAY_P_REACTIVE_MAX: Math.pow(2, 7)
     };
     var id$w = getCurrentStatusMeter;
-    var name$j = uplinkNames[getCurrentStatusMeter];
+    var name$k = uplinkNames[getCurrentStatusMeter];
     var maxSize$k = 41;
     var fromBytes$z = function fromBytes(bytes) {
-      validateFixedCommandPayload(name$j, bytes, maxSize$k);
+      validateFixedCommandPayload(name$k, bytes, maxSize$k);
       var buffer = new BinaryBuffer(bytes, false);
       var operatingSeconds = buffer.getUint32();
       var tbadVAAll = buffer.getUint32();
@@ -6312,11 +6386,11 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     });
 
     var id$v = getCurrentValues;
-    var name$i = uplinkNames[getCurrentValues];
+    var name$j = uplinkNames[getCurrentValues];
     var minSize = 48;
     var maxSize$j = 52;
     var fromBytes$y = function fromBytes(bytes) {
-      validateSetCommandPayload(name$i, bytes, [minSize, maxSize$j]);
+      validateSetCommandPayload(name$j, bytes, [minSize, maxSize$j]);
       var buffer = new BinaryBuffer(bytes, false);
       var hasNeutral = bytes.length === maxSize$j;
       var result = {
@@ -6404,8 +6478,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$t = getDayDemandExport;
+    var name$i = uplinkNames[getDayDemandExport];
     var maxSize$i = 51;
     var fromBytes$w = function fromBytes(bytes) {
+      validateFixedCommandPayload(name$i, bytes, maxSize$i);
       var buffer = new BinaryBuffer(bytes, false);
       return {
         date: getDate$1(buffer),
@@ -6450,13 +6526,13 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var id$q = getDemand$1;
     var NO_VALUE = 0xffff;
     var fromBytes$t = function fromBytes(bytes) {
-      if (!bytes || bytes.length < maxSize$1e) {
+      if (!bytes || bytes.length < maxSize$1g) {
         throw new Error('Invalid uplink GetDemand byte length.');
       }
       var buffer = new BinaryBuffer(bytes, false);
       var parameters = getDemand(buffer);
       var indexLastSummerRecord = getLastSummerHourIndex(parameters.period);
-      if (bytes.length !== maxSize$1e + 2 * parameters.count) {
+      if (bytes.length !== maxSize$1g + 2 * parameters.count) {
         throw new Error('Invalid uplink GetDemand demands byte length.');
       }
       var demands = new Array(parameters.count).fill(0).map(function (item, index) {
@@ -6473,7 +6549,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       });
     };
     var toBytes$s = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1e + parameters.count * 2, false);
+      var buffer = new BinaryBuffer(maxSize$1g + parameters.count * 2, false);
       setDemand(buffer, parameters);
       parameters.demands.forEach(function (value) {
         if (value == null) {
@@ -6557,15 +6633,19 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     var id$l = getEnergyExportDayPrevious;
     var name$d = uplinkNames[getEnergyExportDayPrevious];
-    var maxSize$d = 48;
+    var maxSize$d = 51;
     var fromBytes$o = function fromBytes(bytes) {
       validateFixedCommandPayload(name$d, bytes, maxSize$d);
       var buffer = new BinaryBuffer(bytes, false);
-      return getEnergies(buffer);
+      return {
+        date: getDate$1(buffer),
+        energies: getEnergies(buffer)
+      };
     };
     var toBytes$n = function toBytes(parameters) {
       var buffer = new BinaryBuffer(maxSize$d, false);
-      setEnergies(buffer, parameters);
+      setDate$1(buffer, parameters.date);
+      setEnergies(buffer, parameters.energies);
       return toBytes$2t(id$l, buffer.data);
     };
 
@@ -6840,7 +6920,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       };
     };
     var toBytes$d = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$O, false);
+      var buffer = new BinaryBuffer(maxSize$P, false);
       var date = parameters.date,
         firstHalfhour = parameters.firstHalfhour,
         halfhoursNumber = parameters.halfhoursNumber,
@@ -7125,38 +7205,38 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     toBytesMap[id$2] = toBytes$3;
     toBytesMap[id$1] = toBytes$2;
     toBytesMap[id] = toBytes$1;
-    fromBytesMap[id$1e] = fromBytes$1d;
-    fromBytesMap[id$1B] = fromBytes$1A;
-    fromBytesMap[id$1c] = fromBytes$1c;
-    fromBytesMap[id$1b] = fromBytes$1b;
-    fromBytesMap[id$1a] = fromBytes$1a;
-    fromBytesMap[id$19] = fromBytes$19;
-    fromBytesMap[id$18] = fromBytes$18;
-    fromBytesMap[id$16] = fromBytes$16;
-    fromBytesMap[id$15] = fromBytes$14;
-    fromBytesMap[id$13] = fromBytes$13;
-    fromBytesMap[id$12] = fromBytes$12;
-    fromBytesMap[id$11] = toBytes$12;
-    fromBytesMap[id$] = fromBytes$11;
-    fromBytesMap[id$_] = fromBytes$10;
-    fromBytesMap[id$Z] = fromBytes$;
-    fromBytesMap[id$Y] = fromBytes$_;
-    fromBytesMap[id$X] = fromBytes$Z;
-    fromBytesMap[id$W] = fromBytes$Y;
-    fromBytesMap[id$V] = fromBytes$X;
-    fromBytesMap[id$U] = fromBytes$W;
-    fromBytesMap[id$T] = fromBytes$V;
-    fromBytesMap[id$S] = fromBytes$U;
-    fromBytesMap[id$R] = fromBytes$T;
-    fromBytesMap[id$Q] = fromBytes$S;
-    fromBytesMap[id$P] = fromBytes$R;
-    fromBytesMap[id$O] = fromBytes$Q;
-    fromBytesMap[id$N] = fromBytes$P;
-    fromBytesMap[id$M] = fromBytes$O;
-    fromBytesMap[id$L] = fromBytes$N;
-    fromBytesMap[id$K] = fromBytes$M;
-    fromBytesMap[id$J] = fromBytes$L;
-    fromBytesMap[id$I] = toBytes$K;
+    fromBytesMap[id$1e] = fromBytes$1f;
+    fromBytesMap[id$1B] = fromBytes$1C;
+    fromBytesMap[id$1c] = fromBytes$1e;
+    fromBytesMap[id$1b] = fromBytes$1d;
+    fromBytesMap[id$1a] = fromBytes$1c;
+    fromBytesMap[id$19] = fromBytes$1b;
+    fromBytesMap[id$18] = fromBytes$1a;
+    fromBytesMap[id$16] = fromBytes$18;
+    fromBytesMap[id$15] = fromBytes$16;
+    fromBytesMap[id$13] = fromBytes$15;
+    fromBytesMap[id$12] = fromBytes$14;
+    fromBytesMap[id$11] = fromBytes$13;
+    fromBytesMap[id$] = fromBytes$12;
+    fromBytesMap[id$_] = fromBytes$11;
+    fromBytesMap[id$Z] = fromBytes$10;
+    fromBytesMap[id$Y] = fromBytes$;
+    fromBytesMap[id$X] = fromBytes$_;
+    fromBytesMap[id$W] = fromBytes$Z;
+    fromBytesMap[id$V] = fromBytes$Y;
+    fromBytesMap[id$U] = fromBytes$X;
+    fromBytesMap[id$T] = fromBytes$W;
+    fromBytesMap[id$S] = fromBytes$V;
+    fromBytesMap[id$R] = fromBytes$U;
+    fromBytesMap[id$Q] = fromBytes$T;
+    fromBytesMap[id$P] = fromBytes$S;
+    fromBytesMap[id$O] = fromBytes$R;
+    fromBytesMap[id$N] = fromBytes$Q;
+    fromBytesMap[id$M] = fromBytes$P;
+    fromBytesMap[id$L] = fromBytes$O;
+    fromBytesMap[id$K] = fromBytes$N;
+    fromBytesMap[id$J] = fromBytes$M;
+    fromBytesMap[id$I] = fromBytes$L;
     fromBytesMap[id$H] = fromBytes$K;
     fromBytesMap[id$G] = fromBytes$J;
     fromBytesMap[id$F] = fromBytes$I;
@@ -7175,7 +7255,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     fromBytesMap[id$s] = fromBytes$v;
     fromBytesMap[id$r] = fromBytes$u;
     fromBytesMap[id$q] = fromBytes$t;
-    fromBytesMap[id$17] = fromBytes$17;
+    fromBytesMap[id$17] = fromBytes$19;
     fromBytesMap[id$p] = fromBytes$s;
     fromBytesMap[id$o] = fromBytes$r;
     fromBytesMap[id$n] = fromBytes$q;

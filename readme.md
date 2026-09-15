@@ -52,8 +52,8 @@ function decodeUplink ( input ) {
 git clone git@github.com:jooby-dev/jooby-codec-adapters.git
 cd jooby-codec-adapters
 npm ci
-# edit src/target/%TARGET% files
-# to change command list edit src/target/%TARGET%/full.js like src/targets/thingpark/analog/partial.js
+# edit src/targets/%TARGET% files
+# to change command list edit src/targets/%TARGET%/full.js like src/targets/thingpark/analog/partial.js
 npm run build:clean
 # use files from dist/%TARGET%
 ```
