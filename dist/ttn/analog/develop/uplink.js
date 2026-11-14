@@ -53,15 +53,15 @@ var fromBytes;
   function _toConsumableArray(r) {
     return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread();
   }
-  function _toPrimitive(t, r) {
+  function _toPrimitive(t, e) {
     if ("object" != typeof t || !t) return t;
-    var e = t[Symbol.toPrimitive];
-    if (void 0 !== e) {
-      var i = e.call(t, r);
+    var r;
+    if ("undefined" != typeof Symbol && void 0 !== (r = t[Symbol.toPrimitive])) {
+      var i = r.call(t, e);
       if ("object" != typeof i) return i;
       throw new TypeError("@@toPrimitive must return a primitive value.");
     }
-    return ("string" === r ? String : Number)(t);
+    return ("string" === e ? String : Number)(t);
   }
   function _toPropertyKey(t) {
     var i = _toPrimitive(t, "string");
@@ -715,6 +715,8 @@ var fromBytes;
   var KEEP_LORA_CONNECTION_ON_REMOVAL = 59;
   var NBIOT_NTP_SERVER = 60;
   var ACTIVATE_MODULE = 61;
+  var ACTIVATION_TIMEOUT = 62;
+  var NBIOT_APN_CONFIG = 63;
   var MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG = 64;
 
   var deviceParameters = /*#__PURE__*/Object.freeze({
@@ -725,6 +727,7 @@ var fromBytes;
     ABSOLUTE_DATA_MULTI_CHANNEL: ABSOLUTE_DATA_MULTI_CHANNEL,
     ACTIVATE_MODULE: ACTIVATE_MODULE,
     ACTIVATION_METHOD: ACTIVATION_METHOD,
+    ACTIVATION_TIMEOUT: ACTIVATION_TIMEOUT,
     BATTERY_DEPASSIVATION_CONFIG: BATTERY_DEPASSIVATION_CONFIG,
     BATTERY_DEPASSIVATION_INFO: BATTERY_DEPASSIVATION_INFO,
     BATTERY_MINIMAL_LOAD_TIME: BATTERY_MINIMAL_LOAD_TIME,
@@ -746,6 +749,7 @@ var fromBytes;
     MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG: MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG,
     MTX_POWER_CONFIG: MTX_POWER_CONFIG,
     NBIOT_APN: NBIOT_APN,
+    NBIOT_APN_CONFIG: NBIOT_APN_CONFIG,
     NBIOT_BANDS: NBIOT_BANDS,
     NBIOT_DEVICE_SOFTWARE_UPDATE: NBIOT_DEVICE_SOFTWARE_UPDATE,
     NBIOT_LED_INDICATION: NBIOT_LED_INDICATION,
@@ -774,6 +778,7 @@ var fromBytes;
   var deviceParameterNames = invertObject(deviceParameters);
 
   var EMPTY_VALUE = 0xffffffff;
+  var LEGACY_EMPTY_VALUE = 0xffffff;
 
   var IDLE = 0;
   var PULSE_SENSOR = 1;
@@ -822,6 +827,8 @@ var fromBytes;
   var EXTEND_BIT_MASK = 0x80;
   var LAST_BIT_INDEX = 7;
   var DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT = 600;
+  var ACTIVATION_SECONDS_COEFFICIENT = 5;
+  var MAX_ACTIVATION_TIMEOUT_SECONDS = 255 * ACTIVATION_SECONDS_COEFFICIENT;
   var PARAMETER_RX2_FREQUENCY_COEFFICIENT = 100;
   var SERIAL_NUMBER_SIZE = 6;
   var MAGNETIC_INFLUENCE_BIT_INDEX = 8;
@@ -880,7 +887,7 @@ var fromBytes;
     pipeEmpty: 0x40,
     batteryDischarge: 0x80
   };
-  (_parametersSizeMap = {}, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, REPORTING_DATA_INTERVAL, 1 + 4), DAY_CHECKOUT_HOUR, 1 + 1), REPORTING_DATA_TYPE, 1 + 1), PRIORITY_DATA_DELIVERY_TYPE, 1 + 1), ACTIVATION_METHOD, 1 + 1), BATTERY_DEPASSIVATION_INFO, 1 + 6), BATTERY_MINIMAL_LOAD_TIME, 1 + 4), CHANNELS_CONFIG, 1 + 1), MTX_DATA_TRANSMISSION_SCHEDULE, 1 + 20), MTX_POWER_CONFIG, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, RX2_CONFIG, 1 + 4), ABSOLUTE_DATA, 1 + 9), ABSOLUTE_DATA_ENABLE, 1 + 1), SERIAL_NUMBER, 1 + 6), GEOLOCATION, 1 + 10), EXTRA_FRAME_INTERVAL, 1 + 2), ABSOLUTE_DATA_MULTI_CHANNEL, 1 + 10), ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL, 1 + 2), PULSE_CHANNELS_SCAN_CONFIG, 1 + 3), PULSE_CHANNELS_SET_CONFIG, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, BATTERY_DEPASSIVATION_CONFIG, 1 + 4), MQTT_SSL_ENABLE, 1 + 1), MQTT_DATA_RECEIVE_CONFIG, 1 + 3), MQTT_DATA_SEND_CONFIG, 1 + 3), NBIOT_SSL_CONFIG, 1 + 2), NBIOT_SSL_CACERT_SET, 1 + 4), NBIOT_SSL_CLIENT_CERT_SET, 1 + 4), NBIOT_SSL_CLIENT_KEY_SET, 1 + 4), REPORTING_DATA_CONFIG, 1 + 4), EVENTS_CONFIG, 1 + 3), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, NBIOT_LED_INDICATION, 1 + 2), NBIOT_SIM, 1 + 3), EXTRA_PAYLOAD_ENABLE, 1 + 1), TIME_SYNCHRONIZATION_PERIOD_VIA_MAC, 1 + 4), KEEP_LORA_CONNECTION_ON_REMOVAL, 1 + 1), ACTIVATE_MODULE, 1 + 1));
+  (_parametersSizeMap = {}, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, REPORTING_DATA_INTERVAL, 1 + 4), DAY_CHECKOUT_HOUR, 1 + 1), REPORTING_DATA_TYPE, 1 + 1), PRIORITY_DATA_DELIVERY_TYPE, 1 + 1), ACTIVATION_METHOD, 1 + 1), BATTERY_DEPASSIVATION_INFO, 1 + 6), BATTERY_MINIMAL_LOAD_TIME, 1 + 4), CHANNELS_CONFIG, 1 + 1), MTX_DATA_TRANSMISSION_SCHEDULE, 1 + 20), MTX_POWER_CONFIG, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, RX2_CONFIG, 1 + 4), ABSOLUTE_DATA, 1 + 9), ABSOLUTE_DATA_ENABLE, 1 + 1), SERIAL_NUMBER, 1 + 6), GEOLOCATION, 1 + 10), EXTRA_FRAME_INTERVAL, 1 + 2), ABSOLUTE_DATA_MULTI_CHANNEL, 1 + 10), ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL, 1 + 2), PULSE_CHANNELS_SCAN_CONFIG, 1 + 3), PULSE_CHANNELS_SET_CONFIG, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, BATTERY_DEPASSIVATION_CONFIG, 1 + 4), MQTT_SSL_ENABLE, 1 + 1), MQTT_DATA_RECEIVE_CONFIG, 1 + 3), MQTT_DATA_SEND_CONFIG, 1 + 3), NBIOT_SSL_CONFIG, 1 + 2), NBIOT_SSL_CACERT_SET, 1 + 4), NBIOT_SSL_CLIENT_CERT_SET, 1 + 4), NBIOT_SSL_CLIENT_KEY_SET, 1 + 4), REPORTING_DATA_CONFIG, 1 + 4), EVENTS_CONFIG, 1 + 3), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, NBIOT_LED_INDICATION, 1 + 2), NBIOT_SIM, 1 + 3), EXTRA_PAYLOAD_ENABLE, 1 + 1), TIME_SYNCHRONIZATION_PERIOD_VIA_MAC, 1 + 4), KEEP_LORA_CONNECTION_ON_REMOVAL, 1 + 1), ACTIVATE_MODULE, 1 + 1), ACTIVATION_TIMEOUT, 1 + 2));
   var fourChannelsBitMask = {
     channel1: Math.pow(2, 0),
     channel2: Math.pow(2, 1),
@@ -926,6 +933,12 @@ var fromBytes;
   var pulseCoefficientToByteMap = invertObject(byteToPulseCoefficientMap);
   var isMSBSet = function (value) {
     return !!(value & 0x80);
+  };
+  var getActivationTimeoutByte = function (name, seconds) {
+    if (seconds < 0 || seconds > MAX_ACTIVATION_TIMEOUT_SECONDS) {
+      throw new Error("".concat(name, " must be in range 0-").concat(MAX_ACTIVATION_TIMEOUT_SECONDS, " seconds, got ").concat(seconds));
+    }
+    return Math.round(seconds / ACTIVATION_SECONDS_COEFFICIENT);
   };
   var getNbiotSslWrite = function (buffer) {
     return {
@@ -1480,6 +1493,32 @@ var fromBytes;
     set: function (buffer, parameter) {
       buffer.setUint8(parameter.enable);
     }
+  }), ACTIVATION_TIMEOUT, {
+    get: function (buffer) {
+      return {
+        activation: buffer.getUint8() * ACTIVATION_SECONDS_COEFFICIENT,
+        deactivation: buffer.getUint8() * ACTIVATION_SECONDS_COEFFICIENT
+      };
+    },
+    set: function (buffer, parameter) {
+      var activation = getActivationTimeoutByte('activation', parameter.activation);
+      var deactivation = getActivationTimeoutByte('deactivation', parameter.deactivation);
+      buffer.setUint8(activation);
+      buffer.setUint8(deactivation);
+    }
+  }), _defineProperty(_defineProperty(_deviceParameterConve, NBIOT_APN_CONFIG, {
+    get: function (buffer) {
+      return {
+        login: buffer.getString(),
+        password: buffer.getString(),
+        protocol: buffer.getUint8()
+      };
+    },
+    set: function (buffer, parameter) {
+      buffer.setString(parameter.login);
+      buffer.setString(parameter.password);
+      buffer.setUint8(parameter.protocol);
+    }
   }), MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG, {
     get: function (buffer) {
       var schedules = [];
@@ -1550,15 +1589,15 @@ var fromBytes;
   var getLegacyCounterValue = function (buffer) {
     return buffer.getUint24();
   };
-  var getLegacyCounter = function (buffer) {
+  function getLegacyCounter(buffer) {
     var byte = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : buffer.getUint8();
     var isArchiveValue = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
     var value = getLegacyCounterValue(buffer);
     return {
       isMagneticInfluence: getMagneticInfluenceBit(byte),
-      value: isArchiveValue && value === EMPTY_VALUE ? 0 : value
+      value: isArchiveValue && value === LEGACY_EMPTY_VALUE ? null : value
     };
-  };
+  }
   var getChannels = function (buffer) {
     var channelList = [];
     var extended = true;
@@ -1626,7 +1665,7 @@ var fromBytes;
     }
     buffer.setUint8(value - 1);
   };
-  var getChannelsValuesWithHourDiff = function (buffer) {
+  function getChannelsValuesWithHourDiff(buffer) {
     var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
     var date = getDate(buffer);
     var _getHours = getHours(buffer),
@@ -1642,7 +1681,7 @@ var fromBytes;
         diff.push(getExtendedValue(buffer));
       }
       channelList.push({
-        value: isArchiveValue && value === EMPTY_VALUE ? 0 : value,
+        value: isArchiveValue && value === EMPTY_VALUE ? null : value,
         diff: diff,
         index: channelIndex
       });
@@ -1652,7 +1691,7 @@ var fromBytes;
       hours: hours,
       channelList: channelList
     };
-  };
+  }
   var getHours = function (buffer) {
     var byte = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : buffer.getUint8();
     if (byte === 0) {
@@ -1789,7 +1828,7 @@ var fromBytes;
       value: (stateWithValueByte & 0x1f) << 8 | valueLowerByte
     };
   };
-  var getLegacyHourCounterWithDiff = function (buffer) {
+  function getLegacyHourCounterWithDiff(buffer) {
     var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
     var date = getDate(buffer);
     var byte = buffer.getUint8();
@@ -1798,7 +1837,7 @@ var fromBytes;
     var value = getLegacyCounterValue(buffer);
     var counter = {
       isMagneticInfluence: getMagneticInfluenceBit(byte),
-      value: isArchiveValue && value === EMPTY_VALUE ? 0 : value
+      value: isArchiveValue && value === LEGACY_EMPTY_VALUE ? null : value
     };
     var diff = [];
     while (buffer.offset < buffer.data.length) {
@@ -1810,8 +1849,8 @@ var fromBytes;
       counter: counter,
       diff: diff
     };
-  };
-  var getChannelsValuesWithHourDiffExtended = function (buffer) {
+  }
+  function getChannelsValuesWithHourDiffExtended(buffer) {
     var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
     var date = getDate(buffer);
     var hour = buffer.getUint8();
@@ -1826,7 +1865,7 @@ var fromBytes;
         diff.push(getExtendedValue(buffer));
       }
       channelList.push({
-        value: isArchiveValue && value === EMPTY_VALUE ? 0 : value,
+        value: isArchiveValue && value === EMPTY_VALUE ? null : value,
         diff: diff,
         index: channelIndex
       });
@@ -1837,7 +1876,7 @@ var fromBytes;
       hours: hours,
       channelList: channelList
     };
-  };
+  }
   var getDataSegment = function (buffer) {
     var segmentationSessionId = buffer.getUint8();
     var flag = buffer.getUint8();
@@ -2150,7 +2189,7 @@ var fromBytes;
       });
       for (var day = 0; day < days; ++day) {
         var value = getExtendedValue(buffer);
-        dayList.push(value === EMPTY_VALUE ? 0 : value);
+        dayList.push(value === EMPTY_VALUE ? null : value);
       }
     });
     return {
@@ -2358,7 +2397,7 @@ var fromBytes;
       });
       for (var day = 0; day < days; ++day) {
         var value = getExtendedValue(buffer);
-        dayList.push(value === EMPTY_VALUE ? 0 : value);
+        dayList.push(value === EMPTY_VALUE ? null : value);
       }
     });
     return {

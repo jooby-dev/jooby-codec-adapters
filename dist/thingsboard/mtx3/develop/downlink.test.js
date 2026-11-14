@@ -92,15 +92,15 @@ var logs = '';
   function _toConsumableArray(r) {
     return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread();
   }
-  function _toPrimitive(t, r) {
+  function _toPrimitive(t, e) {
     if ("object" != typeof t || !t) return t;
-    var e = t[Symbol.toPrimitive];
-    if (void 0 !== e) {
-      var i = e.call(t, r);
+    var r;
+    if ("undefined" != typeof Symbol && void 0 !== (r = t[Symbol.toPrimitive])) {
+      var i = r.call(t, e);
       if ("object" != typeof i) return i;
       throw new TypeError("@@toPrimitive must return a primitive value.");
     }
-    return ("string" === r ? String : Number)(t);
+    return ("string" === e ? String : Number)(t);
   }
   function _toPropertyKey(t) {
     var i = _toPrimitive(t, "string");
@@ -863,6 +863,8 @@ var logs = '';
   var RESET_MAGNET_FLAG = 0xb7;
   var CHANGE_PARAMETERS_CHANNEL = 0xb9;
   var RELAY_OFF_BAD_SALDO$1 = 0xba;
+  var SET_SALDO_ZERO$1 = 0xbc;
+  var RELAY_OFF_MAX_POWER_SALDO$1 = 0xbd;
   var SET_DEMAND_EN_1MIN = 0xe0;
   var SET_DEMAND_EN_3MIN = 0xe1;
   var SET_DEMAND_EN_5MIN = 0xe2;
@@ -955,6 +957,7 @@ var logs = '';
     RELAY_HARD_ON: RELAY_HARD_ON$1,
     RELAY_OFF: RELAY_OFF$1,
     RELAY_OFF_BAD_SALDO: RELAY_OFF_BAD_SALDO$1,
+    RELAY_OFF_MAX_POWER_SALDO: RELAY_OFF_MAX_POWER_SALDO$1,
     RELAY_ON: RELAY_ON$1,
     RESET_EM_FLAG: RESET_EM_FLAG$1,
     RESET_MAGNET_FLAG: RESET_MAGNET_FLAG,
@@ -970,6 +973,7 @@ var logs = '';
     SET_DEMAND_EN_60MIN: SET_DEMAND_EN_60MIN,
     SET_NEW_SALDO: SET_NEW_SALDO$1,
     SET_SALDO_PARAM: SET_SALDO_PARAM$1,
+    SET_SALDO_ZERO: SET_SALDO_ZERO$1,
     SET_TARIFF_TABLE: SET_TARIFF_TABLE$1,
     SUMMER_TIME: SUMMER_TIME$1,
     TIME_CORRECT: TIME_CORRECT$1,
@@ -4858,6 +4862,9 @@ var logs = '';
   var RESET_EM_FLAG = 0xb2;
   var RESET_MAGNETIC_FLAG = 0xb3;
   var RELAY_OFF_BAD_SALDO = 0xba;
+  var RELAY_OFF_REACTIVE_POWER_OVER = 0xbb;
+  var SET_SALDO_ZERO = 0xbc;
+  var RELAY_OFF_MAX_POWER_SALDO = 0xbd;
   var SET_DEMAND_EN_1_MIN = 0xe0;
   var SET_DEMAND_EN_3_MIN = 0xe1;
   var SET_DEMAND_EN_5_MIN = 0xe2;
@@ -4985,6 +4992,8 @@ var logs = '';
     RELAY_HARD_ON: RELAY_HARD_ON,
     RELAY_OFF: RELAY_OFF,
     RELAY_OFF_BAD_SALDO: RELAY_OFF_BAD_SALDO,
+    RELAY_OFF_MAX_POWER_SALDO: RELAY_OFF_MAX_POWER_SALDO,
+    RELAY_OFF_REACTIVE_POWER_OVER: RELAY_OFF_REACTIVE_POWER_OVER,
     RELAY_ON: RELAY_ON,
     RESET_EM_FLAG: RESET_EM_FLAG,
     RESET_MAGNETIC_FLAG: RESET_MAGNETIC_FLAG,
@@ -5000,6 +5009,7 @@ var logs = '';
     SET_DEMAND_EN_60_MIN: SET_DEMAND_EN_60_MIN,
     SET_NEW_SALDO: SET_NEW_SALDO,
     SET_SALDO_PARAM: SET_SALDO_PARAM,
+    SET_SALDO_ZERO: SET_SALDO_ZERO,
     SET_TARIFF_TABLE: SET_TARIFF_TABLE,
     SUMMER_TIME: SUMMER_TIME,
     TIME_CORRECT: TIME_CORRECT,
@@ -5581,7 +5591,7 @@ var logs = '';
   var define1Mask = {
     RESET_DAY_MAX_POWER_KEY: 1 << 0,
     RESET_MONTH_MAX_POWER_KEY: 1 << 1,
-    BLOCK_KEY_OPTOPORT: 1 << 2,
+    BLOCK_KEY_OPTOPORT: 1 << 2 | 1 << 3,
     MAGNET_SCREEN_CONST: 1 << 5,
     ALLOW_BROWNOUT_INDICATION: 1 << 7
   };
@@ -6775,6 +6785,46 @@ var logs = '';
         timeoutRelayAuto: 5
       },
       bytes: [0x40, 0x09, 0x01, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00]
+    },
+    'optoport button control enabled request': {
+      id: id$2,
+      name: name$2,
+      headerSize: headerSize$2,
+      maxSize: maxSize$2,
+      accessLevel: accessLevel$2,
+      parameters: {
+        timeoutRelayOn: 1,
+        define1: {
+          RESET_DAY_MAX_POWER_KEY: false,
+          RESET_MONTH_MAX_POWER_KEY: false,
+          BLOCK_KEY_OPTOPORT: true,
+          MAGNET_SCREEN_CONST: false,
+          ALLOW_BROWNOUT_INDICATION: false
+        },
+        timeoutRelayKey: 0,
+        timeoutRelayAuto: 5
+      },
+      bytes: [0x40, 0x09, 0x01, 0x0c, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00]
+    },
+    'all define1 flags enabled request': {
+      id: id$2,
+      name: name$2,
+      headerSize: headerSize$2,
+      maxSize: maxSize$2,
+      accessLevel: accessLevel$2,
+      parameters: {
+        timeoutRelayOn: 1,
+        define1: {
+          RESET_DAY_MAX_POWER_KEY: true,
+          RESET_MONTH_MAX_POWER_KEY: true,
+          BLOCK_KEY_OPTOPORT: true,
+          MAGNET_SCREEN_CONST: true,
+          ALLOW_BROWNOUT_INDICATION: true
+        },
+        timeoutRelayKey: 0,
+        timeoutRelayAuto: 5
+      },
+      bytes: [0x40, 0x09, 0x01, 0xaf, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00]
     }
   };
   var fromBytes$2 = function fromBytes(bytes) {

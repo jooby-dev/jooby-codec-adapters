@@ -92,15 +92,15 @@ var logs = '';
   function _toConsumableArray(r) {
     return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread();
   }
-  function _toPrimitive(t, r) {
+  function _toPrimitive(t, e) {
     if ("object" != typeof t || !t) return t;
-    var e = t[Symbol.toPrimitive];
-    if (void 0 !== e) {
-      var i = e.call(t, r);
+    var r;
+    if ("undefined" != typeof Symbol && void 0 !== (r = t[Symbol.toPrimitive])) {
+      var i = r.call(t, e);
       if ("object" != typeof i) return i;
       throw new TypeError("@@toPrimitive must return a primitive value.");
     }
-    return ("string" === r ? String : Number)(t);
+    return ("string" === e ? String : Number)(t);
   }
   function _toPropertyKey(t) {
     var i = _toPrimitive(t, "string");
@@ -863,6 +863,8 @@ var logs = '';
   var RESET_MAGNET_FLAG = 0xb7;
   var CHANGE_PARAMETERS_CHANNEL = 0xb9;
   var RELAY_OFF_BAD_SALDO = 0xba;
+  var SET_SALDO_ZERO = 0xbc;
+  var RELAY_OFF_MAX_POWER_SALDO = 0xbd;
   var SET_DEMAND_EN_1MIN = 0xe0;
   var SET_DEMAND_EN_3MIN = 0xe1;
   var SET_DEMAND_EN_5MIN = 0xe2;
@@ -955,6 +957,7 @@ var logs = '';
     RELAY_HARD_ON: RELAY_HARD_ON,
     RELAY_OFF: RELAY_OFF,
     RELAY_OFF_BAD_SALDO: RELAY_OFF_BAD_SALDO,
+    RELAY_OFF_MAX_POWER_SALDO: RELAY_OFF_MAX_POWER_SALDO,
     RELAY_ON: RELAY_ON,
     RESET_EM_FLAG: RESET_EM_FLAG,
     RESET_MAGNET_FLAG: RESET_MAGNET_FLAG,
@@ -970,6 +973,7 @@ var logs = '';
     SET_DEMAND_EN_60MIN: SET_DEMAND_EN_60MIN,
     SET_NEW_SALDO: SET_NEW_SALDO,
     SET_SALDO_PARAM: SET_SALDO_PARAM,
+    SET_SALDO_ZERO: SET_SALDO_ZERO,
     SET_TARIFF_TABLE: SET_TARIFF_TABLE,
     SUMMER_TIME: SUMMER_TIME,
     TIME_CORRECT: TIME_CORRECT,

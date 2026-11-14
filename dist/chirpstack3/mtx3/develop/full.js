@@ -96,6 +96,14 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       Number.EPSILON = 2.220446049250313e-16;
     }
 
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isInteger
+    // Otto (ChirpStack v3) is ES5 and has no Number.isInteger.
+    if (typeof Number.isInteger !== 'function') {
+      Number.isInteger = function (value) {
+        return typeof value === 'number' && isFinite(value) && Math.floor(value) === value;
+      };
+    }
+
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
     if (typeof Object.assign !== 'function') {
       Object.assign = function (target) {
@@ -270,15 +278,15 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     function _toConsumableArray(r) {
       return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread();
     }
-    function _toPrimitive(t, r) {
+    function _toPrimitive(t, e) {
       if ("object" != typeof t || !t) return t;
-      var e = t[Symbol.toPrimitive];
-      if (void 0 !== e) {
-        var i = e.call(t, r);
+      var r;
+      if ("undefined" != typeof Symbol && void 0 !== (r = t[Symbol.toPrimitive])) {
+        var i = r.call(t, e);
         if ("object" != typeof i) return i;
         throw new TypeError("@@toPrimitive must return a primitive value.");
       }
-      return ("string" === r ? String : Number)(t);
+      return ("string" === e ? String : Number)(t);
     }
     function _toPropertyKey(t) {
       var i = _toPrimitive(t, "string");
@@ -1060,6 +1068,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var RESET_MAGNET_FLAG = 0xb7;
     var CHANGE_PARAMETERS_CHANNEL = 0xb9;
     var RELAY_OFF_BAD_SALDO$1 = 0xba;
+    var SET_SALDO_ZERO$1 = 0xbc;
+    var RELAY_OFF_MAX_POWER_SALDO$1 = 0xbd;
     var SET_DEMAND_EN_1MIN = 0xe0;
     var SET_DEMAND_EN_3MIN = 0xe1;
     var SET_DEMAND_EN_5MIN = 0xe2;
@@ -1152,6 +1162,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         RELAY_HARD_ON: RELAY_HARD_ON$1,
         RELAY_OFF: RELAY_OFF$1,
         RELAY_OFF_BAD_SALDO: RELAY_OFF_BAD_SALDO$1,
+        RELAY_OFF_MAX_POWER_SALDO: RELAY_OFF_MAX_POWER_SALDO$1,
         RELAY_ON: RELAY_ON$1,
         RESET_EM_FLAG: RESET_EM_FLAG$1,
         RESET_MAGNET_FLAG: RESET_MAGNET_FLAG,
@@ -1167,6 +1178,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         SET_DEMAND_EN_60MIN: SET_DEMAND_EN_60MIN,
         SET_NEW_SALDO: SET_NEW_SALDO$1,
         SET_SALDO_PARAM: SET_SALDO_PARAM$1,
+        SET_SALDO_ZERO: SET_SALDO_ZERO$1,
         SET_TARIFF_TABLE: SET_TARIFF_TABLE$1,
         SUMMER_TIME: SUMMER_TIME$1,
         TIME_CORRECT: TIME_CORRECT$1,
@@ -1719,11 +1731,19 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       var bytesLeft = buffer.bytesLeft;
       data.eventName = eventNames$1[event];
       switch (event) {
-        case POWER_OVER_RELAY_OFF$1:
+        case SET_NEW_SALDO$1:
+        case SET_SALDO_ZERO$1:
           if (bytesLeft < 4) {
             return data;
           }
-          data.power = [buffer.getUint8(), buffer.getUint8(), buffer.getUint8(), buffer.getUint8()];
+          data.saldo = buffer.getInt32();
+          break;
+        case POWER_OVER_RELAY_OFF$1:
+        case RELAY_OFF_MAX_POWER_SALDO$1:
+          if (bytesLeft < 4) {
+            return data;
+          }
+          data.power = buffer.getInt32();
           break;
         case CMD_SET_DATETIME$1:
         case TIME_CORRECT$1:
@@ -1741,19 +1761,19 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       buffer.setUint8(event.seconds);
       buffer.setUint8(event.event);
       switch (event.event) {
-        case POWER_OVER_RELAY_OFF$1:
-          var _iterator = _createForOfIteratorHelper(event.power),
-            _step;
-          try {
-            for (_iterator.s(); !(_step = _iterator.n()).done;) {
-              var item = _step.value;
-              buffer.setUint8(item);
-            }
-          } catch (err) {
-            _iterator.e(err);
-          } finally {
-            _iterator.f();
+        case SET_NEW_SALDO$1:
+        case SET_SALDO_ZERO$1:
+          if (event.saldo == null) {
+            throw new Error('Event saldo is required.');
           }
+          buffer.setInt32(event.saldo);
+          break;
+        case POWER_OVER_RELAY_OFF$1:
+        case RELAY_OFF_MAX_POWER_SALDO$1:
+          if (event.power == null) {
+            throw new Error('Event power is required.');
+          }
+          buffer.setInt32(event.power);
           break;
         case CMD_SET_DATETIME$1:
         case TIME_CORRECT$1:
@@ -2123,7 +2143,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     var TARIFF_NUMBER = 4;
     var ENERGY_NAMES = ['A+', 'A+R+', 'A+R-', 'A-', 'A-R+', 'A-R-'];
-    var UNDEFINED_ENERGY_VALUE = 0xffffffff;
+    var UNDEFINED_ENERGY_VALUE = 0xffff;
     var energiesMask = {
       'A+': 0x01,
       'A+R+': 0x02,
@@ -2186,7 +2206,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       var halfhours = [];
       for (var index = 0; index < halfhoursNumber; index++) {
         var value = buffer.getUint16();
-        halfhours.push(value === UNDEFINED_ENERGY_VALUE ? undefined : value);
+        halfhours.push(value === UNDEFINED_ENERGY_VALUE ? null : value);
       }
       return halfhours;
     };
@@ -2194,7 +2214,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       if (halfhours) {
         for (var index = 0; index < halfhours.length; index++) {
           var value = halfhours[index];
-          buffer.setUint16(value === undefined ? UNDEFINED_ENERGY_VALUE : value);
+          buffer.setUint16(value === null ? UNDEFINED_ENERGY_VALUE : value);
         }
       }
     };
@@ -3069,7 +3089,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         var messageBody = bytes;
         var error;
         if (aesKey && accessLevel !== UNENCRYPTED) {
-          messageBody = _toConsumableArray(aes.decrypt(aesKey, messageBody));
+          messageBody = _toConsumableArray(aes.decrypt());
         }
         var receivedLrc = messageBody[messageBody.length - 1];
         messageBody = messageBody.slice(0, -1);
@@ -3168,7 +3188,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         }
         body = body.concat(calculateLrc(body));
         if (aesKey && accessLevel !== UNENCRYPTED) {
-          body = _toConsumableArray(aes.encrypt(aesKey, body));
+          body = _toConsumableArray(aes.encrypt());
         }
         return body;
       };
@@ -3651,6 +3671,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var RESET_EM_FLAG = 0xb2;
     var RESET_MAGNETIC_FLAG = 0xb3;
     var RELAY_OFF_BAD_SALDO = 0xba;
+    var RELAY_OFF_REACTIVE_POWER_OVER = 0xbb;
+    var SET_SALDO_ZERO = 0xbc;
+    var RELAY_OFF_MAX_POWER_SALDO = 0xbd;
     var SET_DEMAND_EN_1_MIN = 0xe0;
     var SET_DEMAND_EN_3_MIN = 0xe1;
     var SET_DEMAND_EN_5_MIN = 0xe2;
@@ -3778,6 +3801,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         RELAY_HARD_ON: RELAY_HARD_ON,
         RELAY_OFF: RELAY_OFF,
         RELAY_OFF_BAD_SALDO: RELAY_OFF_BAD_SALDO,
+        RELAY_OFF_MAX_POWER_SALDO: RELAY_OFF_MAX_POWER_SALDO,
+        RELAY_OFF_REACTIVE_POWER_OVER: RELAY_OFF_REACTIVE_POWER_OVER,
         RELAY_ON: RELAY_ON,
         RESET_EM_FLAG: RESET_EM_FLAG,
         RESET_MAGNETIC_FLAG: RESET_MAGNETIC_FLAG,
@@ -3793,6 +3818,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         SET_DEMAND_EN_60_MIN: SET_DEMAND_EN_60_MIN,
         SET_NEW_SALDO: SET_NEW_SALDO,
         SET_SALDO_PARAM: SET_SALDO_PARAM,
+        SET_SALDO_ZERO: SET_SALDO_ZERO,
         SET_TARIFF_TABLE: SET_TARIFF_TABLE,
         SUMMER_TIME: SUMMER_TIME,
         TIME_CORRECT: TIME_CORRECT,
@@ -4373,7 +4399,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var define1Mask = {
       RESET_DAY_MAX_POWER_KEY: 1 << 0,
       RESET_MONTH_MAX_POWER_KEY: 1 << 1,
-      BLOCK_KEY_OPTOPORT: 1 << 2,
+      BLOCK_KEY_OPTOPORT: 1 << 2 | 1 << 3,
       MAGNET_SCREEN_CONST: 1 << 5,
       ALLOW_BROWNOUT_INDICATION: 1 << 7
     };
@@ -4674,11 +4700,20 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       var bytesLeft = buffer.bytesLeft;
       data.eventName = eventNames[event];
       switch (event) {
-        case POWER_OVER_RELAY_OFF:
+        case SET_NEW_SALDO:
+        case SET_SALDO_ZERO:
           if (bytesLeft < 4) {
             return data;
           }
-          data.power = [buffer.getUint8(), buffer.getUint8(), buffer.getUint8(), buffer.getUint8()];
+          data.saldo = buffer.getInt32();
+          break;
+        case POWER_OVER_RELAY_OFF:
+        case RELAY_OFF_REACTIVE_POWER_OVER:
+        case RELAY_OFF_MAX_POWER_SALDO:
+          if (bytesLeft < 4) {
+            return data;
+          }
+          data.power = buffer.getInt32();
           break;
         case CMD_SET_DATETIME:
         case TIME_CORRECT:
@@ -4696,19 +4731,20 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       buffer.setUint8(event.seconds);
       buffer.setUint8(event.event);
       switch (event.event) {
-        case POWER_OVER_RELAY_OFF:
-          var _iterator = _createForOfIteratorHelper(event.power),
-            _step;
-          try {
-            for (_iterator.s(); !(_step = _iterator.n()).done;) {
-              var item = _step.value;
-              buffer.setUint8(item);
-            }
-          } catch (err) {
-            _iterator.e(err);
-          } finally {
-            _iterator.f();
+        case SET_NEW_SALDO:
+        case SET_SALDO_ZERO:
+          if (event.saldo == null) {
+            throw new Error('Event saldo is required.');
           }
+          buffer.setInt32(event.saldo);
+          break;
+        case POWER_OVER_RELAY_OFF:
+        case RELAY_OFF_REACTIVE_POWER_OVER:
+        case RELAY_OFF_MAX_POWER_SALDO:
+          if (event.power == null) {
+            throw new Error('Event power is required.');
+          }
+          buffer.setInt32(event.power);
           break;
         case CMD_SET_DATETIME:
         case TIME_CORRECT:
@@ -5313,11 +5349,68 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var ADDITIONAL_HOUR = 25;
+    var DEFAULT_DEMAND_PERIOD = 30;
+    var MAX_DEMANDS_COUNT = 48;
+    var normalizeDemandPeriod = function normalizeDemandPeriod(periodMin) {
+      return periodMin === 0 ? DEFAULT_DEMAND_PERIOD : periodMin;
+    };
     var getRecordIndex = function getRecordIndex(hours, minutes, periodMin) {
-      return Math.trunc((hours * 60 + minutes) / periodMin);
+      return Math.trunc((hours * 60 + minutes) / normalizeDemandPeriod(periodMin));
     };
     var getLastSummerHourIndex = function getLastSummerHourIndex(periodMin) {
       return getRecordIndex(ADDITIONAL_HOUR, 0, periodMin);
+    };
+    var isLastSummerHourIndex = function isLastSummerHourIndex(index, periodMin) {
+      return index === getLastSummerHourIndex(periodMin);
+    };
+    var hasLastSummerHour = function hasLastSummerHour(_ref) {
+      var firstIndex = _ref.firstIndex,
+        count = _ref.count,
+        period = _ref.period;
+      var lastSummerHourIndex = getLastSummerHourIndex(period);
+      return firstIndex <= lastSummerHourIndex && lastSummerHourIndex < firstIndex + count;
+    };
+    var getDemandValuesSize = function getDemandValuesSize(range, valueSize) {
+      var lastSummerHourValueSize = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : valueSize;
+      return range.count * valueSize - (hasLastSummerHour(range) ? valueSize - lastSummerHourValueSize : 0);
+    };
+    var validateDemandCount = function validateDemandCount(count) {
+      if (!Number.isInteger(count) || count < 0 || count > MAX_DEMANDS_COUNT) {
+        throw new Error("Invalid demand count: expected 0..".concat(MAX_DEMANDS_COUNT, ", actual ").concat(count, "."));
+      }
+    };
+    var isLastSummerHourValue = function isLastSummerHourValue(value) {
+      return _typeof(value) === 'object' && value !== null && 'lastSummerHour' in value && value.lastSummerHour != null;
+    };
+    var validateDemandValues = function validateDemandValues(values, range, valueType) {
+      validateDemandCount(range.count);
+      if (!Array.isArray(values)) {
+        throw new Error('Invalid demands: array expected.');
+      }
+      var actualCount = values.length;
+      if (actualCount !== range.count) {
+        throw new Error("Invalid demand count: expected ".concat(range.count, ", actual ").concat(actualCount, "."));
+      }
+      values.forEach(function (value, index) {
+        if (value == null) {
+          return;
+        }
+        var absoluteIndex = range.firstIndex + index;
+        var isLastSummerHourIndexValue = isLastSummerHourIndex(absoluteIndex, range.period);
+        var isLastSummerHourDemandValue = isLastSummerHourValue(value);
+        if (isLastSummerHourIndexValue && !isLastSummerHourDemandValue) {
+          throw new Error('Invalid demand value: lastSummerHour expected. ' + "First index: ".concat(range.firstIndex, ", index: ").concat(index, ", absolute index: ").concat(absoluteIndex));
+        }
+        if (!isLastSummerHourIndexValue && isLastSummerHourDemandValue) {
+          throw new Error('Invalid demand value: lastSummerHour is only valid at the last summer hour index. ' + "First index: ".concat(range.firstIndex, ", index: ").concat(index, ", absolute index: ").concat(absoluteIndex));
+        }
+        if (!isLastSummerHourIndexValue && valueType) {
+          var isExpectedValue = typeof value === 'number' ;
+          if (!isExpectedValue) {
+            throw new Error("Invalid demand value: ".concat(valueType, " expected. ") + "First index: ".concat(range.firstIndex, ", index: ").concat(index, ", absolute index: ").concat(absoluteIndex));
+          }
+        }
+      });
     };
 
     var id$1a = getDateTime$2;
@@ -5378,49 +5471,56 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     var id$17 = getDemandCumulative$1;
-    var NO_VALUE$1 = 0xffffffff;
+    var NO_LAST_SUMMER_HOUR_VALUE = 0xffff;
+    var NO_CUMULATIVE_VALUE = 0xffffffff;
     var fromBytes$19 = function fromBytes(bytes) {
       if (!bytes || bytes.length < maxSize$1_) {
-        throw new Error('Invalid uplink GetDemand byte length.');
+        throw new Error('Invalid uplink GetDemandCumulative byte length.');
       }
       var buffer = new BinaryBuffer(bytes, false);
       var parameters = getDemand$2(buffer);
-      var indexLastSummerRecord = getLastSummerHourIndex(parameters.period);
-      var hasLastSummerHour = parameters.count > 0 && indexLastSummerRecord >= parameters.firstIndex && indexLastSummerRecord < parameters.firstIndex + parameters.count;
-      var expectedLength = maxSize$1_ + 4 * parameters.count - (hasLastSummerHour ? 2 : 0);
+      validateDemandCount(parameters.count);
+      var expectedLength = maxSize$1_ + getDemandValuesSize(parameters, 4, 2);
       if (bytes.length !== expectedLength) {
         throw new Error('Invalid uplink GetDemandCumulative demands byte length.');
       }
-      parameters.demands = new Array(parameters.count).fill(0).map(function (item, index) {
-        if (parameters.firstIndex + index === indexLastSummerRecord) {
-          return {
-            lastSummerHour: buffer.getUint16() >> 8 & 0xff
+      var demandValues = new Array(parameters.count).fill(0).map(function (item, index) {
+        var value;
+        if (isLastSummerHourIndex(parameters.firstIndex + index, parameters.period)) {
+          value = buffer.getUint16();
+          return value === NO_LAST_SUMMER_HOUR_VALUE ? null : {
+            lastSummerHour: value >> 8 & 0xff
           };
         }
-        var value = buffer.getUint32();
-        return value === NO_VALUE$1 ? null : value;
+        value = buffer.getUint32();
+        return value === NO_CUMULATIVE_VALUE ? null : value;
       });
-      return parameters;
+      return _objectSpread2(_objectSpread2({}, parameters), {}, {
+        demands: demandValues
+      });
     };
     var toBytes$18 = function toBytes(parameters) {
-      var _parameters$demands, _parameters$demands$l, _parameters$demands2;
-      var hasLastSummerHour = (_parameters$demands = parameters.demands) === null || _parameters$demands === void 0 ? void 0 : _parameters$demands.some(function (d) {
-        return d != null && typeof d !== 'number' && d.lastSummerHour != null;
-      });
-      var demandsCount = (_parameters$demands$l = (_parameters$demands2 = parameters.demands) === null || _parameters$demands2 === void 0 ? void 0 : _parameters$demands2.length) !== null && _parameters$demands$l !== void 0 ? _parameters$demands$l : 0;
-      var commandSize = demandsCount > 0 ? maxSize$1_ + demandsCount * 4 - (hasLastSummerHour ? 2 : 0) : maxSize$1_;
+      validateDemandValues(parameters.demands, parameters, 'number');
+      var indexLastSummerRecord = getLastSummerHourIndex(parameters.period);
+      var commandSize = maxSize$1_ + getDemandValuesSize(parameters, 4, 2);
       var buffer = new BinaryBuffer(commandSize, false);
       setDemand$1(buffer, parameters);
-      parameters.demands.forEach(function (value) {
-        if (value == null) {
-          buffer.setUint32(NO_VALUE$1);
+      parameters.demands.forEach(function (value, index) {
+        var absoluteIndex = parameters.firstIndex + index;
+        if (absoluteIndex === indexLastSummerRecord) {
+          if (value == null) {
+            buffer.setUint16(NO_LAST_SUMMER_HOUR_VALUE);
+            return;
+          }
+          var lastSummerHour = value.lastSummerHour;
+          buffer.setUint16(lastSummerHour << 8 | 0xff);
           return;
         }
-        if (typeof value === 'number') {
-          buffer.setUint32(value);
-        } else {
-          buffer.setUint16(value.lastSummerHour << 8 | 0xff);
+        if (value == null) {
+          buffer.setUint32(NO_CUMULATIVE_VALUE);
+          return;
         }
+        buffer.setUint32(value);
       });
       return toBytes$2t(id$17, buffer.data);
     };
@@ -5455,7 +5555,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     var nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
     var mtx1DeviceTypeDescriptorMask = {
       typeMeterG: 1 << 0,
-      downgradedToA: 1 << 4,
+      notDowngradedToA: 1 << 4,
       supportMeterInfo: 1 << 6
     };
     var mtx3DeviceTypeDescriptorMask = {
@@ -5466,12 +5566,28 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       reactiveByQuadrants: 1 << 7
     };
     var mtx1DeviceTypeDescriptorFromByte = function mtx1DeviceTypeDescriptorFromByte(_byte) {
-      return _objectSpread2({
-        meterType: 'mtx1'
-      }, toObject(mtx1DeviceTypeDescriptorMask, _byte));
+      var mask = mtx1DeviceTypeDescriptorMask;
+      var typeMeterG = (_byte & mask.typeMeterG) !== 0;
+      var notDowngradedToA = (_byte & mask.notDowngradedToA) !== 0;
+      return {
+        meterType: 'mtx1',
+        typeMeterG: typeMeterG,
+        downgradedToA: typeMeterG && !notDowngradedToA,
+        supportMeterInfo: (_byte & mask.supportMeterInfo) !== 0
+      };
     };
     var mtx1DeviceTypeDescriptorToByte = function mtx1DeviceTypeDescriptorToByte(descriptor) {
-      return fromObject(mtx1DeviceTypeDescriptorMask, descriptor);
+      var typeMeterG = descriptor.typeMeterG,
+        downgradedToA = descriptor.downgradedToA,
+        supportMeterInfo = descriptor.supportMeterInfo;
+      if (!typeMeterG && downgradedToA) {
+        throw new Error('downgradedToA requires typeMeterG');
+      }
+      return fromObject(mtx1DeviceTypeDescriptorMask, {
+        typeMeterG: typeMeterG,
+        notDowngradedToA: typeMeterG && !downgradedToA,
+        supportMeterInfo: supportMeterInfo
+      });
     };
     var mtx3DeviceTypeDescriptorFromByte = function mtx3DeviceTypeDescriptorFromByte(_byte2) {
       var descriptor = toObject(mtx3DeviceTypeDescriptorMask, _byte2);
@@ -6293,6 +6409,16 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       return toBytes$2t(id$x, [event, index, date.year, date.month, date.date, date.hours, date.minutes, date.seconds, count]);
     };
 
+    var calibrationFlagsMask = {
+      calibrationEnable: 0x01,
+      hardkey: 0x02,
+      keyPressTest: 0x04,
+      keyOpenkeyTest: 0x08,
+      keyGerkonTest: 0x10,
+      keyOpenKlemaTest: 0x20,
+      keyPress2Test: 0x40,
+      keyOpenModuleTest: 0x80
+    };
     var relayStatusMask = {
       RELAY_STATE: Math.pow(2, 0),
       RELAY_UBAD: Math.pow(2, 1),
@@ -6330,7 +6456,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       var relayStatus = toObject(relayStatusMask, buffer.getUint8());
       var statusEvent1 = buffer.getUint8();
       var centerAlert = !!(buffer.getUint8() & 1);
-      var calEnableFlag = !!(buffer.getUint8() & 1);
+      var calibrationFlags = toObject(calibrationFlagsMask, buffer.getUint8());
       var currentTariffs = {
         'A+': buffer.getUint8(),
         maximumPowers: buffer.getUint8(),
@@ -6351,12 +6477,14 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         relayStatus: relayStatus,
         statusEvent: toObject(eventStatusMask, statusEventValue),
         centerAlert: centerAlert,
-        calEnableFlag: calEnableFlag,
+        calibrationFlags: calibrationFlags,
+        calEnableFlag: calibrationFlags.calibrationEnable,
         currentTariffs: currentTariffs,
         isSummerTime: isSummerTime
       };
     };
     var toBytes$y = function toBytes(parameters) {
+      var _parameters$calibrati;
       var buffer = new BinaryBuffer(maxSize$k, false);
       var statusEventValue = fromObject(eventStatusMask, parameters.statusEvent);
       buffer.setUint32(parameters.operatingSeconds);
@@ -6372,7 +6500,10 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       buffer.setUint8(fromObject(relayStatusMask, parameters.relayStatus));
       buffer.setUint8(statusEventValue & 0xff);
       buffer.setUint8(parameters.centerAlert ? 1 : 0);
-      buffer.setUint8(parameters.calEnableFlag ? 1 : 0);
+      var calibrationFlags = (_parameters$calibrati = parameters.calibrationFlags) !== null && _parameters$calibrati !== void 0 ? _parameters$calibrati : {
+        calibrationEnable: parameters.calEnableFlag
+      };
+      buffer.setUint8(fromObject(calibrationFlagsMask, calibrationFlags));
       buffer.setUint8(parameters.currentTariffs['A+']);
       buffer.setUint8(parameters.currentTariffs.maximumPowers);
       buffer.setUint8(parameters.currentTariffs['A-']);
@@ -6531,35 +6662,42 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
       }
       var buffer = new BinaryBuffer(bytes, false);
       var parameters = getDemand(buffer);
-      var indexLastSummerRecord = getLastSummerHourIndex(parameters.period);
-      if (bytes.length !== maxSize$1g + 2 * parameters.count) {
+      validateDemandCount(parameters.count);
+      var expectedLength = maxSize$1g + getDemandValuesSize(parameters, 2);
+      if (bytes.length !== expectedLength) {
         throw new Error('Invalid uplink GetDemand demands byte length.');
       }
       var demands = new Array(parameters.count).fill(0).map(function (item, index) {
         var value = buffer.getUint16();
-        if (parameters.firstIndex + index === indexLastSummerRecord) {
+        if (value === NO_VALUE) {
+          return null;
+        }
+        if (isLastSummerHourIndex(parameters.firstIndex + index, parameters.period)) {
           return {
             lastSummerHour: value >> 8 & 0xff
           };
         }
-        return value === NO_VALUE ? null : value;
+        return value;
       });
       return _objectSpread2(_objectSpread2({}, parameters), {}, {
         demands: demands
       });
     };
     var toBytes$s = function toBytes(parameters) {
-      var buffer = new BinaryBuffer(maxSize$1g + parameters.count * 2, false);
+      validateDemandValues(parameters.demands, parameters, 'number');
+      var commandSize = maxSize$1g + getDemandValuesSize(parameters, 2);
+      var buffer = new BinaryBuffer(commandSize, false);
       setDemand(buffer, parameters);
-      parameters.demands.forEach(function (value) {
+      parameters.demands.forEach(function (value, index) {
         if (value == null) {
           buffer.setUint16(NO_VALUE);
           return;
         }
-        if (typeof value === 'number') {
-          buffer.setUint16(value);
-        } else {
+        var absoluteIndex = parameters.firstIndex + index;
+        if (isLastSummerHourIndex(absoluteIndex, parameters.period)) {
           buffer.setUint16(value.lastSummerHour << 8 | 0xff);
+        } else {
+          buffer.setUint16(value);
         }
       });
       return toBytes$2t(id$q, buffer.data);

@@ -781,6 +781,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const RESET_MAGNET_FLAG = 0xb7;
     const CHANGE_PARAMETERS_CHANNEL = 0xb9;
     const RELAY_OFF_BAD_SALDO$1 = 0xba;
+    const SET_SALDO_ZERO$1 = 0xbc;
+    const RELAY_OFF_MAX_POWER_SALDO$1 = 0xbd;
     const SET_DEMAND_EN_1MIN = 0xe0;
     const SET_DEMAND_EN_3MIN = 0xe1;
     const SET_DEMAND_EN_5MIN = 0xe2;
@@ -873,6 +875,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         RELAY_HARD_ON: RELAY_HARD_ON$1,
         RELAY_OFF: RELAY_OFF$1,
         RELAY_OFF_BAD_SALDO: RELAY_OFF_BAD_SALDO$1,
+        RELAY_OFF_MAX_POWER_SALDO: RELAY_OFF_MAX_POWER_SALDO$1,
         RELAY_ON: RELAY_ON$1,
         RESET_EM_FLAG: RESET_EM_FLAG$1,
         RESET_MAGNET_FLAG: RESET_MAGNET_FLAG,
@@ -888,6 +891,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         SET_DEMAND_EN_60MIN: SET_DEMAND_EN_60MIN,
         SET_NEW_SALDO: SET_NEW_SALDO$1,
         SET_SALDO_PARAM: SET_SALDO_PARAM$1,
+        SET_SALDO_ZERO: SET_SALDO_ZERO$1,
         SET_TARIFF_TABLE: SET_TARIFF_TABLE$1,
         SUMMER_TIME: SUMMER_TIME$1,
         TIME_CORRECT: TIME_CORRECT$1,
@@ -1380,11 +1384,19 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         const { bytesLeft } = buffer;
         data.eventName = eventNames$1[event];
         switch (event) {
-            case POWER_OVER_RELAY_OFF$1:
+            case SET_NEW_SALDO$1:
+            case SET_SALDO_ZERO$1:
                 if (bytesLeft < 4) {
                     return data;
                 }
-                data.power = [buffer.getUint8(), buffer.getUint8(), buffer.getUint8(), buffer.getUint8()];
+                data.saldo = buffer.getInt32();
+                break;
+            case POWER_OVER_RELAY_OFF$1:
+            case RELAY_OFF_MAX_POWER_SALDO$1:
+                if (bytesLeft < 4) {
+                    return data;
+                }
+                data.power = buffer.getInt32();
                 break;
             case CMD_SET_DATETIME$1:
             case TIME_CORRECT$1:
@@ -1402,10 +1414,19 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         buffer.setUint8(event.seconds);
         buffer.setUint8(event.event);
         switch (event.event) {
-            case POWER_OVER_RELAY_OFF$1:
-                for (const item of event.power) {
-                    buffer.setUint8(item);
+            case SET_NEW_SALDO$1:
+            case SET_SALDO_ZERO$1:
+                if (event.saldo == null) {
+                    throw new Error('Event saldo is required.');
                 }
+                buffer.setInt32(event.saldo);
+                break;
+            case POWER_OVER_RELAY_OFF$1:
+            case RELAY_OFF_MAX_POWER_SALDO$1:
+                if (event.power == null) {
+                    throw new Error('Event power is required.');
+                }
+                buffer.setInt32(event.power);
                 break;
             case CMD_SET_DATETIME$1:
             case TIME_CORRECT$1:
@@ -1705,7 +1726,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
 
     const TARIFF_NUMBER = 4;
     const ENERGY_NAMES = ['A+', 'A+R+', 'A+R-', 'A-', 'A-R+', 'A-R-'];
-    const UNDEFINED_ENERGY_VALUE = 0xffffffff;
+    const UNDEFINED_ENERGY_VALUE = 0xffff;
     const energiesMask = {
         'A+': 0x01,
         'A+R+': 0x02,
@@ -1761,7 +1782,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         const halfhours = [];
         for (let index = 0; index < halfhoursNumber; index++) {
             const value = buffer.getUint16();
-            halfhours.push(value === UNDEFINED_ENERGY_VALUE ? undefined : value);
+            halfhours.push(value === UNDEFINED_ENERGY_VALUE ? null : value);
         }
         return halfhours;
     };
@@ -1769,7 +1790,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         if (halfhours) {
             for (let index = 0; index < halfhours.length; index++) {
                 const value = halfhours[index];
-                buffer.setUint16(value === undefined ? UNDEFINED_ENERGY_VALUE : value);
+                buffer.setUint16(value === null ? UNDEFINED_ENERGY_VALUE : value);
             }
         }
     };
@@ -2561,7 +2582,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         let messageBody = bytes;
         let error;
         if (aesKey && accessLevel !== UNENCRYPTED) {
-            messageBody = [...aes.decrypt(aesKey, messageBody)];
+            messageBody = [...aes.decrypt()];
         }
         const receivedLrc = messageBody[messageBody.length - 1];
         messageBody = messageBody.slice(0, -1);
@@ -2652,7 +2673,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         }
         body = body.concat(calculateLrc(body));
         if (aesKey && accessLevel !== UNENCRYPTED) {
-            body = [...aes.encrypt(aesKey, body)];
+            body = [...aes.encrypt()];
         }
         return body;
     };
@@ -3112,6 +3133,9 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const RESET_EM_FLAG = 0xb2;
     const RESET_MAGNETIC_FLAG = 0xb3;
     const RELAY_OFF_BAD_SALDO = 0xba;
+    const RELAY_OFF_REACTIVE_POWER_OVER = 0xbb;
+    const SET_SALDO_ZERO = 0xbc;
+    const RELAY_OFF_MAX_POWER_SALDO = 0xbd;
     const SET_DEMAND_EN_1_MIN = 0xe0;
     const SET_DEMAND_EN_3_MIN = 0xe1;
     const SET_DEMAND_EN_5_MIN = 0xe2;
@@ -3239,6 +3263,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         RELAY_HARD_ON: RELAY_HARD_ON,
         RELAY_OFF: RELAY_OFF,
         RELAY_OFF_BAD_SALDO: RELAY_OFF_BAD_SALDO,
+        RELAY_OFF_MAX_POWER_SALDO: RELAY_OFF_MAX_POWER_SALDO,
+        RELAY_OFF_REACTIVE_POWER_OVER: RELAY_OFF_REACTIVE_POWER_OVER,
         RELAY_ON: RELAY_ON,
         RESET_EM_FLAG: RESET_EM_FLAG,
         RESET_MAGNETIC_FLAG: RESET_MAGNETIC_FLAG,
@@ -3254,6 +3280,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         SET_DEMAND_EN_60_MIN: SET_DEMAND_EN_60_MIN,
         SET_NEW_SALDO: SET_NEW_SALDO,
         SET_SALDO_PARAM: SET_SALDO_PARAM,
+        SET_SALDO_ZERO: SET_SALDO_ZERO,
         SET_TARIFF_TABLE: SET_TARIFF_TABLE,
         SUMMER_TIME: SUMMER_TIME,
         TIME_CORRECT: TIME_CORRECT,
@@ -3835,7 +3862,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const define1Mask = {
         RESET_DAY_MAX_POWER_KEY: 1 << 0,
         RESET_MONTH_MAX_POWER_KEY: 1 << 1,
-        BLOCK_KEY_OPTOPORT: 1 << 2,
+        BLOCK_KEY_OPTOPORT: (1 << 2) | (1 << 3),
         MAGNET_SCREEN_CONST: 1 << 5,
         ALLOW_BROWNOUT_INDICATION: 1 << 7
     };
@@ -4108,11 +4135,20 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         const { bytesLeft } = buffer;
         data.eventName = eventNames[event];
         switch (event) {
-            case POWER_OVER_RELAY_OFF:
+            case SET_NEW_SALDO:
+            case SET_SALDO_ZERO:
                 if (bytesLeft < 4) {
                     return data;
                 }
-                data.power = [buffer.getUint8(), buffer.getUint8(), buffer.getUint8(), buffer.getUint8()];
+                data.saldo = buffer.getInt32();
+                break;
+            case POWER_OVER_RELAY_OFF:
+            case RELAY_OFF_REACTIVE_POWER_OVER:
+            case RELAY_OFF_MAX_POWER_SALDO:
+                if (bytesLeft < 4) {
+                    return data;
+                }
+                data.power = buffer.getInt32();
                 break;
             case CMD_SET_DATETIME:
             case TIME_CORRECT:
@@ -4130,10 +4166,20 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         buffer.setUint8(event.seconds);
         buffer.setUint8(event.event);
         switch (event.event) {
-            case POWER_OVER_RELAY_OFF:
-                for (const item of event.power) {
-                    buffer.setUint8(item);
+            case SET_NEW_SALDO:
+            case SET_SALDO_ZERO:
+                if (event.saldo == null) {
+                    throw new Error('Event saldo is required.');
                 }
+                buffer.setInt32(event.saldo);
+                break;
+            case POWER_OVER_RELAY_OFF:
+            case RELAY_OFF_REACTIVE_POWER_OVER:
+            case RELAY_OFF_MAX_POWER_SALDO:
+                if (event.power == null) {
+                    throw new Error('Event power is required.');
+                }
+                buffer.setInt32(event.power);
                 break;
             case CMD_SET_DATETIME:
             case TIME_CORRECT:
@@ -4711,8 +4757,61 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const ADDITIONAL_HOUR = 25;
-    const getRecordIndex = (hours, minutes, periodMin) => Math.trunc(((hours * 60) + minutes) / periodMin);
+    const DEFAULT_DEMAND_PERIOD = 30;
+    const MAX_DEMANDS_COUNT = 48;
+    const normalizeDemandPeriod = (periodMin) => (periodMin === 0 ? DEFAULT_DEMAND_PERIOD : periodMin);
+    const getRecordIndex = (hours, minutes, periodMin) => (Math.trunc(((hours * 60) + minutes) / normalizeDemandPeriod(periodMin)));
     const getLastSummerHourIndex = periodMin => getRecordIndex(ADDITIONAL_HOUR, 0, periodMin);
+    const isLastSummerHourIndex = (index, periodMin) => (index === getLastSummerHourIndex(periodMin));
+    const hasLastSummerHour = ({ firstIndex, count, period }) => {
+        const lastSummerHourIndex = getLastSummerHourIndex(period);
+        return firstIndex <= lastSummerHourIndex && lastSummerHourIndex < firstIndex + count;
+    };
+    const getDemandValuesSize = (range, valueSize, lastSummerHourValueSize = valueSize) => range.count * valueSize
+        - (hasLastSummerHour(range) ? valueSize - lastSummerHourValueSize : 0);
+    const validateDemandCount = (count) => {
+        if (!Number.isInteger(count) || count < 0 || count > MAX_DEMANDS_COUNT) {
+            throw new Error(`Invalid demand count: expected 0..${MAX_DEMANDS_COUNT}, actual ${count}.`);
+        }
+    };
+    const isLastSummerHourValue = (value) => (typeof value === 'object'
+        && value !== null
+        && 'lastSummerHour' in value
+        && value.lastSummerHour != null);
+    const validateDemandValues = (values, range, valueType) => {
+        validateDemandCount(range.count);
+        if (!Array.isArray(values)) {
+            throw new Error('Invalid demands: array expected.');
+        }
+        const actualCount = values.length;
+        if (actualCount !== range.count) {
+            throw new Error(`Invalid demand count: expected ${range.count}, actual ${actualCount}.`);
+        }
+        values.forEach((value, index) => {
+            if (value == null) {
+                return;
+            }
+            const absoluteIndex = range.firstIndex + index;
+            const isLastSummerHourIndexValue = isLastSummerHourIndex(absoluteIndex, range.period);
+            const isLastSummerHourDemandValue = isLastSummerHourValue(value);
+            if (isLastSummerHourIndexValue && !isLastSummerHourDemandValue) {
+                throw new Error('Invalid demand value: lastSummerHour expected. '
+                    + `First index: ${range.firstIndex}, index: ${index}, absolute index: ${absoluteIndex}`);
+            }
+            if (!isLastSummerHourIndexValue && isLastSummerHourDemandValue) {
+                throw new Error('Invalid demand value: lastSummerHour is only valid at the last summer hour index. '
+                    + `First index: ${range.firstIndex}, index: ${index}, absolute index: ${absoluteIndex}`);
+            }
+            if (!isLastSummerHourIndexValue && valueType) {
+                const isExpectedValue = typeof value === 'number'
+                    ;
+                if (!isExpectedValue) {
+                    throw new Error(`Invalid demand value: ${valueType} expected. `
+                        + `First index: ${range.firstIndex}, index: ${index}, absolute index: ${absoluteIndex}`);
+                }
+            }
+        });
+    };
 
     const id$1a = getDateTime$2;
     const name$T = commandNames[getDateTime$2];
@@ -4772,51 +4871,56 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     };
 
     const id$17 = getDemandCumulative$1;
-    const NO_VALUE$1 = 0xffffffff;
+    const NO_LAST_SUMMER_HOUR_VALUE = 0xffff;
+    const NO_CUMULATIVE_VALUE = 0xffffffff;
     const fromBytes$19 = (bytes) => {
         if (!bytes || bytes.length < maxSize$1_) {
-            throw new Error('Invalid uplink GetDemand byte length.');
+            throw new Error('Invalid uplink GetDemandCumulative byte length.');
         }
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = getDemand$2(buffer);
-        const indexLastSummerRecord = getLastSummerHourIndex(parameters.period);
-        const hasLastSummerHour = parameters.count > 0 && indexLastSummerRecord >= parameters.firstIndex && indexLastSummerRecord < (parameters.firstIndex + parameters.count);
-        const expectedLength = maxSize$1_ + (4 * parameters.count) - (hasLastSummerHour ? 2 : 0);
+        validateDemandCount(parameters.count);
+        const expectedLength = maxSize$1_ + getDemandValuesSize(parameters, 4, 2);
         if (bytes.length !== expectedLength) {
             throw new Error('Invalid uplink GetDemandCumulative demands byte length.');
         }
-        parameters.demands = new Array(parameters.count)
+        const demandValues = new Array(parameters.count)
             .fill(0)
             .map((item, index) => {
-            if (parameters.firstIndex + index === indexLastSummerRecord) {
-                return {
-                    lastSummerHour: ((buffer.getUint16() >> 8) & 0xff)
+            let value;
+            if (isLastSummerHourIndex(parameters.firstIndex + index, parameters.period)) {
+                value = buffer.getUint16();
+                return value === NO_LAST_SUMMER_HOUR_VALUE ? null : {
+                    lastSummerHour: (value >> 8) & 0xff
                 };
             }
-            const value = buffer.getUint32();
-            return value === NO_VALUE$1 ? null : value;
+            value = buffer.getUint32();
+            return (value === NO_CUMULATIVE_VALUE ? null : value);
         });
-        return parameters;
+        return { ...parameters, demands: demandValues };
     };
     const toBytes$18 = (parameters) => {
-        const hasLastSummerHour = parameters.demands?.some(d => d != null && typeof d !== 'number' && d.lastSummerHour != null);
-        const demandsCount = parameters.demands?.length ?? 0;
-        const commandSize = demandsCount > 0
-            ? maxSize$1_ + (demandsCount * 4) - (hasLastSummerHour ? 2 : 0)
-            : maxSize$1_;
+        validateDemandValues(parameters.demands, parameters, 'number');
+        const indexLastSummerRecord = getLastSummerHourIndex(parameters.period);
+        const commandSize = maxSize$1_ + getDemandValuesSize(parameters, 4, 2);
         const buffer = new BinaryBuffer(commandSize, false);
         setDemand$1(buffer, parameters);
-        parameters.demands.forEach(value => {
-            if (value == null) {
-                buffer.setUint32(NO_VALUE$1);
+        parameters.demands.forEach((value, index) => {
+            const absoluteIndex = parameters.firstIndex + index;
+            if (absoluteIndex === indexLastSummerRecord) {
+                if (value == null) {
+                    buffer.setUint16(NO_LAST_SUMMER_HOUR_VALUE);
+                    return;
+                }
+                const { lastSummerHour } = value;
+                buffer.setUint16((lastSummerHour << 8) | 0xff);
                 return;
             }
-            if (typeof value === 'number') {
-                buffer.setUint32(value);
+            if (value == null) {
+                buffer.setUint32(NO_CUMULATIVE_VALUE);
+                return;
             }
-            else {
-                buffer.setUint16((value.lastSummerHour << 8) | 0xff);
-            }
+            buffer.setUint32(value);
         });
         return toBytes$2t(id$17, buffer.data);
     };
@@ -4851,7 +4955,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
     const nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
     const mtx1DeviceTypeDescriptorMask = {
         typeMeterG: 1 << 0,
-        downgradedToA: 1 << 4,
+        notDowngradedToA: 1 << 4,
         supportMeterInfo: 1 << 6
     };
     const mtx3DeviceTypeDescriptorMask = {
@@ -4861,11 +4965,28 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         supportMeterInfo: 1 << 6,
         reactiveByQuadrants: 1 << 7
     };
-    const mtx1DeviceTypeDescriptorFromByte = (byte) => ({
-        meterType: 'mtx1',
-        ...toObject(mtx1DeviceTypeDescriptorMask, byte)
-    });
-    const mtx1DeviceTypeDescriptorToByte = (descriptor) => (fromObject(mtx1DeviceTypeDescriptorMask, descriptor));
+    const mtx1DeviceTypeDescriptorFromByte = (byte) => {
+        const mask = mtx1DeviceTypeDescriptorMask;
+        const typeMeterG = (byte & mask.typeMeterG) !== 0;
+        const notDowngradedToA = (byte & mask.notDowngradedToA) !== 0;
+        return {
+            meterType: 'mtx1',
+            typeMeterG,
+            downgradedToA: typeMeterG && !notDowngradedToA,
+            supportMeterInfo: (byte & mask.supportMeterInfo) !== 0
+        };
+    };
+    const mtx1DeviceTypeDescriptorToByte = (descriptor) => {
+        const { typeMeterG, downgradedToA, supportMeterInfo } = descriptor;
+        if (!typeMeterG && downgradedToA) {
+            throw new Error('downgradedToA requires typeMeterG');
+        }
+        return fromObject(mtx1DeviceTypeDescriptorMask, {
+            typeMeterG,
+            notDowngradedToA: typeMeterG && !downgradedToA,
+            supportMeterInfo
+        });
+    };
     const mtx3DeviceTypeDescriptorFromByte = (byte) => {
         const descriptor = toObject(mtx3DeviceTypeDescriptorMask, byte);
         return {
@@ -5603,6 +5724,16 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         ]);
     };
 
+    const calibrationFlagsMask = {
+        calibrationEnable: 0x01,
+        hardkey: 0x02,
+        keyPressTest: 0x04,
+        keyOpenkeyTest: 0x08,
+        keyGerkonTest: 0x10,
+        keyOpenKlemaTest: 0x20,
+        keyPress2Test: 0x40,
+        keyOpenModuleTest: 0x80
+    };
     const relayStatusMask = {
         RELAY_STATE: 2 ** 0,
         RELAY_UBAD: 2 ** 1,
@@ -5640,7 +5771,7 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         const relayStatus = toObject(relayStatusMask, buffer.getUint8());
         const statusEvent1 = buffer.getUint8();
         const centerAlert = !!(buffer.getUint8() & 1);
-        const calEnableFlag = !!(buffer.getUint8() & 1);
+        const calibrationFlags = toObject(calibrationFlagsMask, buffer.getUint8());
         const currentTariffs = {
             'A+': buffer.getUint8(),
             maximumPowers: buffer.getUint8(),
@@ -5661,7 +5792,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
             relayStatus,
             statusEvent: toObject(eventStatusMask, statusEventValue),
             centerAlert,
-            calEnableFlag,
+            calibrationFlags,
+            calEnableFlag: calibrationFlags.calibrationEnable,
             currentTariffs,
             isSummerTime
         };
@@ -5682,7 +5814,8 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         buffer.setUint8(fromObject(relayStatusMask, parameters.relayStatus));
         buffer.setUint8(statusEventValue & 0xff);
         buffer.setUint8(parameters.centerAlert ? 1 : 0);
-        buffer.setUint8(parameters.calEnableFlag ? 1 : 0);
+        const calibrationFlags = parameters.calibrationFlags ?? { calibrationEnable: parameters.calEnableFlag };
+        buffer.setUint8(fromObject(calibrationFlagsMask, calibrationFlags));
         buffer.setUint8(parameters.currentTariffs['A+']);
         buffer.setUint8(parameters.currentTariffs.maximumPowers);
         buffer.setUint8(parameters.currentTariffs['A-']);
@@ -5818,36 +5951,43 @@ var fromBytes, toBytes, getDataSegment, setDataSegment;
         }
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = getDemand(buffer);
-        const indexLastSummerRecord = getLastSummerHourIndex(parameters.period);
-        if (bytes.length !== maxSize$1g + (2 * parameters.count)) {
+        validateDemandCount(parameters.count);
+        const expectedLength = maxSize$1g + getDemandValuesSize(parameters, 2);
+        if (bytes.length !== expectedLength) {
             throw new Error('Invalid uplink GetDemand demands byte length.');
         }
         const demands = new Array(parameters.count)
             .fill(0)
             .map((item, index) => {
             const value = buffer.getUint16();
-            if (parameters.firstIndex + index === indexLastSummerRecord) {
+            if (value === NO_VALUE) {
+                return null;
+            }
+            if (isLastSummerHourIndex(parameters.firstIndex + index, parameters.period)) {
                 return {
                     lastSummerHour: (value >> 8) & 0xff
                 };
             }
-            return value === NO_VALUE ? null : value;
+            return value;
         });
         return { ...parameters, demands };
     };
     const toBytes$s = (parameters) => {
-        const buffer = new BinaryBuffer(maxSize$1g + parameters.count * 2, false);
+        validateDemandValues(parameters.demands, parameters, 'number');
+        const commandSize = maxSize$1g + getDemandValuesSize(parameters, 2);
+        const buffer = new BinaryBuffer(commandSize, false);
         setDemand(buffer, parameters);
-        parameters.demands.forEach(value => {
+        parameters.demands.forEach((value, index) => {
             if (value == null) {
                 buffer.setUint16(NO_VALUE);
                 return;
             }
-            if (typeof value === 'number') {
-                buffer.setUint16(value);
+            const absoluteIndex = parameters.firstIndex + index;
+            if (isLastSummerHourIndex(absoluteIndex, parameters.period)) {
+                buffer.setUint16((value.lastSummerHour << 8) | 0xff);
             }
             else {
-                buffer.setUint16((value.lastSummerHour << 8) | 0xff);
+                buffer.setUint16(value);
             }
         });
         return toBytes$2t(id$q, buffer.data);

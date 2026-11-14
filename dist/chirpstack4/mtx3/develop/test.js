@@ -720,6 +720,8 @@
     const RESET_MAGNET_FLAG = 0xb7;
     const CHANGE_PARAMETERS_CHANNEL = 0xb9;
     const RELAY_OFF_BAD_SALDO$1 = 0xba;
+    const SET_SALDO_ZERO$1 = 0xbc;
+    const RELAY_OFF_MAX_POWER_SALDO$1 = 0xbd;
     const SET_DEMAND_EN_1MIN = 0xe0;
     const SET_DEMAND_EN_3MIN = 0xe1;
     const SET_DEMAND_EN_5MIN = 0xe2;
@@ -812,6 +814,7 @@
         RELAY_HARD_ON: RELAY_HARD_ON$1,
         RELAY_OFF: RELAY_OFF$1,
         RELAY_OFF_BAD_SALDO: RELAY_OFF_BAD_SALDO$1,
+        RELAY_OFF_MAX_POWER_SALDO: RELAY_OFF_MAX_POWER_SALDO$1,
         RELAY_ON: RELAY_ON$1,
         RESET_EM_FLAG: RESET_EM_FLAG$1,
         RESET_MAGNET_FLAG: RESET_MAGNET_FLAG,
@@ -827,6 +830,7 @@
         SET_DEMAND_EN_60MIN: SET_DEMAND_EN_60MIN,
         SET_NEW_SALDO: SET_NEW_SALDO$1,
         SET_SALDO_PARAM: SET_SALDO_PARAM$1,
+        SET_SALDO_ZERO: SET_SALDO_ZERO$1,
         SET_TARIFF_TABLE: SET_TARIFF_TABLE$1,
         SUMMER_TIME: SUMMER_TIME$1,
         TIME_CORRECT: TIME_CORRECT$1,
@@ -1321,11 +1325,19 @@
         const { bytesLeft } = buffer;
         data.eventName = eventNames$1[event];
         switch (event) {
-            case POWER_OVER_RELAY_OFF$1:
+            case SET_NEW_SALDO$1:
+            case SET_SALDO_ZERO$1:
                 if (bytesLeft < 4) {
                     return data;
                 }
-                data.power = [buffer.getUint8(), buffer.getUint8(), buffer.getUint8(), buffer.getUint8()];
+                data.saldo = buffer.getInt32();
+                break;
+            case POWER_OVER_RELAY_OFF$1:
+            case RELAY_OFF_MAX_POWER_SALDO$1:
+                if (bytesLeft < 4) {
+                    return data;
+                }
+                data.power = buffer.getInt32();
                 break;
             case CMD_SET_DATETIME$1:
             case TIME_CORRECT$1:
@@ -1343,10 +1355,19 @@
         buffer.setUint8(event.seconds);
         buffer.setUint8(event.event);
         switch (event.event) {
-            case POWER_OVER_RELAY_OFF$1:
-                for (const item of event.power) {
-                    buffer.setUint8(item);
+            case SET_NEW_SALDO$1:
+            case SET_SALDO_ZERO$1:
+                if (event.saldo == null) {
+                    throw new Error('Event saldo is required.');
                 }
+                buffer.setInt32(event.saldo);
+                break;
+            case POWER_OVER_RELAY_OFF$1:
+            case RELAY_OFF_MAX_POWER_SALDO$1:
+                if (event.power == null) {
+                    throw new Error('Event power is required.');
+                }
+                buffer.setInt32(event.power);
                 break;
             case CMD_SET_DATETIME$1:
             case TIME_CORRECT$1:
@@ -2285,7 +2306,7 @@
 
     const TARIFF_NUMBER = 4;
     const ENERGY_NAMES = ['A+', 'A+R+', 'A+R-', 'A-', 'A-R+', 'A-R-'];
-    const UNDEFINED_ENERGY_VALUE = 0xffffffff;
+    const UNDEFINED_ENERGY_VALUE = 0xffff;
     const energiesMask = {
         'A+': 0x01,
         'A+R+': 0x02,
@@ -2341,7 +2362,7 @@
         const halfhours = [];
         for (let index = 0; index < halfhoursNumber; index++) {
             const value = buffer.getUint16();
-            halfhours.push(value === UNDEFINED_ENERGY_VALUE ? undefined : value);
+            halfhours.push(value === UNDEFINED_ENERGY_VALUE ? null : value);
         }
         return halfhours;
     };
@@ -2349,7 +2370,7 @@
         if (halfhours) {
             for (let index = 0; index < halfhours.length; index++) {
                 const value = halfhours[index];
-                buffer.setUint16(value === undefined ? UNDEFINED_ENERGY_VALUE : value);
+                buffer.setUint16(value === null ? UNDEFINED_ENERGY_VALUE : value);
             }
         }
     };
@@ -4906,6 +4927,9 @@
     const RESET_EM_FLAG = 0xb2;
     const RESET_MAGNETIC_FLAG = 0xb3;
     const RELAY_OFF_BAD_SALDO = 0xba;
+    const RELAY_OFF_REACTIVE_POWER_OVER = 0xbb;
+    const SET_SALDO_ZERO = 0xbc;
+    const RELAY_OFF_MAX_POWER_SALDO = 0xbd;
     const SET_DEMAND_EN_1_MIN = 0xe0;
     const SET_DEMAND_EN_3_MIN = 0xe1;
     const SET_DEMAND_EN_5_MIN = 0xe2;
@@ -5033,6 +5057,8 @@
         RELAY_HARD_ON: RELAY_HARD_ON,
         RELAY_OFF: RELAY_OFF,
         RELAY_OFF_BAD_SALDO: RELAY_OFF_BAD_SALDO,
+        RELAY_OFF_MAX_POWER_SALDO: RELAY_OFF_MAX_POWER_SALDO,
+        RELAY_OFF_REACTIVE_POWER_OVER: RELAY_OFF_REACTIVE_POWER_OVER,
         RELAY_ON: RELAY_ON,
         RESET_EM_FLAG: RESET_EM_FLAG,
         RESET_MAGNETIC_FLAG: RESET_MAGNETIC_FLAG,
@@ -5048,6 +5074,7 @@
         SET_DEMAND_EN_60_MIN: SET_DEMAND_EN_60_MIN,
         SET_NEW_SALDO: SET_NEW_SALDO,
         SET_SALDO_PARAM: SET_SALDO_PARAM,
+        SET_SALDO_ZERO: SET_SALDO_ZERO,
         SET_TARIFF_TABLE: SET_TARIFF_TABLE,
         SUMMER_TIME: SUMMER_TIME,
         TIME_CORRECT: TIME_CORRECT,
@@ -5632,7 +5659,7 @@
     const define1Mask = {
         RESET_DAY_MAX_POWER_KEY: 1 << 0,
         RESET_MONTH_MAX_POWER_KEY: 1 << 1,
-        BLOCK_KEY_OPTOPORT: 1 << 2,
+        BLOCK_KEY_OPTOPORT: (1 << 2) | (1 << 3),
         MAGNET_SCREEN_CONST: 1 << 5,
         ALLOW_BROWNOUT_INDICATION: 1 << 7
     };
@@ -5905,11 +5932,20 @@
         const { bytesLeft } = buffer;
         data.eventName = eventNames[event];
         switch (event) {
-            case POWER_OVER_RELAY_OFF:
+            case SET_NEW_SALDO:
+            case SET_SALDO_ZERO:
                 if (bytesLeft < 4) {
                     return data;
                 }
-                data.power = [buffer.getUint8(), buffer.getUint8(), buffer.getUint8(), buffer.getUint8()];
+                data.saldo = buffer.getInt32();
+                break;
+            case POWER_OVER_RELAY_OFF:
+            case RELAY_OFF_REACTIVE_POWER_OVER:
+            case RELAY_OFF_MAX_POWER_SALDO:
+                if (bytesLeft < 4) {
+                    return data;
+                }
+                data.power = buffer.getInt32();
                 break;
             case CMD_SET_DATETIME:
             case TIME_CORRECT:
@@ -5927,10 +5963,20 @@
         buffer.setUint8(event.seconds);
         buffer.setUint8(event.event);
         switch (event.event) {
-            case POWER_OVER_RELAY_OFF:
-                for (const item of event.power) {
-                    buffer.setUint8(item);
+            case SET_NEW_SALDO:
+            case SET_SALDO_ZERO:
+                if (event.saldo == null) {
+                    throw new Error('Event saldo is required.');
                 }
+                buffer.setInt32(event.saldo);
+                break;
+            case POWER_OVER_RELAY_OFF:
+            case RELAY_OFF_REACTIVE_POWER_OVER:
+            case RELAY_OFF_MAX_POWER_SALDO:
+                if (event.power == null) {
+                    throw new Error('Event power is required.');
+                }
+                buffer.setInt32(event.power);
                 break;
             case CMD_SET_DATETIME:
             case TIME_CORRECT:
@@ -7046,6 +7092,62 @@
                 0x00, 0x00, 0x00, 0x00,
                 0x00
             ]
+        },
+        'optoport button control enabled request': {
+            id: id$1i,
+            name: name$1i,
+            headerSize: headerSize$1i,
+            maxSize: maxSize$1j,
+            accessLevel: accessLevel$1i,
+            parameters: {
+                timeoutRelayOn: 1,
+                define1: {
+                    RESET_DAY_MAX_POWER_KEY: false,
+                    RESET_MONTH_MAX_POWER_KEY: false,
+                    BLOCK_KEY_OPTOPORT: true,
+                    MAGNET_SCREEN_CONST: false,
+                    ALLOW_BROWNOUT_INDICATION: false
+                },
+                timeoutRelayKey: 0,
+                timeoutRelayAuto: 5
+            },
+            bytes: [
+                0x40, 0x09,
+                0x01,
+                0x0c,
+                0x00,
+                0x05,
+                0x00, 0x00, 0x00, 0x00,
+                0x00
+            ]
+        },
+        'all define1 flags enabled request': {
+            id: id$1i,
+            name: name$1i,
+            headerSize: headerSize$1i,
+            maxSize: maxSize$1j,
+            accessLevel: accessLevel$1i,
+            parameters: {
+                timeoutRelayOn: 1,
+                define1: {
+                    RESET_DAY_MAX_POWER_KEY: true,
+                    RESET_MONTH_MAX_POWER_KEY: true,
+                    BLOCK_KEY_OPTOPORT: true,
+                    MAGNET_SCREEN_CONST: true,
+                    ALLOW_BROWNOUT_INDICATION: true
+                },
+                timeoutRelayKey: 0,
+                timeoutRelayAuto: 5
+            },
+            bytes: [
+                0x40, 0x09,
+                0x01,
+                0xaf,
+                0x00,
+                0x05,
+                0x00, 0x00, 0x00, 0x00,
+                0x00
+            ]
         }
     };
     const fromBytes$1h = (bytes) => {
@@ -7998,15 +8100,68 @@
     });
 
     const ADDITIONAL_HOUR = 25;
-    const getRecordIndex = (hours, minutes, periodMin) => Math.trunc(((hours * 60) + minutes) / periodMin);
+    const DEFAULT_DEMAND_PERIOD = 30;
+    const MAX_DEMANDS_COUNT = 48;
+    const normalizeDemandPeriod = (periodMin) => (periodMin === 0 ? DEFAULT_DEMAND_PERIOD : periodMin);
+    const getRecordIndex = (hours, minutes, periodMin) => (Math.trunc(((hours * 60) + minutes) / normalizeDemandPeriod(periodMin)));
     const getLastSummerHourIndex = periodMin => getRecordIndex(ADDITIONAL_HOUR, 0, periodMin);
+    const isLastSummerHourIndex = (index, periodMin) => (index === getLastSummerHourIndex(periodMin));
+    const hasLastSummerHour = ({ firstIndex, count, period }) => {
+        const lastSummerHourIndex = getLastSummerHourIndex(period);
+        return firstIndex <= lastSummerHourIndex && lastSummerHourIndex < firstIndex + count;
+    };
+    const getDemandValuesSize = (range, valueSize, lastSummerHourValueSize = valueSize) => range.count * valueSize
+        - (hasLastSummerHour(range) ? valueSize - lastSummerHourValueSize : 0);
+    const validateDemandCount = (count) => {
+        if (!Number.isInteger(count) || count < 0 || count > MAX_DEMANDS_COUNT) {
+            throw new Error(`Invalid demand count: expected 0..${MAX_DEMANDS_COUNT}, actual ${count}.`);
+        }
+    };
+    const isLastSummerHourValue = (value) => (typeof value === 'object'
+        && value !== null
+        && 'lastSummerHour' in value
+        && value.lastSummerHour != null);
+    const validateDemandValues = (values, range, valueType) => {
+        validateDemandCount(range.count);
+        if (!Array.isArray(values)) {
+            throw new Error('Invalid demands: array expected.');
+        }
+        const actualCount = values.length;
+        if (actualCount !== range.count) {
+            throw new Error(`Invalid demand count: expected ${range.count}, actual ${actualCount}.`);
+        }
+        values.forEach((value, index) => {
+            if (value == null) {
+                return;
+            }
+            const absoluteIndex = range.firstIndex + index;
+            const isLastSummerHourIndexValue = isLastSummerHourIndex(absoluteIndex, range.period);
+            const isLastSummerHourDemandValue = isLastSummerHourValue(value);
+            if (isLastSummerHourIndexValue && !isLastSummerHourDemandValue) {
+                throw new Error('Invalid demand value: lastSummerHour expected. '
+                    + `First index: ${range.firstIndex}, index: ${index}, absolute index: ${absoluteIndex}`);
+            }
+            if (!isLastSummerHourIndexValue && isLastSummerHourDemandValue) {
+                throw new Error('Invalid demand value: lastSummerHour is only valid at the last summer hour index. '
+                    + `First index: ${range.firstIndex}, index: ${index}, absolute index: ${absoluteIndex}`);
+            }
+            if (!isLastSummerHourIndexValue && valueType) {
+                const isExpectedValue = typeof value === 'number'
+                    ;
+                if (!isExpectedValue) {
+                    throw new Error(`Invalid demand value: ${valueType} expected. `
+                        + `First index: ${range.firstIndex}, index: ${index}, absolute index: ${absoluteIndex}`);
+                }
+            }
+        });
+    };
 
     const maxSize$19 = 7;
 
     const id$18 = getDemandCumulative$3;
     const name$18 = commandNames$2[getDemandCumulative$3];
     const headerSize$18 = 2;
-    const maxSize$18 = maxSize$19 + 48;
+    const maxSize$18 = maxSize$19 + MAX_DEMANDS_COUNT * 4;
     const accessLevel$18 = READ_ONLY;
     const isLoraOnly$18 = false;
     const examples$16 = {
@@ -8157,6 +8312,35 @@
                 0x04, 0xff
             ]
         },
+        'response for A+ (without lastSummerHour)': {
+            id: id$18,
+            name: name$18,
+            headerSize: headerSize$18,
+            maxSize: maxSize$18,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 10,
+                    date: 2
+                },
+                demandType: A_PLUS,
+                firstIndex: 23,
+                count: 3,
+                period: 60,
+                demands: [
+                    0x00000010,
+                    0x00000020,
+                    null
+                ]
+            },
+            bytes: [
+                0x77, 0x11,
+                0x31, 0x42, 0x01, 0x00, 0x17, 0x03, 0x3c,
+                0x00, 0x00, 0x00, 0x10,
+                0x00, 0x00, 0x00, 0x20,
+                0xff, 0xff
+            ]
+        },
         'response for A+ (lastSummerHour only)': {
             id: id$18,
             name: name$18,
@@ -8183,51 +8367,56 @@
             ]
         }
     };
-    const NO_VALUE$1 = 0xffffffff;
+    const NO_LAST_SUMMER_HOUR_VALUE = 0xffff;
+    const NO_CUMULATIVE_VALUE = 0xffffffff;
     const fromBytes$17 = (bytes) => {
         if (!bytes || bytes.length < maxSize$19) {
-            throw new Error('Invalid uplink GetDemand byte length.');
+            throw new Error('Invalid uplink GetDemandCumulative byte length.');
         }
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = getDemand$4(buffer);
-        const indexLastSummerRecord = getLastSummerHourIndex(parameters.period);
-        const hasLastSummerHour = parameters.count > 0 && indexLastSummerRecord >= parameters.firstIndex && indexLastSummerRecord < (parameters.firstIndex + parameters.count);
-        const expectedLength = maxSize$19 + (4 * parameters.count) - (hasLastSummerHour ? 2 : 0);
+        validateDemandCount(parameters.count);
+        const expectedLength = maxSize$19 + getDemandValuesSize(parameters, 4, 2);
         if (bytes.length !== expectedLength) {
             throw new Error('Invalid uplink GetDemandCumulative demands byte length.');
         }
-        parameters.demands = new Array(parameters.count)
+        const demandValues = new Array(parameters.count)
             .fill(0)
             .map((item, index) => {
-            if (parameters.firstIndex + index === indexLastSummerRecord) {
-                return {
-                    lastSummerHour: ((buffer.getUint16() >> 8) & 0xff)
+            let value;
+            if (isLastSummerHourIndex(parameters.firstIndex + index, parameters.period)) {
+                value = buffer.getUint16();
+                return value === NO_LAST_SUMMER_HOUR_VALUE ? null : {
+                    lastSummerHour: (value >> 8) & 0xff
                 };
             }
-            const value = buffer.getUint32();
-            return value === NO_VALUE$1 ? null : value;
+            value = buffer.getUint32();
+            return (value === NO_CUMULATIVE_VALUE ? null : value);
         });
-        return parameters;
+        return { ...parameters, demands: demandValues };
     };
     const toBytes$18 = (parameters) => {
-        const hasLastSummerHour = parameters.demands?.some(d => d != null && typeof d !== 'number' && d.lastSummerHour != null);
-        const demandsCount = parameters.demands?.length ?? 0;
-        const commandSize = demandsCount > 0
-            ? maxSize$19 + (demandsCount * 4) - (hasLastSummerHour ? 2 : 0)
-            : maxSize$19;
+        validateDemandValues(parameters.demands, parameters, 'number');
+        const indexLastSummerRecord = getLastSummerHourIndex(parameters.period);
+        const commandSize = maxSize$19 + getDemandValuesSize(parameters, 4, 2);
         const buffer = new BinaryBuffer(commandSize, false);
         setDemand$1(buffer, parameters);
-        parameters.demands.forEach(value => {
-            if (value == null) {
-                buffer.setUint32(NO_VALUE$1);
+        parameters.demands.forEach((value, index) => {
+            const absoluteIndex = parameters.firstIndex + index;
+            if (absoluteIndex === indexLastSummerRecord) {
+                if (value == null) {
+                    buffer.setUint16(NO_LAST_SUMMER_HOUR_VALUE);
+                    return;
+                }
+                const { lastSummerHour } = value;
+                buffer.setUint16((lastSummerHour << 8) | 0xff);
                 return;
             }
-            if (typeof value === 'number') {
-                buffer.setUint32(value);
+            if (value == null) {
+                buffer.setUint32(NO_CUMULATIVE_VALUE);
+                return;
             }
-            else {
-                buffer.setUint16((value.lastSummerHour << 8) | 0xff);
-            }
+            buffer.setUint32(value);
         });
         return toBytes$2r(id$18, buffer.data);
     };
@@ -8310,7 +8499,7 @@
     const nibbles12 = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', 'I', 'X', 'G', 'W', 'M', '-'];
     const mtx1DeviceTypeDescriptorMask = {
         typeMeterG: 1 << 0,
-        downgradedToA: 1 << 4,
+        notDowngradedToA: 1 << 4,
         supportMeterInfo: 1 << 6
     };
     const mtx3DeviceTypeDescriptorMask = {
@@ -8320,11 +8509,28 @@
         supportMeterInfo: 1 << 6,
         reactiveByQuadrants: 1 << 7
     };
-    const mtx1DeviceTypeDescriptorFromByte = (byte) => ({
-        meterType: 'mtx1',
-        ...toObject(mtx1DeviceTypeDescriptorMask, byte)
-    });
-    const mtx1DeviceTypeDescriptorToByte = (descriptor) => (fromObject(mtx1DeviceTypeDescriptorMask, descriptor));
+    const mtx1DeviceTypeDescriptorFromByte = (byte) => {
+        const mask = mtx1DeviceTypeDescriptorMask;
+        const typeMeterG = (byte & mask.typeMeterG) !== 0;
+        const notDowngradedToA = (byte & mask.notDowngradedToA) !== 0;
+        return {
+            meterType: 'mtx1',
+            typeMeterG,
+            downgradedToA: typeMeterG && !notDowngradedToA,
+            supportMeterInfo: (byte & mask.supportMeterInfo) !== 0
+        };
+    };
+    const mtx1DeviceTypeDescriptorToByte = (descriptor) => {
+        const { typeMeterG, downgradedToA, supportMeterInfo } = descriptor;
+        if (!typeMeterG && downgradedToA) {
+            throw new Error('downgradedToA requires typeMeterG');
+        }
+        return fromObject(mtx1DeviceTypeDescriptorMask, {
+            typeMeterG,
+            notDowngradedToA: typeMeterG && !downgradedToA,
+            supportMeterInfo
+        });
+    };
     const mtx3DeviceTypeDescriptorFromByte = (byte) => {
         const descriptor = toObject(mtx3DeviceTypeDescriptorMask, byte);
         return {
@@ -8578,7 +8784,7 @@
     const maxSize$16 = 9;
     const isLoraOnly$16 = false;
     const examples$14 = {
-        'type 1': {
+        'mtx1 type A': {
             id: id$16,
             name: name$16,
             headerSize: headerSize$16,
@@ -8599,7 +8805,28 @@
                 0x00, 0x11, 0x21, 0x49, 0x21, 0xB6, 0x81, 0xC0, 0x00
             ]
         },
-        'type 2': {
+        'mtx1 type G': {
+            id: id$16,
+            name: name$16,
+            headerSize: headerSize$16,
+            maxSize: maxSize$16,
+            accessLevel: accessLevel$16,
+            parameters: {
+                type: 'MTX 1G05.DH.2L2-DOB4',
+                revision: 0x0b,
+                descriptor: {
+                    meterType: 'mtx1',
+                    typeMeterG: true,
+                    downgradedToA: false,
+                    supportMeterInfo: false
+                }
+            },
+            bytes: [
+                0x04, 0x09,
+                0x00, 0x12, 0x16, 0x47, 0x21, 0xb3, 0x17, 0x2c, 0x11
+            ]
+        },
+        'mtx1 type G, downgraded to A': {
             id: id$16,
             name: name$16,
             headerSize: headerSize$16,
@@ -8617,7 +8844,7 @@
             },
             bytes: [
                 0x04, 0x09,
-                0x00, 0x12, 0x16, 0x47, 0x21, 0xb3, 0x17, 0x2c, 0x11
+                0x00, 0x12, 0x16, 0x47, 0x21, 0xb3, 0x17, 0x2c, 0x01
             ]
         }
     };
@@ -10358,6 +10585,16 @@
         toBytes: toBytes$y
     });
 
+    const calibrationFlagsMask = {
+        calibrationEnable: 0x01,
+        hardkey: 0x02,
+        keyPressTest: 0x04,
+        keyOpenkeyTest: 0x08,
+        keyGerkonTest: 0x10,
+        keyOpenKlemaTest: 0x20,
+        keyPress2Test: 0x40,
+        keyOpenModuleTest: 0x80
+    };
     const relayStatusMask = {
         RELAY_STATE: 2 ** 0,
         RELAY_UBAD: 2 ** 1,
@@ -10433,6 +10670,16 @@
                     PROTECTION_RESET_MAGNETIC: false
                 },
                 centerAlert: true,
+                calibrationFlags: {
+                    calibrationEnable: true,
+                    hardkey: false,
+                    keyPressTest: false,
+                    keyOpenkeyTest: false,
+                    keyGerkonTest: true,
+                    keyOpenKlemaTest: false,
+                    keyPress2Test: false,
+                    keyOpenModuleTest: true
+                },
                 calEnableFlag: true,
                 currentTariffs: {
                     'A+': 1,
@@ -10454,7 +10701,7 @@
                 0x01,
                 0x85,
                 0x01,
-                0x01,
+                0x91,
                 0x01,
                 0x02,
                 0x03,
@@ -10479,7 +10726,7 @@
         const relayStatus = toObject(relayStatusMask, buffer.getUint8());
         const statusEvent1 = buffer.getUint8();
         const centerAlert = !!(buffer.getUint8() & 1);
-        const calEnableFlag = !!(buffer.getUint8() & 1);
+        const calibrationFlags = toObject(calibrationFlagsMask, buffer.getUint8());
         const currentTariffs = {
             'A+': buffer.getUint8(),
             maximumPowers: buffer.getUint8(),
@@ -10500,7 +10747,8 @@
             relayStatus,
             statusEvent: toObject(eventStatusMask, statusEventValue),
             centerAlert,
-            calEnableFlag,
+            calibrationFlags,
+            calEnableFlag: calibrationFlags.calibrationEnable,
             currentTariffs,
             isSummerTime
         };
@@ -10521,7 +10769,8 @@
         buffer.setUint8(fromObject(relayStatusMask, parameters.relayStatus));
         buffer.setUint8(statusEventValue & 0xff);
         buffer.setUint8(parameters.centerAlert ? 1 : 0);
-        buffer.setUint8(parameters.calEnableFlag ? 1 : 0);
+        const calibrationFlags = parameters.calibrationFlags ?? { calibrationEnable: parameters.calEnableFlag };
+        buffer.setUint8(fromObject(calibrationFlagsMask, calibrationFlags));
         buffer.setUint8(parameters.currentTariffs['A+']);
         buffer.setUint8(parameters.currentTariffs.maximumPowers);
         buffer.setUint8(parameters.currentTariffs['A-']);
@@ -11132,7 +11381,7 @@
     const id$s = getDemand$3;
     const name$s = commandNames[getDemand$3];
     const headerSize$s = 2;
-    const maxSize$s = maxSize$1z + 48;
+    const maxSize$s = maxSize$1z + MAX_DEMANDS_COUNT * 2;
     const accessLevel$s = READ_ONLY;
     const isLoraOnly$s = false;
     const examples$r = {
@@ -11223,6 +11472,35 @@
                 0x04, 0xff
             ]
         },
+        'response for A+ (without lastSummerHour)': {
+            id: id$s,
+            name: name$s,
+            headerSize: headerSize$s,
+            maxSize: maxSize$s,
+            parameters: {
+                date: {
+                    year: 24,
+                    month: 10,
+                    date: 2
+                },
+                demandType: ACTIVE_ENERGY_A_PLUS,
+                firstIndex: 23,
+                count: 3,
+                period: 60,
+                demands: [
+                    2000,
+                    43981,
+                    null
+                ]
+            },
+            bytes: [
+                0x76, 0x0d,
+                0x31, 0x42, 0x81, 0x00, 0x17, 0x03, 0x3c,
+                0x07, 0xd0,
+                0xab, 0xcd,
+                0xff, 0xff
+            ]
+        },
         'response for A+ (lastSummerHour only)': {
             id: id$s,
             name: name$s,
@@ -11256,36 +11534,43 @@
         }
         const buffer = new BinaryBuffer(bytes, false);
         const parameters = getDemand$2(buffer);
-        const indexLastSummerRecord = getLastSummerHourIndex(parameters.period);
-        if (bytes.length !== maxSize$1z + (2 * parameters.count)) {
+        validateDemandCount(parameters.count);
+        const expectedLength = maxSize$1z + getDemandValuesSize(parameters, 2);
+        if (bytes.length !== expectedLength) {
             throw new Error('Invalid uplink GetDemand demands byte length.');
         }
         const demands = new Array(parameters.count)
             .fill(0)
             .map((item, index) => {
             const value = buffer.getUint16();
-            if (parameters.firstIndex + index === indexLastSummerRecord) {
+            if (value === NO_VALUE) {
+                return null;
+            }
+            if (isLastSummerHourIndex(parameters.firstIndex + index, parameters.period)) {
                 return {
                     lastSummerHour: (value >> 8) & 0xff
                 };
             }
-            return value === NO_VALUE ? null : value;
+            return value;
         });
         return { ...parameters, demands };
     };
     const toBytes$r = (parameters) => {
-        const buffer = new BinaryBuffer(maxSize$1z + parameters.count * 2, false);
+        validateDemandValues(parameters.demands, parameters, 'number');
+        const commandSize = maxSize$1z + getDemandValuesSize(parameters, 2);
+        const buffer = new BinaryBuffer(commandSize, false);
         setDemand(buffer, parameters);
-        parameters.demands.forEach(value => {
+        parameters.demands.forEach((value, index) => {
             if (value == null) {
                 buffer.setUint16(NO_VALUE);
                 return;
             }
-            if (typeof value === 'number') {
-                buffer.setUint16(value);
+            const absoluteIndex = parameters.firstIndex + index;
+            if (isLastSummerHourIndex(absoluteIndex, parameters.period)) {
+                buffer.setUint16((value.lastSummerHour << 8) | 0xff);
             }
             else {
-                buffer.setUint16((value.lastSummerHour << 8) | 0xff);
+                buffer.setUint16(value);
             }
         });
         return toBytes$2r(id$s, buffer.data);
@@ -11726,7 +12011,7 @@
                         seconds: 33,
                         event: 157,
                         eventName: 'POWER_OVER_RELAY_OFF',
-                        power: [22, 25, 12, 143]
+                        power: 370740367
                     },
                     {
                         hours: 1,
@@ -11751,6 +12036,122 @@
                 0x33, 0x18,
                 0x17, 0x03, 0x0c, 0x02, 0x01, 0x0c, 0x21, 0x9d, 0x16, 0x19, 0x0c, 0x8f,
                 0x01, 0x0c, 0x21, 0x8e, 0x00, 0x0a, 0x16, 0x03, 0x04, 0x0c, 0x07, 0x18
+            ]
+        },
+        'response with new saldo': {
+            id: id$l,
+            name: name$l,
+            headerSize: headerSize$l,
+            accessLevel: accessLevel$l,
+            maxSize: maxSize$l,
+            parameters: {
+                date: {
+                    year: 23,
+                    month: 3,
+                    date: 12
+                },
+                eventsNumber: 1,
+                events: [
+                    {
+                        hours: 1,
+                        minutes: 12,
+                        seconds: 33,
+                        event: 131,
+                        eventName: 'SET_NEW_SALDO',
+                        saldo: 16909060
+                    }
+                ]
+            },
+            bytes: [
+                0x33, 0x0c,
+                0x17, 0x03, 0x0c, 0x01, 0x01, 0x0c, 0x21, 0x83, 0x01, 0x02, 0x03, 0x04
+            ]
+        },
+        'response with saldo zero': {
+            id: id$l,
+            name: name$l,
+            headerSize: headerSize$l,
+            accessLevel: accessLevel$l,
+            maxSize: maxSize$l,
+            parameters: {
+                date: {
+                    year: 23,
+                    month: 3,
+                    date: 12
+                },
+                eventsNumber: 1,
+                events: [
+                    {
+                        hours: 1,
+                        minutes: 12,
+                        seconds: 33,
+                        event: 188,
+                        eventName: 'SET_SALDO_ZERO',
+                        saldo: 84281096
+                    }
+                ]
+            },
+            bytes: [
+                0x33, 0x0c,
+                0x17, 0x03, 0x0c, 0x01, 0x01, 0x0c, 0x21, 0xbc, 0x05, 0x06, 0x07, 0x08
+            ]
+        },
+        'response with relay off max power saldo': {
+            id: id$l,
+            name: name$l,
+            headerSize: headerSize$l,
+            accessLevel: accessLevel$l,
+            maxSize: maxSize$l,
+            parameters: {
+                date: {
+                    year: 23,
+                    month: 3,
+                    date: 12
+                },
+                eventsNumber: 1,
+                events: [
+                    {
+                        hours: 1,
+                        minutes: 12,
+                        seconds: 33,
+                        event: 189,
+                        eventName: 'RELAY_OFF_MAX_POWER_SALDO',
+                        power: 168496141
+                    }
+                ]
+            },
+            bytes: [
+                0x33, 0x0c,
+                0x17, 0x03, 0x0c, 0x01, 0x01, 0x0c, 0x21, 0xbd, 0x0a, 0x0b, 0x0c, 0x0d
+            ]
+        },
+        'response with relay off reactive power over': {
+            id: id$l,
+            name: name$l,
+            headerSize: headerSize$l,
+            accessLevel: accessLevel$l,
+            maxSize: maxSize$l,
+            parameters: {
+                date: {
+                    year: 23,
+                    month: 3,
+                    date: 12
+                },
+                eventsNumber: 1,
+                events: [
+                    {
+                        hours: 1,
+                        minutes: 12,
+                        seconds: 33,
+                        event: 187,
+                        eventName: 'RELAY_OFF_REACTIVE_POWER_OVER',
+                        power: 286397204
+                    }
+                ]
+            },
+            bytes: [
+                0x33, 0x0c,
+                0x17, 0x03, 0x0c, 0x01, 0x01, 0x0c, 0x21, 0xbb, 0x11, 0x12, 0x13, 0x14
             ]
         }
     };
@@ -12743,23 +13144,55 @@
             maxSize: maxSize$c,
             parameters: {
                 date: {
-                    year: 21,
-                    month: 2,
-                    date: 3
+                    year: 26,
+                    month: 9,
+                    date: 14
                 },
                 firstHalfhour: 1,
                 halfhoursNumber: 2,
                 energies: {
                     'A+': [0x1000, 0x2000],
-                    'A-R+': [0x3000, 0x4000]
+                    'A+R+': [0x3000, 0x4000],
+                    'A+R-': [0x3000, 0x4000]
                 }
             },
             bytes: [
-                0x6f, 0x0d,
-                0x2a, 0x43, 0x11,
+                0x6f, 0x11,
+                0x35, 0x2e,
+                0x07,
                 0x01, 0x02,
                 0x10, 0x00, 0x20, 0x00,
+                0x30, 0x00, 0x40, 0x00,
                 0x30, 0x00, 0x40, 0x00
+            ]
+        },
+        'get missing halfhours energies': {
+            id: id$c,
+            headerSize: headerSize$c,
+            name: name$c,
+            maxSize: maxSize$c,
+            parameters: {
+                date: {
+                    year: 26,
+                    month: 9,
+                    date: 14
+                },
+                firstHalfhour: 1,
+                halfhoursNumber: 2,
+                energies: {
+                    'A+': [null, null],
+                    'A+R+': [null, null],
+                    'A+R-': [null, null]
+                }
+            },
+            bytes: [
+                0x6f, 0x11,
+                0x35, 0x2e,
+                0x07,
+                0x01, 0x02,
+                0xff, 0xff, 0xff, 0xff,
+                0xff, 0xff, 0xff, 0xff,
+                0xff, 0xff, 0xff, 0xff
             ]
         }
     };
@@ -13433,6 +13866,62 @@
                 0x3f, 0x09,
                 0x01,
                 0x00,
+                0x00,
+                0x05,
+                0x00, 0x00, 0x00, 0x00,
+                0x00
+            ]
+        },
+        'optoport button control enabled response': {
+            id: id$6,
+            name: name$6,
+            headerSize: headerSize$6,
+            maxSize: maxSize$6,
+            accessLevel: accessLevel$6,
+            parameters: {
+                timeoutRelayOn: 1,
+                define1: {
+                    RESET_DAY_MAX_POWER_KEY: false,
+                    RESET_MONTH_MAX_POWER_KEY: false,
+                    BLOCK_KEY_OPTOPORT: true,
+                    MAGNET_SCREEN_CONST: false,
+                    ALLOW_BROWNOUT_INDICATION: false
+                },
+                timeoutRelayKey: 0,
+                timeoutRelayAuto: 5
+            },
+            bytes: [
+                0x3f, 0x09,
+                0x01,
+                0x0c,
+                0x00,
+                0x05,
+                0x00, 0x00, 0x00, 0x00,
+                0x00
+            ]
+        },
+        'all define1 flags enabled response': {
+            id: id$6,
+            name: name$6,
+            headerSize: headerSize$6,
+            maxSize: maxSize$6,
+            accessLevel: accessLevel$6,
+            parameters: {
+                timeoutRelayOn: 1,
+                define1: {
+                    RESET_DAY_MAX_POWER_KEY: true,
+                    RESET_MONTH_MAX_POWER_KEY: true,
+                    BLOCK_KEY_OPTOPORT: true,
+                    MAGNET_SCREEN_CONST: true,
+                    ALLOW_BROWNOUT_INDICATION: true
+                },
+                timeoutRelayKey: 0,
+                timeoutRelayAuto: 5
+            },
+            bytes: [
+                0x3f, 0x09,
+                0x01,
+                0xaf,
                 0x00,
                 0x05,
                 0x00, 0x00, 0x00, 0x00,

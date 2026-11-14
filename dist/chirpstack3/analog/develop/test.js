@@ -42,6 +42,14 @@
       Number.EPSILON = 2.220446049250313e-16;
     }
 
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isInteger
+    // Otto (ChirpStack v3) is ES5 and has no Number.isInteger.
+    if (typeof Number.isInteger !== 'function') {
+      Number.isInteger = function (value) {
+        return typeof value === 'number' && isFinite(value) && Math.floor(value) === value;
+      };
+    }
+
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
     if (typeof Object.assign !== 'function') {
       Object.assign = function (target) {
@@ -177,15 +185,15 @@
     function _toConsumableArray(r) {
       return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread();
     }
-    function _toPrimitive(t, r) {
+    function _toPrimitive(t, e) {
       if ("object" != typeof t || !t) return t;
-      var e = t[Symbol.toPrimitive];
-      if (void 0 !== e) {
-        var i = e.call(t, r);
+      var r;
+      if ("undefined" != typeof Symbol && void 0 !== (r = t[Symbol.toPrimitive])) {
+        var i = r.call(t, e);
         if ("object" != typeof i) return i;
         throw new TypeError("@@toPrimitive must return a primitive value.");
       }
-      return ("string" === r ? String : Number)(t);
+      return ("string" === e ? String : Number)(t);
     }
     function _toPropertyKey(t) {
       var i = _toPrimitive(t, "string");
@@ -865,6 +873,8 @@
     var KEEP_LORA_CONNECTION_ON_REMOVAL = 59;
     var NBIOT_NTP_SERVER = 60;
     var ACTIVATE_MODULE = 61;
+    var ACTIVATION_TIMEOUT = 62;
+    var NBIOT_APN_CONFIG = 63;
     var MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG = 64;
 
     var deviceParameters = /*#__PURE__*/Object.freeze({
@@ -875,6 +885,7 @@
         ABSOLUTE_DATA_MULTI_CHANNEL: ABSOLUTE_DATA_MULTI_CHANNEL,
         ACTIVATE_MODULE: ACTIVATE_MODULE,
         ACTIVATION_METHOD: ACTIVATION_METHOD,
+        ACTIVATION_TIMEOUT: ACTIVATION_TIMEOUT,
         BATTERY_DEPASSIVATION_CONFIG: BATTERY_DEPASSIVATION_CONFIG,
         BATTERY_DEPASSIVATION_INFO: BATTERY_DEPASSIVATION_INFO,
         BATTERY_MINIMAL_LOAD_TIME: BATTERY_MINIMAL_LOAD_TIME,
@@ -896,6 +907,7 @@
         MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG: MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG,
         MTX_POWER_CONFIG: MTX_POWER_CONFIG,
         NBIOT_APN: NBIOT_APN,
+        NBIOT_APN_CONFIG: NBIOT_APN_CONFIG,
         NBIOT_BANDS: NBIOT_BANDS,
         NBIOT_DEVICE_SOFTWARE_UPDATE: NBIOT_DEVICE_SOFTWARE_UPDATE,
         NBIOT_LED_INDICATION: NBIOT_LED_INDICATION,
@@ -924,6 +936,7 @@
     var deviceParameterNames = invertObject(deviceParameters);
 
     var EMPTY_VALUE = 0xffffffff;
+    var LEGACY_EMPTY_VALUE = 0xffffff;
 
     var IDLE = 0;
     var PULSE_SENSOR = 1;
@@ -972,6 +985,8 @@
     var EXTEND_BIT_MASK = 0x80;
     var LAST_BIT_INDEX = 7;
     var DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT = 600;
+    var ACTIVATION_SECONDS_COEFFICIENT = 5;
+    var MAX_ACTIVATION_TIMEOUT_SECONDS = 255 * ACTIVATION_SECONDS_COEFFICIENT;
     var PARAMETER_RX2_FREQUENCY_COEFFICIENT = 100;
     var SERIAL_NUMBER_SIZE = 6;
     var MAGNETIC_INFLUENCE_BIT_INDEX = 8;
@@ -1053,7 +1068,7 @@
       }
       return size;
     };
-    var parametersSizeMap = (_parametersSizeMap = {}, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, REPORTING_DATA_INTERVAL, 1 + 4), DAY_CHECKOUT_HOUR, 1 + 1), REPORTING_DATA_TYPE, 1 + 1), PRIORITY_DATA_DELIVERY_TYPE, 1 + 1), ACTIVATION_METHOD, 1 + 1), BATTERY_DEPASSIVATION_INFO, 1 + 6), BATTERY_MINIMAL_LOAD_TIME, 1 + 4), CHANNELS_CONFIG, 1 + 1), MTX_DATA_TRANSMISSION_SCHEDULE, 1 + 20), MTX_POWER_CONFIG, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, RX2_CONFIG, 1 + 4), ABSOLUTE_DATA, 1 + 9), ABSOLUTE_DATA_ENABLE, 1 + 1), SERIAL_NUMBER, 1 + 6), GEOLOCATION, 1 + 10), EXTRA_FRAME_INTERVAL, 1 + 2), ABSOLUTE_DATA_MULTI_CHANNEL, 1 + 10), ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL, 1 + 2), PULSE_CHANNELS_SCAN_CONFIG, 1 + 3), PULSE_CHANNELS_SET_CONFIG, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, BATTERY_DEPASSIVATION_CONFIG, 1 + 4), MQTT_SSL_ENABLE, 1 + 1), MQTT_DATA_RECEIVE_CONFIG, 1 + 3), MQTT_DATA_SEND_CONFIG, 1 + 3), NBIOT_SSL_CONFIG, 1 + 2), NBIOT_SSL_CACERT_SET, 1 + 4), NBIOT_SSL_CLIENT_CERT_SET, 1 + 4), NBIOT_SSL_CLIENT_KEY_SET, 1 + 4), REPORTING_DATA_CONFIG, 1 + 4), EVENTS_CONFIG, 1 + 3), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, NBIOT_LED_INDICATION, 1 + 2), NBIOT_SIM, 1 + 3), EXTRA_PAYLOAD_ENABLE, 1 + 1), TIME_SYNCHRONIZATION_PERIOD_VIA_MAC, 1 + 4), KEEP_LORA_CONNECTION_ON_REMOVAL, 1 + 1), ACTIVATE_MODULE, 1 + 1));
+    var parametersSizeMap = (_parametersSizeMap = {}, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, REPORTING_DATA_INTERVAL, 1 + 4), DAY_CHECKOUT_HOUR, 1 + 1), REPORTING_DATA_TYPE, 1 + 1), PRIORITY_DATA_DELIVERY_TYPE, 1 + 1), ACTIVATION_METHOD, 1 + 1), BATTERY_DEPASSIVATION_INFO, 1 + 6), BATTERY_MINIMAL_LOAD_TIME, 1 + 4), CHANNELS_CONFIG, 1 + 1), MTX_DATA_TRANSMISSION_SCHEDULE, 1 + 20), MTX_POWER_CONFIG, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, RX2_CONFIG, 1 + 4), ABSOLUTE_DATA, 1 + 9), ABSOLUTE_DATA_ENABLE, 1 + 1), SERIAL_NUMBER, 1 + 6), GEOLOCATION, 1 + 10), EXTRA_FRAME_INTERVAL, 1 + 2), ABSOLUTE_DATA_MULTI_CHANNEL, 1 + 10), ABSOLUTE_DATA_ENABLE_MULTI_CHANNEL, 1 + 2), PULSE_CHANNELS_SCAN_CONFIG, 1 + 3), PULSE_CHANNELS_SET_CONFIG, 1 + 1), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, BATTERY_DEPASSIVATION_CONFIG, 1 + 4), MQTT_SSL_ENABLE, 1 + 1), MQTT_DATA_RECEIVE_CONFIG, 1 + 3), MQTT_DATA_SEND_CONFIG, 1 + 3), NBIOT_SSL_CONFIG, 1 + 2), NBIOT_SSL_CACERT_SET, 1 + 4), NBIOT_SSL_CLIENT_CERT_SET, 1 + 4), NBIOT_SSL_CLIENT_KEY_SET, 1 + 4), REPORTING_DATA_CONFIG, 1 + 4), EVENTS_CONFIG, 1 + 3), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_parametersSizeMap, NBIOT_LED_INDICATION, 1 + 2), NBIOT_SIM, 1 + 3), EXTRA_PAYLOAD_ENABLE, 1 + 1), TIME_SYNCHRONIZATION_PERIOD_VIA_MAC, 1 + 4), KEEP_LORA_CONNECTION_ON_REMOVAL, 1 + 1), ACTIVATE_MODULE, 1 + 1), ACTIVATION_TIMEOUT, 1 + 2));
     var fourChannelsBitMask = {
       channel1: Math.pow(2, 0),
       channel2: Math.pow(2, 1),
@@ -1099,6 +1114,12 @@
     var pulseCoefficientToByteMap = invertObject(byteToPulseCoefficientMap);
     var isMSBSet = function isMSBSet(value) {
       return !!(value & 0x80);
+    };
+    var getActivationTimeoutByte = function getActivationTimeoutByte(name, seconds) {
+      if (seconds < 0 || seconds > MAX_ACTIVATION_TIMEOUT_SECONDS) {
+        throw new Error("".concat(name, " must be in range 0-").concat(MAX_ACTIVATION_TIMEOUT_SECONDS, " seconds, got ").concat(seconds));
+      }
+      return Math.round(seconds / ACTIVATION_SECONDS_COEFFICIENT);
     };
     var getNbiotSslWrite = function getNbiotSslWrite(buffer) {
       return {
@@ -1671,6 +1692,32 @@
       set: function set(buffer, parameter) {
         buffer.setUint8(parameter.enable);
       }
+    }), ACTIVATION_TIMEOUT, {
+      get: function get(buffer) {
+        return {
+          activation: buffer.getUint8() * ACTIVATION_SECONDS_COEFFICIENT,
+          deactivation: buffer.getUint8() * ACTIVATION_SECONDS_COEFFICIENT
+        };
+      },
+      set: function set(buffer, parameter) {
+        var activation = getActivationTimeoutByte('activation', parameter.activation);
+        var deactivation = getActivationTimeoutByte('deactivation', parameter.deactivation);
+        buffer.setUint8(activation);
+        buffer.setUint8(deactivation);
+      }
+    }), _defineProperty(_defineProperty(_deviceParameterConve, NBIOT_APN_CONFIG, {
+      get: function get(buffer) {
+        return {
+          login: buffer.getString(),
+          password: buffer.getString(),
+          protocol: buffer.getUint8()
+        };
+      },
+      set: function set(buffer, parameter) {
+        buffer.setString(parameter.login);
+        buffer.setString(parameter.password);
+        buffer.setUint8(parameter.protocol);
+      }
     }), MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG, {
       get: function get(buffer) {
         var schedules = [];
@@ -1773,6 +1820,10 @@
           data = parameter.data;
           size = 1 + 1 + data.server.length + 2;
           break;
+        case NBIOT_APN_CONFIG:
+          data = parameter.data;
+          size = 1 + 1 + data.login.length + 1 + data.password.length + 1;
+          break;
         case MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG:
           data = parameter.data;
           size = 1 + data.schedules.length * 5;
@@ -1822,6 +1873,7 @@
         case NBIOT_APN:
         case CHANNEL_TYPE:
         case NBIOT_NTP_SERVER:
+        case NBIOT_APN_CONFIG:
         case MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG:
           size = getParameterSize(parameter);
           break;
@@ -1919,21 +1971,21 @@
     var setLegacyCounterValue = function setLegacyCounterValue(buffer, value) {
       buffer.setUint24(value);
     };
-    var getLegacyCounter = function getLegacyCounter(buffer) {
+    function getLegacyCounter(buffer) {
       var _byte6 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : buffer.getUint8();
       var isArchiveValue = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
       var value = getLegacyCounterValue(buffer);
       return {
         isMagneticInfluence: getMagneticInfluenceBit(_byte6),
-        value: isArchiveValue && value === EMPTY_VALUE ? 0 : value
+        value: isArchiveValue && value === LEGACY_EMPTY_VALUE ? null : value
       };
-    };
-    var setLegacyCounter = function setLegacyCounter(buffer, counter) {
+    }
+    function setLegacyCounter(buffer, counter) {
       var _byte7 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
       var isArchiveValue = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
       buffer.setUint8(setMagneticInfluenceBit(_byte7, counter.isMagneticInfluence));
-      setLegacyCounterValue(buffer, isArchiveValue && counter.value === 0 ? EMPTY_VALUE : counter.value);
-    };
+      setLegacyCounterValue(buffer, isArchiveValue && counter.value === null ? LEGACY_EMPTY_VALUE : counter.value);
+    }
     var getChannels = function getChannels(buffer) {
       var channelList = [];
       var extended = true;
@@ -2001,7 +2053,7 @@
       }
       buffer.setUint8(value - 1);
     };
-    var getChannelsValuesWithHourDiff = function getChannelsValuesWithHourDiff(buffer) {
+    function getChannelsValuesWithHourDiff(buffer) {
       var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var date = getDate(buffer);
       var _getHours = getHours(buffer),
@@ -2017,7 +2069,7 @@
           diff.push(getExtendedValue(buffer));
         }
         channelList.push({
-          value: isArchiveValue && value === EMPTY_VALUE ? 0 : value,
+          value: isArchiveValue && value === EMPTY_VALUE ? null : value,
           diff: diff,
           index: channelIndex
         });
@@ -2027,8 +2079,8 @@
         hours: hours,
         channelList: channelList
       };
-    };
-    var setChannelsValuesWithHourDiff = function setChannelsValuesWithHourDiff(buffer, hours, startTime2000, channelList) {
+    }
+    function setChannelsValuesWithHourDiff(buffer, hours, startTime2000, channelList) {
       var isArchiveValue = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
       var date = getDateFromTime2000(startTime2000);
       var hour = date.getUTCHours();
@@ -2038,12 +2090,12 @@
       channelList.forEach(function (_ref3) {
         var value = _ref3.value,
           diff = _ref3.diff;
-        setExtendedValue(buffer, isArchiveValue && value === 0 ? EMPTY_VALUE : value);
+        setExtendedValue(buffer, isArchiveValue && value === null ? EMPTY_VALUE : value);
         diff.forEach(function (diffValue) {
           return setExtendedValue(buffer, diffValue);
         });
       });
-    };
+    }
     var getHours = function getHours(buffer) {
       var _byte0 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : buffer.getUint8();
       if (_byte0 === 0) {
@@ -2346,7 +2398,7 @@
         return buffer.setUint8(_byte11);
       });
     };
-    var getLegacyHourCounterWithDiff = function getLegacyHourCounterWithDiff(buffer) {
+    function getLegacyHourCounterWithDiff(buffer) {
       var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var date = getDate(buffer);
       var _byte12 = buffer.getUint8();
@@ -2355,7 +2407,7 @@
       var value = getLegacyCounterValue(buffer);
       var counter = {
         isMagneticInfluence: getMagneticInfluenceBit(_byte12),
-        value: isArchiveValue && value === EMPTY_VALUE ? 0 : value
+        value: isArchiveValue && value === LEGACY_EMPTY_VALUE ? null : value
       };
       var diff = [];
       while (buffer.offset < buffer.data.length) {
@@ -2367,8 +2419,8 @@
         counter: counter,
         diff: diff
       };
-    };
-    var setLegacyHourCounterWithDiff = function setLegacyHourCounterWithDiff(buffer, hourCounter) {
+    }
+    function setLegacyHourCounterWithDiff(buffer, hourCounter) {
       var isArchiveValue = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
       var date = getDateFromTime2000(hourCounter.startTime2000);
       var hour = date.getUTCHours();
@@ -2379,12 +2431,12 @@
       var _byte13 = buffer.getUint8();
       buffer.seek(buffer.offset - 1);
       buffer.setUint8(setMagneticInfluenceBit(_byte13, hourCounter.counter.isMagneticInfluence));
-      setLegacyCounterValue(buffer, isArchiveValue && value === 0 ? EMPTY_VALUE : value);
+      setLegacyCounterValue(buffer, isArchiveValue && value === null ? LEGACY_EMPTY_VALUE : value);
       hourCounter.diff.forEach(function (diffItem) {
         return setLegacyHourDiff(buffer, diffItem);
       });
-    };
-    var getChannelsValuesWithHourDiffExtended = function getChannelsValuesWithHourDiffExtended(buffer) {
+    }
+    function getChannelsValuesWithHourDiffExtended(buffer) {
       var isArchiveValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var date = getDate(buffer);
       var hour = buffer.getUint8();
@@ -2399,7 +2451,7 @@
           diff.push(getExtendedValue(buffer));
         }
         channelList.push({
-          value: isArchiveValue && value === EMPTY_VALUE ? 0 : value,
+          value: isArchiveValue && value === EMPTY_VALUE ? null : value,
           diff: diff,
           index: channelIndex
         });
@@ -2410,8 +2462,8 @@
         hours: hours,
         channelList: channelList
       };
-    };
-    var setChannelsValuesWithHourDiffExtended = function setChannelsValuesWithHourDiffExtended(buffer, parameters) {
+    }
+    function setChannelsValuesWithHourDiffExtended(buffer, parameters) {
       var isArchiveValue = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
       var date = getDateFromTime2000(parameters.startTime2000);
       setDate(buffer, date);
@@ -2421,12 +2473,12 @@
       parameters.channelList.forEach(function (_ref6) {
         var value = _ref6.value,
           diff = _ref6.diff;
-        setExtendedValue(buffer, isArchiveValue && value === 0 ? EMPTY_VALUE : value);
+        setExtendedValue(buffer, isArchiveValue && value === null ? EMPTY_VALUE : value);
         diff.forEach(function (diffValue) {
           return setExtendedValue(buffer, diffValue);
         });
       });
-    };
+    }
     var getDataSegment = function getDataSegment(buffer) {
       var segmentationSessionId = buffer.getUint8();
       var flag = buffer.getUint8();
@@ -4281,6 +4333,35 @@
         },
         bytes: [0x03, 0x02, 0x3d, 0x01]
       },
+      '62_LoRa_4PU: activation and deactivation timeout': {
+        id: id$I,
+        name: name$I,
+        headerSize: headerSize$I,
+        parameters: {
+          id: ACTIVATION_TIMEOUT,
+          name: deviceParameterNames[ACTIVATION_TIMEOUT],
+          data: {
+            activation: 120,
+            deactivation: 5
+          }
+        },
+        bytes: [0x03, 0x03, 0x3e, 0x18, 0x01]
+      },
+      '63_NB-IoT: set apn config': {
+        id: id$I,
+        name: name$I,
+        headerSize: headerSize$I,
+        parameters: {
+          id: NBIOT_APN_CONFIG,
+          name: deviceParameterNames[NBIOT_APN_CONFIG],
+          data: {
+            login: 'user',
+            password: 'pass',
+            protocol: 1
+          }
+        },
+        bytes: [0x03, 0x0c, 0x3f, 0x04, 0x75, 0x73, 0x65, 0x72, 0x04, 0x70, 0x61, 0x73, 0x73, 0x01]
+      },
       '64_MTX: set current demand schedule config': {
         id: id$I,
         name: name$I,
@@ -5212,6 +5293,32 @@
     var COMMAND_BODY_MIN_SIZE$1 = 2;
     var DAY_COUNTER_SIZE = 4;
     var examples$s = {
+      'missing reading (null)': {
+        id: id$s,
+        name: name$s,
+        headerSize: headerSize$s,
+        parameters: {
+          startTime2000: 756604800,
+          dayList: [{
+            isMagneticInfluence: true,
+            value: null
+          }]
+        },
+        bytes: [0x06, 0x06, 0x2f, 0x97, 0x80, 0xff, 0xff, 0xff]
+      },
+      'valid zero reading': {
+        id: id$s,
+        name: name$s,
+        headerSize: headerSize$s,
+        parameters: {
+          startTime2000: 756604800,
+          dayList: [{
+            isMagneticInfluence: true,
+            value: 0
+          }]
+        },
+        bytes: [0x06, 0x06, 0x2f, 0x97, 0x80, 0x00, 0x00, 0x00]
+      },
       'get day values from 2001.03.10': {
         id: id$s,
         name: name$s,
@@ -5264,6 +5371,34 @@
     var headerSize$r = 2;
     var COMMAND_BODY_MAX_SIZE$8 = 255;
     var examples$r = {
+      'valid zero reading': {
+        id: id$r,
+        name: name$r,
+        headerSize: headerSize$r,
+        parameters: {
+          startTime2000: 339897600,
+          days: 1,
+          channelList: [{
+            dayList: [0],
+            index: 1
+          }]
+        },
+        bytes: [0x1b, 0x05, 0x15, 0x49, 0x01, 0x01, 0x00]
+      },
+      'missing reading (null)': {
+        id: id$r,
+        name: name$r,
+        headerSize: headerSize$r,
+        parameters: {
+          startTime2000: 339897600,
+          days: 1,
+          channelList: [{
+            dayList: [null],
+            index: 1
+          }]
+        },
+        bytes: [0x1b, 0x09, 0x15, 0x49, 0x01, 0x01, 0xff, 0xff, 0xff, 0xff, 0x0f]
+      },
       'get day values from 2001.03.10 12:00:00 GMT for channel 1': {
         id: id$r,
         name: name$r,
@@ -5286,7 +5421,7 @@
           startTime2000: 339897600,
           days: 1,
           channelList: [{
-            dayList: [0],
+            dayList: [null],
             index: 1
           }]
         },
@@ -5307,7 +5442,7 @@
         });
         for (var day = 0; day < days; ++day) {
           var value = getExtendedValue(buffer);
-          dayList.push(value === EMPTY_VALUE ? 0 : value);
+          dayList.push(value === EMPTY_VALUE ? null : value);
         }
       });
       return {
@@ -5327,7 +5462,7 @@
       channelList.forEach(function (_ref) {
         var dayList = _ref.dayList;
         dayList.forEach(function (value) {
-          setExtendedValue(buffer, value === 0 ? EMPTY_VALUE : value);
+          setExtendedValue(buffer, value === null ? EMPTY_VALUE : value);
         });
       });
       return toBytes$13(id$r, buffer.getBytesToOffset());
@@ -5500,6 +5635,40 @@
     var name$p = commandNames[getArchiveHours$1];
     var headerSize$p = 2;
     var examples$p = {
+      'missing reading (null)': {
+        id: id$p,
+        name: name$p,
+        headerSize: headerSize$p,
+        parameters: {
+          startTime2000: 756648000,
+          counter: {
+            isMagneticInfluence: true,
+            value: null
+          },
+          diff: [{
+            isMagneticInfluence: true,
+            value: 10
+          }]
+        },
+        bytes: [0x05, 0x08, 0x2f, 0x97, 0x8c, 0xff, 0xff, 0xff, 0x80, 0x0a]
+      },
+      'valid zero reading': {
+        id: id$p,
+        name: name$p,
+        headerSize: headerSize$p,
+        parameters: {
+          startTime2000: 756648000,
+          counter: {
+            isMagneticInfluence: true,
+            value: 0
+          },
+          diff: [{
+            isMagneticInfluence: true,
+            value: 10
+          }]
+        },
+        bytes: [0x05, 0x08, 0x2f, 0x97, 0x8c, 0x00, 0x00, 0x00, 0x80, 0x0a]
+      },
       '1 hour archive from 2023.12.23 12:00:00 GMT': {
         id: id$p,
         name: name$p,
@@ -5543,6 +5712,51 @@
     var headerSize$o = 2;
     var COMMAND_BODY_MAX_SIZE$7 = 164;
     var examples$o = {
+      'valid zero base with unchanged diff marker': {
+        id: id$o,
+        name: name$o,
+        headerSize: headerSize$o,
+        parameters: {
+          startTime2000: 756648000,
+          hours: 2,
+          channelList: [{
+            value: 0,
+            diff: [4294967295],
+            index: 1
+          }]
+        },
+        bytes: [0x1a, 0x0a, 0x2f, 0x97, 0x2c, 0x01, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f]
+      },
+      'valid zero reading': {
+        id: id$o,
+        name: name$o,
+        headerSize: headerSize$o,
+        parameters: {
+          startTime2000: 756648000,
+          hours: 1,
+          channelList: [{
+            value: 0,
+            diff: [],
+            index: 1
+          }]
+        },
+        bytes: [0x1a, 0x05, 0x2f, 0x97, 0x0c, 0x01, 0x00]
+      },
+      'missing reading (null)': {
+        id: id$o,
+        name: name$o,
+        headerSize: headerSize$o,
+        parameters: {
+          startTime2000: 756648000,
+          hours: 1,
+          channelList: [{
+            value: null,
+            diff: [],
+            index: 1
+          }]
+        },
+        bytes: [0x1a, 0x09, 0x2f, 0x97, 0x0c, 0x01, 0xff, 0xff, 0xff, 0xff, 0x0f]
+      },
       '4 channels at 2023.12.23 12:00:00 GMT': {
         id: id$o,
         name: name$o,
@@ -5613,6 +5827,54 @@
     var headerSize$n = 3;
     var COMMAND_BODY_MAX_SIZE$6 = 255;
     var examples$n = {
+      'valid zero base with unchanged diff marker': {
+        id: id$n,
+        name: name$n,
+        headerSize: headerSize$n,
+        parameters: {
+          startTime2000: 756648000,
+          hour: 12,
+          hours: 1,
+          channelList: [{
+            value: 0,
+            diff: [4294967295],
+            index: 1
+          }]
+        },
+        bytes: [0x1f, 0x30, 0x0b, 0x2f, 0x97, 0x0c, 0x01, 0x01, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f]
+      },
+      'valid zero reading': {
+        id: id$n,
+        name: name$n,
+        headerSize: headerSize$n,
+        parameters: {
+          startTime2000: 756648000,
+          hour: 12,
+          hours: 0,
+          channelList: [{
+            value: 0,
+            diff: [],
+            index: 1
+          }]
+        },
+        bytes: [0x1f, 0x30, 0x06, 0x2f, 0x97, 0x0c, 0x00, 0x01, 0x00]
+      },
+      'missing reading (null)': {
+        id: id$n,
+        name: name$n,
+        headerSize: headerSize$n,
+        parameters: {
+          startTime2000: 756648000,
+          hour: 12,
+          hours: 0,
+          channelList: [{
+            value: null,
+            diff: [],
+            index: 1
+          }]
+        },
+        bytes: [0x1f, 0x30, 0x0a, 0x2f, 0x97, 0x0c, 0x00, 0x01, 0xff, 0xff, 0xff, 0xff, 0x0f]
+      },
       '4 channels at 2023.12.23 12:00:00 GMT': {
         id: id$n,
         name: name$n,
@@ -5954,6 +6216,36 @@
     var headerSize$j = 3;
     var COMMAND_BODY_MAX_SIZE$5 = 255;
     var examples$j = {
+      'valid zero reading': {
+        id: id$j,
+        name: name$j,
+        headerSize: headerSize$j,
+        parameters: {
+          channelList: [{
+            pulseCoefficient: 100,
+            dayList: [0],
+            index: 1
+          }],
+          days: 1,
+          startTime2000: 339897600
+        },
+        bytes: [0x1f, 0x0d, 0x06, 0x15, 0x49, 0x01, 0x01, 0x83, 0x00]
+      },
+      'missing reading (null)': {
+        id: id$j,
+        name: name$j,
+        headerSize: headerSize$j,
+        parameters: {
+          channelList: [{
+            pulseCoefficient: 100,
+            dayList: [null],
+            index: 1
+          }],
+          days: 1,
+          startTime2000: 339897600
+        },
+        bytes: [0x1f, 0x0d, 0x0a, 0x15, 0x49, 0x01, 0x01, 0x83, 0xff, 0xff, 0xff, 0xff, 0x0f]
+      },
       'archive days values at 4 channel from 2023.03.10 00:00:00 GMT': {
         id: id$j,
         name: name$j,
@@ -5986,7 +6278,7 @@
         });
         for (var day = 0; day < days; ++day) {
           var value = getExtendedValue(buffer);
-          dayList.push(value === EMPTY_VALUE ? 0 : value);
+          dayList.push(value === EMPTY_VALUE ? null : value);
         }
       });
       return {
@@ -6008,7 +6300,7 @@
           dayList = _ref.dayList;
         setPulseCoefficient(buffer, pulseCoefficient);
         dayList.forEach(function (value) {
-          setExtendedValue(buffer, value === 0 ? EMPTY_VALUE : value);
+          setExtendedValue(buffer, value === null ? EMPTY_VALUE : value);
         });
       });
       return toBytes$13(id$j, buffer.getBytesToOffset());
@@ -6029,6 +6321,51 @@
     var headerSize$i = 3;
     var COMMAND_BODY_MAX_SIZE$4 = 164;
     var examples$i = {
+      'valid zero base with unchanged diff marker': {
+        id: id$i,
+        name: name$i,
+        headerSize: headerSize$i,
+        parameters: {
+          startTime2000: 756648000,
+          hours: 2,
+          channelList: [{
+            value: 0,
+            diff: [4294967295],
+            index: 1
+          }]
+        },
+        bytes: [0x1f, 0x0c, 0x0a, 0x2f, 0x97, 0x2c, 0x01, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f]
+      },
+      'valid zero reading': {
+        id: id$i,
+        name: name$i,
+        headerSize: headerSize$i,
+        parameters: {
+          startTime2000: 756648000,
+          hours: 1,
+          channelList: [{
+            value: 0,
+            diff: [],
+            index: 1
+          }]
+        },
+        bytes: [0x1f, 0x0c, 0x05, 0x2f, 0x97, 0x0c, 0x01, 0x00]
+      },
+      'missing reading (null)': {
+        id: id$i,
+        name: name$i,
+        headerSize: headerSize$i,
+        parameters: {
+          startTime2000: 756648000,
+          hours: 1,
+          channelList: [{
+            value: null,
+            diff: [],
+            index: 1
+          }]
+        },
+        bytes: [0x1f, 0x0c, 0x09, 0x2f, 0x97, 0x0c, 0x01, 0xff, 0xff, 0xff, 0xff, 0x0f]
+      },
       '4 channels at 2023.12.23 12:00:00 GMT': {
         id: id$i,
         name: name$i,

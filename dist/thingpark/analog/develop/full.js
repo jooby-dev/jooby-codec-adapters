@@ -673,6 +673,8 @@ var fromBytes, toBytes;
     const KEEP_LORA_CONNECTION_ON_REMOVAL = 59;
     const NBIOT_NTP_SERVER = 60;
     const ACTIVATE_MODULE = 61;
+    const ACTIVATION_TIMEOUT = 62;
+    const NBIOT_APN_CONFIG = 63;
     const MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG = 64;
 
     var deviceParameters = /*#__PURE__*/Object.freeze({
@@ -683,6 +685,7 @@ var fromBytes, toBytes;
         ABSOLUTE_DATA_MULTI_CHANNEL: ABSOLUTE_DATA_MULTI_CHANNEL,
         ACTIVATE_MODULE: ACTIVATE_MODULE,
         ACTIVATION_METHOD: ACTIVATION_METHOD,
+        ACTIVATION_TIMEOUT: ACTIVATION_TIMEOUT,
         BATTERY_DEPASSIVATION_CONFIG: BATTERY_DEPASSIVATION_CONFIG,
         BATTERY_DEPASSIVATION_INFO: BATTERY_DEPASSIVATION_INFO,
         BATTERY_MINIMAL_LOAD_TIME: BATTERY_MINIMAL_LOAD_TIME,
@@ -704,6 +707,7 @@ var fromBytes, toBytes;
         MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG: MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG,
         MTX_POWER_CONFIG: MTX_POWER_CONFIG,
         NBIOT_APN: NBIOT_APN,
+        NBIOT_APN_CONFIG: NBIOT_APN_CONFIG,
         NBIOT_BANDS: NBIOT_BANDS,
         NBIOT_DEVICE_SOFTWARE_UPDATE: NBIOT_DEVICE_SOFTWARE_UPDATE,
         NBIOT_LED_INDICATION: NBIOT_LED_INDICATION,
@@ -732,6 +736,7 @@ var fromBytes, toBytes;
     var deviceParameterNames = invertObject(deviceParameters);
 
     const EMPTY_VALUE = 0xffffffff;
+    const LEGACY_EMPTY_VALUE = 0xffffff;
 
     const IDLE = 0;
     const PULSE_SENSOR = 1;
@@ -779,6 +784,8 @@ var fromBytes, toBytes;
     const EXTEND_BIT_MASK = 0x80;
     const LAST_BIT_INDEX = 7;
     const DATA_SENDING_INTERVAL_SECONDS_COEFFICIENT = 600;
+    const ACTIVATION_SECONDS_COEFFICIENT = 5;
+    const MAX_ACTIVATION_TIMEOUT_SECONDS = 255 * ACTIVATION_SECONDS_COEFFICIENT;
     const PARAMETER_RX2_FREQUENCY_COEFFICIENT = 100;
     const SERIAL_NUMBER_SIZE = 6;
     const MAGNETIC_INFLUENCE_BIT_INDEX = 8;
@@ -915,7 +922,8 @@ var fromBytes, toBytes;
         [EXTRA_PAYLOAD_ENABLE]: 1 + 1,
         [TIME_SYNCHRONIZATION_PERIOD_VIA_MAC]: 1 + 4,
         [KEEP_LORA_CONNECTION_ON_REMOVAL]: 1 + 1,
-        [ACTIVATE_MODULE]: 1 + 1
+        [ACTIVATE_MODULE]: 1 + 1,
+        [ACTIVATION_TIMEOUT]: 1 + 2
     };
     const fourChannelsBitMask = {
         channel1: Math.pow(2, 0),
@@ -944,6 +952,12 @@ var fromBytes, toBytes;
     };
     const pulseCoefficientToByteMap = invertObject(byteToPulseCoefficientMap);
     const isMSBSet = (value) => !!(value & 0x80);
+    const getActivationTimeoutByte = (name, seconds) => {
+        if (seconds < 0 || seconds > MAX_ACTIVATION_TIMEOUT_SECONDS) {
+            throw new Error(`${name} must be in range 0-${MAX_ACTIVATION_TIMEOUT_SECONDS} seconds, got ${seconds}`);
+        }
+        return Math.round(seconds / ACTIVATION_SECONDS_COEFFICIENT);
+    };
     const getNbiotSslWrite = (buffer) => ({
         size: buffer.getUint16(),
         position: buffer.getUint16(),
@@ -1441,6 +1455,30 @@ var fromBytes, toBytes;
                 buffer.setUint8(parameter.enable);
             }
         },
+        [ACTIVATION_TIMEOUT]: {
+            get: (buffer) => ({
+                activation: buffer.getUint8() * ACTIVATION_SECONDS_COEFFICIENT,
+                deactivation: buffer.getUint8() * ACTIVATION_SECONDS_COEFFICIENT
+            }),
+            set: (buffer, parameter) => {
+                const activation = getActivationTimeoutByte('activation', parameter.activation);
+                const deactivation = getActivationTimeoutByte('deactivation', parameter.deactivation);
+                buffer.setUint8(activation);
+                buffer.setUint8(deactivation);
+            }
+        },
+        [NBIOT_APN_CONFIG]: {
+            get: (buffer) => ({
+                login: buffer.getString(),
+                password: buffer.getString(),
+                protocol: buffer.getUint8()
+            }),
+            set: (buffer, parameter) => {
+                buffer.setString(parameter.login);
+                buffer.setString(parameter.password);
+                buffer.setUint8(parameter.protocol);
+            }
+        },
         [MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG]: {
             get: (buffer) => {
                 const schedules = [];
@@ -1531,6 +1569,10 @@ var fromBytes, toBytes;
                 data = parameter.data;
                 size = 1 + 1 + data.server.length + 2;
                 break;
+            case NBIOT_APN_CONFIG:
+                data = parameter.data;
+                size = 1 + 1 + data.login.length + 1 + data.password.length + 1;
+                break;
             case MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG:
                 data = parameter.data;
                 size = 1 + data.schedules.length * 5;
@@ -1580,6 +1622,7 @@ var fromBytes, toBytes;
             case NBIOT_APN:
             case CHANNEL_TYPE:
             case NBIOT_NTP_SERVER:
+            case NBIOT_APN_CONFIG:
             case MTX_GET_CURRENT_DEMAND_SCHEDULE_CONFIG:
                 size = getParameterSize(parameter);
                 break;
@@ -1663,17 +1706,17 @@ var fromBytes, toBytes;
     const setLegacyCounterValue = function (buffer, value) {
         buffer.setUint24(value);
     };
-    const getLegacyCounter = function (buffer, byte = buffer.getUint8(), isArchiveValue = false) {
+    function getLegacyCounter(buffer, byte = buffer.getUint8(), isArchiveValue = false) {
         const value = getLegacyCounterValue(buffer);
         return {
             isMagneticInfluence: getMagneticInfluenceBit(byte),
-            value: isArchiveValue && value === EMPTY_VALUE ? 0 : value
+            value: isArchiveValue && value === LEGACY_EMPTY_VALUE ? null : value
         };
-    };
-    const setLegacyCounter = function (buffer, counter, byte = 0, isArchiveValue = false) {
+    }
+    function setLegacyCounter(buffer, counter, byte = 0, isArchiveValue = false) {
         buffer.setUint8(setMagneticInfluenceBit(byte, counter.isMagneticInfluence));
-        setLegacyCounterValue(buffer, isArchiveValue && counter.value === 0 ? EMPTY_VALUE : counter.value);
-    };
+        setLegacyCounterValue(buffer, isArchiveValue && counter.value === null ? LEGACY_EMPTY_VALUE : counter.value);
+    }
     const getChannels = function (buffer) {
         const channelList = [];
         let extended = true;
@@ -1733,7 +1776,7 @@ var fromBytes, toBytes;
         }
         buffer.setUint8(value - 1);
     };
-    const getChannelsValuesWithHourDiff = function (buffer, isArchiveValue = false) {
+    function getChannelsValuesWithHourDiff(buffer, isArchiveValue = false) {
         const date = getDate(buffer);
         const { hour, hours } = getHours(buffer);
         const channels = getChannels(buffer);
@@ -1746,24 +1789,28 @@ var fromBytes, toBytes;
                 diff.push(getExtendedValue(buffer));
             }
             channelList.push({
-                value: isArchiveValue && value === EMPTY_VALUE ? 0 : value,
+                value: isArchiveValue && value === EMPTY_VALUE ? null : value,
                 diff,
                 index: channelIndex
             });
         });
-        return { startTime2000: getTime2000FromDate(date), hours, channelList };
-    };
-    const setChannelsValuesWithHourDiff = function (buffer, hours, startTime2000, channelList, isArchiveValue = false) {
+        return {
+            startTime2000: getTime2000FromDate(date),
+            hours,
+            channelList
+        };
+    }
+    function setChannelsValuesWithHourDiff(buffer, hours, startTime2000, channelList, isArchiveValue = false) {
         const date = getDateFromTime2000(startTime2000);
         const hour = date.getUTCHours();
         setDate(buffer, date);
         setHours(buffer, hour, hours);
         setChannels(buffer, channelList);
         channelList.forEach(({ value, diff }) => {
-            setExtendedValue(buffer, isArchiveValue && value === 0 ? EMPTY_VALUE : value);
+            setExtendedValue(buffer, isArchiveValue && value === null ? EMPTY_VALUE : value);
             diff.forEach(diffValue => setExtendedValue(buffer, diffValue));
         });
-    };
+    }
     const getHours = function (buffer, byte = buffer.getUint8()) {
         if (byte === 0) {
             return { hours: 0, hour: 0 };
@@ -2039,14 +2086,14 @@ var fromBytes, toBytes;
         bytes[0] = setMagneticInfluenceBit(bytes[0], diff.isMagneticInfluence);
         bytes.forEach(byte => buffer.setUint8(byte));
     };
-    const getLegacyHourCounterWithDiff = function (buffer, isArchiveValue = false) {
+    function getLegacyHourCounterWithDiff(buffer, isArchiveValue = false) {
         const date = getDate(buffer);
         const byte = buffer.getUint8();
         const { hour } = getHours(buffer, byte);
         const value = getLegacyCounterValue(buffer);
         const counter = {
             isMagneticInfluence: getMagneticInfluenceBit(byte),
-            value: isArchiveValue && value === EMPTY_VALUE ? 0 : value
+            value: isArchiveValue && value === LEGACY_EMPTY_VALUE ? null : value
         };
         const diff = [];
         while (buffer.offset < buffer.data.length) {
@@ -2054,8 +2101,8 @@ var fromBytes, toBytes;
         }
         date.setUTCHours(hour);
         return { startTime2000: getTime2000FromDate(date), counter, diff };
-    };
-    const setLegacyHourCounterWithDiff = function (buffer, hourCounter, isArchiveValue = false) {
+    }
+    function setLegacyHourCounterWithDiff(buffer, hourCounter, isArchiveValue = false) {
         const date = getDateFromTime2000(hourCounter.startTime2000);
         const hour = date.getUTCHours();
         const { value } = hourCounter.counter;
@@ -2065,10 +2112,10 @@ var fromBytes, toBytes;
         const byte = buffer.getUint8();
         buffer.seek(buffer.offset - 1);
         buffer.setUint8(setMagneticInfluenceBit(byte, hourCounter.counter.isMagneticInfluence));
-        setLegacyCounterValue(buffer, isArchiveValue && value === 0 ? EMPTY_VALUE : value);
+        setLegacyCounterValue(buffer, isArchiveValue && value === null ? LEGACY_EMPTY_VALUE : value);
         hourCounter.diff.forEach(diffItem => setLegacyHourDiff(buffer, diffItem));
-    };
-    const getChannelsValuesWithHourDiffExtended = function (buffer, isArchiveValue = false) {
+    }
+    function getChannelsValuesWithHourDiffExtended(buffer, isArchiveValue = false) {
         const date = getDate(buffer);
         const hour = buffer.getUint8();
         const hours = buffer.getUint8();
@@ -2082,24 +2129,24 @@ var fromBytes, toBytes;
                 diff.push(getExtendedValue(buffer));
             }
             channelList.push({
-                value: isArchiveValue && value === EMPTY_VALUE ? 0 : value,
+                value: isArchiveValue && value === EMPTY_VALUE ? null : value,
                 diff,
                 index: channelIndex
             });
         });
         return { startTime2000: getTime2000FromDate(date), hour, hours, channelList };
-    };
-    const setChannelsValuesWithHourDiffExtended = function (buffer, parameters, isArchiveValue = false) {
+    }
+    function setChannelsValuesWithHourDiffExtended(buffer, parameters, isArchiveValue = false) {
         const date = getDateFromTime2000(parameters.startTime2000);
         setDate(buffer, date);
         buffer.setUint8(parameters.hour);
         buffer.setUint8(parameters.hours);
         setChannels(buffer, parameters.channelList);
         parameters.channelList.forEach(({ value, diff }) => {
-            setExtendedValue(buffer, isArchiveValue && value === 0 ? EMPTY_VALUE : value);
+            setExtendedValue(buffer, isArchiveValue && value === null ? EMPTY_VALUE : value);
             diff.forEach(diffValue => setExtendedValue(buffer, diffValue));
         });
-    };
+    }
     const getDataSegment = function (buffer) {
         const segmentationSessionId = buffer.getUint8();
         const flag = buffer.getUint8();
@@ -3029,7 +3076,7 @@ var fromBytes, toBytes;
             channelList.push({ dayList, index: channelIndex });
             for (let day = 0; day < days; ++day) {
                 const value = getExtendedValue(buffer);
-                dayList.push(value === EMPTY_VALUE ? 0 : value);
+                dayList.push(value === EMPTY_VALUE ? null : value);
             }
         });
         return { startTime2000: getTime2000FromDate(date), days, channelList };
@@ -3042,7 +3089,7 @@ var fromBytes, toBytes;
         buffer.setUint8(days);
         channelList.forEach(({ dayList }) => {
             dayList.forEach(value => {
-                setExtendedValue(buffer, value === 0 ? EMPTY_VALUE : value);
+                setExtendedValue(buffer, value === null ? EMPTY_VALUE : value);
             });
         });
         return toBytes$15(id$r, buffer.getBytesToOffset());
@@ -3317,7 +3364,7 @@ var fromBytes, toBytes;
             });
             for (let day = 0; day < days; ++day) {
                 const value = getExtendedValue(buffer);
-                dayList.push(value === EMPTY_VALUE ? 0 : value);
+                dayList.push(value === EMPTY_VALUE ? null : value);
             }
         });
         return { channelList, days, startTime2000: getTime2000FromDate(date) };
@@ -3331,7 +3378,7 @@ var fromBytes, toBytes;
         channelList.forEach(({ pulseCoefficient, dayList }) => {
             setPulseCoefficient(buffer, pulseCoefficient);
             dayList.forEach(value => {
-                setExtendedValue(buffer, value === 0 ? EMPTY_VALUE : value);
+                setExtendedValue(buffer, value === null ? EMPTY_VALUE : value);
             });
         });
         return toBytes$15(id$j, buffer.getBytesToOffset());
